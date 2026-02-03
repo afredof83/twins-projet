@@ -1,6 +1,7 @@
 {
   "name": "digital-twin-profile",
   "version": "0.1.0",
+  "description": "Clone Project - Secure Digital Twin V1",
   "private": true,
   "scripts": {
     "dev": "next dev",
