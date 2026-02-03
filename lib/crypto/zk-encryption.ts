@@ -1,3 +1,4 @@
+// Fix build dependencies Vercel
 /**
  * Zero-Knowledge Encryption Module
  * 
@@ -5,8 +6,8 @@
  * All encryption happens client-side. The server never sees the encryption key.
  */
 
-import { pbkdf2 } from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha256';
+import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const PBKDF2_ITERATIONS = 100000;
 const SALT_LENGTH = 32;
@@ -27,9 +28,10 @@ export async function deriveKey(
   });
 
   // Import the key material as a CryptoKey for Web Crypto API
+  // Create a new Uint8Array to ensure proper ArrayBuffer type
   return await crypto.subtle.importKey(
     'raw',
-    keyMaterial,
+    new Uint8Array(keyMaterial),
     { name: 'AES-GCM', length: 256 },
     false,
     ['encrypt', 'decrypt']
@@ -69,7 +71,7 @@ export async function encrypt(
   const encryptedBuffer = await crypto.subtle.encrypt(
     {
       name: 'AES-GCM',
-      iv: iv,
+      iv: new Uint8Array(iv),
     },
     key,
     dataBuffer
@@ -81,7 +83,7 @@ export async function encrypt(
   combined.set(new Uint8Array(encryptedBuffer), iv.length);
 
   // Return as base64 for easy storage
-  return btoa(String.fromCharCode(...combined));
+  return btoa(String.fromCharCode.apply(null, Array.from(combined)));
 }
 
 /**
@@ -108,7 +110,7 @@ export async function decrypt(
     const decryptedBuffer = await crypto.subtle.decrypt(
       {
         name: 'AES-GCM',
-        iv: iv,
+        iv: new Uint8Array(iv),
       },
       key,
       encryptedBuffer
@@ -130,7 +132,7 @@ export function hashPassword(password: string, salt: Uint8Array): string {
     c: PBKDF2_ITERATIONS,
     dkLen: 32,
   });
-  return btoa(String.fromCharCode(...hash));
+  return btoa(String.fromCharCode.apply(null, Array.from(hash)));
 }
 
 /**
@@ -171,7 +173,7 @@ export async function decryptObject<T>(
  * Converts a Uint8Array to a base64 string for storage
  */
 export function arrayToBase64(array: Uint8Array): string {
-  return btoa(String.fromCharCode(...array));
+  return btoa(String.fromCharCode.apply(null, Array.from(array)));
 }
 
 /**
