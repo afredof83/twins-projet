@@ -20,10 +20,10 @@ export class SupabasePgVectorStore implements VectorStore {
     ): Promise<void> {
         const supabase = getSupabaseAdmin();
 
-        // Convert embedding array to pgvector format
-        const vectorString = `[${embedding.join(',)}]`;
+        // Convert embedding array to pgvector format (Correction du guillemet ici)
+        const vectorString = `[${embedding.join(',')}]`;
 
-    const { error } = await supabase
+        const { error } = await supabase
             .from(this.tableName)
             .upsert({
                 id,
