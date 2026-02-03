@@ -1,36 +1,171 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Digital Twin Profile - Zero-Knowledge Architecture
 
-## Getting Started
+Un système de gestion de profils de jumeaux numériques avec chiffrement Zero-Knowledge et mémoire vectorielle isolée.
 
-First, run the development server:
+## 🔐 Caractéristiques de Sécurité
+
+- **Chiffrement Zero-Knowledge** : AES-256-GCM avec dérivation de clés PBKDF2 (100k itérations)
+- **Isolation stricte** : Chaque profil dispose de son propre espace vectoriel et clés de chiffrement
+- **Phrase de récupération BIP39** : 12 mots pour la récupération du profil
+- **Aucune clé sur le serveur** : Toutes les clés restent côté client
+- **Mémoire vectorielle sécurisée** : Supabase pgvector avec recherche sémantique chiffrée
+
+## 📦 Architecture
+
+```
+digital-twin-profile/
+├── lib/
+│   ├── crypto/
+│   │   ├── zk-encryption.ts      # Chiffrement AES-256-GCM
+│   │   └── key-manager.ts        # Gestion de session sécurisée
+│   ├── vector/
+│   │   ├── vector-store.ts       # Interface abstraite
+│   │   ├── supabase-pgvector.ts  # Implémentation Supabase
+│   │   └── embedding-service.ts  # Génération d'embeddings
+│   ├── profile/
+│   │   ├── profile-manager.ts    # Gestion des profils
+│   │   └── profile-schema.ts     # Types TypeScript
+│   └── db/
+│       └── supabase.ts           # Client Supabase
+├── app/
+│   ├── profile/
+│   │   └── new/
+│   │       └── page.tsx          # Création de profil
+│   └── api/
+│       └── profile/
+│           └── create/
+│               └── route.ts      # API de création
+└── prisma/
+    ├── schema.prisma             # Schéma de base de données
+    └── migrations/
+        └── 001_setup_pgvector.sql # Migration pgvector
+```
+
+## 🚀 Installation
+
+### 1. Installer les dépendances
+
+```bash
+npm install
+```
+
+### 2. Configurer les variables d'environnement
+
+Copiez `.env.example` vers `.env.local` et remplissez les valeurs :
+
+```bash
+cp .env.example .env.local
+```
+
+Variables requises :
+- `DATABASE_URL` : URL PostgreSQL
+- `NEXT_PUBLIC_SUPABASE_URL` : URL de votre projet Supabase
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` : Clé anonyme Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` : Clé de rôle de service Supabase
+- `OPENAI_API_KEY` : Clé API OpenAI (pour les embeddings)
+
+### 3. Configurer la base de données
+
+#### a. Activer pgvector dans Supabase
+
+Dans le SQL Editor de Supabase, exécutez :
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+#### b. Exécuter les migrations Prisma
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+#### c. Exécuter la migration pgvector
+
+Dans le SQL Editor de Supabase, exécutez le contenu de :
+`prisma/migrations/001_setup_pgvector.sql`
+
+### 4. Lancer l'application
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Accédez à [http://localhost:3000/profile/new](http://localhost:3000/profile/new) pour créer votre premier profil.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔑 Utilisation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Créer un nouveau profil
 
-## Learn More
+1. Naviguez vers `/profile/new`
+2. Entrez un nom et un mot de passe maître (min. 12 caractères)
+3. **IMPORTANT** : Sauvegardez votre phrase de récupération BIP39 (12 mots)
+4. Confirmez et accédez à votre profil
 
-To learn more about Next.js, take a look at the following resources:
+### Sécurité Zero-Knowledge
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Chiffrement côté client** : Toutes les données sont chiffrées avant d'être envoyées au serveur
+- **Pas de clé sur le serveur** : Le serveur ne peut jamais déchiffrer vos données
+- **Phrase de récupération** : Seule façon de récupérer votre profil si vous oubliez votre mot de passe
+- **Perte irréversible** : Si vous perdez votre phrase de récupération ET votre mot de passe, vos données sont perdues définitivement
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧠 Mémoire Vectorielle
 
-## Deploy on Vercel
+Le système utilise Supabase pgvector pour stocker et rechercher des embeddings :
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Dimension** : 1536 (OpenAI text-embedding-3-small)
+- **Recherche sémantique** : Cosine similarity avec seuil configurable
+- **Isolation stricte** : Chaque profil a son propre namespace vectoriel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📚 API
+
+### POST `/api/profile/create`
+
+Crée un nouveau profil.
+
+**Body** :
+```json
+{
+  "name": "Mon Jumeau",
+  "masterPassword": "mot-de-passe-très-sécurisé"
+}
+```
+
+**Response** :
+```json
+{
+  "success": true,
+  "profileId": "clx...",
+  "recoveryPhrase": "word1 word2 word3 ... word12",
+  "salt": "base64-encoded-salt"
+}
+```
+
+## 🛡️ Sécurité
+
+### Bonnes pratiques
+
+1. **Mot de passe maître** : Utilisez un mot de passe fort (min. 12 caractères, idéalement 20+)
+2. **Phrase de récupération** : Stockez-la dans un endroit sûr (coffre-fort, gestionnaire de mots de passe)
+3. **Ne partagez jamais** : Ni votre mot de passe ni votre phrase de récupération
+4. **Auto-lock** : Le système verrouille automatiquement après 30 minutes d'inactivité
+
+### Architecture de chiffrement
+
+- **Algorithme** : AES-256-GCM (authentification intégrée)
+- **Dérivation de clé** : PBKDF2-SHA256 avec 100 000 itérations
+- **Salt** : 32 bytes aléatoires cryptographiquement sécurisés
+- **IV** : 12 bytes aléatoires par opération de chiffrement
+
+## 📝 Licence
+
+MIT
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Veuillez ouvrir une issue avant de soumettre une PR.
+
+---
+
+**⚠️ AVERTISSEMENT** : Ce système utilise un chiffrement Zero-Knowledge. La perte de votre mot de passe maître ET de votre phrase de récupération entraînera une perte IRRÉVERSIBLE de toutes vos données. Sauvegardez votre phrase de récupération en lieu sûr !
