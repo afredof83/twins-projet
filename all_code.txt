@@ -1,367 +1,25 @@
-﻿================================================================================
-BACKUP DE TOUS LES FICHIERS CODE - 2026-02-03 10:44:16
-================================================================================
-
-
+﻿# Digital Twin Profile - Complete Codebase
+# Generated: 2026-02-03 14:47:00
+# This file contains all source code from the project
 
 ================================================================================
-FICHIER: QUICKSTART.md
-================================================================================
-
-# 🚀 Guide de Démarrage Rapide
-
-## Installation en 5 Minutes
-
-### 1. Configuration de l'Environnement
-
-```bash
-cd digital-twin-profile
-cp .env.example .env.local
-```
-
-Éditez `.env.local` et remplissez :
-```env
-DATABASE_URL="postgresql://user:password@host:5432/db"
-NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."
-OPENAI_API_KEY="sk-..."
-```
-
-### 2. Initialisation Automatique
-
-```bash
-npm run init
-```
-
-Cette commande va :
-- ✅ Générer le client Prisma
-- ✅ Créer les tables dans la base de données
-- ⚠️ Vous demander d'exécuter la migration pgvector manuellement
-
-### 3. Migration pgvector (Supabase SQL Editor)
-
-Copiez et exécutez le contenu de :
-```
-prisma/migrations/001_setup_pgvector.sql
-```
-
-### 4. Lancer l'Application
-
-```bash
-npm run dev
-```
-
-Ouvrez [http://localhost:3000/profile/new](http://localhost:3000/profile/new)
-
-### 5. Créer Votre Premier Profil
-
-1. Entrez un nom et un mot de passe maître (12+ caractères)
-2. **IMPORTANT** : Sauvegardez votre phrase de récupération BIP39 !
-3. Confirmez et accédez à votre profil
-
----
-
-## 🔐 Sécurité Zero-Knowledge
-
-### Ce qui est chiffré
-- ✅ Contenu des mémoires
-- ✅ Métadonnées des profils
-- ✅ Phrase de récupération BIP39
-- ✅ Embeddings vectoriels
-
-### Ce qui N'EST PAS chiffré
-- ❌ Nom du profil (pour affichage)
-- ❌ Timestamps
-- ❌ ID du profil
-
-### Garanties
-- 🔒 Le serveur ne peut JAMAIS déchiffrer vos données
-- 🔑 Seul votre mot de passe maître dérive la clé
-- 💾 Aucune clé stockée sur le serveur
-- 🔄 Phrase BIP39 pour récupération
-
----
-
-## 📝 Commandes Utiles
-
-```bash
-# Développement
-npm run dev              # Lancer le serveur de dev
-
-# Base de données
-npm run db:generate      # Générer le client Prisma
-npm run db:push          # Push le schéma vers la DB
-npm run db:studio        # Ouvrir Prisma Studio
-
-# Production
-npm run build            # Build pour production
-npm run start            # Démarrer en production
-```
-
----
-
-## ⚠️ AVERTISSEMENTS CRITIQUES
-
-### Perte de Données Irréversible
-
-Si vous perdez **À LA FOIS** :
-- ❌ Votre mot de passe maître
-- ❌ Votre phrase de récupération BIP39
-
-→ **VOS DONNÉES SONT PERDUES DÉFINITIVEMENT**
-
-### Sauvegarde de la Phrase BIP39
-
-✅ **À FAIRE** :
-- Écrire sur papier et stocker en lieu sûr
-- Utiliser un gestionnaire de mots de passe chiffré
-- Faire plusieurs copies dans des endroits différents
-
-❌ **À NE PAS FAIRE** :
-- Stocker en clair sur votre ordinateur
-- Envoyer par email ou message
-- Partager avec qui que ce soit
-- Prendre une photo non chiffrée
-
----
-
-## 🆘 Dépannage
-
-### Erreur : "Module not found @prisma/client"
-```bash
-npm run db:generate
-```
-
-### Erreur : "Extension vector does not exist"
-Exécutez dans Supabase SQL Editor :
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-### Erreur : "Function match_memories does not exist"
-Exécutez la migration complète :
-```sql
--- Contenu de prisma/migrations/001_setup_pgvector.sql
-```
-
-### L'application ne démarre pas
-Vérifiez que toutes les variables d'environnement sont définies dans `.env.local`
-
----
-
-## 📚 Documentation Complète
-
-- **README.md** : Documentation complète du projet
-- **walkthrough.md** : Guide détaillé de l'implémentation
-- **implementation_plan.md** : Plan d'architecture original
-
----
-
-## 🎯 Prochaines Fonctionnalités Suggérées
-
-1. **Page de déverrouillage** (`/profile/unlock`)
-2. **Dashboard du profil** avec liste des mémoires
-3. **Ajout de mémoires** avec génération d'embeddings
-4. **Recherche sémantique** dans les mémoires
-5. **Export/Import de profil** chiffré
-6. **Récupération via phrase BIP39**
-
----
-
-**Bon développement ! 🚀**
 
 
 ================================================================================
-FICHIER: README.md
-================================================================================
-
-# Digital Twin Profile - Zero-Knowledge Architecture
-
-Un système de gestion de profils de jumeaux numériques avec chiffrement Zero-Knowledge et mémoire vectorielle isolée.
-
-## 🔐 Caractéristiques de Sécurité
-
-- **Chiffrement Zero-Knowledge** : AES-256-GCM avec dérivation de clés PBKDF2 (100k itérations)
-- **Isolation stricte** : Chaque profil dispose de son propre espace vectoriel et clés de chiffrement
-- **Phrase de récupération BIP39** : 12 mots pour la récupération du profil
-- **Aucune clé sur le serveur** : Toutes les clés restent côté client
-- **Mémoire vectorielle sécurisée** : Supabase pgvector avec recherche sémantique chiffrée
-
-## 📦 Architecture
-
-```
-digital-twin-profile/
-├── lib/
-│   ├── crypto/
-│   │   ├── zk-encryption.ts      # Chiffrement AES-256-GCM
-│   │   └── key-manager.ts        # Gestion de session sécurisée
-│   ├── vector/
-│   │   ├── vector-store.ts       # Interface abstraite
-│   │   ├── supabase-pgvector.ts  # Implémentation Supabase
-│   │   └── embedding-service.ts  # Génération d'embeddings
-│   ├── profile/
-│   │   ├── profile-manager.ts    # Gestion des profils
-│   │   └── profile-schema.ts     # Types TypeScript
-│   └── db/
-│       └── supabase.ts           # Client Supabase
-├── app/
-│   ├── profile/
-│   │   └── new/
-│   │       └── page.tsx          # Création de profil
-│   └── api/
-│       └── profile/
-│           └── create/
-│               └── route.ts      # API de création
-└── prisma/
-    ├── schema.prisma             # Schéma de base de données
-    └── migrations/
-        └── 001_setup_pgvector.sql # Migration pgvector
-```
-
-## 🚀 Installation
-
-### 1. Installer les dépendances
-
-```bash
-npm install
-```
-
-### 2. Configurer les variables d'environnement
-
-Copiez `.env.example` vers `.env.local` et remplissez les valeurs :
-
-```bash
-cp .env.example .env.local
-```
-
-Variables requises :
-- `DATABASE_URL` : URL PostgreSQL
-- `NEXT_PUBLIC_SUPABASE_URL` : URL de votre projet Supabase
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` : Clé anonyme Supabase
-- `SUPABASE_SERVICE_ROLE_KEY` : Clé de rôle de service Supabase
-- `OPENAI_API_KEY` : Clé API OpenAI (pour les embeddings)
-
-### 3. Configurer la base de données
-
-#### a. Activer pgvector dans Supabase
-
-Dans le SQL Editor de Supabase, exécutez :
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-#### b. Exécuter les migrations Prisma
-
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-#### c. Exécuter la migration pgvector
-
-Dans le SQL Editor de Supabase, exécutez le contenu de :
-`prisma/migrations/001_setup_pgvector.sql`
-
-### 4. Lancer l'application
-
-```bash
-npm run dev
-```
-
-Accédez à [http://localhost:3000/profile/new](http://localhost:3000/profile/new) pour créer votre premier profil.
-
-## 🔑 Utilisation
-
-### Créer un nouveau profil
-
-1. Naviguez vers `/profile/new`
-2. Entrez un nom et un mot de passe maître (min. 12 caractères)
-3. **IMPORTANT** : Sauvegardez votre phrase de récupération BIP39 (12 mots)
-4. Confirmez et accédez à votre profil
-
-### Sécurité Zero-Knowledge
-
-- **Chiffrement côté client** : Toutes les données sont chiffrées avant d'être envoyées au serveur
-- **Pas de clé sur le serveur** : Le serveur ne peut jamais déchiffrer vos données
-- **Phrase de récupération** : Seule façon de récupérer votre profil si vous oubliez votre mot de passe
-- **Perte irréversible** : Si vous perdez votre phrase de récupération ET votre mot de passe, vos données sont perdues définitivement
-
-## 🧠 Mémoire Vectorielle
-
-Le système utilise Supabase pgvector pour stocker et rechercher des embeddings :
-
-- **Dimension** : 1536 (OpenAI text-embedding-3-small)
-- **Recherche sémantique** : Cosine similarity avec seuil configurable
-- **Isolation stricte** : Chaque profil a son propre namespace vectoriel
-
-## 📚 API
-
-### POST `/api/profile/create`
-
-Crée un nouveau profil.
-
-**Body** :
-```json
-{
-  "name": "Mon Jumeau",
-  "masterPassword": "mot-de-passe-très-sécurisé"
-}
-```
-
-**Response** :
-```json
-{
-  "success": true,
-  "profileId": "clx...",
-  "recoveryPhrase": "word1 word2 word3 ... word12",
-  "salt": "base64-encoded-salt"
-}
-```
-
-## 🛡️ Sécurité
-
-### Bonnes pratiques
-
-1. **Mot de passe maître** : Utilisez un mot de passe fort (min. 12 caractères, idéalement 20+)
-2. **Phrase de récupération** : Stockez-la dans un endroit sûr (coffre-fort, gestionnaire de mots de passe)
-3. **Ne partagez jamais** : Ni votre mot de passe ni votre phrase de récupération
-4. **Auto-lock** : Le système verrouille automatiquement après 30 minutes d'inactivité
-
-### Architecture de chiffrement
-
-- **Algorithme** : AES-256-GCM (authentification intégrée)
-- **Dérivation de clé** : PBKDF2-SHA256 avec 100 000 itérations
-- **Salt** : 32 bytes aléatoires cryptographiquement sécurisés
-- **IV** : 12 bytes aléatoires par opération de chiffrement
-
-## 📝 Licence
-
-MIT
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Veuillez ouvrir une issue avant de soumettre une PR.
-
----
-
-**⚠️ AVERTISSEMENT** : Ce système utilise un chiffrement Zero-Knowledge. La perte de votre mot de passe maître ET de votre phrase de récupération entraînera une perte IRRÉVERSIBLE de toutes vos données. Sauvegardez votre phrase de récupération en lieu sûr !
-
-
-================================================================================
-FICHIER: package.json
+FILE: package.json
 ================================================================================
 
 {
   "name": "digital-twin-profile",
   "version": "0.1.0",
+  "description": "Clone Project - Secure Digital Twin V1",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "init": "node scripts/init.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -369,29 +27,30 @@ FICHIER: package.json
   },
   "dependencies": {
     "@noble/hashes": "^2.0.1",
-    "@prisma/client": "^7.3.0",
-    "@supabase/supabase-js": "^2.93.3",
+    "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.39.0",
     "bip39": "^3.1.0",
-    "next": "16.1.6",
-    "prisma": "^7.3.0",
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "next": "14.1.0",
+    "prisma": "^5.22.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }
 }
 
 
 ================================================================================
-FICHIER: tsconfig.json
+FILE: tsconfig.json
 ================================================================================
 
 {
@@ -430,8 +89,9 @@ FICHIER: tsconfig.json
 }
 
 
+
 ================================================================================
-FICHIER: next.config.ts
+FILE: next.config.ts
 ================================================================================
 
 import type { NextConfig } from "next";
@@ -443,532 +103,303 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 
-================================================================================
-FICHIER: eslint.config.mjs
-================================================================================
-
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
-
 
 ================================================================================
-FICHIER: postcss.config.mjs
+FILE: prisma\schema.prisma
 ================================================================================
 
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
+// Prisma Schema for Digital Twin Profile System
+// Zero-Knowledge Architecture with Supabase pgvector
 
-export default config;
-
-
-================================================================================
-FICHIER: next-env.d.ts
-================================================================================
-
-/// <reference types="next" />
-/// <reference types="next/image-types/global" />
-import "./.next/types/routes.d.ts";
-
-// NOTE: This file should not be edited
-// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
-
-
-================================================================================
-FICHIER: app\globals.css
-================================================================================
-
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [vector]
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+// Profile represents a digital twin instance
+// Each profile is completely isolated with its own encryption
+model Profile {
+  id                String   @id @default(cuid())
+  name              String   // Non-sensitive display name
+  
+  // Zero-Knowledge Security
+  saltBase64        String   // Base64 encoded salt for key derivation
+  passwordHash      String   // Hash for password verification (not the encryption key)
+  
+  // Encrypted Metadata (JSON)
+  encryptedMetadata String   @db.Text // Contains encrypted profile settings, preferences, etc.
+  
+  // Vector Store Configuration
+  vectorNamespace   String   @unique // Unique namespace for this profile's vectors
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastAccessedAt    DateTime @default(now())
+  
+  // Relations
+  memories          Memory[]
+  
+  @@index([vectorNamespace])
+}
+
+// Memory represents a single memory/data point
+// All content is encrypted before storage
+model Memory {
+  id                String   @id @default(cuid())
+  
+  // Profile Association (strict isolation)
+  profileId         String
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Encrypted Content
+  encryptedContent  String   @db.Text // The actual memory content (encrypted)
+  encryptedMetadata String   @db.Text // Additional metadata like tags, context (encrypted)
+  
+  // Vector Embedding (stored in pgvector)
+  // The embedding itself is derived from encrypted content
+  embedding         Unsupported("vector(1024)") // Mistral Embed dimension
+  
+  // Memory Type
+  type              MemoryType @default(TEXT)
+  
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([profileId])
+  @@index([profileId, type])
+  @@index([profileId, createdAt])
+}
+
+// Enum for memory types
+enum MemoryType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  CONVERSATION
+}
+
+// Recovery Phrase Storage (optional - for BIP39 backup)
+// This should be encrypted with a separate recovery key
+model RecoveryPhrase {
+  id                String   @id @default(cuid())
+  profileId         String   @unique
+  
+  // Encrypted BIP39 phrase (encrypted with a recovery-specific key)
+  encryptedPhrase   String   @db.Text
+  
+  // Verification hash to confirm recovery phrase without decrypting
+  phraseHash        String
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([profileId])
+}
+
+
+
+================================================================================
+FILE: lib\crypto\zk-encryption.ts
+================================================================================
+
+// Fix build dependencies Vercel
+/**
+ * Zero-Knowledge Encryption Module
+ * 
+ * Implements AES-256-GCM encryption with PBKDF2 key derivation.
+ * All encryption happens client-side. The server never sees the encryption key.
+ */
+
+import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+
+const PBKDF2_ITERATIONS = 100000;
+const SALT_LENGTH = 32;
+const IV_LENGTH = 12; // GCM standard IV length
+const KEY_LENGTH = 32; // 256 bits
+
+/**
+ * Derives an encryption key from a master password using PBKDF2
+ */
+export async function deriveKey(
+  masterPassword: string,
+  salt: Uint8Array
+): Promise<CryptoKey> {
+  // Use PBKDF2 to derive key material
+  const keyMaterial = pbkdf2(sha256, masterPassword, salt, {
+    c: PBKDF2_ITERATIONS,
+    dkLen: KEY_LENGTH,
+  });
+
+  // Import the key material as a CryptoKey for Web Crypto API
+  // Create a new Uint8Array to ensure proper ArrayBuffer type
+  return await crypto.subtle.importKey(
+    'raw',
+    new Uint8Array(keyMaterial),
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Generates a cryptographically secure random salt
+ */
+export function generateSalt(): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
+}
+
+/**
+ * Generates a cryptographically secure random IV
+ */
+export function generateIV(): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+}
+
+/**
+ * Encrypts data using AES-256-GCM
+ * 
+ * @param data - The plaintext data to encrypt
+ * @param key - The encryption key (derived from master password)
+ * @returns Encrypted data with IV prepended (IV + ciphertext + auth tag)
+ */
+export async function encrypt(
+  data: string,
+  key: CryptoKey
+): Promise<string> {
+  const iv = generateIV();
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+
+  // Encrypt using AES-GCM (includes authentication tag)
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: new Uint8Array(iv),
+    },
+    key,
+    dataBuffer
+  );
+
+  // Combine IV + encrypted data for storage
+  const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encryptedBuffer), iv.length);
+
+  // Return as base64 for easy storage
+  return btoa(String.fromCharCode.apply(null, Array.from(combined)));
+}
+
+/**
+ * Decrypts data encrypted with AES-256-GCM
+ * 
+ * @param encryptedData - Base64 encoded encrypted data (IV + ciphertext + auth tag)
+ * @param key - The decryption key (same as encryption key)
+ * @returns Decrypted plaintext
+ * @throws Error if decryption fails (wrong key or tampered data)
+ */
+export async function decrypt(
+  encryptedData: string,
+  key: CryptoKey
+): Promise<string> {
+  try {
+    // Decode from base64
+    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+
+    // Extract IV and encrypted data
+    const iv = combined.slice(0, IV_LENGTH);
+    const encryptedBuffer = combined.slice(IV_LENGTH);
+
+    // Decrypt using AES-GCM (verifies authentication tag)
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: new Uint8Array(iv),
+      },
+      key,
+      encryptedBuffer
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBuffer);
+  } catch (error) {
+    throw new Error('Decryption failed: Invalid key or corrupted data');
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/**
+ * Hashes a master password to create a verification hash
+ * This hash is stored in the database to verify the password without storing the key
+ */
+export function hashPassword(password: string, salt: Uint8Array): string {
+  const hash = pbkdf2(sha256, password, salt, {
+    c: PBKDF2_ITERATIONS,
+    dkLen: 32,
+  });
+  return btoa(String.fromCharCode.apply(null, Array.from(hash)));
 }
-
-
-================================================================================
-FICHIER: app\layout.tsx
-================================================================================
-
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Create Next App",
-  description: "Generated by create next app",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
-  );
-}
-
-
-================================================================================
-FICHIER: app\page.tsx
-================================================================================
-
-import Image from "next/image";
-
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-
-================================================================================
-FICHIER: app\profile\new\page.tsx
-================================================================================
-
-'use client';
 
 /**
- * New Profile Creation Page
- * Allows users to create a new digital twin profile with Zero-Knowledge encryption
+ * Verifies a password against a stored hash
  */
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-export default function NewProfilePage() {
-    const router = useRouter();
-    const [step, setStep] = useState<'form' | 'recovery'>('form');
-    const [formData, setFormData] = useState({
-        name: '',
-        masterPassword: '',
-        confirmPassword: '',
-    });
-    const [recoveryPhrase, setRecoveryPhrase] = useState<string>('');
-    const [profileId, setProfileId] = useState<string>('');
-    const [isCreating, setIsCreating] = useState(false);
-    const [error, setError] = useState<string>('');
-    const [phraseConfirmed, setPhraseConfirmed] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-
-        // Validation
-        if (formData.name.length < 2) {
-            setError('Le nom doit contenir au moins 2 caractères');
-            return;
-        }
-
-        if (formData.masterPassword.length < 12) {
-            setError('Le mot de passe maître doit contenir au moins 12 caractères');
-            return;
-        }
-
-        if (formData.masterPassword !== formData.confirmPassword) {
-            setError('Les mots de passe ne correspondent pas');
-            return;
-        }
-
-        setIsCreating(true);
-
-        try {
-            const response = await fetch('/api/profile/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.name,
-                    masterPassword: formData.masterPassword,
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Échec de la création du profil');
-            }
-
-            const data = await response.json();
-            setRecoveryPhrase(data.recoveryPhrase);
-            setProfileId(data.profileId);
-            setStep('recovery');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsCreating(false);
-        }
-    };
-
-    const handleCopyPhrase = () => {
-        navigator.clipboard.writeText(recoveryPhrase);
-        alert('Phrase de récupération copiée dans le presse-papiers');
-    };
-
-    const handleConfirmAndContinue = () => {
-        if (!phraseConfirmed) {
-            alert('Veuillez confirmer que vous avez sauvegardé votre phrase de récupération');
-            return;
-        }
-        router.push(`/profile/unlock?id=${profileId}`);
-    };
-
-    if (step === 'recovery') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
-                    <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Profil Créé avec Succès !</h1>
-                        <p className="text-purple-200">Votre jumeau numérique est maintenant initialisé</p>
-                    </div>
-
-                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
-                        <div className="flex items-start gap-3">
-                            <svg className="w-6 h-6 text-red-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div>
-                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Sauvegardez Votre Phrase de Récupération</h3>
-                                <p className="text-red-100 text-sm">
-                                    Cette phrase de 12 mots est la SEULE façon de récupérer votre profil si vous oubliez votre mot de passe.
-                                    <strong className="block mt-2">Perte de cette phrase = Perte IRRÉVERSIBLE de toutes vos données.</strong>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-white font-semibold">Phrase de Récupération BIP39</h3>
-                            <button
-                                onClick={handleCopyPhrase}
-                                className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Copier
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            {recoveryPhrase.split(' ').map((word, index) => (
-                                <div key={index} className="bg-slate-700/50 rounded px-3 py-2 text-center">
-                                    <span className="text-purple-300 text-xs">{index + 1}.</span>
-                                    <span className="text-white font-mono ml-2">{word}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={phraseConfirmed}
-                                onChange={(e) => setPhraseConfirmed(e.target.checked)}
-                                className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
-                            />
-                            <span className="text-white text-sm">
-                                J'ai sauvegardé ma phrase de récupération en lieu sûr et je comprends qu'elle ne peut pas être récupérée
-                            </span>
-                        </label>
-                    </div>
-
-                    <button
-                        onClick={handleConfirmAndContinue}
-                        disabled={!phraseConfirmed}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Continuer vers le Profil
-                    </button>
-
-                    <p className="text-purple-200 text-xs text-center mt-4">
-                        ID du Profil : <span className="font-mono">{profileId}</span>
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
-                <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Nouveau Jumeau Numérique</h1>
-                    <p className="text-purple-200">Créez votre profil sécurisé avec chiffrement Zero-Knowledge</p>
-                </div>
-
-                {error && (
-                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-3 mb-4">
-                        <p className="text-red-200 text-sm">{error}</p>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Nom du Profil
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Ex: Mon Jumeau Personnel"
-                            required
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Mot de Passe Maître (min. 12 caractères)
-                        </label>
-                        <input
-                            type="password"
-                            value={formData.masterPassword}
-                            onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="••••••••••••"
-                            minLength={12}
-                            required
-                        />
-                        <p className="text-purple-300/70 text-xs mt-1">
-                            Ce mot de passe ne sera JAMAIS stocké sur le serveur
-                        </p>
-                    </div>
-
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Confirmer le Mot de Passe
-                        </label>
-                        <input
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="••••••••••••"
-                            minLength={12}
-                            required
-                        />
-                    </div>
-
-                    <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                        <h3 className="text-blue-200 font-semibold text-sm mb-2">🔐 Sécurité Zero-Knowledge</h3>
-                        <ul className="text-blue-100 text-xs space-y-1">
-                            <li>✓ Chiffrement AES-256-GCM côté client</li>
-                            <li>✓ Vos clés ne quittent jamais votre appareil</li>
-                            <li>✓ Le serveur ne peut pas lire vos données</li>
-                            <li>✓ Phrase de récupération BIP39 (12 mots)</li>
-                        </ul>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isCreating}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        {isCreating ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                                Création en cours...
-                            </>
-                        ) : (
-                            'Créer le Profil'
-                        )}
-                    </button>
-                </form>
-
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
-                        ← Retour à l'accueil
-                    </a>
-                </div>
-            </div>
-        </div>
-    );
+export function verifyPassword(
+  password: string,
+  salt: Uint8Array,
+  storedHash: string
+): boolean {
+  const computedHash = hashPassword(password, salt);
+  return computedHash === storedHash;
 }
-
-
-================================================================================
-FICHIER: app\api\profile\create\route.ts
-================================================================================
 
 /**
- * API Route: Create Profile
- * Handles server-side profile creation
+ * Encrypts an object by converting it to JSON first
  */
+export async function encryptObject<T>(
+  obj: T,
+  key: CryptoKey
+): Promise<string> {
+  const json = JSON.stringify(obj);
+  return await encrypt(json, key);
+}
 
-import { NextRequest, NextResponse } from 'next/server';
-import { profileManager } from '@/lib/profile/profile-manager';
+/**
+ * Decrypts an encrypted object
+ */
+export async function decryptObject<T>(
+  encryptedData: string,
+  key: CryptoKey
+): Promise<T> {
+  const json = await decrypt(encryptedData, key);
+  return JSON.parse(json) as T;
+}
 
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { name, masterPassword } = body;
+/**
+ * Converts a Uint8Array to a base64 string for storage
+ */
+export function arrayToBase64(array: Uint8Array): string {
+  return btoa(String.fromCharCode.apply(null, Array.from(array)));
+}
 
-        // Validation
-        if (!name || typeof name !== 'string' || name.length < 2) {
-            return NextResponse.json(
-                { error: 'Le nom doit contenir au moins 2 caractères' },
-                { status: 400 }
-            );
-        }
-
-        if (!masterPassword || typeof masterPassword !== 'string' || masterPassword.length < 12) {
-            return NextResponse.json(
-                { error: 'Le mot de passe maître doit contenir au moins 12 caractères' },
-                { status: 400 }
-            );
-        }
-
-        // Create profile
-        const result = await profileManager.createProfile({
-            name,
-            masterPassword,
-        });
-
-        return NextResponse.json({
-            success: true,
-            profileId: result.profileId,
-            recoveryPhrase: result.recoveryPhrase,
-            salt: result.salt,
-        });
-    } catch (error: any) {
-        console.error('Profile creation error:', error);
-        return NextResponse.json(
-            { error: error.message || 'Erreur lors de la création du profil' },
-            { status: 500 }
-        );
-    }
+/**
+ * Converts a base64 string back to a Uint8Array
+ */
+export function base64ToArray(base64: string): Uint8Array {
+  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 }
 
 
+
 ================================================================================
-FICHIER: lib\crypto\key-manager.ts
+FILE: lib\crypto\key-manager.ts
 ================================================================================
 
 /**
@@ -1116,243 +547,9 @@ class KeyManager {
 export const keyManager = new KeyManager();
 
 
-================================================================================
-FICHIER: lib\crypto\zk-encryption.ts
-================================================================================
-
-/**
- * Zero-Knowledge Encryption Module
- * 
- * Implements AES-256-GCM encryption with PBKDF2 key derivation.
- * All encryption happens client-side. The server never sees the encryption key.
- */
-
-import { pbkdf2 } from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha256';
-
-const PBKDF2_ITERATIONS = 100000;
-const SALT_LENGTH = 32;
-const IV_LENGTH = 12; // GCM standard IV length
-const KEY_LENGTH = 32; // 256 bits
-
-/**
- * Derives an encryption key from a master password using PBKDF2
- */
-export async function deriveKey(
-  masterPassword: string,
-  salt: Uint8Array
-): Promise<CryptoKey> {
-  // Use PBKDF2 to derive key material
-  const keyMaterial = pbkdf2(sha256, masterPassword, salt, {
-    c: PBKDF2_ITERATIONS,
-    dkLen: KEY_LENGTH,
-  });
-
-  // Import the key material as a CryptoKey for Web Crypto API
-  return await crypto.subtle.importKey(
-    'raw',
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-}
-
-/**
- * Generates a cryptographically secure random salt
- */
-export function generateSalt(): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-}
-
-/**
- * Generates a cryptographically secure random IV
- */
-export function generateIV(): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-}
-
-/**
- * Encrypts data using AES-256-GCM
- * 
- * @param data - The plaintext data to encrypt
- * @param key - The encryption key (derived from master password)
- * @returns Encrypted data with IV prepended (IV + ciphertext + auth tag)
- */
-export async function encrypt(
-  data: string,
-  key: CryptoKey
-): Promise<string> {
-  const iv = generateIV();
-  const encoder = new TextEncoder();
-  const dataBuffer = encoder.encode(data);
-
-  // Encrypt using AES-GCM (includes authentication tag)
-  const encryptedBuffer = await crypto.subtle.encrypt(
-    {
-      name: 'AES-GCM',
-      iv: iv,
-    },
-    key,
-    dataBuffer
-  );
-
-  // Combine IV + encrypted data for storage
-  const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(encryptedBuffer), iv.length);
-
-  // Return as base64 for easy storage
-  return btoa(String.fromCharCode(...combined));
-}
-
-/**
- * Decrypts data encrypted with AES-256-GCM
- * 
- * @param encryptedData - Base64 encoded encrypted data (IV + ciphertext + auth tag)
- * @param key - The decryption key (same as encryption key)
- * @returns Decrypted plaintext
- * @throws Error if decryption fails (wrong key or tampered data)
- */
-export async function decrypt(
-  encryptedData: string,
-  key: CryptoKey
-): Promise<string> {
-  try {
-    // Decode from base64
-    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
-
-    // Extract IV and encrypted data
-    const iv = combined.slice(0, IV_LENGTH);
-    const encryptedBuffer = combined.slice(IV_LENGTH);
-
-    // Decrypt using AES-GCM (verifies authentication tag)
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv: iv,
-      },
-      key,
-      encryptedBuffer
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decryptedBuffer);
-  } catch (error) {
-    throw new Error('Decryption failed: Invalid key or corrupted data');
-  }
-}
-
-/**
- * Hashes a master password to create a verification hash
- * This hash is stored in the database to verify the password without storing the key
- */
-export function hashPassword(password: string, salt: Uint8Array): string {
-  const hash = pbkdf2(sha256, password, salt, {
-    c: PBKDF2_ITERATIONS,
-    dkLen: 32,
-  });
-  return btoa(String.fromCharCode(...hash));
-}
-
-/**
- * Verifies a password against a stored hash
- */
-export function verifyPassword(
-  password: string,
-  salt: Uint8Array,
-  storedHash: string
-): boolean {
-  const computedHash = hashPassword(password, salt);
-  return computedHash === storedHash;
-}
-
-/**
- * Encrypts an object by converting it to JSON first
- */
-export async function encryptObject<T>(
-  obj: T,
-  key: CryptoKey
-): Promise<string> {
-  const json = JSON.stringify(obj);
-  return await encrypt(json, key);
-}
-
-/**
- * Decrypts an encrypted object
- */
-export async function decryptObject<T>(
-  encryptedData: string,
-  key: CryptoKey
-): Promise<T> {
-  const json = await decrypt(encryptedData, key);
-  return JSON.parse(json) as T;
-}
-
-/**
- * Converts a Uint8Array to a base64 string for storage
- */
-export function arrayToBase64(array: Uint8Array): string {
-  return btoa(String.fromCharCode(...array));
-}
-
-/**
- * Converts a base64 string back to a Uint8Array
- */
-export function base64ToArray(base64: string): Uint8Array {
-  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-}
-
 
 ================================================================================
-FICHIER: lib\db\supabase.ts
-================================================================================
-
-/**
- * Supabase Client Configuration
- * Configured for Zero-Knowledge architecture with pgvector support
- */
-
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-        'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    );
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-    },
-});
-
-/**
- * Server-side Supabase client with service role key
- * Use only in API routes for admin operations
- */
-export function getSupabaseAdmin() {
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-    if (!supabaseServiceKey) {
-        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
-    }
-
-    return createClient(supabaseUrl, supabaseServiceKey, {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-        },
-    });
-}
-
-
-================================================================================
-FICHIER: lib\profile\profile-manager.ts
+FILE: lib\profile\profile-manager.ts
 ================================================================================
 
 /**
@@ -1360,29 +557,23 @@ FICHIER: lib\profile\profile-manager.ts
  * Handles creation, management, and isolation of digital twin profiles
  */
 
-import { generateMnemonic, mnemonicToSeedSync } from 'bip39';
-import {
-    generateSalt,
-    hashPassword,
-    arrayToBase64,
-    base64ToArray,
-    verifyPassword,
-    encryptObject
-} from '../crypto/zk-encryption';
-import { keyManager } from '../crypto/key-manager';
 import { PrismaClient } from '@prisma/client';
+import { base64ToArray, verifyPassword } from '../crypto/zk-encryption';
+import { keyManager } from '../crypto/key-manager';
 
 const prisma = new PrismaClient();
 
 export interface ProfileCreationData {
     name: string;
-    masterPassword: string;
+    passwordHash: string;
+    saltBase64: string;
+    encryptedMetadata: string;
+    encryptedPhrase: string;
+    vectorNamespace: string;
 }
 
 export interface ProfileCreationResult {
     profileId: string;
-    recoveryPhrase: string;
-    salt: string;
 }
 
 export interface DigitalTwinProfile {
@@ -1395,67 +586,41 @@ export interface DigitalTwinProfile {
 export class ProfileManager {
     /**
      * Creates a new digital twin profile with Zero-Knowledge encryption
+     * All cryptographic operations are performed CLIENT-SIDE
+     * This method only persists pre-encrypted data
      */
     async createProfile(data: ProfileCreationData): Promise<ProfileCreationResult> {
-        // Generate cryptographic salt
-        const salt = generateSalt();
+        // Validate that we received encrypted data (basic sanity check)
+        if (!data.passwordHash || !data.saltBase64 || !data.encryptedMetadata || !data.encryptedPhrase) {
+            throw new Error('Missing required encrypted data fields');
+        }
 
-        // Generate BIP39 recovery phrase (12 words)
-        const recoveryPhrase = generateMnemonic(128); // 128 bits = 12 words
-
-        // Hash the password for verification (not for encryption!)
-        const passwordHash = hashPassword(data.masterPassword, salt);
-
-        // Generate unique vector namespace for this profile
-        const vectorNamespace = `profile_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-        // Create initial encrypted metadata
-        const metadata = {
-            preferences: {},
-            settings: {},
-            createdBy: 'digital-twin-profile-system',
-            version: '1.0.0',
-        };
-
-        // Initialize a temporary session to encrypt metadata
-        await keyManager.initializeSession('temp', data.masterPassword, salt);
-        const encryptedMetadata = await encryptObject(metadata, keyManager.getMasterKey());
-        keyManager.lockSession();
-
-        // Create profile in database
+        // Create profile in database with pre-encrypted data
         const profile = await prisma.profile.create({
             data: {
                 name: data.name,
-                saltBase64: arrayToBase64(salt),
-                passwordHash,
-                encryptedMetadata,
-                vectorNamespace,
+                saltBase64: data.saltBase64,
+                passwordHash: data.passwordHash,
+                encryptedMetadata: data.encryptedMetadata,
+                vectorNamespace: data.vectorNamespace,
             },
         });
 
         // Store encrypted recovery phrase
-        await keyManager.initializeSession(profile.id, data.masterPassword, salt);
-        const encryptedPhrase = await encryptObject(
-            { phrase: recoveryPhrase },
-            keyManager.getMasterKey()
-        );
-        keyManager.lockSession();
-
         await prisma.recoveryPhrase.create({
             data: {
                 profileId: profile.id,
-                encryptedPhrase,
-                phraseHash: hashPassword(recoveryPhrase, salt),
+                encryptedPhrase: data.encryptedPhrase,
+                phraseHash: data.passwordHash, // Use same hash for verification
             },
         });
 
-        console.log(`✅ Profile created: ${profile.id} (${data.name})`);
-        console.log(`📦 Vector namespace: ${vectorNamespace}`);
+        console.log(`âœ… Profile created: ${profile.id} (${data.name})`);
+        console.log(`ðŸ“¦ Vector namespace: ${data.vectorNamespace}`);
+        console.log(`ðŸ” Zero-Knowledge: All data encrypted client-side`);
 
         return {
             profileId: profile.id,
-            recoveryPhrase,
-            salt: arrayToBase64(salt),
         };
     }
 
@@ -1488,7 +653,7 @@ export class ProfileManager {
             data: { lastAccessedAt: new Date() },
         });
 
-        console.log(`🔓 Profile unlocked: ${profileId}`);
+        console.log(`ðŸ”“ Profile unlocked: ${profileId}`);
 
         return true;
     }
@@ -1525,7 +690,7 @@ export class ProfileManager {
      */
     lockProfile(): void {
         keyManager.lockSession();
-        console.log('🔒 Profile locked');
+        console.log('ðŸ”’ Profile locked');
     }
 
     /**
@@ -1554,7 +719,7 @@ export class ProfileManager {
         // Lock session
         keyManager.lockSession();
 
-        console.log(`🗑️ Profile deleted: ${profileId}`);
+        console.log(`ðŸ—‘ï¸ Profile deleted: ${profileId}`);
     }
 
     /**
@@ -1591,8 +756,9 @@ export class ProfileManager {
 export const profileManager = new ProfileManager();
 
 
+
 ================================================================================
-FICHIER: lib\profile\profile-schema.ts
+FILE: lib\profile\profile-schema.ts
 ================================================================================
 
 /**
@@ -1655,125 +821,112 @@ export interface VectorStoreConfig {
 }
 
 
+
 ================================================================================
-FICHIER: lib\vector\embedding-service.ts
+FILE: lib\db\supabase.ts
 ================================================================================
 
 /**
- * Embedding Service
- * Generates vector embeddings for text using OpenAI or local models
+ * Supabase Client Configuration
+ * Configured for Zero-Knowledge architecture with pgvector support
  */
 
-interface EmbeddingResponse {
-    embedding: number[];
-    model: string;
-    tokens: number;
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+        'Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+    );
 }
 
-export class EmbeddingService {
-    private apiKey: string;
-    private model: string = 'text-embedding-3-small';
-    private dimension: number = 1536;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+    },
+});
 
-    constructor() {
-        this.apiKey = process.env.OPENAI_API_KEY || '';
+/**
+ * Server-side Supabase client with service role key
+ * Use only in API routes for admin operations
+ */
+export function getSupabaseAdmin() {
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-        if (!this.apiKey) {
-            console.warn('OPENAI_API_KEY not set. Embedding generation will fail.');
-        }
+    if (!supabaseServiceKey) {
+        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
     }
 
-    /**
-     * Generates an embedding for the given text
-     */
-    async generateEmbedding(text: string): Promise<number[]> {
-        if (!this.apiKey) {
-            throw new Error('OpenAI API key not configured');
-        }
-
-        try {
-            const response = await fetch('https://api.openai.com/v1/embeddings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    input: text,
-                    encoding_format: 'float',
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-            }
-
-            const data = await response.json();
-            return data.data[0].embedding;
-        } catch (error) {
-            console.error('Failed to generate embedding:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Generates embeddings for multiple texts in batch
-     */
-    async generateEmbeddings(texts: string[]): Promise<number[][]> {
-        if (!this.apiKey) {
-            throw new Error('OpenAI API key not configured');
-        }
-
-        try {
-            const response = await fetch('https://api.openai.com/v1/embeddings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    input: texts,
-                    encoding_format: 'float',
-                }),
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-            }
-
-            const data = await response.json();
-            return data.data.map((item: any) => item.embedding);
-        } catch (error) {
-            console.error('Failed to generate embeddings:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Gets the dimension of embeddings produced by this service
-     */
-    getDimension(): number {
-        return this.dimension;
-    }
-
-    /**
-     * Gets the model name being used
-     */
-    getModel(): string {
-        return this.model;
-    }
+    return createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+        },
+    });
 }
 
-// Singleton instance
-export const embeddingService = new EmbeddingService();
 
 
 ================================================================================
-FICHIER: lib\vector\supabase-pgvector.ts
+FILE: lib\vector\vector-store.ts
+================================================================================
+
+/**
+ * Vector Store Interface
+ * Abstraction layer for vector database operations with encryption support
+ */
+
+export interface VectorMetadata {
+    profileId: string;
+    memoryId: string;
+    type: string;
+    createdAt: string;
+    [key: string]: any; // Additional encrypted metadata
+}
+
+export interface VectorSearchResult {
+    id: string;
+    score: number;
+    metadata: VectorMetadata;
+}
+
+export interface VectorStore {
+    /**
+     * Inserts or updates a vector with metadata
+     */
+    upsert(
+        id: string,
+        embedding: number[],
+        metadata: VectorMetadata
+    ): Promise<void>;
+
+    /**
+     * Searches for similar vectors
+     */
+    query(
+        embedding: number[],
+        profileId: string,
+        limit?: number
+    ): Promise<VectorSearchResult[]>;
+
+    /**
+     * Deletes a vector by ID
+     */
+    delete(id: string): Promise<void>;
+
+    /**
+     * Deletes all vectors for a profile
+     */
+    deleteByProfile(profileId: string): Promise<void>;
+}
+
+
+
+================================================================================
+FILE: lib\vector\supabase-pgvector.ts
 ================================================================================
 
 /**
@@ -1889,245 +1042,653 @@ export class SupabasePgVectorStore implements VectorStore {
 export const vectorStore = new SupabasePgVectorStore();
 
 
+
 ================================================================================
-FICHIER: lib\vector\vector-store.ts
+FILE: lib\vector\embedding-service.ts
 ================================================================================
 
 /**
- * Vector Store Interface
- * Abstraction layer for vector database operations with encryption support
+ * Embedding Service
+ * Generates vector embeddings for text using Mistral AI
  */
 
-export interface VectorMetadata {
-    profileId: string;
-    memoryId: string;
-    type: string;
-    createdAt: string;
-    [key: string]: any; // Additional encrypted metadata
+interface EmbeddingResponse {
+    embedding: number[];
+    model: string;
+    tokens: number;
 }
 
-export interface VectorSearchResult {
-    id: string;
-    score: number;
-    metadata: VectorMetadata;
-}
+export class EmbeddingService {
+    private apiKey: string;
+    private model: string = 'mistral-embed';
+    private dimension: number = 1024;
 
-export interface VectorStore {
-    /**
-     * Inserts or updates a vector with metadata
-     */
-    upsert(
-        id: string,
-        embedding: number[],
-        metadata: VectorMetadata
-    ): Promise<void>;
+    constructor() {
+        this.apiKey = process.env.MISTRAL_API_KEY || '';
+
+        if (!this.apiKey) {
+            console.warn('MISTRAL_API_KEY not set. Embedding generation will fail.');
+        }
+    }
 
     /**
-     * Searches for similar vectors
+     * Generates an embedding for the given text
      */
-    query(
-        embedding: number[],
-        profileId: string,
-        limit?: number
-    ): Promise<VectorSearchResult[]>;
+    async generateEmbedding(text: string): Promise<number[]> {
+        if (!this.apiKey) {
+            throw new Error('Mistral API key not configured');
+        }
+
+        try {
+            const response = await fetch('https://api.mistral.ai/v1/embeddings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    input: text,
+                    encoding_format: 'float',
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(`Mistral API error: ${error.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            return data.data[0].embedding;
+        } catch (error) {
+            console.error('Failed to generate embedding:', error);
+            throw error;
+        }
+    }
 
     /**
-     * Deletes a vector by ID
+     * Generates embeddings for multiple texts in batch
      */
-    delete(id: string): Promise<void>;
+    async generateEmbeddings(texts: string[]): Promise<number[][]> {
+        if (!this.apiKey) {
+            throw new Error('Mistral API key not configured');
+        }
+
+        try {
+            const response = await fetch('https://api.mistral.ai/v1/embeddings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    input: texts,
+                    encoding_format: 'float',
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(`Mistral API error: ${error.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            return data.data.map((item: any) => item.embedding);
+        } catch (error) {
+            console.error('Failed to generate embeddings:', error);
+            throw error;
+        }
+    }
 
     /**
-     * Deletes all vectors for a profile
+     * Gets the dimension of embeddings produced by this service
      */
-    deleteByProfile(profileId: string): Promise<void>;
+    getDimension(): number {
+        return this.dimension;
+    }
+
+    /**
+     * Gets the model name being used
+     */
+    getModel(): string {
+        return this.model;
+    }
 }
+
+// Singleton instance
+export const embeddingService = new EmbeddingService();
+
 
 
 ================================================================================
-FICHIER: prisma\schema.prisma
+FILE: app\layout.tsx
 ================================================================================
 
-// Prisma Schema for Digital Twin Profile System
-// Zero-Knowledge Architecture with Supabase pgvector
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
+  );
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [vector]
-}
-
-// Profile represents a digital twin instance
-// Each profile is completely isolated with its own encryption
-model Profile {
-  id                String   @id @default(cuid())
-  name              String   // Non-sensitive display name
-  
-  // Zero-Knowledge Security
-  saltBase64        String   // Base64 encoded salt for key derivation
-  passwordHash      String   // Hash for password verification (not the encryption key)
-  
-  // Encrypted Metadata (JSON)
-  encryptedMetadata String   @db.Text // Contains encrypted profile settings, preferences, etc.
-  
-  // Vector Store Configuration
-  vectorNamespace   String   @unique // Unique namespace for this profile's vectors
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  lastAccessedAt    DateTime @default(now())
-  
-  // Relations
-  memories          Memory[]
-  
-  @@index([vectorNamespace])
-}
-
-// Memory represents a single memory/data point
-// All content is encrypted before storage
-model Memory {
-  id                String   @id @default(cuid())
-  
-  // Profile Association (strict isolation)
-  profileId         String
-  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  // Encrypted Content
-  encryptedContent  String   @db.Text // The actual memory content (encrypted)
-  encryptedMetadata String   @db.Text // Additional metadata like tags, context (encrypted)
-  
-  // Vector Embedding (stored in pgvector)
-  // The embedding itself is derived from encrypted content
-  embedding         Unsupported("vector(1536)") // OpenAI text-embedding-3-small dimension
-  
-  // Memory Type
-  type              MemoryType @default(TEXT)
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  @@index([profileId])
-  @@index([profileId, type])
-  @@index([profileId, createdAt])
-}
-
-// Enum for memory types
-enum MemoryType {
-  TEXT
-  IMAGE
-  VIDEO
-  AUDIO
-  DOCUMENT
-  CONVERSATION
-}
-
-// Recovery Phrase Storage (optional - for BIP39 backup)
-// This should be encrypted with a separate recovery key
-model RecoveryPhrase {
-  id                String   @id @default(cuid())
-  profileId         String   @unique
-  
-  // Encrypted BIP39 phrase (encrypted with a recovery-specific key)
-  encryptedPhrase   String   @db.Text
-  
-  // Verification hash to confirm recovery phrase without decrypting
-  phraseHash        String
-  
-  createdAt         DateTime @default(now())
-  
-  @@index([profileId])
-}
 
 
 ================================================================================
-FICHIER: prisma\migrations\001_setup_pgvector.sql
+FILE: app\page.tsx
 ================================================================================
 
--- SQL Migration for pgvector Setup
--- Run this in your Supabase SQL Editor or PostgreSQL database
+import Image from "next/image";
 
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS vector;
+export default function Home() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+        <Image
+          className="dark:invert"
+          src="/next.svg"
+          alt="Next.js logo"
+          width={100}
+          height={20}
+          priority
+        />
+        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+            To get started, edit the page.tsx file.
+          </h1>
+          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+            Looking for a starting point or more instructions? Head over to{" "}
+            <a
+              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Templates
+            </a>{" "}
+            or the{" "}
+            <a
+              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+              className="font-medium text-zinc-950 dark:text-zinc-50"
+            >
+              Learning
+            </a>{" "}
+            center.
+          </p>
+        </div>
+        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <a
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Image
+              className="dark:invert"
+              src="/vercel.svg"
+              alt="Vercel logomark"
+              width={16}
+              height={16}
+            />
+            Deploy Now
+          </a>
+          <a
+            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Documentation
+          </a>
+        </div>
+      </main>
+    </div>
+  );
+}
 
--- Create function for semantic search with cosine similarity
--- This function is called by the Supabase pgvector adapter
-CREATE OR REPLACE FUNCTION match_memories(
-  query_embedding vector(1536),
-  query_profile_id text,
-  match_threshold float DEFAULT 0.7,
-  match_count int DEFAULT 10
-)
-RETURNS TABLE (
-  id text,
-  profile_id text,
-  encrypted_content text,
-  encrypted_metadata text,
-  type text,
-  created_at timestamp,
-  similarity float
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT
-    "Memory".id,
-    "Memory"."profileId" as profile_id,
-    "Memory"."encryptedContent" as encrypted_content,
-    "Memory"."encryptedMetadata" as encrypted_metadata,
-    "Memory".type::text,
-    "Memory"."createdAt" as created_at,
-    1 - ("Memory".embedding <=> query_embedding) as similarity
-  FROM "Memory"
-  WHERE "Memory"."profileId" = query_profile_id
-    AND 1 - ("Memory".embedding <=> query_embedding) > match_threshold
-  ORDER BY "Memory".embedding <=> query_embedding
-  LIMIT match_count;
-END;
-$$;
-
--- Create index on embedding column for faster similarity search
-CREATE INDEX IF NOT EXISTS memory_embedding_idx 
-ON "Memory" 
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
-
--- Create index on profileId for isolation queries
-CREATE INDEX IF NOT EXISTS memory_profile_id_idx 
-ON "Memory" ("profileId");
-
--- Create composite index for profile + type queries
-CREATE INDEX IF NOT EXISTS memory_profile_type_idx 
-ON "Memory" ("profileId", type);
-
--- Create index on createdAt for temporal queries
-CREATE INDEX IF NOT EXISTS memory_created_at_idx 
-ON "Memory" ("createdAt" DESC);
-
--- Enable Row Level Security (RLS) for additional protection
-ALTER TABLE "Profile" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Memory" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "RecoveryPhrase" ENABLE ROW LEVEL SECURITY;
-
--- Note: RLS policies should be configured based on your authentication setup
--- Example policy (adjust based on your auth system):
--- CREATE POLICY "Users can only access their own profiles"
---   ON "Profile"
---   FOR ALL
---   USING (auth.uid()::text = id);
-
-COMMENT ON FUNCTION match_memories IS 'Performs semantic search on memories using pgvector cosine similarity, strictly filtered by profile ID for Zero-Knowledge isolation';
-COMMENT ON INDEX memory_embedding_idx IS 'IVFFlat index for fast approximate nearest neighbor search on embeddings';
 
 
 ================================================================================
-FICHIER: scripts\init.js
+FILE: app\profile\new\page.tsx
+================================================================================
+
+'use client';
+
+/**
+ * New Profile Creation Page
+ * Allows users to create a new digital twin profile with Zero-Knowledge encryption
+ */
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { generateMnemonic } from 'bip39';
+import {
+    generateSalt,
+    hashPassword,
+    deriveKey,
+    encryptObject,
+    arrayToBase64,
+} from '@/lib/crypto/zk-encryption';
+
+export default function NewProfilePage() {
+    const router = useRouter();
+    const [step, setStep] = useState<'form' | 'recovery'>('form');
+    const [formData, setFormData] = useState({
+        name: '',
+        masterPassword: '',
+        confirmPassword: '',
+    });
+    const [recoveryPhrase, setRecoveryPhrase] = useState<string>('');
+    const [profileId, setProfileId] = useState<string>('');
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string>('');
+    const [phraseConfirmed, setPhraseConfirmed] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        // Validation
+        if (formData.name.length < 2) {
+            setError('Le nom doit contenir au moins 2 caractÃ¨res');
+            return;
+        }
+
+        if (formData.masterPassword.length < 12) {
+            setError('Le mot de passe maÃ®tre doit contenir au moins 12 caractÃ¨res');
+            return;
+        }
+
+        if (formData.masterPassword !== formData.confirmPassword) {
+            setError('Les mots de passe ne correspondent pas');
+            return;
+        }
+
+        setIsCreating(true);
+
+        try {
+            // ===== CLIENT-SIDE CRYPTOGRAPHY (Zero-Knowledge) =====
+
+            // 1. Generate cryptographic salt
+            const salt = generateSalt();
+            const saltBase64 = arrayToBase64(salt);
+
+            // 2. Generate BIP39 recovery phrase (12 words)
+            const generatedRecoveryPhrase = generateMnemonic(128); // 128 bits = 12 words
+
+            // 3. Hash the password for verification (not for encryption!)
+            const passwordHash = hashPassword(formData.masterPassword, salt);
+
+            // 4. Generate unique vector namespace for this profile
+            const vectorNamespace = `profile_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+            // 5. Derive master key from password
+            const masterKey = await deriveKey(formData.masterPassword, salt);
+
+            // 6. Create and encrypt initial metadata
+            const metadata = {
+                preferences: {},
+                settings: {},
+                createdBy: 'digital-twin-profile-system',
+                version: '1.0.0',
+            };
+            const encryptedMetadata = await encryptObject(metadata, masterKey);
+
+            // 7. Encrypt recovery phrase
+            const encryptedPhrase = await encryptObject(
+                { phrase: generatedRecoveryPhrase },
+                masterKey
+            );
+
+            // ===== SEND ONLY ENCRYPTED DATA TO SERVER =====
+            const response = await fetch('/api/profile/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: formData.name,
+                    passwordHash,
+                    saltBase64,
+                    encryptedMetadata,
+                    encryptedPhrase,
+                    vectorNamespace,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Ã‰chec de la crÃ©ation du profil');
+            }
+
+            const data = await response.json();
+
+            // Store recovery phrase (generated client-side, never sent to server)
+            setRecoveryPhrase(generatedRecoveryPhrase);
+            setProfileId(data.profileId);
+            setStep('recovery');
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleCopyPhrase = () => {
+        navigator.clipboard.writeText(recoveryPhrase);
+        alert('Phrase de rÃ©cupÃ©ration copiÃ©e dans le presse-papiers');
+    };
+
+    const handleConfirmAndContinue = () => {
+        if (!phraseConfirmed) {
+            alert('Veuillez confirmer que vous avez sauvegardÃ© votre phrase de rÃ©cupÃ©ration');
+            return;
+        }
+        router.push(`/profile/unlock?id=${profileId}`);
+    };
+
+    if (step === 'recovery') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+                    <div className="text-center mb-8">
+                        <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h1 className="text-3xl font-bold text-white mb-2">Profil CrÃ©Ã© avec SuccÃ¨s !</h1>
+                        <p className="text-purple-200">Votre jumeau numÃ©rique est maintenant initialisÃ©</p>
+                    </div>
+
+                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
+                        <div className="flex items-start gap-3">
+                            <svg className="w-6 h-6 text-red-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <h3 className="text-red-200 font-bold mb-2">âš ï¸ CRITIQUE : Sauvegardez Votre Phrase de RÃ©cupÃ©ration</h3>
+                                <p className="text-red-100 text-sm">
+                                    Cette phrase de 12 mots est la SEULE faÃ§on de rÃ©cupÃ©rer votre profil si vous oubliez votre mot de passe.
+                                    <strong className="block mt-2">Perte de cette phrase = Perte IRRÃ‰VERSIBLE de toutes vos donnÃ©es.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-white font-semibold">Phrase de RÃ©cupÃ©ration BIP39</h3>
+                            <button
+                                onClick={handleCopyPhrase}
+                                className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Copier
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {recoveryPhrase.split(' ').map((word, index) => (
+                                <div key={index} className="bg-slate-700/50 rounded px-3 py-2 text-center">
+                                    <span className="text-purple-300 text-xs">{index + 1}.</span>
+                                    <span className="text-white font-mono ml-2">{word}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={phraseConfirmed}
+                                onChange={(e) => setPhraseConfirmed(e.target.checked)}
+                                className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
+                            />
+                            <span className="text-white text-sm">
+                                J'ai sauvegardÃ© ma phrase de rÃ©cupÃ©ration en lieu sÃ»r et je comprends qu'elle ne peut pas Ãªtre rÃ©cupÃ©rÃ©e
+                            </span>
+                        </label>
+                    </div>
+
+                    <button
+                        onClick={handleConfirmAndContinue}
+                        disabled={!phraseConfirmed}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Continuer vers le Profil
+                    </button>
+
+                    <p className="text-purple-200 text-xs text-center mt-4">
+                        ID du Profil : <span className="font-mono">{profileId}</span>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+                <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Nouveau Jumeau NumÃ©rique</h1>
+                    <p className="text-purple-200">CrÃ©ez votre profil sÃ©curisÃ© avec chiffrement Zero-Knowledge</p>
+                </div>
+
+                {error && (
+                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-3 mb-4">
+                        <p className="text-red-200 text-sm">{error}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Nom du Profil
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Ex: Mon Jumeau Personnel"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Mot de Passe MaÃ®tre (min. 12 caractÃ¨res)
+                        </label>
+                        <input
+                            type="password"
+                            value={formData.masterPassword}
+                            onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            minLength={12}
+                            required
+                        />
+                        <p className="text-purple-300/70 text-xs mt-1">
+                            Ce mot de passe ne sera JAMAIS stockÃ© sur le serveur
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Confirmer le Mot de Passe
+                        </label>
+                        <input
+                            type="password"
+                            value={formData.confirmPassword}
+                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            minLength={12}
+                            required
+                        />
+                    </div>
+
+                    <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
+                        <h3 className="text-blue-200 font-semibold text-sm mb-2">ðŸ” SÃ©curitÃ© Zero-Knowledge</h3>
+                        <ul className="text-blue-100 text-xs space-y-1">
+                            <li>âœ“ Chiffrement AES-256-GCM cÃ´tÃ© client</li>
+                            <li>âœ“ Vos clÃ©s ne quittent jamais votre appareil</li>
+                            <li>âœ“ Le serveur ne peut pas lire vos donnÃ©es</li>
+                            <li>âœ“ Phrase de rÃ©cupÃ©ration BIP39 (12 mots)</li>
+                        </ul>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isCreating}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {isCreating ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                CrÃ©ation en cours...
+                            </>
+                        ) : (
+                            'CrÃ©er le Profil'
+                        )}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
+                        â† Retour Ã  l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+
+================================================================================
+FILE: app\api\profile\create\route.ts
+================================================================================
+
+/**
+ * API Route: Create Profile
+ * Handles server-side profile creation
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { profileManager } from '@/lib/profile/profile-manager';
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { name, passwordHash, saltBase64, encryptedMetadata, encryptedPhrase, vectorNamespace } = body;
+
+        // Validation
+        if (!name || typeof name !== 'string' || name.length < 2) {
+            return NextResponse.json(
+                { error: 'Le nom doit contenir au moins 2 caractÃ¨res' },
+                { status: 400 }
+            );
+        }
+
+        // Validate encrypted data fields
+        if (!passwordHash || typeof passwordHash !== 'string') {
+            return NextResponse.json(
+                { error: 'Hash de mot de passe manquant ou invalide' },
+                { status: 400 }
+            );
+        }
+
+        if (!saltBase64 || typeof saltBase64 !== 'string') {
+            return NextResponse.json(
+                { error: 'Salt manquant ou invalide' },
+                { status: 400 }
+            );
+        }
+
+        if (!encryptedMetadata || typeof encryptedMetadata !== 'string') {
+            return NextResponse.json(
+                { error: 'MÃ©tadonnÃ©es chiffrÃ©es manquantes ou invalides' },
+                { status: 400 }
+            );
+        }
+
+        if (!encryptedPhrase || typeof encryptedPhrase !== 'string') {
+            return NextResponse.json(
+                { error: 'Phrase de rÃ©cupÃ©ration chiffrÃ©e manquante ou invalide' },
+                { status: 400 }
+            );
+        }
+
+        if (!vectorNamespace || typeof vectorNamespace !== 'string') {
+            return NextResponse.json(
+                { error: 'Namespace vectoriel manquant ou invalide' },
+                { status: 400 }
+            );
+        }
+
+        // Create profile with pre-encrypted data
+        const result = await profileManager.createProfile({
+            name,
+            passwordHash,
+            saltBase64,
+            encryptedMetadata,
+            encryptedPhrase,
+            vectorNamespace,
+        });
+
+        return NextResponse.json({
+            success: true,
+            profileId: result.profileId,
+        });
+    } catch (error: any) {
+        console.error('Profile creation error:', error);
+        return NextResponse.json(
+            { error: error.message || 'Erreur lors de la crÃ©ation du profil' },
+            { status: 500 }
+        );
+    }
+}
+
+
+
+================================================================================
+FILE: scripts\init.js
 ================================================================================
 
 #!/usr/bin/env node
@@ -2141,58 +1702,61 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Initializing Digital Twin Profile System...\n');
+console.log('ðŸš€ Initializing Digital Twin Profile System...\n');
 
 // Check if .env.local exists
 const envPath = path.join(__dirname, '..', '.env.local');
 if (!fs.existsSync(envPath)) {
-    console.error('❌ Error: .env.local file not found!');
-    console.log('📝 Please copy .env.example to .env.local and fill in your values:');
+    console.error('âŒ Error: .env.local file not found!');
+    console.log('ðŸ“ Please copy .env.example to .env.local and fill in your values:');
     console.log('   cp .env.example .env.local\n');
     process.exit(1);
 }
 
-console.log('✅ Environment file found\n');
+console.log('âœ… Environment file found\n');
 
 // Step 1: Generate Prisma Client
-console.log('📦 Step 1: Generating Prisma Client...');
+console.log('ðŸ“¦ Step 1: Generating Prisma Client...');
 try {
     execSync('npx prisma generate', { stdio: 'inherit' });
-    console.log('✅ Prisma Client generated\n');
+    console.log('âœ… Prisma Client generated\n');
 } catch (error) {
-    console.error('❌ Failed to generate Prisma Client');
+    console.error('âŒ Failed to generate Prisma Client');
     process.exit(1);
 }
 
 // Step 2: Push database schema
-console.log('🗄️  Step 2: Pushing database schema...');
+console.log('ðŸ—„ï¸  Step 2: Pushing database schema...');
 try {
     execSync('npx prisma db push', { stdio: 'inherit' });
-    console.log('✅ Database schema pushed\n');
+    console.log('âœ… Database schema pushed\n');
 } catch (error) {
-    console.error('❌ Failed to push database schema');
-    console.log('💡 Make sure your DATABASE_URL is correct in .env.local');
+    console.error('âŒ Failed to push database schema');
+    console.log('ðŸ’¡ Make sure your DATABASE_URL is correct in .env.local');
     process.exit(1);
 }
 
 // Step 3: Instructions for pgvector migration
-console.log('🧠 Step 3: pgvector Setup');
-console.log('⚠️  MANUAL STEP REQUIRED:');
+console.log('ðŸ§  Step 3: pgvector Setup');
+console.log('âš ï¸  MANUAL STEP REQUIRED:');
 console.log('   1. Open your Supabase SQL Editor');
 console.log('   2. Run the SQL from: prisma/migrations/001_setup_pgvector.sql');
 console.log('   3. This will enable pgvector and create the semantic search function\n');
 
 // Step 4: Verify installation
-console.log('✅ Core setup complete!\n');
-console.log('📋 Next steps:');
+console.log('âœ… Core setup complete!\n');
+console.log('ðŸ“‹ Next steps:');
 console.log('   1. Complete the pgvector migration (see Step 3 above)');
 console.log('   2. Run: npm run dev');
 console.log('   3. Navigate to: http://localhost:3000/profile/new');
 console.log('   4. Create your first digital twin profile!\n');
 
-console.log('🔐 Security Reminder:');
+console.log('ðŸ” Security Reminder:');
 console.log('   - Your master password is NEVER stored on the server');
 console.log('   - Save your BIP39 recovery phrase in a safe place');
 console.log('   - Loss of both = permanent data loss\n');
 
-console.log('🎉 Happy coding!\n');
+console.log('ðŸŽ‰ Happy coding!\n');
+
+
+
