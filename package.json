@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "init": "node scripts/init.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
