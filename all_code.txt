@@ -1,5 +1,5 @@
 ﻿# Digital Twin Profile - Complete Codebase
-# Generated: 2026-02-03 14:47:00
+# Generated: 2026-02-03 15:44:39
 # This file contains all source code from the project
 
 ================================================================================
@@ -30,20 +30,19 @@ FILE: package.json
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "^2.39.0",
     "bip39": "^3.1.0",
-    "next": "14.1.0",
+    "next": "16.1.6",
     "prisma": "^5.22.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.1.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5"
   }
 }
@@ -951,10 +950,10 @@ export class SupabasePgVectorStore implements VectorStore {
     ): Promise<void> {
         const supabase = getSupabaseAdmin();
 
-        // Convert embedding array to pgvector format
-        const vectorString = `[${embedding.join(',)}]`;
+        // Convert embedding array to pgvector format (Correction du guillemet ici)
+        const vectorString = `[${embedding.join(',')}]`;
 
-    const { error } = await supabase
+        const { error } = await supabase
             .from(this.tableName)
             .upsert({
                 id,
@@ -1040,7 +1039,6 @@ export class SupabasePgVectorStore implements VectorStore {
 
 // Singleton instance
 export const vectorStore = new SupabasePgVectorStore();
-
 
 
 ================================================================================
