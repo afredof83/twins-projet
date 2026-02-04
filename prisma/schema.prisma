@@ -54,7 +54,7 @@ model Memory {
   
   // Vector Embedding (stored in pgvector)
   // The embedding itself is derived from encrypted content
-  embedding         Unsupported("vector(1024)") // Mistral Embed dimension
+  embedding         Unsupported("vector(1024)")?  // Mistral Embed dimension (optional for now)
   
   // Memory Type
   type              MemoryType @default(TEXT)
