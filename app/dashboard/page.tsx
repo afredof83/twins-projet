@@ -31,9 +31,35 @@ export default function Dashboard() {
             router.push('/');
         } else {
             setAuthorized(true);
+
+            // Save profile info to localStorage for "Remember Me" feature
+            const profileId = keyManager.getProfileId();
+            const sessionInfo = keyManager.getSessionInfo();
+
+            if (profileId) {
+                localStorage.setItem('twins_last_id', profileId);
+                // We'll fetch the profile name from the API or store it during unlock
+                // For now, we can store a generic name or fetch it
+                fetchAndSaveProfileName(profileId);
+            }
+
             loadMemories();
         }
     }, [router]);
+
+    const fetchAndSaveProfileName = async (profileId: string) => {
+        try {
+            const response = await fetch(`/api/profile/${profileId}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.name) {
+                    localStorage.setItem('twins_last_name', data.name);
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch profile name:', err);
+        }
+    };
 
     const loadMemories = async () => {
         setLoading(true);
