@@ -7,6 +7,7 @@ import { keyManager } from '@/lib/crypto/key-manager';
 import { encrypt, decrypt } from '@/lib/crypto/zk-encryption'; // Restored
 import { cryptoManager } from '@/lib/security/crypto';
 import ShadowGlobe from '@/components/shadow-globe';
+import { useSpeech } from '@/lib/hooks/use-speech'; // Hook vocal
 
 interface Memory {
     id: string;
@@ -45,6 +46,16 @@ export default function MissionControl() {
     const [chatInput, setChatInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const chatRef = useRef<HTMLDivElement>(null);
+
+    // VOICE MODE HOOK
+    const { isListening, transcript, startListening, speak, isSpeaking } = useSpeech();
+
+    // Effet : Quand la reconnaissance vocale écrit du texte, on le met dans l'input
+    useEffect(() => {
+        if (transcript) {
+            setChatInput(transcript);
+        }
+    }, [transcript]);
 
     // File upload state
     const [uploadingFile, setUploadingFile] = useState(false);
@@ -309,6 +320,9 @@ export default function MissionControl() {
                 ...prev,
                 { role: 'twin', content: twinResponse }
             ]);
+
+            // 🗣️ LE JUMEAU PARLE ICI
+            speak(twinResponse);
 
             addLog('[DIALOGUE] Réponse du jumeau générée');
         } catch (err: any) {
@@ -843,6 +857,18 @@ export default function MissionControl() {
 
                                 {/* Chat Input */}
                                 <div className="flex gap-2">
+                                    {/* BOUTON MICRO */}
+                                    <button
+                                        onClick={isListening ? undefined : startListening}
+                                        className={`p-3 rounded-lg transition-all ${isListening
+                                            ? 'bg-red-500 text-white animate-pulse'
+                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                            }`}
+                                        title="Parler"
+                                    >
+                                        {isListening ? '👂' : '🎙️'}
+                                    </button>
+
                                     <input
                                         type="text"
                                         value={chatInput}
