@@ -34,7 +34,10 @@ model Profile {
   lastAccessedAt    DateTime @default(now())
   
   // Relations
-  memories          Memory[]
+  memories           Memory[]
+  missions           Mission[]
+  shadowInteractions ShadowInteraction[]
+  dataSources        DataSource[]
   
   @@index([vectorNamespace])
 }
@@ -76,6 +79,96 @@ enum MemoryType {
   AUDIO
   DOCUMENT
   CONVERSATION
+}
+
+// Mission represents an autonomous task given to the Digital Twin
+model Mission {
+  id          String        @id @default(cuid())
+  profileId   String
+  profile     Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  title       String        // e.g., "Find investors"
+  description String?       @db.Text
+  status      MissionStatus @default(ACTIVE)
+  progress    Int           @default(0) // 0-100
+  
+  // JSON log of actions taken
+  log         String        @db.Text @default("[]")
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  completedAt DateTime?
+  
+  @@index([profileId])
+  @@index([profileId, status])
+}
+
+// ShadowInteraction tracks the clone's autonomous network activity
+model ShadowInteraction {
+  id                String            @id @default(cuid())
+  profileId         String
+  profile           Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // The anonymous ID encountered in the network
+  targetProfileId   String
+  
+  // AI-computed compatibility score
+  compatibilityScore Float            @default(0.0)
+  
+  // Interaction status
+  status            InteractionStatus @default(IGNORED)
+  
+  // Metadata about the interaction
+  metadata          String            @db.Text @default("{}")
+  
+  timestamp         DateTime          @default(now())
+  
+  @@index([profileId])
+  @@index([profileId, status])
+  @@index([profileId, timestamp])
+}
+
+// Enum for mission status
+enum MissionStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  FAILED
+}
+
+// Enum for shadow interaction status
+enum InteractionStatus {
+  IGNORED      // Clone ignored this profile
+  MATCHED      // Clone found a match
+  ESCALATED    // Requires human review
+}
+
+// DataSource represents a connected social media platform for data ingestion
+// CRITICAL: Read-only. Twin NEVER posts to real social networks.
+model DataSource {
+  id          String     @id @default(cuid())
+  profileId   String
+  profile     Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  platform    String     // 'LINKEDIN', 'TWITTER', 'INSTAGRAM'
+  isConnected Boolean    @default(false)
+  syncStatus  SyncStatus @default(IDLE)
+  
+  lastSync    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@index([profileId])
+  @@index([profileId, platform])
+  @@unique([profileId, platform])
+}
+
+// Enum for data source sync status
+ enum SyncStatus {
+  IDLE
+  SYNCING
+  CONNECTED
+  ERROR
 }
 
 // Recovery Phrase Storage (optional - for BIP39 backup)

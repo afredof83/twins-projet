@@ -141,6 +141,16 @@ export default function Home() {
           )}
         </div>
 
+        {/* Manual Login Link */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/profile/unlock"
+            className="text-sm text-slate-400 hover:text-white transition-colors underline"
+          >
+            J'ai déjà un ID (Connexion manuelle)
+          </Link>
+        </div>
+
         {/* Footer */}
         <div className="mt-12 text-center text-sm text-purple-400/50">
           <p>Propulsé par Next.js • Prisma • Supabase pgvector</p>

@@ -1,111 +1,100 @@
-/**
- * Supabase pgvector Adapter
- * Implements vector storage using Supabase's PostgreSQL with pgvector extension
- */
+import { createClient } from '@supabase/supabase-js';
 
-import { getSupabaseAdmin } from '../db/supabase';
-import type { VectorStore, VectorMetadata, VectorSearchResult } from './vector-store';
+// Configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export class SupabasePgVectorStore implements VectorStore {
-    private tableName = 'Memory'; // Prisma table name
+interface MemoryInput {
+    content: string;
+    embedding: number[];
+    tags: string[];
+    type?: string;
+    profileId: string;
+}
 
-    /**
-     * Inserts or updates a vector embedding in the database
-     * Note: The actual insert is done via Prisma, this is for direct vector operations
-     */
-    async upsert(
-        id: string,
-        embedding: number[],
-        metadata: VectorMetadata
-    ): Promise<void> {
-        const supabase = getSupabaseAdmin();
+export interface MemoryQueryResult {
+    id: string;
+    content: string;
+    similarity: number;
+}
 
-        // Convert embedding array to pgvector format (Correction du guillemet ici)
-        const vectorString = `[${embedding.join(',')}]`;
+export class SupabasePgVectorStore {
+    private client;
 
-        const { error } = await supabase
-            .from(this.tableName)
-            .upsert({
-                id,
-                profileId: metadata.profileId,
-                embedding: vectorString,
-                encryptedMetadata: JSON.stringify(metadata),
-                type: metadata.type,
-                updatedAt: new Date().toISOString(),
-            });
+    constructor() {
+        this.client = createClient(supabaseUrl, supabaseKey);
+    }
+
+    // AJOUT (Ingestion)
+    async addMemory(memory: MemoryInput) {
+        let safeType = memory.type || 'MEMORY';
+        const safeTags = [...(memory.tags || [])];
+
+        // Sécurité au cas où on retombe sur une base stricte un jour
+        if (safeType === 'file_upload') {
+            // On laisse passer file_upload maintenant que la base est libre
+            // Mais on garde la logique de tag par sécurité
+            safeTags.push('file_upload');
+        }
+
+        const payload: any = {
+            content: memory.content,
+            tags: safeTags,
+            type: safeType,
+            "profileId": memory.profileId
+        };
+
+        if (memory.embedding && memory.embedding.length > 0) {
+            payload.embedding = memory.embedding;
+        }
+
+        const { error } = await this.client
+            .from('memories')
+            .insert(payload);
 
         if (error) {
+            console.error("Supabase Insert Error:", error);
             throw new Error(`Failed to upsert vector: ${error.message}`);
         }
     }
 
-    /**
-     * Performs semantic search using cosine similarity
-     * Strictly filtered by profileId for isolation
-     */
-    async query(
-        embedding: number[],
-        profileId: string,
-        limit: number = 10
-    ): Promise<VectorSearchResult[]> {
-        const supabase = getSupabaseAdmin();
+    // RECHERCHE (RAG)
+    async query(vector: number[], filter: { profileId: string }): Promise<MemoryQueryResult[]> {
 
-        // Convert query embedding to pgvector format
-        const vectorString = `[${embedding.join(',')}]`;
-
-        // Use pgvector's cosine similarity operator (<=>)
-        // Lower distance = higher similarity
-        const { data, error } = await supabase.rpc('match_memories', {
-            query_embedding: vectorString,
-            query_profile_id: profileId,
-            match_threshold: 0.7, // Similarity threshold (0-1)
-            match_count: limit,
+        // --- CORRECTION CRITIQUE ICI ---
+        // On appelle la fonction SQL avec les noms de paramètres EXACTS
+        const { data, error } = await this.client.rpc('match_memories', {
+            query_embedding: vector,
+            match_threshold: 0.4,       // Seuil tolérant pour trouver le souvenir
+            match_count: 5,
+            query_profile_id: filter.profileId // <--- C'est la clé du succès !
         });
 
         if (error) {
-            throw new Error(`Failed to query vectors: ${error.message}`);
+            console.error("Supabase Search Error:", error);
+            // On logue l'erreur mais on ne crash pas l'app, on renvoie une liste vide
+            return [];
         }
 
         return (data || []).map((row: any) => ({
             id: row.id,
-            score: 1 - row.similarity, // Convert distance to similarity score
-            metadata: JSON.parse(row.encrypted_metadata) as VectorMetadata,
+            content: row.content,
+            similarity: row.similarity
         }));
     }
 
-    /**
-     * Deletes a specific vector by ID
-     */
-    async delete(id: string): Promise<void> {
-        const supabase = getSupabaseAdmin();
-
-        const { error } = await supabase
-            .from(this.tableName)
+    // SUPPRESSION (Oubli)
+    async deleteMemory(id: string) {
+        const { error } = await this.client
+            .from('memories')
             .delete()
             .eq('id', id);
 
         if (error) {
-            throw new Error(`Failed to delete vector: ${error.message}`);
-        }
-    }
-
-    /**
-     * Deletes all vectors for a specific profile
-     * Used when deleting a profile
-     */
-    async deleteByProfile(profileId: string): Promise<void> {
-        const supabase = getSupabaseAdmin();
-
-        const { error } = await supabase
-            .from(this.tableName)
-            .delete()
-            .eq('profileId', profileId);
-
-        if (error) {
-            throw new Error(`Failed to delete profile vectors: ${error.message}`);
+            console.error("Supabase Delete Error:", error);
+            throw new Error(`Failed to delete memory: ${error.message}`);
         }
     }
 }
 
-// Singleton instance
 export const vectorStore = new SupabasePgVectorStore();
