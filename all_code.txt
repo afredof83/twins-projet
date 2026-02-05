@@ -14,7 +14,9 @@ import "./.next/dev/types/routes.d.ts";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Nouvelle syntaxe officielle pour Next.js 15/16
+  // Cela dit Ã  Next.js : "Ne touche pas Ã  ce paquet, laisse-le au serveur Node.js"
+  serverExternalPackages: ['pdf-parse'],
 };
 
 export default nextConfig;
@@ -45,6 +47,7 @@ export default nextConfig;
     "cobe": "^0.6.5",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
+    "pdf-parse": "^2.4.5",
     "prisma": "^5.22.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -52,6 +55,7 @@ export default nextConfig;
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -944,75 +948,90 @@ export async function POST(req: NextRequest) {
 === C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\ingest\route.ts ===
 
 import { NextRequest, NextResponse } from 'next/server';
-import { embeddingService } from '@/lib/vector/embedding-service';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
+import { embeddingService } from '@/lib/vector/embedding-service';
+// --- SOLUTION ULTIME POUR PDF-PARSE ---
+// On utilise 'require' pour forcer le chargement, et on ignore l'erreur TS
+// @ts-ignore
+const pdf = require('pdf-parse');
+// --------------------------------------
 
-export async function POST(request: NextRequest) {
-    let successCount = 0;
-
+export async function POST(req: NextRequest) {
     try {
-        console.log("ðŸ“¥ [API] DÃ©but de l'ingestion...");
-
-        // 1. RÃ©cupÃ©ration sÃ©curisÃ©e
-        const formData = await request.formData();
+        const formData = await req.formData();
         const file = formData.get('file') as File;
         const profileId = formData.get('profileId') as string;
 
         if (!file || !profileId) {
-            return NextResponse.json({ error: 'Fichier ou ID manquant' }, { status: 400 });
+            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
         }
 
-        const textContent = await file.text();
-        if (!textContent || textContent.length < 5) {
-            return NextResponse.json({ error: 'Fichier vide' }, { status: 400 });
+        console.log(`ðŸ“‚ RÃ©ception fichier: ${file.name} (${file.type})`);
+
+        let textContent = "";
+
+        // --- DÃ‰TECTION DU TYPE ---
+        if (file.type === 'application/pdf') {
+            // TRAITEMENT PDF
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const data = await pdf(buffer);
+            textContent = data.text;
+
+            // Nettoyage basique (retirer les multiples espaces/sauts de ligne bizarres du PDF)
+            textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+
+            console.log(`ðŸ“„ PDF extrait : ${textContent.length} caractÃ¨res.`);
+        } else {
+            // TRAITEMENT TEXTE CLASSIQUE
+            textContent = await file.text();
         }
 
-        // 2. DÃ©coupage
-        const chunks = textContent.match(/[\s\S]{1,1000}/g) || [];
-        console.log(`ðŸ”ª [API] ${chunks.length} segments Ã  traiter.`);
-
-        // 3. Boucle de traitement
-        for (let i = 0; i < chunks.length; i++) {
-            const chunk = chunks[i];
-            try {
-                // Pause anti-spam Mistral
-                await new Promise(r => setTimeout(r, 200));
-
-                // GÃ©nÃ©ration Vecteur
-                const embedding = await embeddingService.generateEmbedding(chunk);
-
-                // Sauvegarde using the correct addMemory method
-                await vectorStore.addMemory({
-                    content: chunk,
-                    embedding: embedding,
-                    tags: ['upload', file.name],
-                    type: 'TEXT',  // Valid enum value from Prisma schema
-                    profileId: profileId
-                });
-
-                successCount++;
-            } catch (innerError) {
-                // Si un morceau plante, on l'affiche mais ON CONTINUE les autres
-                console.error("âš ï¸ Erreur sur un segment:", innerError);
-            }
+        if (!textContent || textContent.length < 10) {
+            return NextResponse.json({ error: "Fichier vide ou illisible" }, { status: 400 });
         }
 
-        // 4. RÃ©ponse Finale (MÃªme si 0 succÃ¨s, on renvoie 200 pour ne pas effrayer le front)
-        console.log(`âœ… [API] TerminÃ©. ${successCount} segments sauvÃ©s.`);
+        // --- DÃ‰COUPAGE (Chunking) ---
+        // Les PDF peuvent Ãªtre Ã©normes. On les dÃ©coupe en morceaux de ~1000 caractÃ¨res
+        // pour que l'IA puisse digÃ©rer chaque partie.
+        const chunks = chunkText(textContent, 1000);
+        console.log(`ðŸ”ª DÃ©coupÃ© en ${chunks.length} morceaux.`);
+
+        // --- SAUVEGARDE EN MÃ‰MOIRE ---
+        // On boucle sur chaque morceau pour l'insÃ©rer
+        let count = 0;
+        for (const chunk of chunks) {
+            const embedding = await embeddingService.generateEmbedding(chunk);
+
+            await vectorStore.addMemory({
+                content: chunk, // On garde le texte original
+                embedding: embedding,
+                tags: ['upload', 'pdf', file.name], // On ajoute le nom du fichier en tag
+                type: 'MEMORY',
+                profileId: profileId
+            });
+            count++;
+        }
+
         return NextResponse.json({
             success: true,
-            count: successCount,
-            message: "Traitement terminÃ©"
+            chunks: count,
+            message: `J'ai lu et mÃ©morisÃ© ${count} passages de "${file.name}".`
         });
 
     } catch (error: any) {
-        console.error('ðŸ”¥ [API CRASH]:', error);
-        // On renvoie quand mÃªme une rÃ©ponse JSON propre
-        return NextResponse.json(
-            { error: error.message || 'Erreur inconnue serveur' },
-            { status: 500 }
-        );
+        console.error("ðŸ”¥ Upload Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
+}
+
+// Petite fonction utilitaire pour couper le texte
+function chunkText(text: string, size: number): string[] {
+    const chunks = [];
+    for (let i = 0; i < text.length; i += size) {
+        chunks.push(text.slice(i, i + size));
+    }
+    return chunks;
 }
 
 === C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\route.ts ===
@@ -1700,6 +1719,95 @@ export async function POST(request: NextRequest) {
     }
 }
 
+=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\upload\route.ts ===
+
+import { NextRequest, NextResponse } from 'next/server';
+import { vectorStore } from '@/lib/vector/supabase-pgvector';
+import { embeddingService } from '@/lib/vector/embedding-service';
+// --- SOLUTION ULTIME POUR PDF-PARSE ---
+// On utilise 'require' pour forcer le chargement, et on ignore l'erreur TS
+// @ts-ignore
+const pdf = require('pdf-parse');
+// --------------------------------------
+
+export async function POST(req: NextRequest) {
+    try {
+        const formData = await req.formData();
+        const file = formData.get('file') as File;
+        const profileId = formData.get('profileId') as string;
+
+        if (!file || !profileId) {
+            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
+        }
+
+        console.log(`ðŸ“‚ RÃ©ception fichier: ${file.name} (${file.type})`);
+
+        let textContent = "";
+
+        // --- DÃ‰TECTION DU TYPE ---
+        if (file.type === 'application/pdf') {
+            // TRAITEMENT PDF
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const data = await pdf(buffer);
+            textContent = data.text;
+
+            // Nettoyage basique (retirer les multiples espaces/sauts de ligne bizarres du PDF)
+            textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+
+            console.log(`ðŸ“„ PDF extrait : ${textContent.length} caractÃ¨res.`);
+        } else {
+            // TRAITEMENT TEXTE CLASSIQUE
+            textContent = await file.text();
+        }
+
+        if (!textContent || textContent.length < 10) {
+            return NextResponse.json({ error: "Fichier vide ou illisible" }, { status: 400 });
+        }
+
+        // --- DÃ‰COUPAGE (Chunking) ---
+        // Les PDF peuvent Ãªtre Ã©normes. On les dÃ©coupe en morceaux de ~1000 caractÃ¨res
+        // pour que l'IA puisse digÃ©rer chaque partie.
+        const chunks = chunkText(textContent, 1000);
+        console.log(`ðŸ”ª DÃ©coupÃ© en ${chunks.length} morceaux.`);
+
+        // --- SAUVEGARDE EN MÃ‰MOIRE ---
+        // On boucle sur chaque morceau pour l'insÃ©rer
+        let count = 0;
+        for (const chunk of chunks) {
+            const embedding = await embeddingService.generateEmbedding(chunk);
+
+            await vectorStore.addMemory({
+                content: chunk, // On garde le texte original
+                embedding: embedding,
+                tags: ['upload', 'pdf', file.name], // On ajoute le nom du fichier en tag
+                type: 'MEMORY',
+                profileId: profileId
+            });
+            count++;
+        }
+
+        return NextResponse.json({
+            success: true,
+            chunks: count,
+            message: `J'ai lu et mÃ©morisÃ© ${count} passages de "${file.name}".`
+        });
+
+    } catch (error: any) {
+        console.error("ðŸ”¥ Upload Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+// Petite fonction utilitaire pour couper le texte
+function chunkText(text: string, size: number): string[] {
+    const chunks = [];
+    for (let i = 0; i < text.length; i += size) {
+        chunks.push(text.slice(i, i + size));
+    }
+    return chunks;
+}
+
 === C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\connections\page.tsx ===
 
 'use client';
@@ -2287,61 +2395,47 @@ export default function MissionControl() {
         }
     };
 
-    // File upload handler
     const handleFileUpload = async (file: File) => {
+        // 1. On vÃ©rifie qu'un fichier est sÃ©lectionnÃ©
+        if (!file) return;
+
+        setUploadingFile(true);
+        setUploadSuccess(null);
+        setError('');
+
         const profileId = keyManager.getProfileId();
-
-        if (!profileId) {
-            alert("Erreur : Profil non identifiÃ©.");
-            return;
-        }
-
-        // 1. UI Feedback: Show upload started
-        const updatedMsgs = [
-            ...chatMessages,
-            { role: 'user' as const, content: `[UPLOAD] Envoi du fichier : ${file.name}` },
-            { role: 'twin' as const, content: 'Analyse du document en cours...' }
-        ];
-        setChatMessages(updatedMsgs);
-        setIsThinking(true);
+        // 2. On prÃ©pare le colis pour le serveur
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('profileId', profileId || '');
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('profileId', profileId);
-
-            const response = await fetch('/api/ingest', {
+            // 3. ON ENVOIE AU SERVEUR (C'est lui qui va lire le PDF)
+            const res = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
 
-            // --- NOUVEAU : Lecture intelligente de l'erreur ---
-            const result = await response.json();
+            const data = await res.json();
 
-            if (!response.ok) {
-                // Si le serveur a plantÃ©, on affiche SON message d'erreur
-                throw new Error(result.error || `Erreur serveur (${response.status})`);
+            if (!res.ok) {
+                throw new Error(data.error || "Erreur inconnue");
             }
 
-            setChatMessages(prev => [
-                ...prev,
-                {
-                    role: 'twin',
-                    content: `âœ… Analyse terminÃ©e ! ${result.count} segments ajoutÃ©s Ã  ma mÃ©moire.`
-                }
-            ]);
+            // 4. SuccÃ¨s !
+            setUploadSuccess(`SuccÃ¨s : ${data.message || 'Fichier mÃ©morisÃ© !'}`);
 
-            // RafraÃ®chir l'historique pour voir les nouveaux fichiers
-            loadMemories();
+            // Recharger les souvenirs
+            setTimeout(() => {
+                loadMemories();
+                setUploadSuccess(null);
+            }, 2000);
 
-        } catch (error: any) {
-            console.error(error);
-            setChatMessages(prev => [
-                ...prev,
-                { role: 'twin', content: `âŒ Oups : ${error.message}` } // Affiche la vraie erreur
-            ]);
+        } catch (err: any) {
+            console.error(err);
+            setError("Erreur upload: " + err.message);
         } finally {
-            setIsThinking(false);
+            setUploadingFile(false);
         }
     };
 
@@ -2635,11 +2729,11 @@ export default function MissionControl() {
                                                     ðŸ“„ Glissez vos documents ici
                                                 </div>
                                                 <div className="text-xs text-purple-400/50 mb-3">
-                                                    TXT, MD, Logs
+                                                    TXT, MD, Logs, PDF
                                                 </div>
                                                 <input
                                                     type="file"
-                                                    accept=".txt,.md,.log"
+                                                    accept=".txt,.md,.log,.pdf"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) handleFileUpload(file);

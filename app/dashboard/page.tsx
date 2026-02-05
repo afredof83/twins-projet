@@ -402,61 +402,47 @@ export default function MissionControl() {
         }
     };
 
-    // File upload handler
     const handleFileUpload = async (file: File) => {
+        // 1. On vérifie qu'un fichier est sélectionné
+        if (!file) return;
+
+        setUploadingFile(true);
+        setUploadSuccess(null);
+        setError('');
+
         const profileId = keyManager.getProfileId();
-
-        if (!profileId) {
-            alert("Erreur : Profil non identifié.");
-            return;
-        }
-
-        // 1. UI Feedback: Show upload started
-        const updatedMsgs = [
-            ...chatMessages,
-            { role: 'user' as const, content: `[UPLOAD] Envoi du fichier : ${file.name}` },
-            { role: 'twin' as const, content: 'Analyse du document en cours...' }
-        ];
-        setChatMessages(updatedMsgs);
-        setIsThinking(true);
+        // 2. On prépare le colis pour le serveur
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('profileId', profileId || '');
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('profileId', profileId);
-
-            const response = await fetch('/api/ingest', {
+            // 3. ON ENVOIE AU SERVEUR (C'est lui qui va lire le PDF)
+            const res = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
 
-            // --- NOUVEAU : Lecture intelligente de l'erreur ---
-            const result = await response.json();
+            const data = await res.json();
 
-            if (!response.ok) {
-                // Si le serveur a planté, on affiche SON message d'erreur
-                throw new Error(result.error || `Erreur serveur (${response.status})`);
+            if (!res.ok) {
+                throw new Error(data.error || "Erreur inconnue");
             }
 
-            setChatMessages(prev => [
-                ...prev,
-                {
-                    role: 'twin',
-                    content: `✅ Analyse terminée ! ${result.count} segments ajoutés à ma mémoire.`
-                }
-            ]);
+            // 4. Succès !
+            setUploadSuccess(`Succès : ${data.message || 'Fichier mémorisé !'}`);
 
-            // Rafraîchir l'historique pour voir les nouveaux fichiers
-            loadMemories();
+            // Recharger les souvenirs
+            setTimeout(() => {
+                loadMemories();
+                setUploadSuccess(null);
+            }, 2000);
 
-        } catch (error: any) {
-            console.error(error);
-            setChatMessages(prev => [
-                ...prev,
-                { role: 'twin', content: `❌ Oups : ${error.message}` } // Affiche la vraie erreur
-            ]);
+        } catch (err: any) {
+            console.error(err);
+            setError("Erreur upload: " + err.message);
         } finally {
-            setIsThinking(false);
+            setUploadingFile(false);
         }
     };
 
@@ -750,11 +736,11 @@ export default function MissionControl() {
                                                     📄 Glissez vos documents ici
                                                 </div>
                                                 <div className="text-xs text-purple-400/50 mb-3">
-                                                    TXT, MD, Logs
+                                                    TXT, MD, Logs, PDF
                                                 </div>
                                                 <input
                                                     type="file"
-                                                    accept=".txt,.md,.log"
+                                                    accept=".txt,.md,.log,.pdf"
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) handleFileUpload(file);
