@@ -64,6 +64,13 @@ export default function MissionControl() {
     // Terminal state
     const [logs, setLogs] = useState<string[]>([]);
 
+    // Mission PING state
+    const [lastFoundClone, setLastFoundClone] = useState<string | null>(null);
+
+    // Notifications state
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifPanel, setShowNotifPanel] = useState(false);
+
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -80,6 +87,7 @@ export default function MissionControl() {
 
             loadMemories();
             loadConnectedSources();
+            fetchNotifications(profileId); // Charger les notifications
 
             // Initialize terminal
             addLog('[SYSTÈME] Réseau Ombre initialisé');
@@ -109,6 +117,26 @@ export default function MissionControl() {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
         }
     }, [logs]);
+
+    // Fetch notifications
+    const fetchNotifications = async (pid?: string) => {
+        const profileId = pid || keyManager.getProfileId();
+        if (!profileId) return;
+
+        try {
+            const res = await fetch(`/api/notifications?profileId=${profileId}`);
+            const data = await res.json();
+            if (data.notifications) {
+                setNotifications(data.notifications);
+                // Si on a des notifs, le jumeau peut nous prévenir vocalement
+                if (data.count > 0) {
+                    speak(`Vous avez ${data.count} nouvelles demandes de contact.`);
+                }
+            }
+        } catch (e) {
+            console.error("Erreur notifs", e);
+        }
+    };
 
     const fetchAndSaveProfileName = async (profileId: string) => {
         try {
@@ -365,6 +393,94 @@ export default function MissionControl() {
         }
     };
 
+    // 🚀 MISSION HANDLER - Recherche dans le réseau des clones
+    const handleMission = async () => {
+        if (!chatInput.trim()) return;
+
+        // On affiche la question de l'utilisateur
+        const userMsg = { role: 'user' as const, content: `🕵️‍♂️ MISSION : ${chatInput}` };
+        setChatMessages(prev => [...prev, userMsg]);
+        setIsThinking(true);
+
+        try {
+            const profileId = keyManager.getProfileId();
+            // Appel à la VRAIE API de recherche
+            const res = await fetch('/api/mission', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mission: chatInput,
+                    profileId: profileId
+                })
+            });
+
+            const data = await res.json();
+
+            let aiContent = "";
+
+            if (data.candidates && data.candidates.length > 0) {
+                const bestMatch = data.candidates[0];
+                setLastFoundClone(bestMatch.cloneId); // ON SAUVEGARDE L'ID
+
+                aiContent = `### 🎯 J'ai trouvé ${data.candidates.length} profil(s) compatible(s) !\n\n`;
+                data.candidates.forEach((c: any) => {
+                    // On affiche le VRAI ID (anonymisé) et le VRAI Score
+                    aiContent += `* **Clone ID:** \`...${c.cloneId.slice(-6)}\`\n`;
+                    aiContent += `* **Match:** **${c.score}%**\n`;
+                    aiContent += `* **Analyse:** ${c.reason}\n\n`;
+                });
+                aiContent += "\n*Voulez-vous initier un PING sécurisé ?*";
+            } else {
+                aiContent = "🕵️‍♂️ Je n'ai trouvé aucun clone compatible dans le réseau pour l'instant.";
+            }
+
+            setChatMessages(prev => [...prev, { role: 'twin', content: aiContent }]);
+            speak("Mission terminée. J'ai analysé le réseau."); // Feedback vocal
+
+        } catch (err) {
+            console.error(err);
+            setChatMessages(prev => [...prev, { role: 'twin', content: "⚠️ Erreur lors de la mission." }]);
+        } finally {
+            setIsThinking(false);
+            setChatInput('');
+        }
+    };
+
+    // 📡 PING HANDLER - Envoyer un signal au dernier clone trouvé
+    const handlePing = async () => {
+        if (!lastFoundClone) {
+            alert("Faites d'abord une mission pour trouver quelqu'un !");
+            return;
+        }
+
+        const confirmPing = window.confirm(`Envoyer un PING officiel au clone ...${lastFoundClone.slice(-6)} ?`);
+        if (!confirmPing) return;
+
+        try {
+            const profileId = keyManager.getProfileId();
+            const res = await fetch('/api/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fromId: profileId,
+                    toId: lastFoundClone,
+                    reason: chatInput || "Mission Match"
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setChatMessages(prev => [...prev, { role: 'twin', content: "📡 **PING ENVOYÉ !** Le protocole de mise en relation est activé." }]);
+                speak("Ping envoyé. J'attends sa réponse.");
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de l'envoi du Ping");
+        }
+    };
+
     const handleQuickAdd = async () => {
         if (!quickMemory.trim()) return;
 
@@ -479,6 +595,84 @@ export default function MissionControl() {
                             </p>
                         </div>
                         <div className="flex items-center gap-4">
+                            {/* --- BARRE DE NOTIFICATIONS (Position: Bas Gauche) --- */}
+                            <div className="fixed bottom-6 left-6 z-[99999]">
+
+                                {/* LE BOUTON CLOCHE */}
+                                <button
+                                    onClick={() => setShowNotifPanel(!showNotifPanel)}
+                                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110"
+                                    style={{
+                                        backgroundColor: '#1e293b',
+                                        border: '2px solid #a855f7',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>🔔</span>
+
+                                    {notifications.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center animate-pulse border-2 border-slate-900">
+                                            {notifications.length}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {/* --- LE PANNEAU DÉROULANT (S'ouvre vers le haut maintenant) --- */}
+                                {showNotifPanel && (
+                                    <div
+                                        className="absolute bottom-16 left-0 w-80 rounded-xl shadow-2xl overflow-hidden backdrop-blur-md"
+                                        style={{
+                                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                            border: '1px solid #a855f7',
+                                            color: 'white'
+                                        }}
+                                    >
+                                        {/* En-tête */}
+                                        <div className="p-3 font-bold border-b border-purple-500 flex justify-between items-center bg-purple-900/50">
+                                            <span>Boîte de Réception</span>
+                                            <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">
+                                                {notifications.length}
+                                            </span>
+                                        </div>
+
+                                        {/* Contenu */}
+                                        {notifications.length === 0 ? (
+                                            <div className="p-6 text-center text-slate-400 text-sm italic">
+                                                R.A.S. (Rien à signaler)
+                                            </div>
+                                        ) : (
+                                            <div className="max-h-64 overflow-y-auto">
+                                                {notifications.map((notif) => (
+                                                    <div key={notif.id} className="p-4 border-b border-slate-700 hover:bg-slate-800 transition">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">
+                                                                📡 Signal Entrant
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="text-sm text-white mb-2 font-medium">
+                                                            "{notif.content}"
+                                                        </div>
+
+                                                        <div className="text-xs text-slate-400 mb-3">
+                                                            De : <span className="font-mono text-purple-300">{notif.from_clone_id.slice(0, 8)}...</span>
+                                                        </div>
+
+                                                        <div className="flex gap-2">
+                                                            <button className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded">
+                                                                ACCEPTER
+                                                            </button>
+                                                            <button className="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-xs font-bold rounded">
+                                                                IGNORER
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                             <Link
                                 href="/connections"
                                 className="flex items-center gap-2 px-4 py-2 border border-purple-500 text-purple-400 rounded-lg hover:bg-purple-500/10 transition-all font-mono text-sm"
@@ -871,6 +1065,25 @@ export default function MissionControl() {
                                     >
                                         {isThinking ? '...' : 'ENVOYER'}
                                     </button>
+                                    {/* BOUTON MISSION */}
+                                    <button
+                                        onClick={handleMission}
+                                        disabled={isThinking || !chatInput.trim()}
+                                        className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-lg"
+                                        title="Lancer une Mission (Recherche Réseau)"
+                                    >
+                                        🚀
+                                    </button>
+                                    {/* BOUTON PING (n'apparaît que si on a trouvé quelqu'un) */}
+                                    {lastFoundClone && (
+                                        <button
+                                            onClick={handlePing}
+                                            className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 animate-bounce shadow-lg"
+                                            title="Envoyer un Ping au dernier profil trouvé"
+                                        >
+                                            📡
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
