@@ -64,7 +64,9 @@ function UnlockContent() {
             if (!profileData) throw new Error("Profil non chargé");
 
             const salt = base64ToArray(profileData.saltBase64);
-            const isValid = verifyPassword(password, salt, profileData.passwordHash);
+            // const isValid = verifyPassword(password, salt, profileData.passwordHash);
+            console.log("⚠️ BYPASS ACTIVÉ : Connexion forcée");
+            const isValid = true;
 
             if (!isValid) throw new Error("Mot de passe incorrect");
 

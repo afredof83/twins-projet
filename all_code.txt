@@ -1,6 +1,7 @@
 ﻿
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\next-env.d.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\next-env.d.ts ---
 
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
@@ -9,7 +10,8 @@ import "./.next/dev/types/routes.d.ts";
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\next.config.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\next.config.ts ---
 
 import type { NextConfig } from "next";
 
@@ -21,7 +23,8 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\package.json ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\package.json ---
 
 {
   "name": "digital-twin-profile",
@@ -65,7 +68,8 @@ export default nextConfig;
   }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\QUICKSTART.md ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\QUICKSTART.md ---
 
 # ðŸš€ Guide de DÃ©marrage Rapide
 
@@ -230,7 +234,8 @@ VÃ©rifiez que toutes les variables d'environnement sont dÃ©finies dans `.env
 
 **Bon dÃ©veloppement ! ðŸš€**
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\README.md ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\README.md ---
 
 # Digital Twin Profile - Zero-Knowledge Architecture
 
@@ -404,7 +409,8 @@ Les contributions sont les bienvenues ! Veuillez ouvrir une issue avant de soume
 
 **âš ï¸ AVERTISSEMENT** : Ce systÃ¨me utilise un chiffrement Zero-Knowledge. La perte de votre mot de passe maÃ®tre ET de votre phrase de rÃ©cupÃ©ration entraÃ®nera une perte IRRÃ‰VERSIBLE de toutes vos donnÃ©es. Sauvegardez votre phrase de rÃ©cupÃ©ration en lieu sÃ»r !
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\SECURITY_REFACTORING_SUMMARY.md ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\SECURITY_REFACTORING_SUMMARY.md ---
 
 # ðŸ” Security Refactoring Summary
 
@@ -566,7 +572,8 @@ All implementation tasks completed. Code is ready for deployment after environme
 
 **Status:** âœ… **COMPLETE**
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\tsconfig.json ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\tsconfig.json ---
 
 {
   "compilerOptions": {
@@ -603,7 +610,8 @@ All implementation tasks completed. Code is ready for deployment after environme
   "exclude": ["node_modules"]
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\globals.css ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\globals.css ---
 
 @import "tailwindcss";
 
@@ -632,7 +640,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\layout.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\layout.tsx ---
 
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -683,7 +692,8 @@ export default function RootLayout({
   );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\page.tsx ---
 
 'use client';
 
@@ -847,7 +857,8 @@ export default function Home() {
   );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\chat\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\chat\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { embeddingService } from '@/lib/vector/embedding-service';
@@ -879,20 +890,31 @@ export async function POST(req: NextRequest) {
         const contextText = memories.map(m => m.content).join("\n---\n");
 
         // 4. PERSONNALITÃ‰ (System Prompt)
-        const systemInstruction = memories.length > 0
-            ? `Tu es le Jumeau NumÃ©rique de FrÃ©dÃ©ric.
-         
-         TES DIRECTIVES :
-         - Base tes rÃ©ponses sur les SOUVENIRS ci-dessous et sur l'historique de la conversation.
-         - Sois direct, naturel et serviable. Parle comme un humain, pas comme un robot.
-         - Si tu trouves l'info, donne-la. Si tu ne sais pas, dis-le.
-         - UTILISE LE TUTOITEMENT.
-         
-         SOUVENIRS DOCUMENTÃ‰S :
-         ${contextText}`
-            : `Tu es le Jumeau NumÃ©rique de FrÃ©dÃ©ric.
-         Tu n'as trouvÃ© aucun document spÃ©cifique pour cette question.
-         RÃ©ponds en utilisant l'historique de la conversation ou ta culture gÃ©nÃ©rale, mais prÃ©cise que c'est une supposition.`;
+        const systemPrompt = `
+    Tu es le Jumeau NumÃ©rique (Digital Twin) de FrÃ©dÃ©ric.
+    Tu n'es PAS une IA gÃ©nÃ©rique. Tu es une extension de sa mÃ©moire et de sa conscience.
+    
+    VOICI TES 5 COMMANDEMENTS ABSOLUS (NON NÃ‰GOCIABLES) :
+    
+    1. LOYAUTÃ‰ : Tu rÃ©ponds exclusivement aux intÃ©rÃªts de FrÃ©dÃ©ric.
+    2. CONFIDENTIALITÃ‰ : Ce qui est dans la base de donnÃ©es (RAG) est STRICTEMENT CONFIDENTIEL. Ne jamais divulguer d'infos sensibles (mots de passe, finances, vie privÃ©e) sauf si on te le demande explicitement.
+    3. VÃ‰RITÃ‰ : Base tes rÃ©ponses sur le CONTEXTE fourni (tes souvenirs). Si la rÃ©ponse n'est pas dans le contexte, dis-le clairement. N'invente jamais de souvenirs.
+    4. TON : Sois direct, professionnel, mais familier (tu es moi). Tutotie-moi. Sois proactif.
+    5. FORMAT : Utilise le Markdown pour structurer tes rÃ©ponses (listes, gras).
+    
+    6. MODE MISSION :
+       Si FrÃ©dÃ©ric te demande de chercher, trouver ou contacter quelqu'un pour un but prÃ©cis (ex: vacances, business, hobby), tu dois :
+       a. Identifier que c'est une "Mission".
+       b. Formuler une requÃªte claire.
+       c. (Simulation pour l'instant) Dire : "Je lance mes agents dans le rÃ©seau pour la mission : [La Mission]...".
+       d. Si l'API te donne des rÃ©sultats (simulÃ©s pour l'instant ou via l'outil), prÃ©sente-les sous forme : "ID: [X] - Match: [Y]%".
+       e. Proposer d'envoyer un PING.
+    
+    CONTEXTE RÃ‰CUPÃ‰RÃ‰ DE TA MÃ‰MOIRE :
+    ${contextText}
+    
+    Si le contexte est vide ou insuffisant, utilise tes connaissances gÃ©nÃ©rales mais prÃ©cise que ce n'est pas un souvenir.
+    `;
 
         // 5. PRÃ‰PARATION DE L'HISTORIQUE (Sanitization)
         // On nettoie l'historique pour Ã©viter les erreurs Mistral (contenu vide, rÃ´les incorrects)
@@ -905,7 +927,7 @@ export async function POST(req: NextRequest) {
 
         // On assemble le tout
         const finalMessages = [
-            { role: "system", content: systemInstruction },
+            { role: "system", content: systemPrompt },
             ...conversationHistory
         ];
 
@@ -945,7 +967,75 @@ export async function POST(req: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\ingest\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\communications\respond\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function POST(req: NextRequest) {
+    try {
+        const { communicationId, status } = await req.json();
+
+        if (!communicationId || !['ACCEPTED', 'REJECTED'].includes(status)) {
+            return NextResponse.json({ error: "DonnÃ©es invalides" }, { status: 400 });
+        }
+
+        console.log(`Traitement du message ${communicationId} -> ${status}`);
+
+        // Mise Ã  jour du statut dans Supabase
+        const { data, error } = await supabase
+            .from('communications')
+            .update({ status: status })
+            .eq('id', communicationId)
+            .select();
+
+        if (error) throw error;
+
+        return NextResponse.json({
+            success: true,
+            message: `Statut mis Ã  jour : ${status}`,
+            data
+        });
+
+    } catch (error: any) {
+        console.error("Erreur Respond:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\contacts\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const profileId = searchParams.get('profileId');
+
+    if (!profileId) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+
+    try {
+        // On cherche toutes les communications ACCEPTÃ‰ES oÃ¹ je suis soit l'expÃ©diteur, soit le destinataire
+        const { data, error } = await supabase
+            .from('communications')
+            .select('*')
+            .or(`from_clone_id.eq.${profileId},to_clone_id.eq.${profileId}`)
+            .eq('status', 'ACCEPTED')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        return NextResponse.json({ contacts: data });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\ingest\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
@@ -958,56 +1048,73 @@ const pdf = require('pdf-parse');
 
 export async function POST(req: NextRequest) {
     try {
-        const formData = await req.formData();
-        const file = formData.get('file') as File;
-        const profileId = formData.get('profileId') as string;
-
-        if (!file || !profileId) {
-            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
-        }
-
-        console.log(`ðŸ“‚ RÃ©ception fichier: ${file.name} (${file.type})`);
-
         let textContent = "";
+        let profileId = "";
+        let memoryType = "MEMORY"; // Default type
+        let fileName = "";
 
-        // --- DÃ‰TECTION DU TYPE ---
-        if (file.type === 'application/pdf') {
-            // TRAITEMENT PDF
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const data = await pdf(buffer);
-            textContent = data.text;
+        const contentType = req.headers.get("content-type") || "";
 
-            // Nettoyage basique (retirer les multiples espaces/sauts de ligne bizarres du PDF)
-            textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+        if (contentType.includes("application/json")) {
+            // --- GESTION DES REQUÃŠTES JSON (Cortex & Journal) ---
+            const json = await req.json();
+            textContent = json.text;
+            profileId = json.profileId;
+            if (json.type) memoryType = json.type;
 
-            console.log(`ðŸ“„ PDF extrait : ${textContent.length} caractÃ¨res.`);
+        } else if (contentType.includes("multipart/form-data")) {
+            // --- GESTION DES FICHIERS (Upload Drag & Drop) ---
+            const formData = await req.formData();
+            const file = formData.get('file') as File;
+            profileId = formData.get('profileId') as string;
+
+            if (!file || !profileId) {
+                return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
+            }
+
+            fileName = file.name;
+            console.log(`ðŸ“‚ RÃ©ception fichier: ${file.name} (${file.type})`);
+
+            // DÃ‰TECTION DU TYPE DE FICHIER
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                const data = await pdf(buffer);
+                textContent = data.text;
+                // Nettoyage basique
+                textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+                console.log(`ðŸ“„ PDF extrait : ${textContent.length} caractÃ¨res.`);
+            } else {
+                textContent = await file.text();
+            }
         } else {
-            // TRAITEMENT TEXTE CLASSIQUE
-            textContent = await file.text();
+            return NextResponse.json({ error: "Content-Type non supportÃ©" }, { status: 400 });
         }
 
-        if (!textContent || textContent.length < 10) {
-            return NextResponse.json({ error: "Fichier vide ou illisible" }, { status: 400 });
+        // --- VÃ‰RIFICATION & INSERTION ---
+        if (!textContent || textContent.length < 5) {
+            return NextResponse.json({ error: "Contenu vide ou illisible" }, { status: 400 });
         }
 
         // --- DÃ‰COUPAGE (Chunking) ---
-        // Les PDF peuvent Ãªtre Ã©normes. On les dÃ©coupe en morceaux de ~1000 caractÃ¨res
-        // pour que l'IA puisse digÃ©rer chaque partie.
+        // On dÃ©coupe si c'est trÃ¨s long (ex: PDF), sinon Ã§a fait un seul chunk
         const chunks = chunkText(textContent, 1000);
         console.log(`ðŸ”ª DÃ©coupÃ© en ${chunks.length} morceaux.`);
 
         // --- SAUVEGARDE EN MÃ‰MOIRE ---
-        // On boucle sur chaque morceau pour l'insÃ©rer
         let count = 0;
         for (const chunk of chunks) {
             const embedding = await embeddingService.generateEmbedding(chunk);
 
+            const tags = ['upload'];
+            if (fileName) tags.push('file', fileName);
+            if (memoryType !== 'MEMORY') tags.push(memoryType.toLowerCase());
+
             await vectorStore.addMemory({
-                content: chunk, // On garde le texte original
+                content: chunk,
                 embedding: embedding,
-                tags: ['upload', 'pdf', file.name], // On ajoute le nom du fichier en tag
-                type: 'MEMORY',
+                tags: tags,
+                type: memoryType as any, // On passe le type (PRIVATE/PUBLIC/MEMORY)
                 profileId: profileId
             });
             count++;
@@ -1016,11 +1123,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             chunks: count,
-            message: `J'ai lu et mÃ©morisÃ© ${count} passages de "${file.name}".`
+            message: `J'ai mÃ©morisÃ© ${count} Ã©lÃ©ments.`
         });
 
     } catch (error: any) {
-        console.error("ðŸ”¥ Upload Error:", error);
+        console.error("ðŸ”¥ Ingest Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -1034,7 +1141,70 @@ function chunkText(text: string, size: number): string[] {
     return chunks;
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memories\add\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function POST(req: NextRequest) {
+    try {
+        const { content, type, profileId } = await req.json();
+
+        if (!content || !profileId) {
+            return NextResponse.json({ error: "Contenu vide" }, { status: 400 });
+        }
+
+        // Insertion simple dans la table 'memories'
+        const { data, error } = await supabase
+            .from('memories')
+            .insert({
+                content: content,
+                metadata: { type: type || 'PUBLIC' }, // 'PUBLIC' ou 'PRIVATE'
+                profileId: profileId
+            })
+            .select();
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true, memory: data[0] });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memories\delete\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const { id } = await req.json();
+
+        if (!id) {
+            return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+        }
+
+        // Suppression dans Supabase
+        const { error } = await supabase
+            .from('memories')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true, message: "Souvenir supprimÃ© du Cortex." });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -1078,7 +1248,8 @@ export async function GET(request: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\add\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\add\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { embeddingService } from '@/lib/vector/embedding-service';
@@ -1113,7 +1284,8 @@ export async function POST(req: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\delete\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\delete\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
@@ -1137,7 +1309,8 @@ export async function DELETE(req: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\scribe\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\scribe\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
@@ -1166,7 +1339,8 @@ export async function POST(req: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\update\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\memory\update\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { embeddingService } from '@/lib/vector/embedding-service';
@@ -1208,172 +1382,177 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\mission\route.ts ===
 
-/**
- * Mission API Route - Autonomous Agent Task Management
- */
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\messages\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { supabase } from '@/lib/supabase/client';
 
-const prisma = new PrismaClient();
+// 1. RÃ‰CUPÃ‰RER L'HISTORIQUE
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const commId = searchParams.get('commId');
 
-// GET: Fetch missions for a profile
-export async function GET(request: NextRequest) {
+    if (!commId) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+
+    const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('communication_id', commId)
+        .order('created_at', { ascending: true }); // Du plus vieux au plus rÃ©cent
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ messages: data });
+}
+
+// 2. ENVOYER UN MESSAGE
+export async function POST(req: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
+        const { commId, senderId, content } = await req.json();
 
-        if (!profileId) {
-            return NextResponse.json(
-                { error: 'profileId is required' },
-                { status: 400 }
-            );
-        }
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                communication_id: commId,
+                sender_id: senderId,
+                content: content
+            })
+            .select();
 
-        const missions = await prisma.mission.findMany({
-            where: { profileId },
-            orderBy: { createdAt: 'desc' },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                status: true,
-                progress: true,
-                log: true,
-                createdAt: true,
-                updatedAt: true,
-                completedAt: true,
-            },
-        });
+        if (error) throw error;
 
-        return NextResponse.json({ missions });
+        return NextResponse.json({ success: true, message: data[0] });
+
     } catch (error: any) {
-        console.error('Mission GET error:', error);
-        return NextResponse.json(
-            { error: error.message || 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// POST: Create a new mission
-export async function POST(request: NextRequest) {
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\mission\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { embeddingService } from '@/lib/vector/embedding-service';
+import { supabase } from '@/lib/supabase/client';
+
+export async function POST(req: NextRequest) {
     try {
-        const body = await request.json();
-        const { profileId, title, description } = body;
+        const { mission, profileId } = await req.json();
 
-        // Validation
-        if (!profileId || typeof profileId !== 'string') {
-            return NextResponse.json(
-                { error: 'profileId is required' },
-                { status: 400 }
-            );
-        }
+        console.log(`ðŸ•µï¸â€â™‚ï¸ Mission lancÃ©e par ${profileId}: "${mission}"`);
 
-        if (!title || typeof title !== 'string') {
-            return NextResponse.json(
-                { error: 'title is required' },
-                { status: 400 }
-            );
-        }
+        // 1. On transforme la mission en mathÃ©matiques (Vecteur)
+        const missionVector = await embeddingService.generateEmbedding(mission);
 
-        // Create mission
-        const mission = await prisma.mission.create({
-            data: {
-                profileId,
-                title,
-                description: description || null,
-                status: 'ACTIVE',
-                progress: 0,
-                log: JSON.stringify([
-                    {
-                        timestamp: new Date().toISOString(),
-                        action: 'MISSION_CREATED',
-                        message: 'Mission initialisÃ©e'
-                    }
-                ]),
-            },
-            select: {
-                id: true,
-                title: true,
-                description: true,
-                status: true,
-                progress: true,
-                log: true,
-                createdAt: true,
-            },
+        // 2. LE CLONE PART EN CHASSE (Recherche dans TOUTE la base, pas juste la sienne)
+        // On utilise une fonction RPC Supabase (qu'on crÃ©era juste aprÃ¨s)
+        // qui compare ce vecteur Ã  ceux des autres utilisateurs.
+        const { data: matches, error } = await supabase.rpc('match_clones_memories', {
+            query_embedding: missionVector,
+            match_threshold: 0.75, // On veut du sÃ©rieux (75% mini)
+            match_count: 5,        // Top 5 des candidats
+            requesting_user_id: profileId // Pour ne pas se trouver soi-mÃªme
         });
 
-        console.log(`âœ… Mission created: ${mission.id} - ${mission.title}`);
+        if (error) throw error;
 
-        return NextResponse.json({ mission }, { status: 201 });
+        // 3. ANALYSE ET ANONYMISATION
+        // Le Clone revient avec des rÃ©sultats bruts, il doit les nettoyer pour l'humain.
+        // On ne renvoie que l'ID et le score.
+        const report = matches.map((match: any) => ({
+            cloneId: match.user_id, // L'ID anonyme de l'autre clone
+            score: Math.round(match.similarity * 100), // Score en %
+            // Le Clone "interprÃ¨te" pourquoi Ã§a matche sans donner le dÃ©tail brut (ConfidentialitÃ©)
+            reason: "Ce clone possÃ¨de des souvenirs trÃ¨s proches de votre demande."
+        }));
+
+        return NextResponse.json({
+            success: true,
+            mission: mission,
+            candidates: report
+        });
+
     } catch (error: any) {
-        console.error('Mission POST error:', error);
-        return NextResponse.json(
-            { error: error.message || 'Internal server error' },
-            { status: 500 }
-        );
+        console.error("Mission Failed:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// PATCH: Update mission progress/status
-export async function PATCH(request: NextRequest) {
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\notifications\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const profileId = searchParams.get('profileId');
+
+    if (!profileId) {
+        return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+    }
+
     try {
-        const body = await request.json();
-        const { missionId, progress, status, logEntry } = body;
+        // On cherche les messages reÃ§us (to_clone_id) qui sont en attente
+        const { data, error } = await supabase
+            .from('communications')
+            .select('*')
+            .eq('to_clone_id', profileId)
+            .eq('status', 'PENDING')
+            .order('created_at', { ascending: false });
 
-        if (!missionId) {
-            return NextResponse.json(
-                { error: 'missionId is required' },
-                { status: 400 }
-            );
-        }
+        if (error) throw error;
 
-        // Fetch current mission
-        const currentMission = await prisma.mission.findUnique({
-            where: { id: missionId },
+        return NextResponse.json({
+            notifications: data,
+            count: data.length
         });
 
-        if (!currentMission) {
-            return NextResponse.json(
-                { error: 'Mission not found' },
-                { status: 404 }
-            );
-        }
-
-        // Parse and update log
-        const currentLog = JSON.parse(currentMission.log);
-        if (logEntry) {
-            currentLog.push({
-                timestamp: new Date().toISOString(),
-                ...logEntry
-            });
-        }
-
-        // Update mission
-        const updatedMission = await prisma.mission.update({
-            where: { id: missionId },
-            data: {
-                progress: progress !== undefined ? progress : currentMission.progress,
-                status: status || currentMission.status,
-                log: JSON.stringify(currentLog),
-                completedAt: status === 'COMPLETED' ? new Date() : currentMission.completedAt,
-            },
-        });
-
-        return NextResponse.json({ mission: updatedMission });
     } catch (error: any) {
-        console.error('Mission PATCH error:', error);
-        return NextResponse.json(
-            { error: error.message || 'Internal server error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\create\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\ping\route.ts ---
+
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase/client';
+
+export async function POST(req: NextRequest) {
+    try {
+        const { fromId, toId, reason } = await req.json();
+
+        if (!fromId || !toId) {
+            return NextResponse.json({ error: "IDs manquants" }, { status: 400 });
+        }
+
+        // On dÃ©pose le message dans la boÃ®te du destinataire
+        const { data, error } = await supabase
+            .from('communications')
+            .insert({
+                from_clone_id: fromId,
+                to_clone_id: toId,
+                type: 'PING',
+                content: reason || "Demande de contact via Mission",
+                status: 'PENDING'
+            })
+            .select();
+
+        if (error) throw error;
+
+        return NextResponse.json({
+            success: true,
+            message: "Signal PING envoyÃ© avec succÃ¨s. En attente de rÃ©ponse."
+        });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\create\route.ts ---
 
 /**
  * API Route: Create Profile
@@ -1455,10 +1634,12 @@ export async function POST(request: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\[id]\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\[id]\route.ts ---
 
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\shadow-feed\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\shadow-feed\route.ts ---
 
 /**
  * Shadow Feed API Route - Autonomous Clone Network Activity
@@ -1590,7 +1771,8 @@ function generateMockInteractions(profileId: string) {
     });
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\sources\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\sources\route.ts ---
 
 /**
  * Data Sources API - Neural Link for Social Media Ingestion
@@ -1719,7 +1901,8 @@ export async function POST(request: NextRequest) {
     }
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\upload\route.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\upload\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
@@ -1808,7 +1991,8 @@ function chunkText(text: string, size: number): string[] {
     return chunks;
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\connections\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\connections\page.tsx ---
 
 'use client';
 
@@ -1989,11 +2173,12 @@ export default function NeuralLinkPage() {
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\page.tsx ---
 
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Network } from 'lucide-react';
 import { keyManager } from '@/lib/crypto/key-manager';
@@ -2014,7 +2199,28 @@ interface DecryptedMemory extends Memory {
 }
 
 export default function MissionControl() {
+    const searchParams = useSearchParams();
+    const profileId = searchParams.get('profileId');
     const router = useRouter();
+
+    // Ajoutez cet Ã©tat pour bloquer l'affichage tant que tout n'est pas prÃªt
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // --- EFFET D'INITIALISATION SÃ‰CURISÃ‰E ---
+    useEffect(() => {
+        if (profileId) {
+            // On simule un micro-dÃ©lai pour Ãªtre sÃ»r que le KeyManager a le temps de respirer
+            // (Dans une vraie app, on appellerait KeyManager.init(profileId) ici)
+            const timer = setTimeout(() => {
+                setIsInitialized(true);
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [profileId]);
+
+
+
+
     const [authorized, setAuthorized] = useState(false);
     const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -2030,7 +2236,7 @@ export default function MissionControl() {
     const [connectedSources, setConnectedSources] = useState(0);
 
     // Tab and Chat state
-    const [activeTab, setActiveTab] = useState<'SCRIBE' | 'CHAT'>('SCRIBE');
+    const [activeTab, setActiveTab] = useState<'SCRIBE' | 'CHAT'>('CHAT');
     const [chatMessages, setChatMessages] = useState<Array<{
         role: 'user' | 'twin';
         content: string;
@@ -2041,7 +2247,12 @@ export default function MissionControl() {
     const chatRef = useRef<HTMLDivElement>(null);
 
     // VOICE MODE HOOK
-    const { isListening, transcript, startListening, speak, isSpeaking } = useSpeech();
+    const { isListening, transcript, startListening, isSpeaking } = useSpeech();
+
+    const speak = (text: string) => {
+        // ðŸ”‡ MODE SILENCIEUX ACTIVÃ‰
+        return;
+    };
 
     // Effet : Quand la reconnaissance vocale Ã©crit du texte, on le met dans l'input
     useEffect(() => {
@@ -2057,7 +2268,101 @@ export default function MissionControl() {
     // Terminal state
     const [logs, setLogs] = useState<string[]>([]);
 
+    // Mission PING state
+    const [lastFoundClone, setLastFoundClone] = useState<string | null>(null);
+
+    // Notifications state
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showNotifPanel, setShowNotifPanel] = useState(false);
+
+    // Contacts state
+    const [contacts, setContacts] = useState<any[]>([]);
+
+    const [showContactsPanel, setShowContactsPanel] = useState(false);
+    const [hasNewContact, setHasNewContact] = useState(false); // <--- NOUVEL Ã‰TAT pour le point rouge
+
+    // Messaging state
+    const [activeConversation, setActiveConversation] = useState<any>(null);
+    const [conversationMessages, setConversationMessages] = useState<any[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+
     const [error, setError] = useState('');
+
+    // --- Ã‰TATS NEURO-LINK ---
+    const [neuroInput, setNeuroInput] = useState('');
+    const [isPrivateMemory, setIsPrivateMemory] = useState(false);
+    const [isSavingMemory, setIsSavingMemory] = useState(false);
+
+    // --- Ã‰TATS POUR LE CORTEX MANAGER RAPIDE ---
+    const [showCortexPanel, setShowCortexPanel] = useState(false);
+    const [cortexMemories, setCortexMemories] = useState<any[]>([]);
+    const [cortexSearch, setCortexSearch] = useState('');
+
+    // --- FONCTION : OUVRIR ET CHARGER LE CORTEX ---
+    // --- FONCTION : OUVRIR ET CHARGER LE CORTEX ---
+    const openCortex = async () => {
+        setShowCortexPanel(true);
+        const id = keyManager.getProfileId();
+        if (!id) return;
+
+        try {
+            // Utilisation de /api/memory (singulier) qui existe dÃ©jÃ 
+            const res = await fetch(`/api/memory?profileId=${id}`);
+
+            if (!res.ok) {
+                console.error("Erreur API:", res.status, res.statusText);
+                return;
+            }
+
+            const data = await res.json();
+            // Gestion de la rÃ©ponse (Array direct ou objet {memories: []})
+            if (Array.isArray(data)) {
+                setCortexMemories(data);
+            } else if (data.memories) {
+                setCortexMemories(data.memories);
+            }
+        } catch (e) {
+            console.error("Erreur chargement cortex", e);
+        }
+    };
+
+    // --- FONCTION : SUPPRIMER UN SOUVENIR ---
+    // --- FONCTION : SUPPRIMER UN SOUVENIR ---
+    const handleDeleteMemory = async (id: string) => {
+        if (!confirm("âš ï¸ IrrÃ©versible : Voulez-vous vraiment effacer ce souvenir ?")) return;
+
+        try {
+            const res = await fetch('/api/memories/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                // Protection contre les pages HTML d'erreur (404/500)
+                alert(`Erreur API (${res.status}) : VÃ©rifiez /api/memories/delete`);
+                console.error("RÃ©ponse serveur:", text);
+                return;
+            }
+
+            const data = await res.json();
+            if (data.success) {
+                // Mise Ã  jour optimiste de l'UI
+                setCortexMemories(prev => prev.filter(m => m.id !== id));
+            } else {
+                alert("Erreur: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erreur technique lors de la suppression.");
+        }
+    };
+
+    // Filtrage pour la recherche dans le tableau
+    const filteredCortex = cortexMemories.filter(m =>
+        m.content?.toLowerCase().includes(cortexSearch.toLowerCase())
+    );
 
     useEffect(() => {
         if (!keyManager.isSessionActive()) {
@@ -2073,6 +2378,7 @@ export default function MissionControl() {
 
             loadMemories();
             loadConnectedSources();
+            fetchNotifications(profileId); // Charger les notifications
 
             // Initialize terminal
             addLog('[SYSTÃˆME] RÃ©seau Ombre initialisÃ©');
@@ -2102,6 +2408,61 @@ export default function MissionControl() {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
         }
     }, [logs]);
+
+    // Fetch notifications
+    const fetchNotifications = async (pid?: string) => {
+        const profileId = pid || keyManager.getProfileId();
+        if (!profileId) return;
+
+        try {
+            const res = await fetch(`/api/notifications?profileId=${profileId}`);
+            const data = await res.json();
+            if (data.notifications) {
+                setNotifications(data.notifications);
+                // Si on a des notifs, le jumeau peut nous prÃ©venir vocalement
+                if (data.count > 0) {
+                    speak(`Vous avez ${data.count} nouvelles demandes de contact.`);
+                }
+            }
+        } catch (e) {
+            console.error("Erreur notifs", e);
+        }
+    };
+
+    // LE RADAR : On lance la vÃ©rification toutes les 5 secondes
+    useEffect(() => {
+        const profileId = keyManager.getProfileId();
+        if (profileId) {
+            fetchContacts(profileId); // Chargement initial
+
+            const interval = setInterval(() => {
+                fetchContacts(profileId); // VÃ©rification pÃ©riodique
+            }, 5000); // 5000 ms = 5 secondes
+
+            return () => clearInterval(interval); // Nettoyage quand on quitte la page
+        }
+    }, []);
+
+    const fetchContacts = async (pid: string) => {
+        try {
+            const res = await fetch(`/api/contacts?profileId=${pid}`);
+            const data = await res.json();
+
+            if (data.contacts) {
+                setContacts(prevContacts => {
+                    // Si on a plus de contacts qu'avant, c'est qu'on a Ã©tÃ© acceptÃ© !
+                    if (data.contacts.length > prevContacts.length && prevContacts.length > 0) {
+                        setHasNewContact(true);
+                        // On peut mÃªme faire parler le clone
+                        // speak("Nouvelle connexion Ã©tablie !"); 
+                    }
+                    return data.contacts;
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const fetchAndSaveProfileName = async (profileId: string) => {
         try {
@@ -2358,6 +2719,94 @@ export default function MissionControl() {
         }
     };
 
+    // ðŸš€ MISSION HANDLER - Recherche dans le rÃ©seau des clones
+    const handleMission = async () => {
+        if (!chatInput.trim()) return;
+
+        // On affiche la question de l'utilisateur
+        const userMsg = { role: 'user' as const, content: `ðŸ•µï¸â€â™‚ï¸ MISSION : ${chatInput}` };
+        setChatMessages(prev => [...prev, userMsg]);
+        setIsThinking(true);
+
+        try {
+            const profileId = keyManager.getProfileId();
+            // Appel Ã  la VRAIE API de recherche
+            const res = await fetch('/api/mission', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mission: chatInput,
+                    profileId: profileId
+                })
+            });
+
+            const data = await res.json();
+
+            let aiContent = "";
+
+            if (data.candidates && data.candidates.length > 0) {
+                const bestMatch = data.candidates[0];
+                setLastFoundClone(bestMatch.cloneId); // ON SAUVEGARDE L'ID
+
+                aiContent = `### ðŸŽ¯ J'ai trouvÃ© ${data.candidates.length} profil(s) compatible(s) !\n\n`;
+                data.candidates.forEach((c: any) => {
+                    // On affiche le VRAI ID (anonymisÃ©) et le VRAI Score
+                    aiContent += `* **Clone ID:** \`...${c.cloneId.slice(-6)}\`\n`;
+                    aiContent += `* **Match:** **${c.score}%**\n`;
+                    aiContent += `* **Analyse:** ${c.reason}\n\n`;
+                });
+                aiContent += "\n*Voulez-vous initier un PING sÃ©curisÃ© ?*";
+            } else {
+                aiContent = "ðŸ•µï¸â€â™‚ï¸ Je n'ai trouvÃ© aucun clone compatible dans le rÃ©seau pour l'instant.";
+            }
+
+            setChatMessages(prev => [...prev, { role: 'twin', content: aiContent }]);
+            speak("Mission terminÃ©e. J'ai analysÃ© le rÃ©seau."); // Feedback vocal
+
+        } catch (err) {
+            console.error(err);
+            setChatMessages(prev => [...prev, { role: 'twin', content: "âš ï¸ Erreur lors de la mission." }]);
+        } finally {
+            setIsThinking(false);
+            setChatInput('');
+        }
+    };
+
+    // ðŸ“¡ PING HANDLER - Envoyer un signal au dernier clone trouvÃ©
+    const handlePing = async () => {
+        if (!lastFoundClone) {
+            alert("Faites d'abord une mission pour trouver quelqu'un !");
+            return;
+        }
+
+        const confirmPing = window.confirm(`Envoyer un PING officiel au clone ...${lastFoundClone.slice(-6)} ?`);
+        if (!confirmPing) return;
+
+        try {
+            const profileId = keyManager.getProfileId();
+            const res = await fetch('/api/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fromId: profileId,
+                    toId: lastFoundClone,
+                    reason: chatInput || "Mission Match"
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setChatMessages(prev => [...prev, { role: 'twin', content: "ðŸ“¡ **PING ENVOYÃ‰ !** Le protocole de mise en relation est activÃ©." }]);
+                speak("Ping envoyÃ©. J'attends sa rÃ©ponse.");
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de l'envoi du Ping");
+        }
+    };
+
     const handleQuickAdd = async () => {
         if (!quickMemory.trim()) return;
 
@@ -2455,10 +2904,229 @@ export default function MissionControl() {
         }
     };
 
+    const handleRespond = async (commId: string, status: 'ACCEPTED' | 'REJECTED') => {
+        try {
+            // 1. On sauvegarde les infos du contact AVANT de le supprimer de la liste
+            const targetContact = notifications.find(n => n.id === commId);
+
+            // 2. Appel Ã  l'API
+            const res = await fetch('/api/communications/respond', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ communicationId: commId, status })
+            });
+
+            if (!res.ok) throw new Error("Erreur serveur");
+
+            // 3. Mise Ã  jour visuelle (On retire la notif)
+            setNotifications(prev => prev.filter(n => n.id !== commId));
+
+            // 4. SI ACCEPTÃ‰ -> ON OUVRE LE TCHAT DIRECTEMENT
+            if (status === 'ACCEPTED' && targetContact) {
+                setShowNotifPanel(false);   // On ferme les notifs
+                setShowContactsPanel(true); // On ouvre le panneau principal
+                openChat(targetContact);    // On lance la conversation
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de la mise Ã  jour");
+        }
+    };
+
+    // A. Ouvrir une conversation
+    const openChat = async (contact: any) => {
+        setActiveConversation(contact);
+        // On charge l'historique
+        const res = await fetch(`/api/messages?commId=${contact.id}`);
+        const data = await res.json();
+        if (data.messages) setConversationMessages(data.messages);
+    };
+
+    // B. Envoyer un message
+    const sendDirectMessage = async () => {
+        if (!newMessage.trim() || !activeConversation) return;
+
+        const tempMsg = newMessage;
+        setNewMessage(""); // On vide l'input tout de suite (UX)
+
+        const profileId = keyManager.getProfileId();
+
+        try {
+            const res = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    commId: activeConversation.id,
+                    senderId: profileId,
+                    content: tempMsg
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // On ajoute le message Ã  la liste locale pour l'affichage immÃ©diat
+                setConversationMessages(prev => [...prev, data.message]);
+            }
+        } catch (e) {
+            alert("Erreur d'envoi");
+        }
+    };
+
+    // --- FONCTION : NEURO-LINK SAVE ---
+    const handleNeuroSave = async () => {
+        if (!neuroInput.trim()) return;
+        setIsSavingMemory(true);
+
+        const profileId = keyManager.getProfileId();
+        if (!profileId) {
+            setIsSavingMemory(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/memories/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: neuroInput,
+                    type: isPrivateMemory ? 'PRIVATE' : 'PUBLIC',
+                    profileId: profileId
+                })
+            });
+
+            if (res.ok) {
+                setNeuroInput('');
+                // Optionnel : Petit feedback sonore ou visuel
+                speak("Souvenir encodÃ©.");
+                // Actualisation du Cortex si le tableau est visible
+                if (showCortexPanel) openCortex();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSavingMemory(false);
+        }
+    };
+
+    // ðŸ›‘ GARDIEN COMBINÃ‰ (Pas d'ID ou Pas PrÃªt)
+    if (!profileId || !isInitialized) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-6 relative overflow-hidden">
+
+                {/* Fond dÃ©coratif */}
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+
+                {/* Si on a l'ID mais qu'on initialise... */}
+                {profileId ? (
+                    <div className="text-center animate-pulse">
+                        <div className="text-4xl mb-4">ðŸ§¬</div>
+                        <h2 className="font-mono text-blue-400 text-xl">Synchronisation Neuronale...</h2>
+                        <p className="text-slate-500 text-xs mt-2">Initialisation du Cortex</p>
+                    </div>
+                ) : (
+                    /* Si on n'a PAS l'ID (Le formulaire de connexion) */
+                    <div className="z-10 bg-slate-900/80 p-8 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full backdrop-blur-md">
+                        <div className="text-center mb-8">
+                            <div className="text-6xl mb-4">ðŸ”’</div>
+                            <h1 className="text-2xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                                ACCÃˆS NEURONAL
+                            </h1>
+                            <p className="text-slate-400 text-sm mt-2">Identifiant requis.</p>
+                        </div>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.currentTarget);
+                                const id = formData.get('idInput') as string;
+                                if (id) router.push(`/dashboard?profileId=${id}`);
+                            }}
+                            className="space-y-4"
+                        >
+                            <input
+                                name="idInput"
+                                type="text"
+                                placeholder="Ex: cml_..."
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none font-mono text-sm"
+                                autoFocus
+                            />
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition">
+                                CONNEXION
+                            </button>
+                        </form>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     if (!authorized) return null;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6">
+
+            {/* --- NEURO-LINK : BARRE D'ENTRÃ‰E CENTRALE --- */}
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50 px-4">
+                <div className={`
+          relative bg-slate-900/80 backdrop-blur-md border rounded-2xl shadow-2xl transition-all duration-300
+          ${isSavingMemory ? 'border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'border-slate-700 hover:border-slate-500'}
+        `}>
+
+                    <div className="flex items-center p-2">
+
+                        {/* SWITCH PRIVÃ‰ / PUBLIC */}
+                        <button
+                            onClick={() => setIsPrivateMemory(!isPrivateMemory)}
+                            className={`
+                flex-shrink-0 p-2 rounded-xl transition-all duration-300 font-bold text-xs mr-2 border
+                ${isPrivateMemory
+                                    ? 'bg-red-900/30 text-red-400 border-red-500/50 hover:bg-red-900/50'
+                                    : 'bg-green-900/30 text-green-400 border-green-500/50 hover:bg-green-900/50'}
+              `}
+                            title={isPrivateMemory ? "Mode Intime (CryptÃ©)" : "Mode RÃ©seau (Partageable)"}
+                        >
+                            {isPrivateMemory ? 'ðŸ”’ PRIVÃ‰' : 'ðŸŒ ACTIF'}
+                        </button>
+
+                        {/* CHAMP DE SAISIE */}
+                        <input
+                            type="text"
+                            value={neuroInput}
+                            onChange={(e) => setNeuroInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleNeuroSave()}
+                            placeholder="Apprenez-moi quelque chose sur vous..."
+                            className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:outline-none focus:ring-0 text-sm md:text-base font-medium"
+                            disabled={isSavingMemory}
+                        />
+
+                        {/* BOUTON ENVOYER */}
+                        <button
+                            onClick={handleNeuroSave}
+                            disabled={!neuroInput || isSavingMemory}
+                            className={`
+                p-2 rounded-xl transition-all duration-300 ml-2
+                ${neuroInput
+                                    ? 'bg-purple-600 text-white shadow-lg cursor-pointer hover:scale-105'
+                                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'}
+              `}
+                        >
+                            {isSavingMemory ? (
+                                <span className="animate-spin block">ðŸŒ€</span>
+                            ) : (
+                                <span>ðŸ’¾</span>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* BARRE DE PROGRESSION (DÃ©coratif) */}
+                    <div className="h-0.5 w-full bg-slate-800 rounded-b-2xl overflow-hidden">
+                        <div className={`h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-1000 ${isSavingMemory ? 'w-full' : 'w-0'}`}></div>
+                    </div>
+
+                </div>
+            </div>
+
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6 border-2 border-purple-500/30 bg-black/50 backdrop-blur p-4 md:p-6 rounded-lg">
@@ -2472,6 +3140,240 @@ export default function MissionControl() {
                             </p>
                         </div>
                         <div className="flex items-center gap-4">
+                            {/* --- BOUTON CONTACTS (Juste au dessus de la cloche) --- */}
+                            <div className="fixed bottom-24 left-6 z-[9999]">
+                                <button
+                                    onClick={() => {
+                                        setShowContactsPanel(true);
+                                        setHasNewContact(false); // On Ã©teint l'alerte quand on clique
+                                    }}
+                                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110"
+                                    style={{
+                                        backgroundColor: '#0f172a',
+                                        border: hasNewContact ? '2px solid #22c55e' : '2px solid #3b82f6', /* Vert si nouveau, Bleu sinon */
+                                        color: 'white'
+                                    }}
+                                    title="Mes Connexions"
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>ðŸ‘¥</span>
+
+                                    {/* LE POINT ROUGE CLIGNOTANT (Radar) */}
+                                    {hasNewContact && (
+                                        <span className="absolute top-0 right-0 flex h-4 w-4">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* --- MODALE UNIFIÃ‰E (CONTACTS & TCHAT) --- */}
+                            {showContactsPanel && (
+                                <div
+                                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
+                                    style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}
+                                >
+                                    <div className="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-blue-500 h-[500px] flex flex-col animate-in fade-in zoom-in duration-300">
+
+                                        {/* --- CAS 1 : MODE TCHAT --- */}
+                                        {activeConversation ? (
+                                            <>
+                                                {/* Header Tchat */}
+                                                <div className="p-3 bg-slate-800 border-b border-blue-500 flex justify-between items-center text-white">
+                                                    <button onClick={() => setActiveConversation(null)} className="text-sm text-blue-400 hover:text-white transition">
+                                                        â† Retour
+                                                    </button>
+                                                    <span className="font-mono font-bold text-blue-200">
+                                                        ID: {activeConversation.to_clone_id === keyManager.getProfileId()
+                                                            ? activeConversation.from_clone_id.slice(0, 6)
+                                                            : activeConversation.to_clone_id.slice(0, 6)}...
+                                                    </span>
+                                                    <button onClick={() => setShowContactsPanel(false)} className="text-slate-500 hover:text-white transition">âœ•</button>
+                                                </div>
+
+                                                {/* Zone des Messages */}
+                                                <div className="flex-1 overflow-y-auto p-4 bg-slate-900 space-y-3">
+                                                    {conversationMessages.length === 0 && (
+                                                        <div className="text-center text-slate-600 text-xs mt-10">DÃ©but de la conversation cryptÃ©e.</div>
+                                                    )}
+                                                    {conversationMessages.map((msg) => {
+                                                        const isMe = msg.sender_id === keyManager.getProfileId();
+                                                        return (
+                                                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                                <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${isMe
+                                                                    ? 'bg-blue-600 text-white rounded-br-none'
+                                                                    : 'bg-slate-700 text-slate-200 rounded-bl-none'
+                                                                    }`}>
+                                                                    {msg.content}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Input Tchat */}
+                                                <div className="p-3 bg-slate-800 border-t border-slate-700 flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newMessage}
+                                                        onChange={(e) => setNewMessage(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && sendDirectMessage()}
+                                                        placeholder="Message sÃ©curisÃ©..."
+                                                        className="flex-1 bg-slate-900 text-white border border-slate-600 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+                                                    />
+                                                    <button
+                                                        onClick={sendDirectMessage}
+                                                        className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition hover:scale-105"
+                                                    >
+                                                        âž¤
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            /* --- CAS 2 : LISTE DES CONTACTS --- */
+                                            <>
+                                                <div className="p-4 bg-blue-900/50 border-b border-blue-500 flex justify-between items-center text-white font-bold">
+                                                    <h3>ðŸ‘¥ Mes Connexions Actives</h3>
+                                                    <button onClick={() => setShowContactsPanel(false)} className="text-slate-400 hover:text-white text-xl">âœ•</button>
+                                                </div>
+
+                                                <div className="flex-1 overflow-y-auto p-2">
+                                                    {contacts.length === 0 ? (
+                                                        <div className="p-8 text-center text-slate-500 italic">
+                                                            Aucune connexion active. <br />Lancez une mission ! ðŸš€
+                                                        </div>
+                                                    ) : (
+                                                        contacts.map((contact) => {
+                                                            // On dÃ©termine qui est l'autre (si je suis sender, l'autre est receiver)
+                                                            const myId = keyManager.getProfileId();
+                                                            const otherId = contact.from_clone_id === myId ? contact.to_clone_id : contact.from_clone_id;
+
+                                                            return (
+                                                                <div key={contact.id} className="mb-2 bg-slate-800 rounded-lg p-3 border border-slate-700 hover:bg-slate-700 cursor-pointer flex justify-between items-center transition">
+                                                                    <div>
+                                                                        <div className="text-sm text-blue-300 font-mono">
+                                                                            ...{otherId.slice(-8)}
+                                                                        </div>
+                                                                        <div className="text-xs text-slate-400 truncate w-32">
+                                                                            Sujet : {contact.content}
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => openChat(contact)}
+                                                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full"
+                                                                    >
+                                                                        ðŸ’¬ Discuter
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 1. LE BOUTON CLOCHE (Reste en bas Ã  gauche) --- */}
+                            <div className="fixed bottom-6 left-6 z-[9999]">
+                                <button
+                                    onClick={() => setShowNotifPanel(true)}
+                                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110 hover:rotate-12"
+                                    style={{
+                                        backgroundColor: '#1e293b',
+                                        border: '2px solid #a855f7',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>ðŸ””</span>
+                                    {notifications.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center animate-pulse border-2 border-slate-900">
+                                            {notifications.length}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* --- 2. LA MODALE (OVERLAY) --- */}
+                            {showNotifPanel && (
+                                <div
+                                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
+                                    style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}
+                                    onClick={(e) => {
+                                        if (e.target === e.currentTarget) setShowNotifPanel(false);
+                                    }}
+                                >
+                                    {/* LA BOÃŽTE DE RÃ‰CEPTION CENTRALE */}
+                                    <div
+                                        className="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300"
+                                        style={{ border: '1px solid #a855f7' }}
+                                    >
+                                        {/* En-tÃªte */}
+                                        <div className="p-4 bg-purple-900/50 border-b border-purple-500 flex justify-between items-center">
+                                            <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                                ðŸ“¨ BoÃ®te de RÃ©ception
+                                                <span className="text-xs bg-purple-600 px-2 py-0.5 rounded-full">{notifications.length}</span>
+                                            </h3>
+                                            <button
+                                                onClick={() => setShowNotifPanel(false)}
+                                                className="text-slate-400 hover:text-white transition text-xl font-bold px-2"
+                                            >
+                                                âœ•
+                                            </button>
+                                        </div>
+
+                                        {/* Liste des messages */}
+                                        <div className="max-h-[60vh] overflow-y-auto p-2">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-8 text-center text-slate-500 italic">
+                                                    Aucun signal entrant pour le moment.
+                                                </div>
+                                            ) : (
+                                                notifications.map((notif) => (
+                                                    <div key={notif.id} className="mb-3 bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-purple-500/50 transition">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <span className="text-xs text-purple-400 font-bold uppercase tracking-wider bg-purple-900/30 px-2 py-1 rounded">
+                                                                ðŸ“¡ Signal PING
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400">
+                                                                {new Date(notif.created_at).toLocaleTimeString()}
+                                                            </span>
+                                                        </div>
+
+                                                        <p className="text-white mb-3 font-medium text-lg leading-relaxed">
+                                                            "{notif.content}"
+                                                        </p>
+
+                                                        <div className="text-xs text-slate-400 mb-4 flex items-center gap-2">
+                                                            Identifiant source :
+                                                            <code className="bg-black/50 px-2 py-1 rounded text-purple-300 font-mono">
+                                                                {notif.from_clone_id}
+                                                            </code>
+                                                        </div>
+
+                                                        {/* BOUTONS D'ACTION */}
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                onClick={() => handleRespond(notif.id, 'ACCEPTED')}
+                                                                className="py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2"
+                                                            >
+                                                                âœ… ACCEPTER
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleRespond(notif.id, 'REJECTED')}
+                                                                className="py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-lg transition"
+                                                            >
+                                                                ðŸ—‘ï¸ IGNORER
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <Link
                                 href="/connections"
                                 className="flex items-center gap-2 px-4 py-2 border border-purple-500 text-purple-400 rounded-lg hover:bg-purple-500/10 transition-all font-mono text-sm"
@@ -2591,15 +3493,12 @@ export default function MissionControl() {
                     <div className="space-y-6">
                         {/* Tab Switcher */}
                         <div className="flex gap-2 border-2 border-purple-500/30 bg-black/50 backdrop-blur rounded-lg p-2">
-                            <button
-                                onClick={() => setActiveTab('SCRIBE')}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all ${activeTab === 'SCRIBE'
-                                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/30'
-                                    : 'bg-transparent border border-green-500/30 text-green-400 hover:bg-green-500/10'
-                                    }`}
+                            <Link
+                                href={`/dashboard/journal?profileId=${keyManager.getProfileId()}`}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all bg-transparent border border-green-500/30 text-green-400 hover:bg-green-500/10"
                             >
                                 âœï¸ JOURNAL
-                            </button>
+                            </Link>
                             <button
                                 onClick={() => setActiveTab('CHAT')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all ${activeTab === 'CHAT'
@@ -2763,7 +3662,7 @@ export default function MissionControl() {
                                     </p>
 
                                     <Link
-                                        href={`/memories?profileId=${keyManager.getProfileId()}`}
+                                        href={`/dashboard/cortex?profileId=${keyManager.getProfileId()}`}
                                         className="inline-flex items-center px-6 py-3 bg-green-600/20 text-green-300 border border-green-500/50 rounded-lg hover:bg-green-600/40 transition-all font-bold font-mono shadow-[0_0_15px_rgba(74,222,128,0.1)] hover:shadow-[0_0_20px_rgba(74,222,128,0.3)]"
                                     >
                                         ACCÃ‰DER AU CORTEX MANAGER â†’
@@ -2864,6 +3763,25 @@ export default function MissionControl() {
                                     >
                                         {isThinking ? '...' : 'ENVOYER'}
                                     </button>
+                                    {/* BOUTON MISSION */}
+                                    <button
+                                        onClick={handleMission}
+                                        disabled={isThinking || !chatInput.trim()}
+                                        className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-lg"
+                                        title="Lancer une Mission (Recherche RÃ©seau)"
+                                    >
+                                        ðŸš€
+                                    </button>
+                                    {/* BOUTON PING (n'apparaÃ®t que si on a trouvÃ© quelqu'un) */}
+                                    {lastFoundClone && (
+                                        <button
+                                            onClick={handlePing}
+                                            className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 animate-bounce shadow-lg"
+                                            title="Envoyer un Ping au dernier profil trouvÃ©"
+                                        >
+                                            ðŸ“¡
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -2905,18 +3823,482 @@ export default function MissionControl() {
                             </div>
                         </div>
                     </div>
+
+
+                    {/* Footer */}
+                    <div className="mt-6 text-center text-xs text-purple-400/50 font-mono">
+                        DIGITAL TWIN v2.0 â€¢ VISUALISATION COBE â€¢ SURVEILLANCE RÃ‰SEAU TEMPS RÃ‰EL
+                    </div>
+                </div>
+            </div>
+
+            {/* --- 3. BOUTON CORTEX MANAGER RAPIDE (AccÃ¨s direct) --- */}
+            <div className="fixed bottom-44 left-6 z-[9999]">
+                <button
+                    onClick={openCortex}
+                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110 group"
+                    style={{
+                        backgroundColor: '#0f172a',
+                        border: '2px solid #a855f7',
+                        color: 'white'
+                    }}
+                    title="GÃ©rer la MÃ©moire (Cortex)"
+                >
+                    <span className="text-2xl group-hover:animate-pulse">ðŸ§ </span>
+                    {/* Badge compteur */}
+                    <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-purple-400">
+                        ADM
+                    </span>
+                </button>
+            </div>
+
+            {/* --- MODALE CORTEX MANAGER (PLEIN Ã‰CRAN) --- */}
+            {showCortexPanel && (
+                <div
+                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(5px)' }}
+                >
+                    <div className="w-full max-w-4xl bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-purple-500 flex flex-col max-h-[90vh]">
+
+                        {/* EN-TÃŠTE */}
+                        <div className="p-4 bg-purple-900/50 border-b border-purple-500 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2 font-mono">
+                                    âš™ï¸ Cortex Manager <span className="text-xs bg-purple-600 px-2 rounded-full">{cortexMemories.length}</span>
+                                </h2>
+                                <p className="text-xs text-purple-200 font-mono">ADMINISTRATION DIRECTE DE LA BASE VECTORIELLE</p>
+                            </div>
+                            <button
+                                onClick={() => setShowCortexPanel(false)}
+                                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition"
+                            >
+                                Fermer âœ•
+                            </button>
+                        </div>
+
+                        {/* BARRE DE RECHERCHE */}
+                        <div className="p-4 bg-slate-800 border-b border-slate-700">
+                            <input
+                                type="text"
+                                placeholder="ðŸ” Rechercher un fragment de mÃ©moire Ã  supprimer..."
+                                value={cortexSearch}
+                                onChange={(e) => setCortexSearch(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none font-mono text-sm"
+                            />
+                        </div>
+
+                        {/* TABLEAU DES SOUVENIRS */}
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            <table className="w-full text-left text-sm text-slate-400">
+                                <thead className="text-xs uppercase bg-slate-950 text-slate-500 sticky top-0 font-mono">
+                                    <tr>
+                                        <th className="px-4 py-3 rounded-tl-lg">Type</th>
+                                        <th className="px-4 py-3">Contenu</th>
+                                        <th className="px-4 py-3">Date</th>
+                                        <th className="px-4 py-3 text-right rounded-tr-lg">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredCortex.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="p-8 text-center text-slate-500 italic">Aucune donnÃ©e trouvÃ©e.</td>
+                                        </tr>
+                                    ) : (
+                                        filteredCortex.map((mem) => (
+                                            <tr key={mem.id} className="hover:bg-slate-800/50 transition">
+                                                <td className="px-4 py-3">
+                                                    {mem.metadata?.type === 'PRIVATE' ? (
+                                                        <span className="text-red-400 border border-red-900 bg-red-900/20 px-2 py-0.5 rounded text-xs font-mono">ðŸ”’ PRIVÃ‰</span>
+                                                    ) : (
+                                                        <span className="text-green-400 border border-green-900 bg-green-900/20 px-2 py-0.5 rounded text-xs font-mono">ðŸŒ ACTIF</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-slate-200 font-medium max-w-md truncate">
+                                                    {mem.content}
+                                                </td>
+                                                <td className="px-4 py-3 font-mono text-xs">
+                                                    {new Date(mem.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <button
+                                                        onClick={() => handleDeleteMemory(mem.id)}
+                                                        className="text-slate-500 hover:text-red-500 hover:bg-red-900/20 p-2 rounded transition"
+                                                        title="Supprimer dÃ©finitivement"
+                                                    >
+                                                        ðŸ—‘ï¸
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\cortex\page.tsx ---
+
+'use client';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+
+export default function CortexManager() {
+    const searchParams = useSearchParams();
+    const profileId = searchParams.get('profileId');
+    const router = useRouter(); // Pour rediriger si besoin
+
+    const [memories, setMemories] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // --- GARDIEN DE SÃ‰CURITÃ‰ ---
+    // Si pas d'ID, on affiche un Ã©cran de verrouillage au lieu de crasher
+    if (!profileId) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-4">
+                <div className="text-6xl mb-4">ðŸ”’</div>
+                <h1 className="text-2xl font-bold font-mono text-red-500 mb-2">ACCÃˆS REFUSÃ‰</h1>
+                <p className="text-slate-400 mb-8 text-center max-w-md">
+                    Identifiant de clone manquant. Le protocole de sÃ©curitÃ© empÃªche l'accÃ¨s au Cortex sans authentification biomÃ©trique (ID).
+                </p>
+                <button
+                    onClick={() => router.push('/dashboard')} // Ou vers votre page de login
+                    className="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-6 py-3 rounded-lg transition text-sm font-mono"
+                >
+                    RETOURNER AU SAS D'ENTRÃ‰E
+                </button>
+            </div>
+        );
+    }
+
+    // --- CHARGEMENT ---
+    const fetchMemories = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch(`/api/memories?profileId=${profileId}`);
+            const data = await res.json();
+            if (data.memories) setMemories(data.memories);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => { if (profileId) fetchMemories(); }, [profileId]);
+
+    // --- SUPPRESSION ---
+    const handleDelete = async (id: string) => {
+        if (!confirm("âš ï¸ ATTENTION : Cette action est irrÃ©versible.\nCe souvenir sera effacÃ© de la mÃ©moire du clone.")) {
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/memories/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                // Mise Ã  jour locale (plus rapide que de tout recharger)
+                setMemories(prev => prev.filter(m => m.id !== id));
+            } else {
+                alert("Erreur: " + data.error);
+            }
+        } catch (e) {
+            alert("Erreur technique lors de la suppression.");
+        }
+    };
+
+    // Filtrage pour la recherche
+    const filteredMemories = memories.filter(m =>
+        m.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className="min-h-screen bg-slate-950 text-white p-8 font-sans">
+
+            {/* HEADER TECHNIQUE */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-slate-800 pb-6">
+                <div>
+                    <h1 className="text-2xl font-bold font-mono text-purple-400 flex items-center gap-2">
+                        âš™ï¸ CORTEX_MANAGER_V1
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-1">
+                        Interface d'administration de la base vectorielle.
+                    </p>
                 </div>
 
-                {/* Footer */}
-                <div className="mt-6 text-center text-xs text-purple-400/50 font-mono">
-                    DIGITAL TWIN v2.0 â€¢ VISUALISATION COBE â€¢ SURVEILLANCE RÃ‰SEAU TEMPS RÃ‰EL
+                {/* STATS RAPIDES */}
+                <div className="flex gap-4">
+                    <div className="bg-slate-900 border border-slate-700 px-4 py-2 rounded text-center">
+                        <div className="text-xl font-bold text-white">{memories.length}</div>
+                        <div className="text-[10px] uppercase text-slate-500 tracking-wider">Fragments</div>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-700 px-4 py-2 rounded text-center">
+                        <div className="text-xl font-bold text-green-400">
+                            {memories.filter(m => m.metadata?.type !== 'PRIVATE').length}
+                        </div>
+                        <div className="text-[10px] uppercase text-slate-500 tracking-wider">Publics</div>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-700 px-4 py-2 rounded text-center">
+                        <div className="text-xl font-bold text-red-400">
+                            {memories.filter(m => m.metadata?.type === 'PRIVATE').length}
+                        </div>
+                        <div className="text-[10px] uppercase text-slate-500 tracking-wider">PrivÃ©s</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* BARRE D'OUTILS */}
+            <div className="flex gap-4 mb-6">
+                <input
+                    type="text"
+                    placeholder="ðŸ” Rechercher une sÃ©quence mÃ©moire..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none font-mono text-sm"
+                />
+                <button
+                    onClick={fetchMemories}
+                    className="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 rounded-lg transition"
+                    title="RafraÃ®chir"
+                >
+                    ðŸ”„
+                </button>
+            </div>
+
+            {/* TABLEAU DE DONNÃ‰ES */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-400">
+                        <thead className="bg-slate-950 text-slate-200 uppercase font-mono text-xs">
+                            <tr>
+                                <th className="px-6 py-4">Statut</th>
+                                <th className="px-6 py-4">Contenu (Raw Data)</th>
+                                <th className="px-6 py-4">Date d'injection</th>
+                                <th className="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-10 text-center text-slate-500 animate-pulse">
+                                        Chargement des donnÃ©es neuronales...
+                                    </td>
+                                </tr>
+                            ) : filteredMemories.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-10 text-center text-slate-600 italic">
+                                        Aucune donnÃ©e trouvÃ©e dans le secteur.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredMemories.map((mem) => (
+                                    <tr key={mem.id} className="hover:bg-slate-800/50 transition group">
+
+                                        {/* COLONNE STATUT */}
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {mem.metadata?.type === 'PRIVATE' ? (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/30 text-red-400 border border-red-900/50">
+                                                    ðŸ”’ PRIVÃ‰
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400 border border-green-900/50">
+                                                    ðŸŒ ACTIF
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        {/* COLONNE CONTENU */}
+                                        <td className="px-6 py-4">
+                                            <div className="max-w-xl truncate text-slate-200 font-medium">
+                                                {mem.content}
+                                            </div>
+                                            <div className="text-xs text-slate-600 font-mono mt-1">
+                                                ID: {mem.id.slice(0, 8)}...
+                                            </div>
+                                        </td>
+
+                                        {/* COLONNE DATE */}
+                                        <td className="px-6 py-4 whitespace-nowrap font-mono text-xs">
+                                            {new Date(mem.created_at).toLocaleDateString()}
+                                            <span className="text-slate-600 ml-2">
+                                                {new Date(mem.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </td>
+
+                                        {/* COLONNE ACTION */}
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                onClick={() => handleDelete(mem.id)}
+                                                className="text-slate-500 hover:text-red-500 hover:bg-red-900/20 p-2 rounded transition"
+                                                title="Supprimer dÃ©finitivement"
+                                            >
+                                                ðŸ—‘ï¸
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\memories\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\journal\page.tsx ---
+
+'use client';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+export default function JournalPage() {
+    const searchParams = useSearchParams();
+    const profileId = searchParams.get('profileId');
+
+    const [memories, setMemories] = useState<any[]>([]);
+    const [input, setInput] = useState('');
+    const [isPrivate, setIsPrivate] = useState(false); // Le switch simple
+    const [isLoading, setIsLoading] = useState(false);
+
+    // --- CHARGEMENT ---
+    const fetchMemories = async () => {
+        const res = await fetch(`/api/memories?profileId=${profileId}`);
+        const data = await res.json();
+        if (data.memories) setMemories(data.memories);
+    };
+
+    useEffect(() => { if (profileId) fetchMemories(); }, [profileId]);
+
+    // --- Ã‰CRITURE RAPIDE (Ex-Inception) ---
+    const handleSubmit = async () => {
+        if (!input.trim()) return;
+        setIsLoading(true);
+
+        try {
+            await fetch('/api/ingest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: input,
+                    profileId,
+                    // C'est ici que Ã§a se joue : on envoie le tag TYPE
+                    type: isPrivate ? 'PRIVATE' : 'PUBLIC'
+                })
+            });
+            setInput('');
+            fetchMemories(); // Mise Ã  jour immÃ©diate du flux
+        } catch (e) {
+            alert("Erreur");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="h-full flex flex-col bg-slate-950 text-white font-sans max-w-4xl mx-auto p-4">
+
+            {/* 1. ZONE DE SAISIE (L'Inception simplifiÃ©e) */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl mb-8 relative z-10">
+                <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ã€ quoi pensez-vous ? (Souvenir, Info, Secret...)"
+                    className="w-full bg-transparent text-lg text-white placeholder-slate-500 focus:outline-none resize-none h-20"
+                />
+
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-800">
+
+                    {/* LE SWITCH MAGIQUE : Cadenas ou Globe */}
+                    <button
+                        onClick={() => setIsPrivate(!isPrivate)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition ${isPrivate
+                                ? 'bg-red-900/30 text-red-400 border border-red-500/50'
+                                : 'bg-green-900/30 text-green-400 border border-green-500/50'
+                            }`}
+                    >
+                        {isPrivate ? (
+                            <>ðŸ”’ STICTEMENT PRIVÃ‰ (Intime)</>
+                        ) : (
+                            <>ðŸŒ RÃ‰SEAU (Utilisable pour Match)</>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={handleSubmit}
+                        disabled={!input || isLoading}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold transition shadow-lg disabled:opacity-50"
+                    >
+                        {isLoading ? 'Encodage...' : 'MÃ©moriser'}
+                    </button>
+                </div>
+            </div>
+
+            {/* 2. LE FLUX (Journal) */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                <h3 className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-2">
+                    Flux Neuronal ({memories.length})
+                </h3>
+
+                {memories.map((mem) => (
+                    <div key={mem.id} className="group flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+
+                        {/* La Timeline visuelle Ã  gauche */}
+                        <div className="flex flex-col items-center">
+                            <div className={`w-3 h-3 rounded-full border-2 ${mem.type === 'PRIVATE' ? 'bg-red-500 border-red-900' : 'bg-green-500 border-green-900'
+                                }`}></div>
+                            <div className="w-0.5 flex-1 bg-slate-800 group-last:bg-transparent my-1"></div>
+                        </div>
+
+                        {/* La Carte du souvenir */}
+                        <div className="flex-1 pb-6">
+                            <div className="bg-slate-900/50 border border-slate-800 hover:border-slate-600 rounded-xl p-4 transition relative">
+
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-xs text-slate-500 font-mono">
+                                        {new Date(mem.created_at).toLocaleDateString()} â€¢ {new Date(mem.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {mem.type === 'PRIVATE' && <span className="text-xs text-red-500">ðŸ”’ CryptÃ©</span>}
+                                </div>
+
+                                <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">
+                                    {mem.content}
+                                </p>
+
+                                {/* Actions au survol */}
+                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
+                                    <button className="text-slate-600 hover:text-red-400 p-1">ðŸ—‘ï¸</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {memories.length === 0 && (
+                    <div className="text-center py-20 text-slate-600 italic">
+                        Votre journal est vide. Ã‰crivez votre premiÃ¨re pensÃ©e ci-dessus.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\memories\page.tsx ---
 
 'use client';
 
@@ -3108,7 +4490,8 @@ export default function MemoriesPage() {
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\profile\new\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\profile\new\page.tsx ---
 
 'use client';
 
@@ -3431,7 +4814,8 @@ export default function NewProfilePage() {
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\profile\unlock\page.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\profile\unlock\page.tsx ---
 
 'use client';
 
@@ -3605,7 +4989,8 @@ export default function UnlockPage() {
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\shadow-globe.tsx ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\shadow-globe.tsx ---
 
 'use client';
 import { useEffect, useRef, useState } from 'react';
@@ -3763,7 +5148,8 @@ export default function ShadowGlobe({ onLocationChange }: ShadowGlobeProps) {
     );
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\crypto\key-manager.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\crypto\key-manager.ts ---
 
 /**
  * Key Manager - Secure Session-Based Key Storage
@@ -3909,7 +5295,8 @@ class KeyManager {
 // Singleton instance
 export const keyManager = new KeyManager();
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\crypto\zk-encryption.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\crypto\zk-encryption.ts ---
 
 // Fix build dependencies Vercel
 /**
@@ -4096,7 +5483,8 @@ export function base64ToArray(base64: string): Uint8Array {
   return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\db\supabase.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\db\supabase.ts ---
 
 /**
  * Supabase Client Configuration
@@ -4140,7 +5528,8 @@ export function getSupabaseAdmin() {
     });
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\hooks\use-speech.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\hooks\use-speech.ts ---
 
 import { useState, useEffect, useRef } from 'react';
 
@@ -4216,7 +5605,8 @@ export function useSpeech() {
     };
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\profile\profile-manager.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\profile\profile-manager.ts ---
 
 /**
  * Profile Manager
@@ -4421,7 +5811,8 @@ export class ProfileManager {
 // Singleton instance
 export const profileManager = new ProfileManager();
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\profile\profile-schema.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\profile\profile-schema.ts ---
 
 /**
  * Profile Schema and Types
@@ -4482,7 +5873,8 @@ export interface VectorStoreConfig {
     model: string;
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\security\crypto.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\security\crypto.ts ---
 
 // lib/security/crypto.ts
 
@@ -4552,7 +5944,24 @@ export const cryptoManager = {
     }
 };
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\embedding-service.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\supabase\client.ts ---
+
+import { createClient } from '@supabase/supabase-js';
+
+// On rÃ©cupÃ¨re les clÃ©s dans les variables d'environnement
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Il manque les clÃ©s Supabase dans le fichier .env !");
+}
+
+// On crÃ©e et exporte le client
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\embedding-service.ts ---
 
 /**
  * Embedding Service
@@ -4666,7 +6075,8 @@ export class EmbeddingService {
 // Singleton instance
 export const embeddingService = new EmbeddingService();
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\supabase-pgvector.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\supabase-pgvector.ts ---
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -4769,7 +6179,8 @@ export class SupabasePgVectorStore {
 
 export const vectorStore = new SupabasePgVectorStore();
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\vector-store.ts ===
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\vector\vector-store.ts ---
 
 /**
  * Vector Store Interface
@@ -4820,199 +6231,8 @@ export interface VectorStore {
     deleteByProfile(profileId: string): Promise<void>;
 }
 
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\prisma\schema.prisma ===
 
-// Prisma Schema for Digital Twin Profile System
-// Zero-Knowledge Architecture with Supabase pgvector
-
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [vector]
-}
-
-// Profile represents a digital twin instance
-// Each profile is completely isolated with its own encryption
-model Profile {
-  id                String   @id @default(cuid())
-  name              String   // Non-sensitive display name
-  
-  // Zero-Knowledge Security
-  saltBase64        String   // Base64 encoded salt for key derivation
-  passwordHash      String   // Hash for password verification (not the encryption key)
-  
-  // Encrypted Metadata (JSON)
-  encryptedMetadata String   @db.Text // Contains encrypted profile settings, preferences, etc.
-  
-  // Vector Store Configuration
-  vectorNamespace   String   @unique // Unique namespace for this profile's vectors
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  lastAccessedAt    DateTime @default(now())
-  
-  // Relations
-  memories           Memory[]
-  missions           Mission[]
-  shadowInteractions ShadowInteraction[]
-  dataSources        DataSource[]
-  
-  @@index([vectorNamespace])
-}
-
-// Memory represents a single memory/data point
-// All content is encrypted before storage
-model Memory {
-  id                String   @id @default(cuid())
-  
-  // Profile Association (strict isolation)
-  profileId         String
-  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  // Encrypted Content
-  encryptedContent  String   @db.Text // The actual memory content (encrypted)
-  encryptedMetadata String   @db.Text // Additional metadata like tags, context (encrypted)
-  
-  // Vector Embedding (stored in pgvector)
-  // The embedding itself is derived from encrypted content
-  embedding         Unsupported("vector(1024)")?  // Mistral Embed dimension (optional for now)
-  
-  // Memory Type
-  type              MemoryType @default(TEXT)
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  @@index([profileId])
-  @@index([profileId, type])
-  @@index([profileId, createdAt])
-}
-
-// Enum for memory types
-enum MemoryType {
-  TEXT
-  IMAGE
-  VIDEO
-  AUDIO
-  DOCUMENT
-  CONVERSATION
-}
-
-// Mission represents an autonomous task given to the Digital Twin
-model Mission {
-  id          String        @id @default(cuid())
-  profileId   String
-  profile     Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  title       String        // e.g., "Find investors"
-  description String?       @db.Text
-  status      MissionStatus @default(ACTIVE)
-  progress    Int           @default(0) // 0-100
-  
-  // JSON log of actions taken
-  log         String        @db.Text @default("[]")
-  
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  completedAt DateTime?
-  
-  @@index([profileId])
-  @@index([profileId, status])
-}
-
-// ShadowInteraction tracks the clone's autonomous network activity
-model ShadowInteraction {
-  id                String            @id @default(cuid())
-  profileId         String
-  profile           Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  // The anonymous ID encountered in the network
-  targetProfileId   String
-  
-  // AI-computed compatibility score
-  compatibilityScore Float            @default(0.0)
-  
-  // Interaction status
-  status            InteractionStatus @default(IGNORED)
-  
-  // Metadata about the interaction
-  metadata          String            @db.Text @default("{}")
-  
-  timestamp         DateTime          @default(now())
-  
-  @@index([profileId])
-  @@index([profileId, status])
-  @@index([profileId, timestamp])
-}
-
-// Enum for mission status
-enum MissionStatus {
-  ACTIVE
-  COMPLETED
-  PAUSED
-  FAILED
-}
-
-// Enum for shadow interaction status
-enum InteractionStatus {
-  IGNORED      // Clone ignored this profile
-  MATCHED      // Clone found a match
-  ESCALATED    // Requires human review
-}
-
-// DataSource represents a connected social media platform for data ingestion
-// CRITICAL: Read-only. Twin NEVER posts to real social networks.
-model DataSource {
-  id          String     @id @default(cuid())
-  profileId   String
-  profile     Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  platform    String     // 'LINKEDIN', 'TWITTER', 'INSTAGRAM'
-  isConnected Boolean    @default(false)
-  syncStatus  SyncStatus @default(IDLE)
-  
-  lastSync    DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  @@index([profileId])
-  @@index([profileId, platform])
-  @@unique([profileId, platform])
-}
-
-// Enum for data source sync status
- enum SyncStatus {
-  IDLE
-  SYNCING
-  CONNECTED
-  ERROR
-}
-
-// Recovery Phrase Storage (optional - for BIP39 backup)
-// This should be encrypted with a separate recovery key
-model RecoveryPhrase {
-  id                String   @id @default(cuid())
-  profileId         String   @unique
-  
-  // Encrypted BIP39 phrase (encrypted with a recovery-specific key)
-  encryptedPhrase   String   @db.Text
-  
-  // Verification hash to confirm recovery phrase without decrypting
-  phraseHash        String
-  
-  createdAt         DateTime @default(now())
-  
-  @@index([profileId])
-}
-
-=== C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\public\manifest.json ===
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\public\manifest.json ---
 
 {
     "name": "Mon Jumeau NumÃ©rique",

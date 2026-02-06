@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Network } from 'lucide-react';
 import { keyManager } from '@/lib/crypto/key-manager';
@@ -20,8 +20,84 @@ interface DecryptedMemory extends Memory {
     type?: 'secret' | 'public';
 }
 
+// ✅ COLLEZ CECI À LA PLACE (Nouveau Mission Control Sécurisé)
+const SafeMissionControl = ({ count }: { count: number }) => {
+    // Calcul simulé du taux de synchro basé sur le nombre de souvenirs
+    const syncRate = Math.min(100, Math.floor(count * 2.5));
+
+    return (
+        <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-6 backdrop-blur-sm">
+            <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Systèmes Vitaux
+            </h3>
+
+            <div className="space-y-6">
+                {/* JAUGE SYNCHRONISATION */}
+                <div>
+                    <div className="flex justify-between text-sm mb-1">
+                        <span className="text-blue-400 font-mono">Taux de Synchro</span>
+                        <span className="text-white font-bold">{syncRate}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-1000"
+                            style={{ width: `${syncRate}%` }}
+                        ></div>
+                    </div>
+                </div>
+
+                {/* JAUGE MÉMOIRE */}
+                <div>
+                    <div className="flex justify-between text-sm mb-1">
+                        <span className="text-purple-400 font-mono">Fragments Mémoire</span>
+                        <span className="text-white font-bold">{count}</span>
+                    </div>
+                    <div className="grid grid-cols-10 gap-1">
+                        {[...Array(10)].map((_, i) => (
+                            <div
+                                key={i}
+                                className={`h-1 rounded-full transition-all delay-[${i * 50}ms] ${i < (count / 10) ? 'bg-purple-500 shadow-[0_0_5px_#a855f7]' : 'bg-slate-800'
+                                    }`}
+                            ></div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="p-3 bg-blue-900/10 border border-blue-500/20 rounded-lg text-xs text-blue-300 font-mono">
+                    STATUS: ONLINE<br />
+                    CONNEXION: STABLE
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// On renomme l'original pour ne pas le perdre (mais il ne sera plus appelé)
 export default function MissionControl() {
+    const searchParams = useSearchParams();
+    const profileId = searchParams.get('profileId');
     const router = useRouter();
+
+    // Ajoutez cet état pour bloquer l'affichage tant que tout n'est pas prêt
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // --- EFFET D'INITIALISATION SÉCURISÉE ---
+    useEffect(() => {
+        if (profileId) {
+            // On simule un micro-délai pour être sûr que le KeyManager a le temps de respirer
+            // (Dans une vraie app, on appellerait KeyManager.init(profileId) ici)
+            const timer = setTimeout(() => {
+                setIsInitialized(true);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [profileId]);
+
+
+
+
     const [authorized, setAuthorized] = useState(false);
     const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +113,7 @@ export default function MissionControl() {
     const [connectedSources, setConnectedSources] = useState(0);
 
     // Tab and Chat state
-    const [activeTab, setActiveTab] = useState<'SCRIBE' | 'CHAT'>('SCRIBE');
+    const [activeTab, setActiveTab] = useState<'SCRIBE' | 'CHAT'>('CHAT');
     const [chatMessages, setChatMessages] = useState<Array<{
         role: 'user' | 'twin';
         content: string;
@@ -48,7 +124,12 @@ export default function MissionControl() {
     const chatRef = useRef<HTMLDivElement>(null);
 
     // VOICE MODE HOOK
-    const { isListening, transcript, startListening, speak, isSpeaking } = useSpeech();
+    const { isListening, transcript, startListening, isSpeaking } = useSpeech();
+
+    const speak = (text: string) => {
+        // 🔇 MODE SILENCIEUX ACTIVÉ
+        return;
+    };
 
     // Effet : Quand la reconnaissance vocale écrit du texte, on le met dans l'input
     useEffect(() => {
@@ -71,7 +152,94 @@ export default function MissionControl() {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifPanel, setShowNotifPanel] = useState(false);
 
+    // Contacts state
+    const [contacts, setContacts] = useState<any[]>([]);
+
+    const [showContactsPanel, setShowContactsPanel] = useState(false);
+    const [hasNewContact, setHasNewContact] = useState(false); // <--- NOUVEL ÉTAT pour le point rouge
+
+    // Messaging state
+    const [activeConversation, setActiveConversation] = useState<any>(null);
+    const [conversationMessages, setConversationMessages] = useState<any[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+
     const [error, setError] = useState('');
+
+    // --- ÉTATS NEURO-LINK ---
+    const [neuroInput, setNeuroInput] = useState('');
+    const [isPrivateMemory, setIsPrivateMemory] = useState(false);
+    const [isSavingMemory, setIsSavingMemory] = useState(false);
+
+    // --- ÉTATS POUR LE CORTEX MANAGER RAPIDE ---
+    const [showCortexPanel, setShowCortexPanel] = useState(false);
+    const [cortexMemories, setCortexMemories] = useState<any[]>([]);
+    const [cortexSearch, setCortexSearch] = useState('');
+
+    // --- FONCTION : OUVRIR ET CHARGER LE CORTEX ---
+    // --- FONCTION : OUVRIR ET CHARGER LE CORTEX ---
+    const openCortex = async () => {
+        setShowCortexPanel(true);
+        const id = keyManager.getProfileId();
+        if (!id) return;
+
+        try {
+            // Utilisation de /api/memory (singulier) qui existe déjà
+            const res = await fetch(`/api/memory?profileId=${id}`);
+
+            if (!res.ok) {
+                console.error("Erreur API:", res.status, res.statusText);
+                return;
+            }
+
+            const data = await res.json();
+            // Gestion de la réponse (Array direct ou objet {memories: []})
+            if (Array.isArray(data)) {
+                setCortexMemories(data);
+            } else if (data.memories) {
+                setCortexMemories(data.memories);
+            }
+        } catch (e) {
+            console.error("Erreur chargement cortex", e);
+        }
+    };
+
+    // --- FONCTION : SUPPRIMER UN SOUVENIR ---
+    // --- FONCTION : SUPPRIMER UN SOUVENIR ---
+    const handleDeleteMemory = async (id: string) => {
+        if (!confirm("⚠️ Irréversible : Voulez-vous vraiment effacer ce souvenir ?")) return;
+
+        try {
+            const res = await fetch('/api/memories/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                // Protection contre les pages HTML d'erreur (404/500)
+                alert(`Erreur API (${res.status}) : Vérifiez /api/memories/delete`);
+                console.error("Réponse serveur:", text);
+                return;
+            }
+
+            const data = await res.json();
+            if (data.success) {
+                // Mise à jour optimiste de l'UI
+                setCortexMemories(prev => prev.filter(m => m.id !== id));
+            } else {
+                alert("Erreur: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erreur technique lors de la suppression.");
+        }
+    };
+
+    // Filtrage pour la recherche dans le tableau
+    const filteredCortex = cortexMemories.filter(m =>
+        m.content?.toLowerCase().includes(cortexSearch.toLowerCase())
+    );
 
     useEffect(() => {
         if (!keyManager.isSessionActive()) {
@@ -135,6 +303,41 @@ export default function MissionControl() {
             }
         } catch (e) {
             console.error("Erreur notifs", e);
+        }
+    };
+
+    // LE RADAR : On lance la vérification toutes les 5 secondes
+    useEffect(() => {
+        const profileId = keyManager.getProfileId();
+        if (profileId) {
+            fetchContacts(profileId); // Chargement initial
+
+            const interval = setInterval(() => {
+                fetchContacts(profileId); // Vérification périodique
+            }, 5000); // 5000 ms = 5 secondes
+
+            return () => clearInterval(interval); // Nettoyage quand on quitte la page
+        }
+    }, []);
+
+    const fetchContacts = async (pid: string) => {
+        try {
+            const res = await fetch(`/api/contacts?profileId=${pid}`);
+            const data = await res.json();
+
+            if (data.contacts) {
+                setContacts(prevContacts => {
+                    // Si on a plus de contacts qu'avant, c'est qu'on a été accepté !
+                    if (data.contacts.length > prevContacts.length && prevContacts.length > 0) {
+                        setHasNewContact(true);
+                        // On peut même faire parler le clone
+                        // speak("Nouvelle connexion établie !"); 
+                    }
+                    return data.contacts;
+                });
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -578,10 +781,229 @@ export default function MissionControl() {
         }
     };
 
+    const handleRespond = async (commId: string, status: 'ACCEPTED' | 'REJECTED') => {
+        try {
+            // 1. On sauvegarde les infos du contact AVANT de le supprimer de la liste
+            const targetContact = notifications.find(n => n.id === commId);
+
+            // 2. Appel à l'API
+            const res = await fetch('/api/communications/respond', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ communicationId: commId, status })
+            });
+
+            if (!res.ok) throw new Error("Erreur serveur");
+
+            // 3. Mise à jour visuelle (On retire la notif)
+            setNotifications(prev => prev.filter(n => n.id !== commId));
+
+            // 4. SI ACCEPTÉ -> ON OUVRE LE TCHAT DIRECTEMENT
+            if (status === 'ACCEPTED' && targetContact) {
+                setShowNotifPanel(false);   // On ferme les notifs
+                setShowContactsPanel(true); // On ouvre le panneau principal
+                openChat(targetContact);    // On lance la conversation
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de la mise à jour");
+        }
+    };
+
+    // A. Ouvrir une conversation
+    const openChat = async (contact: any) => {
+        setActiveConversation(contact);
+        // On charge l'historique
+        const res = await fetch(`/api/messages?commId=${contact.id}`);
+        const data = await res.json();
+        if (data.messages) setConversationMessages(data.messages);
+    };
+
+    // B. Envoyer un message
+    const sendDirectMessage = async () => {
+        if (!newMessage.trim() || !activeConversation) return;
+
+        const tempMsg = newMessage;
+        setNewMessage(""); // On vide l'input tout de suite (UX)
+
+        const profileId = keyManager.getProfileId();
+
+        try {
+            const res = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    commId: activeConversation.id,
+                    senderId: profileId,
+                    content: tempMsg
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // On ajoute le message à la liste locale pour l'affichage immédiat
+                setConversationMessages(prev => [...prev, data.message]);
+            }
+        } catch (e) {
+            alert("Erreur d'envoi");
+        }
+    };
+
+    // --- FONCTION : NEURO-LINK SAVE ---
+    const handleNeuroSave = async () => {
+        if (!neuroInput.trim()) return;
+        setIsSavingMemory(true);
+
+        const profileId = keyManager.getProfileId();
+        if (!profileId) {
+            setIsSavingMemory(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/memories/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: neuroInput,
+                    type: isPrivateMemory ? 'PRIVATE' : 'PUBLIC',
+                    profileId: profileId
+                })
+            });
+
+            if (res.ok) {
+                setNeuroInput('');
+                // Optionnel : Petit feedback sonore ou visuel
+                speak("Souvenir encodé.");
+                // Actualisation du Cortex si le tableau est visible
+                if (showCortexPanel) openCortex();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSavingMemory(false);
+        }
+    };
+
+    // 🛑 GARDIEN COMBINÉ (Pas d'ID ou Pas Prêt)
+    if (!profileId || !isInitialized) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-6 relative overflow-hidden">
+
+                {/* Fond décoratif */}
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+
+                {/* Si on a l'ID mais qu'on initialise... */}
+                {profileId ? (
+                    <div className="text-center animate-pulse">
+                        <div className="text-4xl mb-4">🧬</div>
+                        <h2 className="font-mono text-blue-400 text-xl">Synchronisation Neuronale...</h2>
+                        <p className="text-slate-500 text-xs mt-2">Initialisation du Cortex</p>
+                    </div>
+                ) : (
+                    /* Si on n'a PAS l'ID (Le formulaire de connexion) */
+                    <div className="z-10 bg-slate-900/80 p-8 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full backdrop-blur-md">
+                        <div className="text-center mb-8">
+                            <div className="text-6xl mb-4">🔒</div>
+                            <h1 className="text-2xl font-bold font-mono bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                                ACCÈS NEURONAL
+                            </h1>
+                            <p className="text-slate-400 text-sm mt-2">Identifiant requis.</p>
+                        </div>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.currentTarget);
+                                const id = formData.get('idInput') as string;
+                                if (id) router.push(`/dashboard?profileId=${id}`);
+                            }}
+                            className="space-y-4"
+                        >
+                            <input
+                                name="idInput"
+                                type="text"
+                                placeholder="Ex: cml_..."
+                                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none font-mono text-sm"
+                                autoFocus
+                            />
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition">
+                                CONNEXION
+                            </button>
+                        </form>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     if (!authorized) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6">
+        <div key={profileId + "_mission"} className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6">
+
+            {/* --- NEURO-LINK : BARRE D'ENTRÉE CENTRALE --- */}
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-50 px-4">
+                <div className={`
+          relative bg-slate-900/80 backdrop-blur-md border rounded-2xl shadow-2xl transition-all duration-300
+          ${isSavingMemory ? 'border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'border-slate-700 hover:border-slate-500'}
+        `}>
+
+                    <div className="flex items-center p-2">
+
+                        {/* SWITCH PRIVÉ / PUBLIC */}
+                        <button
+                            onClick={() => setIsPrivateMemory(!isPrivateMemory)}
+                            className={`
+                flex-shrink-0 p-2 rounded-xl transition-all duration-300 font-bold text-xs mr-2 border
+                ${isPrivateMemory
+                                    ? 'bg-red-900/30 text-red-400 border-red-500/50 hover:bg-red-900/50'
+                                    : 'bg-green-900/30 text-green-400 border-green-500/50 hover:bg-green-900/50'}
+              `}
+                            title={isPrivateMemory ? "Mode Intime (Crypté)" : "Mode Réseau (Partageable)"}
+                        >
+                            {isPrivateMemory ? '🔒 PRIVÉ' : '🌐 ACTIF'}
+                        </button>
+
+                        {/* CHAMP DE SAISIE */}
+                        <input
+                            type="text"
+                            value={neuroInput}
+                            onChange={(e) => setNeuroInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleNeuroSave()}
+                            placeholder="Apprenez-moi quelque chose sur vous..."
+                            className="flex-1 bg-transparent border-none text-white placeholder-slate-500 focus:outline-none focus:ring-0 text-sm md:text-base font-medium"
+                            disabled={isSavingMemory}
+                        />
+
+                        {/* BOUTON ENVOYER */}
+                        <button
+                            onClick={handleNeuroSave}
+                            disabled={!neuroInput || isSavingMemory}
+                            className={`
+                p-2 rounded-xl transition-all duration-300 ml-2
+                ${neuroInput
+                                    ? 'bg-purple-600 text-white shadow-lg cursor-pointer hover:scale-105'
+                                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'}
+              `}
+                        >
+                            {isSavingMemory ? (
+                                <span className="animate-spin block">🌀</span>
+                            ) : (
+                                <span>💾</span>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* BARRE DE PROGRESSION (Décoratif) */}
+                    <div className="h-0.5 w-full bg-slate-800 rounded-b-2xl overflow-hidden">
+                        <div className={`h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-1000 ${isSavingMemory ? 'w-full' : 'w-0'}`}></div>
+                    </div>
+
+                </div>
+            </div>
+
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6 border-2 border-purple-500/30 bg-black/50 backdrop-blur p-4 md:p-6 rounded-lg">
@@ -595,13 +1017,146 @@ export default function MissionControl() {
                             </p>
                         </div>
                         <div className="flex items-center gap-4">
-                            {/* --- BARRE DE NOTIFICATIONS (Position: Bas Gauche) --- */}
-                            <div className="fixed bottom-6 left-6 z-[99999]">
-
-                                {/* LE BOUTON CLOCHE */}
+                            {/* --- BOUTON CONTACTS (Juste au dessus de la cloche) --- */}
+                            <div className="fixed bottom-24 left-6 z-[9999]">
                                 <button
-                                    onClick={() => setShowNotifPanel(!showNotifPanel)}
+                                    onClick={() => {
+                                        setShowContactsPanel(true);
+                                        setHasNewContact(false); // On éteint l'alerte quand on clique
+                                    }}
                                     className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110"
+                                    style={{
+                                        backgroundColor: '#0f172a',
+                                        border: hasNewContact ? '2px solid #22c55e' : '2px solid #3b82f6', /* Vert si nouveau, Bleu sinon */
+                                        color: 'white'
+                                    }}
+                                    title="Mes Connexions"
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>👥</span>
+
+                                    {/* LE POINT ROUGE CLIGNOTANT (Radar) */}
+                                    {hasNewContact && (
+                                        <span className="absolute top-0 right-0 flex h-4 w-4">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* --- MODALE UNIFIÉE (CONTACTS & TCHAT) --- */}
+                            {showContactsPanel && (
+                                <div
+                                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
+                                    style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}
+                                >
+                                    <div className="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-blue-500 h-[500px] flex flex-col animate-in fade-in zoom-in duration-300">
+
+                                        {/* --- CAS 1 : MODE TCHAT --- */}
+                                        {activeConversation ? (
+                                            <>
+                                                {/* Header Tchat */}
+                                                <div className="p-3 bg-slate-800 border-b border-blue-500 flex justify-between items-center text-white">
+                                                    <button onClick={() => setActiveConversation(null)} className="text-sm text-blue-400 hover:text-white transition">
+                                                        ← Retour
+                                                    </button>
+                                                    <span className="font-mono font-bold text-blue-200">
+                                                        ID: {activeConversation.to_clone_id === keyManager.getProfileId()
+                                                            ? activeConversation.from_clone_id.slice(0, 6)
+                                                            : activeConversation.to_clone_id.slice(0, 6)}...
+                                                    </span>
+                                                    <button onClick={() => setShowContactsPanel(false)} className="text-slate-500 hover:text-white transition">✕</button>
+                                                </div>
+
+                                                {/* Zone des Messages */}
+                                                <div className="flex-1 overflow-y-auto p-4 bg-slate-900 space-y-3">
+                                                    {conversationMessages.length === 0 && (
+                                                        <div className="text-center text-slate-600 text-xs mt-10">Début de la conversation cryptée.</div>
+                                                    )}
+                                                    {conversationMessages.map((msg) => {
+                                                        const isMe = msg.sender_id === keyManager.getProfileId();
+                                                        return (
+                                                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                                <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${isMe
+                                                                    ? 'bg-blue-600 text-white rounded-br-none'
+                                                                    : 'bg-slate-700 text-slate-200 rounded-bl-none'
+                                                                    }`}>
+                                                                    {msg.content}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {/* Input Tchat */}
+                                                <div className="p-3 bg-slate-800 border-t border-slate-700 flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={newMessage}
+                                                        onChange={(e) => setNewMessage(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && sendDirectMessage()}
+                                                        placeholder="Message sécurisé..."
+                                                        className="flex-1 bg-slate-900 text-white border border-slate-600 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+                                                    />
+                                                    <button
+                                                        onClick={sendDirectMessage}
+                                                        className="bg-blue-600 hover:bg-blue-500 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center transition hover:scale-105"
+                                                    >
+                                                        ➤
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            /* --- CAS 2 : LISTE DES CONTACTS --- */
+                                            <>
+                                                <div className="p-4 bg-blue-900/50 border-b border-blue-500 flex justify-between items-center text-white font-bold">
+                                                    <h3>👥 Mes Connexions Actives</h3>
+                                                    <button onClick={() => setShowContactsPanel(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+                                                </div>
+
+                                                <div className="flex-1 overflow-y-auto p-2">
+                                                    {contacts.length === 0 ? (
+                                                        <div className="p-8 text-center text-slate-500 italic">
+                                                            Aucune connexion active. <br />Lancez une mission ! 🚀
+                                                        </div>
+                                                    ) : (
+                                                        contacts.map((contact) => {
+                                                            // On détermine qui est l'autre (si je suis sender, l'autre est receiver)
+                                                            const myId = keyManager.getProfileId();
+                                                            const otherId = contact.from_clone_id === myId ? contact.to_clone_id : contact.from_clone_id;
+
+                                                            return (
+                                                                <div key={contact.id} className="mb-2 bg-slate-800 rounded-lg p-3 border border-slate-700 hover:bg-slate-700 cursor-pointer flex justify-between items-center transition">
+                                                                    <div>
+                                                                        <div className="text-sm text-blue-300 font-mono">
+                                                                            ...{otherId.slice(-8)}
+                                                                        </div>
+                                                                        <div className="text-xs text-slate-400 truncate w-32">
+                                                                            Sujet : {contact.content}
+                                                                        </div>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => openChat(contact)}
+                                                                        className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-full"
+                                                                    >
+                                                                        💬 Discuter
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- 1. LE BOUTON CLOCHE (Reste en bas à gauche) --- */}
+                            <div className="fixed bottom-6 left-6 z-[9999]">
+                                <button
+                                    onClick={() => setShowNotifPanel(true)}
+                                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110 hover:rotate-12"
                                     style={{
                                         backgroundColor: '#1e293b',
                                         border: '2px solid #a855f7',
@@ -609,70 +1164,93 @@ export default function MissionControl() {
                                     }}
                                 >
                                     <span style={{ fontSize: '1.5rem' }}>🔔</span>
-
                                     {notifications.length > 0 && (
                                         <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center animate-pulse border-2 border-slate-900">
                                             {notifications.length}
                                         </span>
                                     )}
                                 </button>
+                            </div>
 
-                                {/* --- LE PANNEAU DÉROULANT (S'ouvre vers le haut maintenant) --- */}
-                                {showNotifPanel && (
+                            {/* --- 2. LA MODALE (OVERLAY) --- */}
+                            {showNotifPanel && (
+                                <div
+                                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
+                                    style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)' }}
+                                    onClick={(e) => {
+                                        if (e.target === e.currentTarget) setShowNotifPanel(false);
+                                    }}
+                                >
+                                    {/* LA BOÎTE DE RÉCEPTION CENTRALE */}
                                     <div
-                                        className="absolute bottom-16 left-0 w-80 rounded-xl shadow-2xl overflow-hidden backdrop-blur-md"
-                                        style={{
-                                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                                            border: '1px solid #a855f7',
-                                            color: 'white'
-                                        }}
+                                        className="w-full max-w-md bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300"
+                                        style={{ border: '1px solid #a855f7' }}
                                     >
                                         {/* En-tête */}
-                                        <div className="p-3 font-bold border-b border-purple-500 flex justify-between items-center bg-purple-900/50">
-                                            <span>Boîte de Réception</span>
-                                            <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">
-                                                {notifications.length}
-                                            </span>
+                                        <div className="p-4 bg-purple-900/50 border-b border-purple-500 flex justify-between items-center">
+                                            <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                                📨 Boîte de Réception
+                                                <span className="text-xs bg-purple-600 px-2 py-0.5 rounded-full">{notifications.length}</span>
+                                            </h3>
+                                            <button
+                                                onClick={() => setShowNotifPanel(false)}
+                                                className="text-slate-400 hover:text-white transition text-xl font-bold px-2"
+                                            >
+                                                ✕
+                                            </button>
                                         </div>
 
-                                        {/* Contenu */}
-                                        {notifications.length === 0 ? (
-                                            <div className="p-6 text-center text-slate-400 text-sm italic">
-                                                R.A.S. (Rien à signaler)
-                                            </div>
-                                        ) : (
-                                            <div className="max-h-64 overflow-y-auto">
-                                                {notifications.map((notif) => (
-                                                    <div key={notif.id} className="p-4 border-b border-slate-700 hover:bg-slate-800 transition">
+                                        {/* Liste des messages */}
+                                        <div className="max-h-[60vh] overflow-y-auto p-2">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-8 text-center text-slate-500 italic">
+                                                    Aucun signal entrant pour le moment.
+                                                </div>
+                                            ) : (
+                                                notifications.map((notif) => (
+                                                    <div key={notif.id} className="mb-3 bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-purple-500/50 transition">
                                                         <div className="flex justify-between items-start mb-2">
-                                                            <span className="text-xs text-purple-400 font-bold uppercase tracking-wider">
-                                                                📡 Signal Entrant
+                                                            <span className="text-xs text-purple-400 font-bold uppercase tracking-wider bg-purple-900/30 px-2 py-1 rounded">
+                                                                📡 Signal PING
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400">
+                                                                {new Date(notif.created_at).toLocaleTimeString()}
                                                             </span>
                                                         </div>
 
-                                                        <div className="text-sm text-white mb-2 font-medium">
+                                                        <p className="text-white mb-3 font-medium text-lg leading-relaxed">
                                                             "{notif.content}"
+                                                        </p>
+
+                                                        <div className="text-xs text-slate-400 mb-4 flex items-center gap-2">
+                                                            Identifiant source :
+                                                            <code className="bg-black/50 px-2 py-1 rounded text-purple-300 font-mono">
+                                                                {notif.from_clone_id}
+                                                            </code>
                                                         </div>
 
-                                                        <div className="text-xs text-slate-400 mb-3">
-                                                            De : <span className="font-mono text-purple-300">{notif.from_clone_id.slice(0, 8)}...</span>
-                                                        </div>
-
-                                                        <div className="flex gap-2">
-                                                            <button className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded">
-                                                                ACCEPTER
+                                                        {/* BOUTONS D'ACTION */}
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                onClick={() => handleRespond(notif.id, 'ACCEPTED')}
+                                                                className="py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition shadow-[0_0_15px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2"
+                                                            >
+                                                                ✅ ACCEPTER
                                                             </button>
-                                                            <button className="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-xs font-bold rounded">
-                                                                IGNORER
+                                                            <button
+                                                                onClick={() => handleRespond(notif.id, 'REJECTED')}
+                                                                className="py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold rounded-lg transition"
+                                                            >
+                                                                🗑️ IGNORER
                                                             </button>
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                             <Link
                                 href="/connections"
                                 className="flex items-center gap-2 px-4 py-2 border border-purple-500 text-purple-400 rounded-lg hover:bg-purple-500/10 transition-all font-mono text-sm"
@@ -696,12 +1274,12 @@ export default function MissionControl() {
                 )}
 
                 {/* Synchronization Rate Widget */}
-                <div className="mb-6 border-2 border-pink-500/40 bg-gradient-to-br from-purple-900/30 via-pink-900/20 to-purple-900/30 backdrop-blur rounded-xl p-6 md:p-8 shadow-2xl shadow-pink-500/10">
+                {/* <div key={profileId + "_sync"} className="mb-6 border-2 border-pink-500/40 bg-gradient-to-br from-purple-900/30 via-pink-900/20 to-purple-900/30 backdrop-blur rounded-xl p-6 md:p-8 shadow-2xl shadow-pink-500/10">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        {/* Left: Percentage Circle */}
+                        
                         <div className="flex-shrink-0">
                             <div className="relative w-32 h-32 md:w-40 md:h-40">
-                                {/* Background Circle */}
+                                
                                 <svg className="w-full h-full transform -rotate-90">
                                     <circle
                                         cx="50%"
@@ -711,7 +1289,7 @@ export default function MissionControl() {
                                         stroke="rgba(139, 92, 246, 0.2)"
                                         strokeWidth="8"
                                     />
-                                    {/* Progress Circle */}
+                                    
                                     <circle
                                         cx="50%"
                                         cy="50%"
@@ -732,7 +1310,7 @@ export default function MissionControl() {
                                         </linearGradient>
                                     </defs>
                                 </svg>
-                                {/* Percentage Text */}
+                                
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                                         {syncRate}%
@@ -741,7 +1319,7 @@ export default function MissionControl() {
                             </div>
                         </div>
 
-                        {/* Right: Info */}
+                        
                         <div className="flex-1 text-center md:text-left">
                             <h2 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
                                 TAUX DE SYNCHRONISATION
@@ -752,7 +1330,7 @@ export default function MissionControl() {
                                 </span>
                             </div>
 
-                            {/* Progress Bar */}
+                            
                             <div className="mb-4">
                                 <div className="h-3 bg-slate-800/50 rounded-full overflow-hidden border border-purple-500/30">
                                     <div
@@ -762,7 +1340,7 @@ export default function MissionControl() {
                                 </div>
                             </div>
 
-                            {/* Stats */}
+                            
                             <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-3 text-sm">
                                 <div className="flex items-center gap-2">
                                     <span className="text-green-400">🧠</span>
@@ -774,7 +1352,7 @@ export default function MissionControl() {
                                 </div>
                             </div>
 
-                            {/* Motivational Text */}
+                            
                             <p className="text-sm text-pink-300/80 italic">
                                 {syncRate < 100
                                     ? "⚡ Données insuffisantes pour l'autonomie totale. Nourrissez le modèle."
@@ -783,24 +1361,26 @@ export default function MissionControl() {
                             </p>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
 
                 {/* Main Grid: 2 Columns */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* LEFT: Tabbed Interface (Journal / Chat) */}
                     <div className="space-y-6">
+
+                        {/* ✅ LE NOUVEAU MODULE SÉCURISÉ */}
+                        {/* On lui passe le nombre de souvenirs (cortexMemories.length) pour qu'il bouge ! */}
+                        <SafeMissionControl count={memories.length} />
+
                         {/* Tab Switcher */}
                         <div className="flex gap-2 border-2 border-purple-500/30 bg-black/50 backdrop-blur rounded-lg p-2">
-                            <button
-                                onClick={() => setActiveTab('SCRIBE')}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all ${activeTab === 'SCRIBE'
-                                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/30'
-                                    : 'bg-transparent border border-green-500/30 text-green-400 hover:bg-green-500/10'
-                                    }`}
+                            <Link
+                                href={`/dashboard/journal?profileId=${keyManager.getProfileId()}`}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all bg-transparent border border-green-500/30 text-green-400 hover:bg-green-500/10"
                             >
                                 ✍️ JOURNAL
-                            </button>
+                            </Link>
                             <button
                                 onClick={() => setActiveTab('CHAT')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-bold font-mono text-sm transition-all ${activeTab === 'CHAT'
@@ -964,7 +1544,7 @@ export default function MissionControl() {
                                     </p>
 
                                     <Link
-                                        href={`/memories?profileId=${keyManager.getProfileId()}`}
+                                        href={`/dashboard/cortex?profileId=${keyManager.getProfileId()}`}
                                         className="inline-flex items-center px-6 py-3 bg-green-600/20 text-green-300 border border-green-500/50 rounded-lg hover:bg-green-600/40 transition-all font-bold font-mono shadow-[0_0_15px_rgba(74,222,128,0.1)] hover:shadow-[0_0_20px_rgba(74,222,128,0.3)]"
                                     >
                                         ACCÉDER AU CORTEX MANAGER →
@@ -1125,13 +1705,120 @@ export default function MissionControl() {
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer */}
-                <div className="mt-6 text-center text-xs text-purple-400/50 font-mono">
-                    DIGITAL TWIN v2.0 • VISUALISATION COBE • SURVEILLANCE RÉSEAU TEMPS RÉEL
+
+                    {/* Footer */}
+                    <div className="mt-6 text-center text-xs text-purple-400/50 font-mono">
+                        DIGITAL TWIN v2.0 • VISUALISATION COBE • SURVEILLANCE RÉSEAU TEMPS RÉEL
+                    </div>
                 </div>
             </div>
+
+            {/* --- 3. BOUTON CORTEX MANAGER RAPIDE (Accès direct) --- */}
+            <div className="fixed bottom-44 left-6 z-[9999]">
+                <button
+                    onClick={openCortex}
+                    className="relative p-4 rounded-full shadow-lg transition transform hover:scale-110 group"
+                    style={{
+                        backgroundColor: '#0f172a',
+                        border: '2px solid #a855f7',
+                        color: 'white'
+                    }}
+                    title="Gérer la Mémoire (Cortex)"
+                >
+                    <span className="text-2xl group-hover:animate-pulse">🧠</span>
+                    {/* Badge compteur */}
+                    <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-purple-400">
+                        ADM
+                    </span>
+                </button>
+            </div>
+
+            {/* --- MODALE CORTEX MANAGER (PLEIN ÉCRAN) --- */}
+            {showCortexPanel && (
+                <div
+                    className="fixed inset-0 z-[100000] flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(5px)' }}
+                >
+                    <div className="w-full max-w-4xl bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-purple-500 flex flex-col max-h-[90vh]">
+
+                        {/* EN-TÊTE */}
+                        <div className="p-4 bg-purple-900/50 border-b border-purple-500 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2 font-mono">
+                                    ⚙️ Cortex Manager <span className="text-xs bg-purple-600 px-2 rounded-full">{cortexMemories.length}</span>
+                                </h2>
+                                <p className="text-xs text-purple-200 font-mono">ADMINISTRATION DIRECTE DE LA BASE VECTORIELLE</p>
+                            </div>
+                            <button
+                                onClick={() => setShowCortexPanel(false)}
+                                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition"
+                            >
+                                Fermer ✕
+                            </button>
+                        </div>
+
+                        {/* BARRE DE RECHERCHE */}
+                        <div className="p-4 bg-slate-800 border-b border-slate-700">
+                            <input
+                                type="text"
+                                placeholder="🔍 Rechercher un fragment de mémoire à supprimer..."
+                                value={cortexSearch}
+                                onChange={(e) => setCortexSearch(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none font-mono text-sm"
+                            />
+                        </div>
+
+                        {/* TABLEAU DES SOUVENIRS */}
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            <table className="w-full text-left text-sm text-slate-400">
+                                <thead className="text-xs uppercase bg-slate-950 text-slate-500 sticky top-0 font-mono">
+                                    <tr>
+                                        <th className="px-4 py-3 rounded-tl-lg">Type</th>
+                                        <th className="px-4 py-3">Contenu</th>
+                                        <th className="px-4 py-3">Date</th>
+                                        <th className="px-4 py-3 text-right rounded-tr-lg">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {filteredCortex.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="p-8 text-center text-slate-500 italic">Aucune donnée trouvée.</td>
+                                        </tr>
+                                    ) : (
+                                        filteredCortex.map((mem) => (
+                                            <tr key={mem.id} className="hover:bg-slate-800/50 transition">
+                                                <td className="px-4 py-3">
+                                                    {mem.metadata?.type === 'PRIVATE' ? (
+                                                        <span className="text-red-400 border border-red-900 bg-red-900/20 px-2 py-0.5 rounded text-xs font-mono">🔒 PRIVÉ</span>
+                                                    ) : (
+                                                        <span className="text-green-400 border border-green-900 bg-green-900/20 px-2 py-0.5 rounded text-xs font-mono">🌐 ACTIF</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 text-slate-200 font-medium max-w-md truncate">
+                                                    {mem.content}
+                                                </td>
+                                                <td className="px-4 py-3 font-mono text-xs">
+                                                    {new Date(mem.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <button
+                                                        onClick={() => handleDeleteMemory(mem.id)}
+                                                        className="text-slate-500 hover:text-red-500 hover:bg-red-900/20 p-2 rounded transition"
+                                                        title="Supprimer définitivement"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

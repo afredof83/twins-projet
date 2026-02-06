@@ -9,56 +9,73 @@ const pdf = require('pdf-parse');
 
 export async function POST(req: NextRequest) {
     try {
-        const formData = await req.formData();
-        const file = formData.get('file') as File;
-        const profileId = formData.get('profileId') as string;
-
-        if (!file || !profileId) {
-            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
-        }
-
-        console.log(`📂 Réception fichier: ${file.name} (${file.type})`);
-
         let textContent = "";
+        let profileId = "";
+        let memoryType = "MEMORY"; // Default type
+        let fileName = "";
 
-        // --- DÉTECTION DU TYPE ---
-        if (file.type === 'application/pdf') {
-            // TRAITEMENT PDF
-            const arrayBuffer = await file.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            const data = await pdf(buffer);
-            textContent = data.text;
+        const contentType = req.headers.get("content-type") || "";
 
-            // Nettoyage basique (retirer les multiples espaces/sauts de ligne bizarres du PDF)
-            textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+        if (contentType.includes("application/json")) {
+            // --- GESTION DES REQUÊTES JSON (Cortex & Journal) ---
+            const json = await req.json();
+            textContent = json.text;
+            profileId = json.profileId;
+            if (json.type) memoryType = json.type;
 
-            console.log(`📄 PDF extrait : ${textContent.length} caractères.`);
+        } else if (contentType.includes("multipart/form-data")) {
+            // --- GESTION DES FICHIERS (Upload Drag & Drop) ---
+            const formData = await req.formData();
+            const file = formData.get('file') as File;
+            profileId = formData.get('profileId') as string;
+
+            if (!file || !profileId) {
+                return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
+            }
+
+            fileName = file.name;
+            console.log(`📂 Réception fichier: ${file.name} (${file.type})`);
+
+            // DÉTECTION DU TYPE DE FICHIER
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                const data = await pdf(buffer);
+                textContent = data.text;
+                // Nettoyage basique
+                textContent = textContent.replace(/\n\s*\n/g, '\n').trim();
+                console.log(`📄 PDF extrait : ${textContent.length} caractères.`);
+            } else {
+                textContent = await file.text();
+            }
         } else {
-            // TRAITEMENT TEXTE CLASSIQUE
-            textContent = await file.text();
+            return NextResponse.json({ error: "Content-Type non supporté" }, { status: 400 });
         }
 
-        if (!textContent || textContent.length < 10) {
-            return NextResponse.json({ error: "Fichier vide ou illisible" }, { status: 400 });
+        // --- VÉRIFICATION & INSERTION ---
+        if (!textContent || textContent.length < 5) {
+            return NextResponse.json({ error: "Contenu vide ou illisible" }, { status: 400 });
         }
 
         // --- DÉCOUPAGE (Chunking) ---
-        // Les PDF peuvent être énormes. On les découpe en morceaux de ~1000 caractères
-        // pour que l'IA puisse digérer chaque partie.
+        // On découpe si c'est très long (ex: PDF), sinon ça fait un seul chunk
         const chunks = chunkText(textContent, 1000);
         console.log(`🔪 Découpé en ${chunks.length} morceaux.`);
 
         // --- SAUVEGARDE EN MÉMOIRE ---
-        // On boucle sur chaque morceau pour l'insérer
         let count = 0;
         for (const chunk of chunks) {
             const embedding = await embeddingService.generateEmbedding(chunk);
 
+            const tags = ['upload'];
+            if (fileName) tags.push('file', fileName);
+            if (memoryType !== 'MEMORY') tags.push(memoryType.toLowerCase());
+
             await vectorStore.addMemory({
-                content: chunk, // On garde le texte original
+                content: chunk,
                 embedding: embedding,
-                tags: ['upload', 'pdf', file.name], // On ajoute le nom du fichier en tag
-                type: 'MEMORY',
+                tags: tags,
+                type: memoryType as any, // On passe le type (PRIVATE/PUBLIC/MEMORY)
                 profileId: profileId
             });
             count++;
@@ -67,11 +84,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             success: true,
             chunks: count,
-            message: `J'ai lu et mémorisé ${count} passages de "${file.name}".`
+            message: `J'ai mémorisé ${count} éléments.`
         });
 
     } catch (error: any) {
-        console.error("🔥 Upload Error:", error);
+        console.error("🔥 Ingest Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
