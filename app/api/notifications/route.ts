@@ -1,31 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function GET(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
     const profileId = searchParams.get('profileId');
 
-    if (!profileId) {
-        return NextResponse.json({ error: "ID manquant" }, { status: 400 });
-    }
+    if (!profileId) return NextResponse.json({ notifications: [] });
 
-    try {
-        // On cherche les messages reçus (to_clone_id) qui sont en attente
-        const { data, error } = await supabase
-            .from('communications')
-            .select('*')
-            .eq('to_clone_id', profileId)
-            .eq('status', 'PENDING')
-            .order('created_at', { ascending: false });
+    // On récupère les 10 derniers messages reçus
+    const { data: messages, error } = await supabase
+        .from('Message')
+        .select('*')
+        .eq('toId', profileId)
+        .eq('isRead', false) // <--- AJOUTEZ CETTE LIGNE
+        .order('createdAt', { ascending: false })
+        .limit(10);
 
-        if (error) throw error;
+    if (error) return NextResponse.json({ notifications: [] });
 
-        return NextResponse.json({
-            notifications: data,
-            count: data.length
-        });
+    // On renvoie des objets structurés
+    const notifications = messages.map((msg: any) => ({
+        id: msg.id,
+        fromId: msg.fromId, // CRUCIAL pour répondre
+        content: msg.content,
+        date: msg.createdAt,
+        type: 'message'
+    }));
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    return NextResponse.json({ notifications });
 }

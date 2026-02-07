@@ -1,46 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { embeddingService } from '@/lib/vector/embedding-service';
-import { supabase } from '@/lib/supabase/client';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function POST(req: NextRequest) {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+
+export async function POST(request: Request) {
     try {
-        const { mission, profileId } = await req.json();
+        const { mission, profileId } = await request.json();
 
-        console.log(`🕵️‍♂️ Mission lancée par ${profileId}: "${mission}"`);
+        if (!mission || !profileId) {
+            return NextResponse.json({ error: 'Mission or ID missing' }, { status: 400 });
+        }
 
-        // 1. On transforme la mission en mathématiques (Vecteur)
-        const missionVector = await embeddingService.generateEmbedding(mission);
+        // 1. Vectoriser la mission (Comprendre ce qu'on cherche)
+        if (!MISTRAL_API_KEY) return NextResponse.json({ candidates: [] });
 
-        // 2. LE CLONE PART EN CHASSE (Recherche dans TOUTE la base, pas juste la sienne)
-        // On utilise une fonction RPC Supabase (qu'on créera juste après)
-        // qui compare ce vecteur à ceux des autres utilisateurs.
-        const { data: matches, error } = await supabase.rpc('match_clones_memories', {
-            query_embedding: missionVector,
-            match_threshold: 0.75, // On veut du sérieux (75% mini)
-            match_count: 5,        // Top 5 des candidats
-            requesting_user_id: profileId // Pour ne pas se trouver soi-même
+        const embeddingResponse = await fetch('https://api.mistral.ai/v1/embeddings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${MISTRAL_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'mistral-embed',
+                input: [mission]
+            })
         });
 
-        if (error) throw error;
+        const embeddingData = await embeddingResponse.json();
+        const queryVector = embeddingData.data[0].embedding;
 
-        // 3. ANALYSE ET ANONYMISATION
-        // Le Clone revient avec des résultats bruts, il doit les nettoyer pour l'humain.
-        // On ne renvoie que l'ID et le score.
-        const report = matches.map((match: any) => ({
-            cloneId: match.user_id, // L'ID anonyme de l'autre clone
-            score: Math.round(match.similarity * 100), // Score en %
-            // Le Clone "interprète" pourquoi ça matche sans donner le détail brut (Confidentialité)
-            reason: "Ce clone possède des souvenirs très proches de votre demande."
-        }));
+        // 2. Chercher dans TOUTE la base (sauf soi-même)
+        const { data: matches, error } = await supabase
+            .rpc('match_global_memories', {
+                query_embedding: queryVector,
+                searcher_profile_id: profileId, // On s'exclut de la recherche
+                match_threshold: 0.6,
+                match_count: 5
+            });
 
-        return NextResponse.json({
-            success: true,
-            mission: mission,
-            candidates: report
+        if (error) {
+            console.error("Erreur SQL Mission:", error);
+            throw error;
+        }
+
+        // 3. Organiser les résultats par clone
+        // On regroupe les souvenirs trouvés par profil
+        const candidatesMap = new Map();
+
+        matches.forEach((match: any) => {
+            if (!candidatesMap.has(match.profile_id)) {
+                candidatesMap.set(match.profile_id, {
+                    cloneId: match.profile_id,
+                    score: Math.round(match.similarity * 100),
+                    reason: `A évoqué : "${match.content}"`
+                });
+            }
         });
 
-    } catch (error: any) {
-        console.error("Mission Failed:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const candidates = Array.from(candidatesMap.values());
+
+        return NextResponse.json({ candidates });
+
+    } catch (error) {
+        console.error("Erreur Mission:", error);
+        return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }

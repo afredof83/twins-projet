@@ -7,32 +7,32 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request: Request) {
     try {
-        const { fromId, toId, reason } = await request.json();
+        const { fromId, toId, content } = await request.json();
 
-        if (!fromId || !toId) {
-            return NextResponse.json({ error: 'IDs missing' }, { status: 400 });
+        // Vérification basique
+        if (!fromId || !toId || !content) {
+            return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
         }
 
-        // On insère le message dans la boîte aux lettres du destinataire
         const { error } = await supabase
             .from('Message')
             .insert([
                 {
-                    fromId: fromId,
-                    toId: toId,
-                    content: reason || "Ping de synchronisation",
+                    fromId,
+                    toId,
+                    content,
                     isRead: false
                 }
             ]);
 
         if (error) {
-            console.error("Erreur Envoi Ping:", error);
+            console.error("Erreur Supabase Send:", error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
         return NextResponse.json({ success: true });
-
-    } catch (error) {
-        return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    } catch (e) {
+        console.error("Erreur API Send:", e);
+        return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
 }

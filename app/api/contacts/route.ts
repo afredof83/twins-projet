@@ -1,26 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function GET(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
     const profileId = searchParams.get('profileId');
 
-    if (!profileId) return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+    if (!profileId) return NextResponse.json({ contacts: [] });
 
     try {
-        // On cherche toutes les communications ACCEPTÉES où je suis soit l'expéditeur, soit le destinataire
-        const { data, error } = await supabase
-            .from('communications')
-            .select('*')
-            .or(`from_clone_id.eq.${profileId},to_clone_id.eq.${profileId}`)
-            .eq('status', 'ACCEPTED')
-            .order('created_at', { ascending: false });
+        // 1. On récupère TOUS les messages où vous êtes impliqué
+        const { data: messages, error } = await supabase
+            .from('Message')
+            .select('fromId, toId, content, createdAt, isRead')
+            .or(`fromId.eq.${profileId},toId.eq.${profileId}`)
+            .order('createdAt', { ascending: false }); // Du plus récent au plus vieux
 
         if (error) throw error;
 
-        return NextResponse.json({ contacts: data });
+        // 2. On extrait les interlocuteurs uniques
+        const contactsMap = new Map();
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        messages.forEach((msg: any) => {
+            // Déterminer qui est l'autre personne
+            const otherId = msg.fromId === profileId ? msg.toId : msg.fromId;
+
+            // On ne s'ajoute pas soi-même
+            if (otherId === profileId) return;
+
+            // Si on n'a pas encore vu ce contact, on l'ajoute
+            if (!contactsMap.has(otherId)) {
+                contactsMap.set(otherId, {
+                    id: otherId,
+                    lastMessage: msg.content,
+                    lastActive: msg.createdAt,
+                    hasUnread: (msg.toId === profileId && !msg.isRead) // Vrai si c'est pour moi et pas lu
+                });
+            } else {
+                // Si le contact existe déjà, on vérifie juste s'il a des messages non lus plus vieux
+                const existing = contactsMap.get(otherId);
+                if (msg.toId === profileId && !msg.isRead) {
+                    existing.hasUnread = true;
+                }
+            }
+        });
+
+        // Convertir la Map en tableau
+        const contacts = Array.from(contactsMap.values());
+
+        return NextResponse.json({ contacts });
+
+    } catch (e) {
+        console.error("Erreur contacts:", e);
+        return NextResponse.json({ contacts: [] });
     }
 }
