@@ -7,7 +7,7 @@ Write-Host "Root Path: $rootPath"
 # Clear file
 $null | Out-File -FilePath $targetFile -Encoding UTF8
 
-function Append-File {
+function Add-ProjectFile {
     param ([string]$Path)
     Write-Host "Processing: $Path"
     "--- FILE: $Path ---" | Out-File -FilePath $targetFile -Append -Encoding UTF8
@@ -21,7 +21,7 @@ function Append-File {
 $rootFiles = @("package.json", "tsconfig.json", "next.config.ts", "README.md", ".env.example", "next-env.d.ts", "postcss.config.mjs", "tailwind.config.ts")
 foreach ($file in $rootFiles) {
     $p = Join-Path $rootPath $file
-    if (Test-Path $p) { Append-File -Path $p }
+    if (Test-Path $p) { Add-ProjectFile -Path $p }
 }
 
 # Directories
@@ -33,7 +33,7 @@ foreach ($d in $dirs) {
             $_.FullName -notmatch "node_modules" -and
             $_.Extension -match "^\.(ts|tsx|js|jsx|mjs|cjs|css|scss|sass|less|html|md|json|prisma|sql)$"
         } | ForEach-Object {
-            Append-File -Path $_.FullName
+            Add-ProjectFile -Path $_.FullName
         }
     }
 }

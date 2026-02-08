@@ -1,161 +1,157 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Lock, UserPlus, ArrowRight, Loader2, Cpu, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
-  const [savedProfile, setSavedProfile] = useState<{ id: string; name: string } | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check localStorage for saved profile
-    const savedId = localStorage.getItem('twins_last_id');
-    const savedName = localStorage.getItem('twins_last_name');
+  // États
+  const [view, setView] = useState<'login' | 'create'>('create'); // On commence par CREATE pour tester
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-    if (savedId) {
-      setSavedProfile({
-        id: savedId,
-        name: savedName || 'Mon Profil',
+  // États Formulaire
+  const [profileId, setProfileId] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // --- ACTION : SE CONNECTER ---
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true); setError('');
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId, password })
       });
-    }
-    setLoading(false);
-  }, []);
+      const data = await res.json();
 
-  const handleClearProfile = () => {
-    localStorage.removeItem('twins_last_id');
-    localStorage.removeItem('twins_last_name');
-    setSavedProfile(null);
+      if (res.ok && data.success) {
+        router.push(`/dashboard?profileId=${profileId}`);
+      } else {
+        setError(data.error || "Identifiant incorrect.");
+      }
+    } catch (err) { setError("Erreur serveur."); }
+    finally { setLoading(false); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900">
-        <div className="text-purple-400 text-xl">Chargement...</div>
-      </div>
-    );
-  }
+  // --- ACTION : CRÉER UN CLONE (NOUVEAU) ---
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+
+    // Validation locale
+    if (password !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+    if (profileId.includes(' ')) {
+      setError("L'identifiant ne doit pas contenir d'espaces.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/profile/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setSuccessMsg("Clone généré avec succès ! Connexion en cours...");
+        // Auto-login après 1.5 secondes
+        setTimeout(() => {
+          router.push(`/dashboard?profileId=${profileId}`);
+        }, 1500);
+      } else {
+        setError(data.error || "Erreur de création.");
+        setLoading(false);
+      }
+    } catch (err) {
+      setError("Erreur technique.");
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 p-4">
-      <main className="max-w-2xl w-full text-center">
-        {/* Logo/Title */}
-        <div className="mb-12">
-          <div className="inline-block mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-purple-500/50">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
+    <div className="min-h-screen bg-black text-white font-sans overflow-hidden relative flex flex-col items-center justify-center p-4">
+      <div className="absolute inset-0 z-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/40 via-black to-black"></div>
+
+      <div className="z-10 w-full max-w-md">
+        {/* LOGO */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-900 rounded-2xl border border-slate-700 shadow-[0_0_30px_rgba(147,51,234,0.3)] mb-4 animate-pulse">
+            <Cpu className="w-10 h-10 text-purple-500" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">
-            Digital Twin
-          </h1>
-          <p className="text-xl text-purple-300 mb-2">
-            Votre Jumeau Numérique Sécurisé
-          </p>
-          <p className="text-sm text-purple-400/70">
-            🔐 Chiffrement Zero-Knowledge • AES-256-GCM
-          </p>
+          <h1 className="text-4xl font-bold tracking-tighter bg-gradient-to-r from-white via-purple-200 to-slate-400 bg-clip-text text-transparent">ANTIGRAVITY</h1>
+          <p className="text-slate-500 text-sm tracking-widest mt-2 uppercase">Système de Jumeau Numérique V2</p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-4">
-          {savedProfile ? (
-            <>
-              {/* Unlock Saved Profile */}
-              <Link
-                href={`/profile/unlock?id=${savedProfile.id}`}
-                className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-8 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                  </svg>
-                  <span>Déverrouiller {savedProfile.name}</span>
-                </div>
-              </Link>
+        {/* BOITE PRINCIPALE */}
+        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700 p-8 rounded-2xl shadow-2xl relative overflow-hidden">
 
-              {/* Profile Info */}
-              <div className="bg-slate-800/50 backdrop-blur border border-purple-500/30 rounded-lg p-4">
-                <p className="text-purple-300 text-sm mb-2">Dernier profil utilisé</p>
-                <p className="text-white font-semibold">{savedProfile.name}</p>
-                <p className="text-purple-400/70 text-xs font-mono mt-1">
-                  ID: {savedProfile.id.slice(0, 12)}...
-                </p>
-                <button
-                  onClick={handleClearProfile}
-                  className="text-red-400 hover:text-red-300 text-xs mt-3 underline"
-                >
-                  Oublier ce profil
-                </button>
+          {/* Onglets */}
+          <div className="flex mb-6 border-b border-slate-700 pb-1">
+            <button onClick={() => { setView('login'); setError(''); }} className={`flex-1 pb-3 text-sm font-bold transition-all ${view === 'login' ? 'text-purple-400 border-b-2 border-purple-500' : 'text-slate-500 hover:text-slate-300'}`}>CONNEXION</button>
+            <button onClick={() => { setView('create'); setError(''); }} className={`flex-1 pb-3 text-sm font-bold transition-all ${view === 'create' ? 'text-blue-400 border-b-2 border-blue-500' : 'text-slate-500 hover:text-slate-300'}`}>INITIALISATION</button>
+          </div>
+
+          {/* FORMULAIRE LOGIN */}
+          {view === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-1">IDENTIFIANT</label>
+                <div className="relative"><input type="text" value={profileId} onChange={(e) => setProfileId(e.target.value)} placeholder="ex: neo" className="w-full bg-black/50 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:border-purple-500 outline-none" /><div className="absolute left-3 top-3.5 text-slate-500"><UserPlus size={16} /></div></div>
               </div>
-
-              {/* Secondary: Create New */}
-              <Link
-                href="/profile/new"
-                className="block w-full bg-slate-800/50 backdrop-blur border border-purple-500/30 text-purple-300 font-semibold py-3 px-6 rounded-lg hover:bg-slate-800/70 hover:border-purple-500/50 transition-all"
-              >
-                + Créer un nouveau profil
-              </Link>
-            </>
-          ) : (
-            <>
-              {/* No Saved Profile - Primary CTA */}
-              <Link
-                href="/profile/new"
-                className="block w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-8 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70 transform hover:scale-105"
-              >
-                <div className="flex items-center justify-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Créer Mon Jumeau Numérique</span>
-                </div>
-              </Link>
-
-              {/* Info Card */}
-              <div className="bg-slate-800/50 backdrop-blur border border-purple-500/30 rounded-lg p-6 text-left">
-                <h3 className="text-purple-300 font-semibold mb-3">Pourquoi un Jumeau Numérique ?</h3>
-                <ul className="space-y-2 text-sm text-purple-200/80">
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">✓</span>
-                    <span>Stockez vos souvenirs de manière sécurisée</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">✓</span>
-                    <span>Chiffrement Zero-Knowledge (vos données restent privées)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">✓</span>
-                    <span>Mémoire vectorielle pour recherche sémantique</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">✓</span>
-                    <span>Phrase de récupération BIP39 (12 mots)</span>
-                  </li>
-                </ul>
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-1">CLÉ</label>
+                <div className="relative"><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="•••••••" className="w-full bg-black/50 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:border-purple-500 outline-none" /><div className="absolute left-3 top-3.5 text-slate-500"><Lock size={16} /></div></div>
               </div>
-            </>
+              {error && <div className="text-red-400 text-xs bg-red-900/20 p-2 rounded border border-red-500/30">⚠️ {error}</div>}
+              <button type="submit" disabled={loading} className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all mt-2">
+                {loading ? <Loader2 className="animate-spin" /> : <>CONNEXION <ArrowRight size={18} /></>}
+              </button>
+            </form>
           )}
-        </div>
 
-        {/* Manual Login Link */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/profile/unlock"
-            className="text-sm text-slate-400 hover:text-white transition-colors underline"
-          >
-            J'ai déjà un ID (Connexion manuelle)
-          </Link>
-        </div>
+          {/* FORMULAIRE CREATE */}
+          {view === 'create' && (
+            <form onSubmit={handleCreate} className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
+              <div>
+                <label className="block text-xs font-mono text-blue-400 mb-1">NOM DU CLONE</label>
+                <input type="text" value={profileId} onChange={(e) => setProfileId(e.target.value)} placeholder="ex: trinity" className="w-full bg-black/50 border border-blue-500/50 rounded-lg py-3 px-4 text-white focus:border-blue-400 outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-mono text-blue-400 mb-1">MOT DE PASSE</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/50 border border-slate-600 rounded-lg py-3 px-4 text-white focus:border-blue-400 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono text-slate-400 mb-1">CONFIRMATION</label>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full bg-black/50 border border-slate-600 rounded-lg py-3 px-4 text-white focus:border-blue-400 outline-none" />
+                </div>
+              </div>
 
-        {/* Footer */}
-        <div className="mt-12 text-center text-sm text-purple-400/50">
-          <p>Propulsé par Next.js • Prisma • Supabase pgvector</p>
+              {error && <div className="text-red-400 text-xs bg-red-900/20 p-2 rounded border border-red-500/30">⚠️ {error}</div>}
+              {successMsg && <div className="text-green-400 text-xs bg-green-900/20 p-2 rounded border border-green-500/30 flex items-center gap-2"><ShieldCheck size={14} /> {successMsg}</div>}
+
+              <button type="submit" disabled={loading || !!successMsg} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all mt-2">
+                {loading ? <Loader2 className="animate-spin" /> : <>GÉNÉRER LE JUMEAU <Cpu size={18} /></>}
+              </button>
+            </form>
+          )}
+
         </div>
-      </main>
+      </div>
     </div>
   );
 }

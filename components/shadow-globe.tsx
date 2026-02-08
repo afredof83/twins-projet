@@ -53,22 +53,17 @@ export default function ShadowGlobe({ onLocationChange }: ShadowGlobeProps) {
             markerColor: [0.8, 0.2, 0.8],
             glowColor: [0.4, 0.1, 0.5],
             markers: [
-                // Current location marker (large)
                 { location: [currentCity.lat, currentCity.long] as [number, number], size: 0.1 },
-                // All tech hub markers (small)
                 ...TECH_HUBS.map(city => ({
                     location: [city.lat, city.long] as [number, number],
                     size: 0.04
                 }))
             ],
             onRender: (state) => {
-                // Auto-rotation
                 if (!pointerInteracting.current) {
                     phi += 0.003;
                 }
                 state.phi = phi + r;
-
-                // Update size on resize
                 state.width = width * 2;
                 state.height = width * 2;
             }
@@ -82,22 +77,15 @@ export default function ShadowGlobe({ onLocationChange }: ShadowGlobeProps) {
         };
     }, [currentCity, r]);
 
-    // Change location every 5 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * TECH_HUBS.length);
             const newCity = TECH_HUBS[randomIndex];
-
-            // Only change if different
             if (newCity.name !== currentCity.name) {
                 setCurrentCity(newCity);
-
-                if (onLocationChange) {
-                    onLocationChange(newCity.name);
-                }
+                if (onLocationChange) onLocationChange(newCity.name);
             }
         }, 5000);
-
         return () => clearInterval(interval);
     }, [currentCity, onLocationChange]);
 
@@ -124,31 +112,11 @@ export default function ShadowGlobe({ onLocationChange }: ShadowGlobeProps) {
                         setR(delta / 200);
                     }
                 }}
-                onTouchMove={(e) => {
-                    if (pointerInteracting.current !== null && e.touches[0]) {
-                        const delta = e.touches[0].clientX - pointerInteracting.current;
-                        pointerInteractionMovement.current = delta;
-                        setR(delta / 100);
-                    }
-                }}
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'grab',
-                    contain: 'layout paint size',
-                    opacity: 0,
-                    transition: 'opacity 1s ease'
-                }}
+                style={{ width: '100%', height: '100%', cursor: 'grab', contain: 'layout paint size', opacity: 0, transition: 'opacity 1s ease' }}
             />
-
-            {/* Current Location Indicator */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-purple-900/90 border border-purple-500 px-4 py-2 rounded backdrop-blur-sm">
-                <div className="text-xs text-purple-300 font-mono">
-                    📍 NŒUD ACTIF
-                </div>
-                <div className="text-sm text-purple-100 font-bold font-mono">
-                    {currentCity.name.toUpperCase()}
-                </div>
+                <div className="text-xs text-purple-300 font-mono">📍 NŒUD ACTIF</div>
+                <div className="text-sm text-purple-100 font-bold font-mono">{currentCity.name.toUpperCase()}</div>
             </div>
         </div>
     );
