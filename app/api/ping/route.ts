@@ -1,38 +1,34 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(request: Request) {
     try {
         const { fromId, toId, reason } = await request.json();
 
-        if (!fromId || !toId) {
-            return NextResponse.json({ error: 'IDs missing' }, { status: 400 });
-        }
+        if (!fromId || !toId) return NextResponse.json({ error: "IDs manquants" }, { status: 400 });
 
-        // On insère le message dans la boîte aux lettres du destinataire
+        console.log(`[PING] De ${fromId} vers ${toId}. Raison: ${reason}`);
+
+        // 1. On crée le message de "Demande"
         const { error } = await supabase
             .from('Message')
-            .insert([
-                {
-                    fromId: fromId,
-                    toId: toId,
-                    content: reason || "Ping de synchronisation",
-                    isRead: false
-                }
-            ]);
+            .insert([{
+                fromId,
+                toId,
+                content: reason || "📡 Demande de liaison neuronale.",
+                isRead: false
+            }]);
 
-        if (error) {
-            console.error("Erreur Envoi Ping:", error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
-        }
+        if (error) throw error;
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: "Signal transmis." });
 
-    } catch (error) {
-        return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
