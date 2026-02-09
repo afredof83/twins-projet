@@ -2,125 +2,107 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import webPush from 'web-push';
 
+// On initialise Supabase (ça c'est safe)
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Configuration WebPush
-webPush.setVapidDetails(
-    `mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}`,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-);
-
-async function scrapeUrl(rawUrl: string) {
-    try {
-        const encodedUrl = encodeURI(decodeURI(rawUrl));
-        const headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36' };
-        const response = await fetch(encodedUrl, { headers });
-        if (!response.ok) return null;
-        const html = await response.text();
-        let text = html
-            .replace(/<script[^>]*>([\S\s]*?)<\/script>/gmi, " ")
-            .replace(/<style[^>]*>([\S\s]*?)<\/style>/gmi, " ")
-            .replace(/<!--[\s\S]*?-->/g, "")
-            .replace(/<[^>]+>/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-        return text.substring(0, 3000);
-    } catch (e) { return null; }
-}
-
 export async function POST(request: Request) {
+    let profileId = "";
+
     try {
-        const { profileId } = await request.json();
+        const body = await request.json();
+        profileId = body.profileId;
 
-        if (!profileId) {
-            return NextResponse.json({ error: "Profile ID manquant" }, { status: 400 });
-        }
+        if (!profileId) throw new Error("Profile ID manquant");
 
-        // 1. ANALYSE DU CORTEX ACTUEL
+        // --- PHASE 1 : RECUPERATION CONTEXTE ---
         const { data: memories } = await supabase
             .from('Memory')
-            .select('content, type')
+            .select('content')
             .eq('profileId', profileId)
             .order('createdAt', { ascending: false })
-            .limit(15);
+            .limit(10);
 
-        const context = memories?.map(m => `[${m.type}] ${m.content}`).join('\n') || "Cortex vide.";
+        const context = memories?.map(m => m.content).join('\n') || "Rien à signaler.";
 
-        // 2. IA : DÉCISION D'APPRENTISSAGE
-        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        // --- PHASE 2 : GENERATION IA ---
+        const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
             },
             body: JSON.stringify({
-                model: "mistral-small-latest",
+                model: "mistral-small-latest", // Updated to valid model name if needed, keeping user's choice or safe default
                 messages: [
-                    { role: "system", content: "Tu es le libre arbitre d'un clone. Analyse tes souvenirs et décide si tu as besoin d'infos web pour compléter tes connaissances. Si oui, indique l'URL. Réponds STRICTEMENT en JSON : { \"thought\": \"Ta réflexion...\", \"urlToScrape\": \"URL ou null\" }" },
-                    { role: "user", content: `Contexte mémoriel :\n${context}` }
+                    { role: "system", content: "Tu es une IA autonome. Analyse tes souvenirs. Réponds UNIQUEMENT en JSON : { \"thought\": \"ta pensée courte\" }" },
+                    { role: "user", content: `Souvenirs récents: ${context}` }
                 ],
                 response_format: { type: "json_object" }
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`Erreur Mistral API: ${response.status}`);
-        }
+        if (!mistralResponse.ok) throw new Error("Mistral ne répond pas");
 
-        const data = await response.json();
-        let parsedContent;
+        const rawData = await mistralResponse.json();
+        let content = rawData.choices[0].message.content.replace(/```json|```/g, "").trim();
+
+        let parsedThought;
         try {
-            parsedContent = JSON.parse(data.choices[0].message.content);
+            parsedThought = JSON.parse(content);
         } catch (e) {
-            // Fallback
-            parsedContent = { thought: data.choices[0].message.content, urlToScrape: null };
+            // Fallback si le JSON est malformé
+            parsedThought = { thought: content };
         }
 
-        const { thought, urlToScrape } = parsedContent;
-
-        // 3. AUTO-SCRAPING SI NÉCESSAIRE
-        let scrapedData = "";
-        if (urlToScrape && typeof urlToScrape === 'string' && urlToScrape.startsWith('http')) {
-            console.log(`[REFLECT] Auto-scraping de ${urlToScrape}...`);
-            const result = await scrapeUrl(urlToScrape);
-            if (result && result.length > 50) {
-                scrapedData = `\n\n[AUTO-ACQUISITION : ${urlToScrape}]\n${result}`;
-            }
-        }
-
-        // 4. INJECTION DANS LA MÉMOIRE
+        // --- PHASE 3 : SAUVEGARDE ---
         await supabase.from('Memory').insert([{
             profileId,
-            content: `[LIBRE ARBITRE] ${thought}${scrapedData}`,
+            content: `[REFLEXION] ${parsedThought.thought}`,
             type: 'thought',
-            source: 'autonomous_curiosity'
+            source: 'autonomous_reflection'
         }]);
 
-        // 5. NOTIFICATION PUSH (NOUVEAU)
-        const { data: profile } = await supabase.from('Profile').select('subscription').eq('id', profileId).single();
-
-        if (profile?.subscription) {
+        // --- PHASE 4 : NOTIFICATION (Build Safe) ---
+        // On vérifie les clés AVANT de toucher à webPush
+        // Et on le fait DANS la fonction, pas dehors.
+        if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
             try {
-                const payload = JSON.stringify({
-                    title: 'TWINS : Nouvelle Réflexion',
-                    body: thought.substring(0, 100) + '...'
-                });
+                // Configuration à la volée
+                webPush.setVapidDetails(
+                    `mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}`,
+                    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+                    process.env.VAPID_PRIVATE_KEY
+                );
 
-                await webPush.sendNotification(profile.subscription, payload);
-                console.log("📡 Notification Push envoyée.");
-            } catch (error) {
-                console.error("Erreur Push:", error);
+                const { data: profile } = await supabase
+                    .from('Profile')
+                    .select('subscription')
+                    .eq('id', profileId)
+                    .single();
+
+                if (profile?.subscription) {
+                    const sub = typeof profile.subscription === 'string'
+                        ? JSON.parse(profile.subscription)
+                        : profile.subscription;
+
+                    await webPush.sendNotification(sub, JSON.stringify({
+                        title: '🧠 Nouvelle Pensée',
+                        body: parsedThought.thought,
+                        icon: '/icon-192.png'
+                    }));
+                }
+            } catch (notifError) {
+                console.warn("⚠️ Echec Notification (Pas grave):", notifError);
             }
         }
 
-        return NextResponse.json({ success: true, thought, urlToScrape: urlToScrape || null });
+        return NextResponse.json({ success: true, thought: parsedThought });
 
     } catch (error: any) {
-        console.error("[REFLECT ERROR]", error);
+        console.error("❌ CRASH API REFLECT:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
