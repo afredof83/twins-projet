@@ -1,25 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-export async function DELETE(req: NextRequest) {
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function POST(request: Request) {
     try {
-        const { id } = await req.json();
+        const { ids } = await request.json(); // On attend une liste d'IDs (ex: ["123", "456"])
 
-        if (!id) {
-            return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json({ error: "Aucun ID fourni" }, { status: 400 });
         }
 
-        // Suppression dans Supabase
+        // Suppression en masse
         const { error } = await supabase
-            .from('memories')
+            .from('Memory')
             .delete()
-            .eq('id', id);
+            .in('id', ids);
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true, message: "Souvenir supprimé du Cortex." });
+        return NextResponse.json({ success: true, count: ids.length });
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (e: any) {
+        console.error("Erreur suppression:", e);
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }

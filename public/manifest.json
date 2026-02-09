@@ -1,11 +1,11 @@
 {
-    "name": "Mon Jumeau Numérique",
-    "short_name": "Jumeau",
-    "description": "Assistant personnel et extension de mémoire",
-    "start_url": "/dashboard",
+    "name": "TWINS : Jumeau Numérique",
+    "short_name": "Twins",
+    "description": "Interface de contrôle du projet Twins",
+    "start_url": "/dashboard?profileId=afredof83",
     "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#4f46e5",
+    "background_color": "#020617",
+    "theme_color": "#020617",
     "orientation": "portrait",
     "icons": [
         {
@@ -17,8 +17,7 @@
         {
             "src": "/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "type": "image/png"
         }
     ]
 }

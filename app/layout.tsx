@@ -12,35 +12,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Mon Jumeau Numérique",
-  description: "Extension de mémoire et assistant personnel",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Jumeau",
-  },
-};
-
+// Configuration de la fenêtre d'affichage pour mobile
 export const viewport: Viewport = {
-  themeColor: "#4f46e5",
+  themeColor: "#020617",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
 };
 
+export const metadata: Metadata = {
+  title: "TWINS | Mission Control",
+  description: "Interface de gestion du Jumeau Numérique",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Twins",
+  },
+};
+
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="fr" className="dark">
+      <body className="bg-slate-950 text-slate-200 antialiased overflow-hidden">
         {children}
       </body>
     </html>
