@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
+
 :root {
+  /* On définit une hauteur dynamique pour mobile */
+  --vh: 100dvh; 
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -19,8 +22,21 @@
   }
 }
 
-body {
+html, body {
+  height: auto !important; /* Force la hauteur à s'adapter au contenu */
+  min-height: 100% !important;
+  overflow-y: auto !important; /* Autorise le scroll vertical */
+  overflow-x: hidden !important; /* Interdit le scroll horizontal parasite */
+  -webkit-overflow-scrolling: touch; /* Scroll fluide sur iOS */
+  position: relative;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* On s'assure que le container de Next.js ne bloque rien */
+#__next, body > div:first-child {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }

@@ -424,7 +424,7 @@ export default function MissionControl() {
     if (!profileId || !isInitialized) return <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono"><div className="text-4xl mb-4 animate-spin">🧬</div><div className="text-red-500 animate-pulse">ACCÈS NON AUTORISÉ. REDIRECTION...</div></div>;
 
     return (
-        <main className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6 font-sans overflow-y-auto pb-20">
+        <main className="relative min-h-[100dvh] w-full bg-slate-950 p-4 md:p-8 flex flex-col gap-6">
             <div className="max-w-7xl mx-auto pt-4 mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
                 <div><h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-mono">MISSION CONTROL</h1><p className="text-xs text-slate-500">v2.1.4-COMM • {profileId.slice(0, 8)}...</p></div>
                 <div className="flex gap-4 items-center">
@@ -624,6 +624,8 @@ export default function MissionControl() {
                     </div>
                 </div>
             )}
+            {/* ESPACE DE SÉCURITÉ EN BAS (VITAL POUR MOBILE) */}
+            <div className="h-24 w-full flex-shrink-0" aria-hidden="true" />
         </main>
     );
 }
