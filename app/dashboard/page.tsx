@@ -424,7 +424,7 @@ export default function MissionControl() {
     if (!profileId || !isInitialized) return <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono"><div className="text-4xl mb-4 animate-spin">🧬</div><div className="text-red-500 animate-pulse">ACCÈS NON AUTORISÉ. REDIRECTION...</div></div>;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6 font-sans overflow-hidden">
+        <main className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-purple-950/20 to-slate-950 text-white p-4 md:p-6 font-sans overflow-y-auto pb-20">
             <div className="max-w-7xl mx-auto pt-4 mb-6 flex justify-between items-center border-b border-slate-800 pb-4">
                 <div><h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-mono">MISSION CONTROL</h1><p className="text-xs text-slate-500">v2.1.4-COMM • {profileId.slice(0, 8)}...</p></div>
                 <div className="flex gap-4 items-center">
@@ -508,9 +508,10 @@ export default function MissionControl() {
                                 )}
                             </div>
                         </div>
-                        <div className="h-1/2 bg-black border border-slate-800 rounded-xl p-3 flex flex-col font-mono text-xs">
-                            <div className="text-slate-500 border-b border-slate-800 mb-2 pb-1">LOGS SYSTÈME</div>
-                            <div ref={terminalRef} className="flex-1 overflow-y-auto text-green-500/80 space-y-1">{logs.map((l, i) => <div key={i}>{l}</div>)}</div>
+                        <div className="h-64 md:h-96 overflow-y-auto font-mono text-xs p-4 bg-black/50 border border-slate-800 rounded-lg">
+                            {logs.map((log, i) => (
+                                <div key={i} className="mb-1">{log}</div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -623,6 +624,6 @@ export default function MissionControl() {
                     </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 }
