@@ -1,42 +1,41 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
-        const { text } = await request.json();
-        const apiKey = process.env.ELEVENLABS_API_KEY;
+        const { text } = await req.json();
 
-        console.log("🎤 TTS Request reçue:", text?.substring(0, 20) + "...");
+        if (!text) return NextResponse.json({ error: 'Texte manquant' }, { status: 400 });
+        if (!process.env.ELEVENLABS_API_KEY) return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 });
 
-        if (!apiKey) {
-            console.error("❌ ERREUR: Clé API ElevenLabs introuvable dans le serveur.");
-            return NextResponse.json({ error: 'Clé API manquante (Vérifiez .env.local)' }, { status: 500 });
-        }
-
-        // ID de voix (Rachel)
+        // ID de voix "Rachel" (Défaut ElevenLabs) ou votre ID perso
         const VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
-        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'xi-api-key': apiKey,
-            },
-            body: JSON.stringify({
-                text: text,
-                // --- CORRECTION ICI : On utilise le modèle V2 qui est Gratuit et Meilleur ---
-                model_id: "eleven_multilingual_v2",
-                // --------------------------------------------------------------------------
-                voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-            }),
-        });
+        const response = await fetch(
+            `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Accept': 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': process.env.ELEVENLABS_API_KEY,
+                },
+                body: JSON.stringify({
+                    text: text,
+                    model_id: "eleven_multilingual_v2",
+                    voice_settings: {
+                        stability: 0.5,
+                        similarity_boost: 0.75,
+                    },
+                }),
+            }
+        );
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error("❌ ElevenLabs API Error:", JSON.stringify(errorData, null, 2));
-            return NextResponse.json({ error: 'Erreur API ElevenLabs' }, { status: response.status });
+            const err = await response.text();
+            console.error("ElevenLabs Error:", err);
+            throw new Error("Erreur TTS");
         }
 
-        console.log("✅ Audio généré avec succès, envoi au client...");
         const audioBuffer = await response.arrayBuffer();
 
         return new NextResponse(audioBuffer, {
@@ -47,7 +46,6 @@ export async function POST(request: Request) {
         });
 
     } catch (error: any) {
-        console.error("🔥 TTS Crash:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

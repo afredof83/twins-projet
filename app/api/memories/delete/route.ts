@@ -6,15 +6,12 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
-        const { ids } = await request.json(); // On attend une liste d'IDs (ex: ["123", "456"])
+        const { ids } = await req.json(); // On reçoit un tableau d'IDs
 
-        if (!ids || !Array.isArray(ids) || ids.length === 0) {
-            return NextResponse.json({ error: "Aucun ID fourni" }, { status: 400 });
-        }
+        if (!ids || ids.length === 0) return NextResponse.json({ error: "Aucun ID" }, { status: 400 });
 
-        // Suppression en masse
         const { error } = await supabase
             .from('Memory')
             .delete()
@@ -22,10 +19,8 @@ export async function POST(request: Request) {
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true, count: ids.length });
-
-    } catch (e: any) {
-        console.error("Erreur suppression:", e);
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

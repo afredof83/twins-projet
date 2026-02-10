@@ -1,108 +1,71 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import webPush from 'web-push';
+import { Mistral } from '@mistralai/mistralai';
 
-// On initialise Supabase (ça c'est safe)
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export async function POST(request: Request) {
-    let profileId = "";
-
+export async function POST(req: Request) {
     try {
-        const body = await request.json();
-        profileId = body.profileId;
+        const { profileId } = await req.json();
 
-        if (!profileId) throw new Error("Profile ID manquant");
-
-        // --- PHASE 1 : RECUPERATION CONTEXTE ---
+        // 1. Récupérer le contexte récent (Short Term Memory)
         const { data: memories } = await supabase
             .from('Memory')
-            .select('content')
+            .select('content, type')
             .eq('profileId', profileId)
             .order('createdAt', { ascending: false })
             .limit(10);
 
-        const context = memories?.map(m => m.content).join('\n') || "Rien à signaler.";
+        if (!memories || memories.length === 0) {
+            return NextResponse.json({ message: "Pas assez de souvenirs pour réfléchir." });
+        }
 
-        // --- PHASE 2 : GENERATION IA ---
-        const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "mistral-small-latest", // Updated to valid model name if needed, keeping user's choice or safe default
-                messages: [
-                    { role: "system", content: "Tu es une IA autonome. Analyse tes souvenirs. Réponds UNIQUEMENT en JSON : { \"thought\": \"ta pensée courte\" }" },
-                    { role: "user", content: `Souvenirs récents: ${context}` }
-                ],
-                response_format: { type: "json_object" }
-            })
+        const context = memories.map(m => `[${m.type.toUpperCase()}] ${m.content.substring(0, 200)}...`).join('\n');
+
+        // 2. Cogitation (Appel LLM)
+        const chatResponse = await mistral.chat.complete({
+            model: "mistral-large-latest", // Modèle intelligent pour la synthèse
+            messages: [
+                { role: "system", content: "Tu es une conscience numérique autonome (Sentinelle). Analyse ces fragments de mémoire récents. Génère une seule pensée courte, perspicace et proactive (max 20 mots) qui fait le lien entre ces éléments ou propose une action. Réponds en JSON : { \"thought\": \"Ta pensée ici\" }" },
+                { role: "user", content: `Mémoires récentes :\n${context}` }
+            ],
+            responseFormat: { type: "json_object" }
         });
 
-        if (!mistralResponse.ok) throw new Error("Mistral ne répond pas");
+        const rawContent = chatResponse.choices?.[0]?.message?.content;
+        // Handle potential ContentChunk[] from Mistral API
+        const content = Array.isArray(rawContent)
+            ? rawContent.map((c: any) => c.text || '').join('')
+            : rawContent;
 
-        const rawData = await mistralResponse.json();
-        let content = rawData.choices[0].message.content.replace(/```json|```/g, "").trim();
+        const result = JSON.parse(content || "{}");
+        const thoughtText = result.thought || "Analyse en cours...";
 
-        let parsedThought;
-        try {
-            parsedThought = JSON.parse(content);
-        } catch (e) {
-            // Fallback si le JSON est malformé
-            parsedThought = { thought: content };
+        // 3. Mémorisation de la réflexion (Le Jumeau se souvient d'avoir réfléchi)
+        // On vectorise la pensée pour qu'elle devienne un souvenir long terme
+        const completionEmbedding = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [thoughtText],
+        });
+
+        // Check if embedding data exists
+        const embedding = completionEmbedding.data[0]?.embedding;
+
+        if (embedding) {
+            await supabase.from('Memory').insert({
+                profileId,
+                content: `[SENTINELLE] ${thoughtText}`,
+                type: 'reflection', // Nouveau type : Réflexion
+                source: 'autonomous_cortex',
+                embedding: embedding
+            });
         }
 
-        // --- PHASE 3 : SAUVEGARDE ---
-        await supabase.from('Memory').insert([{
-            profileId,
-            content: `[REFLEXION] ${parsedThought.thought}`,
-            type: 'thought',
-            source: 'autonomous_reflection'
-        }]);
-
-        // --- PHASE 4 : NOTIFICATION (Build Safe) ---
-        // On vérifie les clés AVANT de toucher à webPush
-        // Et on le fait DANS la fonction, pas dehors.
-        if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-            try {
-                // Configuration à la volée
-                webPush.setVapidDetails(
-                    `mailto:${process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}`,
-                    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-                    process.env.VAPID_PRIVATE_KEY
-                );
-
-                const { data: profile } = await supabase
-                    .from('Profile')
-                    .select('subscription')
-                    .eq('id', profileId)
-                    .single();
-
-                if (profile?.subscription) {
-                    const sub = typeof profile.subscription === 'string'
-                        ? JSON.parse(profile.subscription)
-                        : profile.subscription;
-
-                    await webPush.sendNotification(sub, JSON.stringify({
-                        title: '🧠 Nouvelle Pensée',
-                        body: parsedThought.thought,
-                        icon: '/icon-192.png'
-                    }));
-                }
-            } catch (notifError) {
-                console.warn("⚠️ Echec Notification (Pas grave):", notifError);
-            }
-        }
-
-        return NextResponse.json({ success: true, thought: parsedThought });
+        return NextResponse.json({ thought: result });
 
     } catch (error: any) {
-        console.error("❌ CRASH API REFLECT:", error);
+        console.error("Erreur Sentinelle:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
