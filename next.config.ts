@@ -1,12 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Cette option est CRUCIALE pour les modules natifs comme pdf-parse ou canvas
-  serverExternalPackages: ['pdf-parse'],
+  // On laisse vide pour l'instant, pdf2json n'a pas besoin d'exclusion spécifique
+  // serverExternalPackages: [], 
 
-  // Optionnel : Désactive certains checks stricts si nécessaire
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
+  typescript: {
+    // Permet de déployer même si TypeScript râle un peu
+    ignoreBuildErrors: true,
+  },
+
 };
 
 export default nextConfig;
