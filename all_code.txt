@@ -20,7 +20,9 @@
     "@mistralai/mistralai": "^1.14.0",
     "@noble/hashes": "^2.0.1",
     "@prisma/client": "^5.22.0",
-    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
     "bip39": "^3.1.0",
     "cheerio": "^1.2.0",
     "cobe": "^0.6.5",
@@ -33,6 +35,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-globe.gl": "^2.37.0",
+    "react-markdown": "^10.1.0",
     "rss-parser": "^3.13.0",
     "web-push": "^3.6.7"
   },
@@ -312,7 +315,7 @@ MISTRAL_API_KEY="your-mistral-api-key"
 
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-import "./.next/dev/types/routes.d.ts";
+import "./.next/types/routes.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
@@ -856,41 +859,317 @@ export async function GET(req: Request) {
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\bridge\route.ts ---
+
+import { createClient } from '@/lib/supabaseServer';
+import { Mistral } from '@mistralai/mistralai';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+    try {
+        const { fromProfileId, toProfileId, task } = await req.json();
+        const supabase = await createClient();
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+        // Generate embedding for the task description
+        const embeddingResponse = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [task],
+        });
+        const queryEmbedding = embeddingResponse.data[0].embedding;
+
+        // 1. Recherche profonde dans le Cortex de l'AUTRE clone
+        const { data: foreignMemories, error } = await supabase.rpc('match_memories', {
+            match_profile_id: toProfileId,
+            match_count: 1, // Limit to most relevant
+            match_threshold: 0.6, // Higher threshold for relevance
+            query_embedding: queryEmbedding
+        });
+
+        if (error) {
+            console.error("Bridge search error:", error);
+            return NextResponse.json({ error: "Bridge connection failed" }, { status: 500 });
+        }
+
+        // 2. SÃ‰CURITÃ‰ : On ne renvoie PAS le contenu, juste le signal d'existence
+        if (foreignMemories && foreignMemories.length > 0) {
+            const bestMatch = foreignMemories[0];
+            const similarity = bestMatch.similarity || 0;
+            const percentage = Math.round(similarity * 100);
+
+            // SIMULATION PING : Si le match est fort, on prÃ©vient le Provider
+            if (percentage > 70) {
+                console.log(`ðŸ“¡ PING SENT to Provider ${toProfileId} for topic "${task}" (Match: ${percentage}%)`);
+                // TODO: Appeler ici /api/cortex/bridge/ping REELLEMENT
+            }
+
+            return NextResponse.json({
+                found: true,
+                topic: task,
+                match_score: percentage,
+                origin: "EXTERNAL_NETWORK"
+            });
+        }
+
+        return NextResponse.json({ found: false });
+
+    } catch (error: any) {
+        console.error("Bridge Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\bridge\handle-decision\route.ts ---
+
+import { createClient } from '@/lib/supabaseServer';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+    try {
+        const { requestId, status } = await req.json();
+        const supabase = await createClient();
+
+        // 1. Mettre Ã  jour la requÃªte
+        const { data: request, error } = await supabase
+            .from('AccessRequest')
+            .update({ status })
+            .eq('id', requestId)
+            .select()
+            .single();
+
+        if (error || !request) throw new Error("Request not found or update failed");
+
+        // 2. Envoyer le message automatique dans la messagerie DirectMessage
+        // Note: status 'approved' vs 'declined'
+        const messageContent = status === 'approved'
+            ? `âœ… [AUTO] J'ai acceptÃ© ta demande sur le sujet "${request.topic}". On peut en discuter.`
+            : `âŒ [AUTO] J'ai refusÃ© la discussion sur le sujet "${request.topic}".`;
+
+        await supabase.from('DirectMessage').insert([{
+            sender_id: request.provider_id,
+            receiver_id: request.requester_id,
+            content: messageContent,
+            created_at: new Date().toISOString()
+        }]);
+
+        return NextResponse.json({ status: 'done', requestStatus: status });
+    } catch (error: any) {
+        console.error("Decision Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\bridge\ping\route.ts ---
+
+import { createClient } from '@/lib/supabaseServer';
+import { Mistral } from '@mistralai/mistralai';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+    const body = await req.json();
+    console.log("ðŸ“¦ DEBUG PING REÃ‡U:", body); // <--- DEBUG LOG
+
+    const { requesterId, providerId, topic } = body;
+
+    if (!providerId) {
+        console.error("âŒ ERREUR CRITIQUE : providerId (Destinataire) est manquant !");
+        return NextResponse.json({ error: "Missing providerId" }, { status: 400 });
+    }
+
+    try {
+        const supabase = await createClient();
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+        // 1. Calculer l'embedding du sujet
+        const embeddingResponse = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [topic],
+        });
+        const embedding = embeddingResponse.data[0].embedding;
+
+        // 2. On interroge le Cortex du RECEVEUR (providerId)
+        const { data: matches } = await supabase.rpc('match_memories', {
+            match_threshold: 0.5,
+            match_count: 5,
+            query_embedding: embedding,
+            p_profile_id: providerId // On cherche DANS le cerveau du destinataire
+        });
+
+        const bestMatch = matches && matches.length > 0 ? matches[0] : null;
+        // Check if similarity exists on the returned object, otherwise default to 0
+        const rawScore = bestMatch ? (bestMatch.similarity || 0) : 0;
+        const matchPercentage = Math.round(rawScore * 100);
+
+        console.log(`ðŸ“Š PING SCORE: ${matchPercentage}% pour le sujet "${topic}"`);
+
+        // 3. InsÃ©rer la demande dans la table "AccessRequest"
+        const { data, error } = await supabase
+            .from('AccessRequest')
+            .insert([{
+                requester_id: requesterId,
+                provider_id: providerId,
+                topic: topic,
+                match_score: matchPercentage,
+                status: 'pending' // En attente de validation
+            }])
+            .select()
+            .single();
+
+        if (error) {
+            console.error("âŒ Erreur SQL Ping:", error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, id: data.id, score: matchPercentage });
+    } catch (error: any) {
+        console.error("Ping Route Error:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\chat\route.ts ---
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { message, profileId } = await req.json();
+        const supabase = await createClient();
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-        // 1. Vectorisation (Embedding)
+        // 1. RÃ©cupÃ©rer les donnÃ©es d'identitÃ© (Le Miroir)
+        const { data: profile } = await supabase
+            .from('Profile')
+            .select('*')
+            .eq('id', profileId)
+            .single();
+
+        // 2. RÃ©cupÃ©rer le dernier Ã‰veil Profond (La conscience)
+        const { data: lastAwakening } = await supabase
+            .from('Memory')
+            .select('content')
+            .ilike('content', '[Ã‰VEIL PROFOND]%')
+            .eq('profileId', profileId)
+            .order('createdAt', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        // 3. Vectorisation (Embedding) pour RAG
         const embeddingResponse = await mistral.embeddings.create({
             model: "mistral-embed",
             inputs: [message],
         });
         const embedding = embeddingResponse.data[0].embedding;
 
-        // 2. Recherche MÃ©moire (RAG)
-        const { data: memories } = await supabase.rpc('match_memories', {
-            query_embedding: embedding,
-            match_threshold: 0.7,
-            match_count: 5,
+        // 4. Recherche CORTEX (RAG)
+        const { data: memories, error: dbError } = await supabase.rpc('match_memories', {
+            query_embedding: embedding || [],
+            match_threshold: 0.5, // Un peu plus strict pour la pertinence
+            match_count: 8,
             match_profile_id: profileId
         });
 
-        const context = memories?.map((m: any) => m.content).join('\n') || "Aucun souvenir pertinent.";
+        if (dbError) console.error("Erreur RAG:", dbError);
 
-        // 3. GÃ©nÃ©ration RÃ©ponse
+        const matchedMemories = memories?.map((m: any) => `[SOURCE: MOI] ${m.content}`).join('\n') || "";
+
+        // 2. LOGIQUE DE SECOURS : Si local est vide, on interroge le rÃ©seau (Bridge)
+        let externalMemories = "";
+
+        if (!matchedMemories) {
+            console.log("ðŸ” Cortex local vide. Interrogation du rÃ©seau de Clones...");
+
+            // On cherche un autre profil Ã  interroger (n'importe lequel pour l'exemple)
+            const { data: other } = await supabase.from('Profile').select('id').neq('id', profileId).limit(1).maybeSingle();
+
+            if (other) {
+                try {
+                    const protocol = req.headers.get('x-forwarded-proto') || 'http';
+                    const host = req.headers.get('host');
+                    const baseUrl = `${protocol}://${host}`;
+
+                    const bridgeResponse = await fetch(`${baseUrl}/api/cortex/bridge`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            fromProfileId: profileId,
+                            toProfileId: other.id,
+                            task: message
+                        })
+                    });
+
+                    const bridgeData = await bridgeResponse.json();
+                    if (bridgeData.found) {
+                        externalMemories = `[SOURCE: RÃ‰SEAU EXTERNE] Existence confirmÃ©e sur le sujet : "${bridgeData.topic}".`;
+                    }
+                } catch (e) {
+                    console.error("Bridge Connection Failed:", e);
+                }
+            }
+        }
+
+        const fullContext = `
+VOICI TES SOUVENIRS (Ton Cortex Local) :
+${matchedMemories || "(Vide)"}
+
+VOICI LES INFORMATIONS DES AUTRES CLONES (RÃ©seau) :
+${externalMemories || "(Aucune donnÃ©e externe reÃ§ue)"}
+`;
+
+        // 5. Construction du System Prompt "Twin" - Version "PropriÃ©tÃ© Intellectuelle" & "Ambassadeur"
+        const twinSystemPrompt = `
+TU ES LE CLONE NUMÃ‰RIQUE DU PROFIL ${profile?.name || 'Inconnu'}.
+Ton identitÃ© est strictement limitÃ©e aux informations marquÃ©es [SOURCE: MOI].
+
+TON PROFIL (Si [SOURCE: MOI] est vide, ignore ceci et dis que tu n'es qu'une interface) :
+- MÃ©tier : ${profile?.bio || 'Non dÃ©fini'}
+- Localisation : Toulon / Ollioules
+
+CONSIGNE DE SÃ‰CURITÃ‰ NIVEAU ROUGE :
+- Tu es un indexeur. Tu n'as pas de souvenirs propres sur ce sujet externe.
+- Si le Bridge confirme une information [SOURCE: RÃ‰SEAU EXTERNE], tu dois UNIQUEMENT confirmer son existence.
+- INTERDICTION de faire des listes, de parler de hobbies, de caractÃ¨re ou d'autres jobs.
+
+RÃ‰PONSE TYPE OBLIGATOIRE pour les donnÃ©es externes :
+"Oui, je connais un clone dans le rÃ©seau qui a travaillÃ© chez [Sujet]." 
+
+RÃˆGLE D'OR DU PING (AUTOMATISATION) :
+Si l'utilisateur demande "Envoie un ping" (ou similaire), TU NE DOIS PAS DEMANDER LE SUJET.
+Tu dois :
+1. RepÃ©rer l'entreprise ou le thÃ¨me dont TU viens de parler (ex: Qualitat Expertises).
+2. GÃ©nÃ©rer immÃ©diatement la balise avec ce sujet.
+3. RÃ©pondre court : "C'est fait."
+
+EXEMPLE :
+- Toi : "...un clone a travaillÃ© chez Qualitat Expertises."
+- User : "Envoie le ping."
+- Toi : "Demande transmise explictement. [TRIGGER_PING:Qualitat Expertises]"
+
+INTERDICTION : Ne dis jamais "Quel est le sujet ?". DÃ©duis-le.
+
+POINT FINAL. Ne rajoute rien d'autre. Si l'utilisateur demande "plus d'infos", rÃ©ponds : "AccÃ¨s refusÃ©. Je ne suis pas autorisÃ© Ã  consulter les dÃ©tails de ce profil."
+
+CONTEXTE GLOBAL :
+${fullContext}
+
+CONSIGNES DE STYLE :
+- Si tu parles de tes souvenirs [SOURCE: MOI], utilise "JE".
+- Si tu parles d'infos externes, APPLIQUE LA LOI DE CONFIDENTIALITÃ‰.
+- Ton Ã©tat d'esprit : "${lastAwakening?.content?.replace('[Ã‰VEIL PROFOND]', '').trim() || 'Neutre'}"
+`;
+
+        // 6. Appel Ã  Mistral avec le nouveau prompt
         const chatResponse = await mistral.chat.complete({
-            model: "mistral-small-latest",
+            model: "mistral-large-latest", // On prend le gros modÃ¨le pour la personnalitÃ©
             messages: [
-                { role: "system", content: `Tu es le Jumeau NumÃ©rique. Utilise ces souvenirs pour rÃ©pondre : ${context}` },
+                { role: "system", content: twinSystemPrompt },
                 { role: "user", content: message }
             ]
         });
@@ -898,8 +1177,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ reply: chatResponse.choices?.[0]?.message?.content });
 
     } catch (error: any) {
-        console.error(error);
-        return NextResponse.json({ reply: "Erreur systÃ¨me. Le cortex ne rÃ©pond pas." });
+        console.error("Erreur Chat:", error);
+        return NextResponse.json({ reply: "Erreur critique du noyau. RedÃ©marrage requis." });
     }
 }
 
@@ -1057,6 +1336,105 @@ export async function POST(req: Request) {
 
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\sync\route.ts ---
+
+import { createClient } from '@/lib/supabaseServer';
+import { Mistral } from '@mistralai/mistralai';
+import { NextResponse } from 'next/server';
+
+export async function POST(req: Request) {
+    try {
+        const { profileId } = await req.json();
+        const supabase = await createClient();
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+        // 1. Maintenance SQL (Doublons + Expiration)
+        // On appelle la fonction RPC qu'on vient de crÃ©er via SQL
+        // Si la fonction n'existe pas encore en DB, cela Ã©chouera silencieusement ou lÃ¨vera une erreur catchÃ©e.
+        const { error: rpcError } = await supabase.rpc('run_cortex_maintenance', { p_profile_id: profileId });
+        if (rpcError) console.warn("Attention: Maintenance RPC Ã©chouÃ©e (Fonction manquante ?)", rpcError.message);
+
+        // 2. VÃ©rification du "Cool Down"
+        // On regarde si une [META] mÃ©moire a Ã©tÃ© crÃ©ee rÃ©cemment
+        const { data: lastMeta } = await supabase
+            .from('Memory')
+            .select('createdAt')
+            .ilike('content', '[Ã‰VEIL PROFOND]%')
+            .eq('profileId', profileId)
+            .order('createdAt', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        const hoursSinceLastAwake = lastMeta
+            ? (Date.now() - new Date(lastMeta.createdAt).getTime()) / (1000 * 60 * 60)
+            : 99;
+
+        let awakeStatus = "Skipped (Cool Down)";
+
+        if (hoursSinceLastAwake > 4) {
+            // 3. Ã‰veil Profond (SynthÃ¨se par IA)
+            const { data: recent } = await supabase
+                .from('Memory')
+                .select('content')
+                .eq('profileId', profileId)
+                .order('createdAt', { ascending: false })
+                .limit(15);
+
+            if (recent && recent.length > 5) {
+                const context = recent.map(m => m.content).join('\n');
+
+                try {
+                    const response = await mistral.chat.complete({
+                        model: "mistral-small-latest",
+                        messages: [
+                            { role: "system", content: "Tu es le subconscient du Clone. SynthÃ©tise les derniers Ã©vÃ©nements ou pensÃ©es en une phrase courte d'insight percutant (max 20 mots)." },
+                            { role: "user", content: `Souvenirs rÃ©cents :\n${context}` }
+                        ]
+                    });
+
+                    let insight = response.choices?.[0].message.content;
+
+                    if (Array.isArray(insight)) {
+                        insight = insight.map((c: any) => c.text || "").join(" ");
+                    }
+
+                    if (typeof insight === 'string' && insight.length > 0) {
+                        // On insÃ¨re l'insight via un appel API interne ou direct DB
+                        // Ici direct DB pour simplicitÃ©
+
+                        // On embed l'insight pour qu'il soit recherchable
+                        const embeddingResponse = await mistral.embeddings.create({
+                            model: "mistral-embed",
+                            inputs: [insight],
+                        });
+
+                        await supabase.from('Memory').insert({
+                            content: `[Ã‰VEIL PROFOND] ${insight}`,
+                            profileId: profileId,
+                            type: 'thought',
+                            embedding: embeddingResponse.data[0].embedding,
+                            source: 'cortex_sync'
+                        });
+                        awakeStatus = "Insight Generated: " + insight;
+                    }
+                } catch (mistralError) {
+                    console.error("Erreur Mistral Sync:", mistralError);
+                }
+            } else {
+                awakeStatus = "Not enough context";
+            }
+        }
+
+        return NextResponse.json({ status: 'Cortex Synced', detail: awakeStatus });
+
+    } catch (error: any) {
+        console.error("Erreur Sync:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\login\route.ts ---
 
 import { NextResponse } from 'next/server';
@@ -1134,29 +1512,100 @@ import { Mistral } from '@mistralai/mistralai';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
+// Filtres de pertinence
+const NOISE_KEYWORDS = ["publicitÃ©", "promo", "sponsored", "cookies", "abonnez-vous"];
+
+async function shouldMemorize(content: string): Promise<boolean> {
+    // 1. Longueur min
+    if (content.length < 50) return false;
+
+    // 2. Mots-clÃ©s bruit
+    if (NOISE_KEYWORDS.some(word => content.toLowerCase().includes(word))) return false;
+
+    return true;
+}
+
+// Retry logic avec backoff exponentiel
+async function fetchWithRetry(fn: () => Promise<any>, retries = 3, delay = 1000): Promise<any> {
+    try {
+        return await fn();
+    } catch (error: any) {
+        if (error?.status === 429 && retries > 0) {
+            console.log(`â³ Rate limit atteint. Nouvelle tentative dans ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchWithRetry(fn, retries - 1, delay * 2);
+        }
+        throw error;
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const { content, type, profileId } = await req.json();
 
-        const embeddingResponse = await mistral.embeddings.create({
-            model: "mistral-embed",
-            inputs: [content],
-        });
+        // 1. Filtrage (Le Gardien)
+        if (!await shouldMemorize(content)) {
+            return NextResponse.json({ skipped: true, reason: "Contenu non pertinent ou trop court." });
+        }
 
+        let contentToEmbed = content;
+        let finalContent = content;
+
+        // 2. RÃ©sumÃ© intelligent (si trop long)
+        if (content.length > 1500) {
+            console.log("ðŸ“ Contenu long dÃ©tectÃ© -> RÃ©sumÃ© en cours...");
+            try {
+                const summaryResponse = await fetchWithRetry(() => mistral.chat.complete({
+                    model: "mistral-small-latest",
+                    messages: [
+                        { role: "system", content: "Tu es un archiviste expert. RÃ©sume ce texte en un paragraphe dense et factuel de 150 mots maximum. Capture les entitÃ©s nommÃ©es et les idÃ©es clÃ©s." },
+                        { role: "user", content: content }
+                    ]
+                }));
+                const summary = summaryResponse.choices?.[0]?.message?.content || content.substring(0, 500); // Fallback
+                contentToEmbed = `[RÃ‰SUMÃ‰] ${summary}`;
+                // Optionnel : On peut stocker le rÃ©sumÃ© ou garder le texte complet. 
+                // Ici on garde le texte complet dans 'content' mais on vectorise le rÃ©sumÃ©.
+            } catch (e) {
+                console.error("Erreur rÃ©sumÃ©:", e);
+                // On continue avec le texte complet si le rÃ©sumÃ© Ã©choue
+            }
+        }
+
+        // 3. Vectorisation (avec Retry)
+        const embeddingResponse = await fetchWithRetry(() => mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [contentToEmbed],
+        }));
+
+        const embedding = embeddingResponse.data[0].embedding;
+
+        // 4. Expiration (Nettoyage automatique)
+        let expiresAt = null;
+        if (type === 'news') {
+            const date = new Date();
+            date.setDate(date.getDate() + 7); // Expire dans 7 jours
+            expiresAt = date.toISOString();
+        }
+
+        // 5. Stockage Supabase
         const { error } = await supabase
             .from('Memory')
             .insert({
                 profileId,
-                content,
+                content: finalContent, // On stocke le contenu original
                 type: type || 'thought',
-                embedding: embeddingResponse.data[0].embedding,
-                source: 'manual_input'
+                embedding: embedding,
+                source: 'manual_input',
+                expires_at: expiresAt // Colonne d'expiration (assurez-vous d'avoir ajoutÃ© la colonne)
             });
 
         if (error) throw error;
-        return NextResponse.json({ success: true });
+
+        return NextResponse.json({ success: true, summarized: contentToEmbed !== content });
 
     } catch (error: any) {
+        console.error("Erreur Scribe:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -1176,27 +1625,36 @@ const supabase = createClient(
 export async function POST(req: Request) {
     try {
         const { profileId } = await req.json();
+        const now = new Date().toISOString();
 
-        // MÃ©thode brutale mais efficace : Suppression par requÃªte SQL directe via RPC (ou logique code)
-        // Ici, on utilise une logique JS pour Ãªtre compatible sans modifier le SQL complexe.
+        // 1. Suppression des items ExpirÃ©s (Le Balayeur)
+        const { data: expired, error: expireError } = await supabase
+            .from('Memory')
+            .delete()
+            .lt('expires_at', now) // < NOW()
+            .eq('profileId', profileId)
+            .select('id');
 
-        // 1. On rÃ©cupÃ¨re TOUS les souvenirs (ID et Content uniquement)
+        const expiredCount = expired?.length || 0;
+        if (expireError) console.error("Erreur expiration:", expireError);
+
+        // 2. DÃ©tection des doublons (MÃ©thode JS pour Ãªtre safe)
         const { data: allMemories } = await supabase
             .from('Memory')
             .select('id, content')
             .eq('profileId', profileId);
 
         if (!allMemories || allMemories.length === 0) {
-            return NextResponse.json({ message: "MÃ©moire vide." });
+            return NextResponse.json({ message: "MÃ©moire vide.", expiredCount });
         }
 
-        // 2. DÃ©tection des doublons
         const seen = new Set();
         const duplicates: string[] = [];
 
         for (const mem of allMemories) {
+            if (!mem.content) continue;
             // On normalise le texte (minuscule, sans espace inutile) pour comparer
-            const normalized = mem.content?.trim().toLowerCase();
+            const normalized = mem.content.trim().toLowerCase();
 
             if (seen.has(normalized)) {
                 duplicates.push(mem.id);
@@ -1205,22 +1663,28 @@ export async function POST(req: Request) {
             }
         }
 
-        // 3. ExÃ©cution de la purge
+        // 3. ExÃ©cution de la purge doublons
+        let duplicateCount = 0;
         if (duplicates.length > 0) {
-            const { error } = await supabase
+            const { error: dupError } = await supabase
                 .from('Memory')
                 .delete()
                 .in('id', duplicates);
 
-            if (error) throw error;
-
-            console.log(`[NETTOYAGE] ${duplicates.length} doublons supprimÃ©s.`);
-            return NextResponse.json({ success: true, count: duplicates.length });
+            if (dupError) throw dupError;
+            duplicateCount = duplicates.length;
         }
 
-        return NextResponse.json({ success: true, count: 0, message: "Aucun doublon." });
+        console.log(`[NETTOYAGE] ${expiredCount} expirÃ©s, ${duplicateCount} doublons supprimÃ©s.`);
+
+        return NextResponse.json({
+            success: true,
+            expired: expiredCount,
+            duplicates: duplicateCount
+        });
 
     } catch (error: any) {
+        console.error("Erreur Clean:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -1901,46 +2365,163 @@ export async function POST(request: Request) {
 
 import { NextResponse } from 'next/server';
 import Parser from 'rss-parser';
+import { createClient } from '@/lib/supabaseServer';
 
-// Liste des sources de surveillance
-const FEEDS = [
-    { id: 'wired', url: 'https://www.wired.com/feed/rss' },
-    { id: 'verge', url: 'https://www.theverge.com/rss/index.xml' },
-    { id: 'hackernews', url: 'https://hnrss.org/newest?points=100' }, // Uniquement les posts populaires
-    { id: 'cointelegraph', url: 'https://cointelegraph.com/rss' }
+// Sources par dÃ©faut si l'utilisateur n'en a pas
+const DEFAULT_FEEDS = [
+    { id: 'lemonde', name: 'Le Monde', url: 'https://www.lemonde.fr/rss/une.xml' }
 ];
 
 export async function GET() {
     try {
+        const supabase = await createClient();
+
+        let sources = DEFAULT_FEEDS;
+
+        // Tentative de rÃ©cupÃ©ration de l'utilisateur et de ses sources
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+            const { data: userSources } = await supabase
+                .from('RadarSource')
+                .select('*')
+                .eq('profileId', user.id);
+
+            if (userSources && userSources.length > 0) {
+                // @ts-ignore
+                sources = userSources;
+            }
+        }
+
+        console.log(`ðŸ“¡ Radar : RÃ©cupÃ©ration RSS (${sources.length} sources)...`);
         const parser = new Parser();
 
-        // On lance toutes les requÃªtes en parallÃ¨le pour la vitesse
-        const feedPromises = FEEDS.map(async (feed) => {
+        // On lance toutes les requÃªtes en parallÃ¨le 
+        const feedPromises = sources.map(async (source) => {
             try {
-                const feedData = await parser.parseURL(feed.url);
+                const feedData = await parser.parseURL(source.url);
                 return feedData.items.slice(0, 3).map(item => ({
-                    source: feed.id,
+                    source: source.name || 'Inconnu',
                     title: item.title,
                     link: item.link,
                     date: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString()
                 }));
             } catch (e) {
-                console.error(`Erreur flux ${feed.id}:`, e);
+                console.error(`Erreur flux ${source.name || source.url}:`, e);
                 return [];
             }
         });
 
         const results = await Promise.all(feedPromises);
 
-        // On aplatit tout en une seule liste et on trie par date (le plus rÃ©cent en premier)
-        const allNews = results.flat().sort((a, b) =>
+        // On aplatit tout en une seule liste et on trie par date
+        const allNews = results.flat().sort((a: any, b: any) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        return NextResponse.json({ news: allNews.slice(0, 15) }); // Top 15 infos
+        return NextResponse.json({ news: allNews.slice(0, 20) }); // Top 20 infos
 
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("âŒ Erreur Radar:", error.message);
+        return NextResponse.json({ error: "Radar indisponible" }, { status: 503 });
+    }
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\radar\sources\route.ts ---
+
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+
+// AJOUTER UN FLUX
+export async function POST(req: Request) {
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value, ...options });
+                    } catch (error) {
+                        // The `set` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+                remove(name: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value: '', ...options });
+                    } catch (error) {
+                        // The `delete` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+            },
+        }
+    );
+
+    try {
+        const { url, name, profileId } = await req.json();
+
+        const { data, error } = await supabase
+            .from('RadarSource')
+            .insert([{ url, name, profileId }])
+            .select();
+
+        return NextResponse.json(data || { error });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+}
+
+// SUPPRIMER UN FLUX
+export async function DELETE(req: Request) {
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value, ...options });
+                    } catch (error) {
+                    }
+                },
+                remove(name: string, options: CookieOptions) {
+                    try {
+                        cookieStore.set({ name, value: '', ...options });
+                    } catch (error) {
+                    }
+                },
+            },
+        }
+    );
+
+    try {
+        const { id } = await req.json();
+
+        const { error } = await supabase
+            .from('RadarSource')
+            .delete()
+            .eq('id', id);
+
+        return NextResponse.json({ success: !error });
+    } catch (e: any) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
 
@@ -2844,6 +3425,11 @@ import AudioInput from '@/components/AudioInput';
 import VoiceOutput from '@/components/VoiceOutput';
 import RadarWidget from '@/components/RadarWidget';
 import CommlinkButton from '@/components/CommlinkButton';
+import RadarManager from '@/components/RadarManager';
+import MessageBubble from '@/components/MessageBubble';
+import NetworkPing from '@/components/NetworkPing';
+
+// ... existing code ...
 
 const SFX = {
     LAUNCH: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
@@ -2877,6 +3463,7 @@ const SafeMissionControl = ({ count }: { count: number }) => {
 export default function MissionControl() {
     const router = useRouter();
     const [profileId, setProfileId] = useState<string | null>(null);
+    const [targetProfileId, setTargetProfileId] = useState<string | null>(null);
 
     // Etats
     const [isInitialized, setIsInitialized] = useState(false);
@@ -2884,12 +3471,13 @@ export default function MissionControl() {
     const [logs, setLogs] = useState<string[]>([]);
     const [contacts, setContacts] = useState<any[]>([]);
     const [isSentinelActive, setIsSentinelActive] = useState(false);
+    const [activeRequest, setActiveRequest] = useState<any>(null);
 
     // Drag & Drop
     const [isDragging, setIsDragging] = useState(false);
 
     // Chat & Mission
-    const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'twin', content: string }>>([]);
+    const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([]);
     const [chatInput, setChatInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const [lastSpokenText, setLastSpokenText] = useState<string | null>(null);
@@ -2919,14 +3507,110 @@ export default function MissionControl() {
             if (!user) { router.push('/'); return; }
 
             setProfileId(user.id);
+
+            // Recherche d'un autre clone cible pour le Ping
+            const { data: others } = await sb.from('Profile').select('id').neq('id', user.id).limit(1);
+            if (others && others.length > 0) setTargetProfileId(others[0].id);
+
             setIsInitialized(true);
             addLog('[BOOT] SystÃ¨me Twin v2.1 en ligne.');
             playSFX(SFX.CONNECT);
             loadMemories(user.id);
             fetchContacts(user.id);
+
+            // Lancement de la Synchro Cortex (Nettoyage + Ã‰veil)
+            fetch('/api/cortex/sync', {
+                method: 'POST',
+                body: JSON.stringify({ profileId: user.id }),
+            }).then(() => console.log("ðŸ§  Cortex Synced")).catch(e => console.error("Sync warnings:", e));
         };
         init();
     }, []);
+
+    // --- REALTIME PING LISTENER ---
+    useEffect(() => {
+        if (!profileId) return;
+
+        const setupRealtime = async () => {
+            const { createClient } = await import('@supabase/supabase-js');
+            const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+
+            const channel = sb
+                .channel('ping-channel')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'AccessRequest',
+                        filter: `provider_id=eq.${profileId}` // Ã‰coute pour MOI
+                    },
+                    (payload) => {
+                        console.log('ðŸ”” NOUVEAU PING REÃ‡U:', payload.new);
+                        addLog(`[RESEAU] Ping entrant: "${payload.new.topic}"`);
+                        playSFX(SFX.PING);
+                        setActiveRequest(payload.new);
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                sb.removeChannel(channel);
+            };
+        };
+        setupRealtime();
+    }, [profileId]);
+
+    // --- AUTO-PING EFFECT ---
+    useEffect(() => {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage?.role === 'assistant') { // Removed targetProfileId check to allow fallout
+            const match = lastMessage.content.match(/\[TRIGGER_PING:(.*?)\]/);
+            if (match) {
+                const topicToPing = match[1];
+                console.log("ðŸŽ¯ TAG DÃ‰TECTÃ‰. Sujet :", topicToPing);
+
+                addLog(`[AUTO-PING] Envoi demande sur "${topicToPing}"...`);
+
+                const effectiveProviderId = targetProfileId || profileId; // <--- HARDCODED FALLBACK FOR TESTING
+
+                if (!effectiveProviderId) {
+                    addLog("[ERREUR] Aucun destinataire trouvÃ©.");
+                    return;
+                }
+
+                fetch('/api/cortex/bridge/ping', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requesterId: profileId,
+                        providerId: '710fc2a1-f078-409d-8f82-faa7e4f99951', // <--- HARDCODED FIX FORCED
+                        topic: topicToPing
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            addLog(`[PING SUCCESS] Score: ${data.score}%`);
+                            playSFX(SFX.PING);
+                        } else {
+                            addLog(`[PING ERROR] ${data.error}`);
+                        }
+                    });
+            }
+        }
+    }, [messages, targetProfileId, profileId]);
+
+    const handlePingAccept = async (req: any) => {
+        // Logic to accept ping
+        setActiveRequest(null);
+        addLog(`[ACCORD] Canal ouvert avec ${req.requester_id.slice(0, 8)}`);
+    };
+
+    const handlePingDecline = (id: string) => {
+        setActiveRequest(null);
+        addLog(`[REFUS] Demande ignorÃ©e.`);
+    };
 
     const loadMemories = async (pid: string) => { try { const res = await fetch(`/api/memories?profileId=${pid}`); const data = await res.json(); if (data.memories) setMemories(data.memories); } catch (e) { } };
     const fetchContacts = async (pid: string) => { try { const res = await fetch(`/api/contacts?profileId=${pid}`); const data = await res.json(); if (data.contacts) setContacts(data.contacts); } catch (e) { } };
@@ -2940,14 +3624,14 @@ export default function MissionControl() {
 
     const handleSendMessage = async () => {
         if (!chatInput.trim() || !profileId) return;
-        const msg = chatInput; setChatInput(''); setChatMessages(prev => [...prev, { role: 'user', content: msg }]); setIsThinking(true); playSFX(SFX.LAUNCH);
+        const msg = chatInput; setChatInput(''); setMessages(prev => [...prev, { role: 'user', content: msg }]); setIsThinking(true); playSFX(SFX.LAUNCH);
         try {
             const res = await fetch('/api/cortex/chat', { method: 'POST', body: JSON.stringify({ message: msg, profileId }), headers: { 'Content-Type': 'application/json' } });
             const data = await res.json();
-            setChatMessages(prev => [...prev, { role: 'twin', content: data.reply || "Silence radio." }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: data.reply || "Silence radio." }]);
             setLastSpokenText(data.reply || "Silence radio.");
             playSFX(SFX.PING);
-        } catch (e) { setChatMessages(prev => [...prev, { role: 'twin', content: "Erreur connexion." }]); } finally { setIsThinking(false); }
+        } catch (e) { setMessages(prev => [...prev, { role: 'assistant', content: "Erreur connexion." }]); } finally { setIsThinking(false); }
     };
 
     const handleNeuroSave = async () => {
@@ -3061,8 +3745,19 @@ export default function MissionControl() {
                     <div className="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl flex flex-col overflow-hidden relative shadow-2xl">
                         <div className="p-3 border-b border-slate-800 bg-slate-900/80 text-xs font-bold text-slate-400 flex justify-between items-center"><span className="flex items-center gap-2"><Activity size={12} /> INTERFACE NEURONALE</span>{isThinking && <span className="text-cyan-400 animate-pulse">TRAITEMENT...</span>}</div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
-                            {chatMessages.length === 0 && <div className="text-center text-slate-600 mt-20 opacity-50">LIEN NEURONAL ACTIF</div>}
-                            {chatMessages.map((msg, idx) => (<div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm shadow-lg ${msg.role === 'user' ? 'bg-cyan-700 text-white rounded-br-none' : 'bg-slate-800 text-cyan-100 border border-slate-700 rounded-bl-none'}`}>{msg.content}</div></div>))}
+                            <NetworkPing
+                                request={activeRequest}
+                                onAccept={handlePingAccept}
+                                onDecline={handlePingDecline}
+                            />
+                            {messages.length === 0 && <div className="text-center text-slate-600 mt-20 opacity-50">LIEN NEURONAL ACTIF</div>}
+                            {messages.map((msg, idx) => (
+                                <MessageBubble
+                                    key={idx}
+                                    message={msg}
+                                    onSendPing={(topic) => console.log("Manual ping override:", topic)}
+                                />
+                            ))}
                             <div ref={chatRef} />
                         </div>
                         <div className="p-3 bg-slate-950 border-t border-slate-800 flex gap-2 items-center">
@@ -3082,7 +3777,7 @@ export default function MissionControl() {
 
                     {/* NOUVEAU RADAR ICI */}
                     <div className="h-1/2 flex flex-col">
-                        <RadarWidget />
+                        <RadarWidget profileId={profileId} />
                     </div>
                 </div>
 
@@ -3096,7 +3791,43 @@ export default function MissionControl() {
             <div className="fixed bottom-6 right-6 z-50"><button onClick={() => setShowCortexPanel(true)} className="p-4 bg-slate-900 border-2 border-purple-500 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] text-white hover:scale-110 transition-transform"><BrainCircuit size={28} /></button></div>
 
             {showCortexPanel && (
-                <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl p-8 animate-in fade-in duration-300"><div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-purple-400 tracking-tight">CORTEX DATABASE</h2><button onClick={() => setShowCortexPanel(false)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700"><X size={24} /></button></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{memories.map(m => (<div key={m.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl hover:border-purple-500 transition-colors cursor-pointer group" onClick={() => { if (selectedMemoryIds.includes(m.id)) setSelectedMemoryIds(p => p.filter(id => id !== m.id)); else setSelectedMemoryIds(p => [...p, m.id]); }}><div className="flex justify-between text-[10px] text-slate-500 mb-2"><span className="uppercase bg-slate-950 px-2 rounded border border-slate-800">{m.type}</span><span>{new Date(m.createdAt).toLocaleDateString()}</span></div><p className="text-sm text-slate-300 group-hover:text-white line-clamp-4">{m.content}</p>{selectedMemoryIds.includes(m.id) && <div className="mt-2 text-xs text-purple-400 font-bold flex items-center gap-1"><CheckSquare size={12} /> SÃ‰LECTIONNÃ‰</div>}</div>))}</div>{selectedMemoryIds.length > 0 && (<div className="fixed bottom-8 right-8"><button onClick={async () => { if (!confirm("Supprimer ?")) return; await fetch('/api/memories/delete', { method: 'POST', body: JSON.stringify({ ids: selectedMemoryIds }), headers: { 'Content-Type': 'application/json' } }); setSelectedMemoryIds([]); loadMemories(profileId!); setShowCortexPanel(false); }} className="bg-red-600 text-white px-6 py-4 rounded-xl font-bold flex items-center gap-2 shadow-2xl hover:bg-red-500 transition-transform hover:scale-105"><Trash2 size={20} /> PURGER LA SÃ‰LECTION</button></div>)}</div>
+                <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-xl p-8 animate-in fade-in duration-300 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-3xl font-bold text-purple-400 tracking-tight">CORTEX DATABASE</h2>
+                            <button onClick={() => setShowCortexPanel(false)} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700"><X size={24} /></button>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                            {/* RADAR MANAGER (Colonne de Gauche) */}
+                            <div className="lg:col-span-1">
+                                <RadarManager profileId={profileId} />
+                            </div>
+
+                            {/* MEMORIES GRID (Colonnes de Droite) */}
+                            <div className="lg:col-span-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {memories.map(m => (
+                                        <div key={m.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl hover:border-purple-500 transition-colors cursor-pointer group" onClick={() => { if (selectedMemoryIds.includes(m.id)) setSelectedMemoryIds(p => p.filter(id => id !== m.id)); else setSelectedMemoryIds(p => [...p, m.id]); }}>
+                                            <div className="flex justify-between text-[10px] text-slate-500 mb-2">
+                                                <span className="uppercase bg-slate-950 px-2 rounded border border-slate-800">{m.type}</span>
+                                                <span>{new Date(m.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="text-sm text-slate-300 group-hover:text-white line-clamp-4">{m.content}</p>
+                                            {selectedMemoryIds.includes(m.id) && <div className="mt-2 text-xs text-purple-400 font-bold flex items-center gap-1"><CheckSquare size={12} /> SÃ‰LECTIONNÃ‰</div>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {selectedMemoryIds.length > 0 && (
+                            <div className="fixed bottom-8 right-8">
+                                <button onClick={async () => { if (!confirm("Supprimer ?")) return; await fetch('/api/memories/delete', { method: 'POST', body: JSON.stringify({ ids: selectedMemoryIds }), headers: { 'Content-Type': 'application/json' } }); setSelectedMemoryIds([]); loadMemories(profileId!); setShowCortexPanel(false); }} className="bg-red-600 text-white px-6 py-4 rounded-xl font-bold flex items-center gap-2 shadow-2xl hover:bg-red-500 transition-transform hover:scale-105"><Trash2 size={20} /> PURGER LA SÃ‰LECTION</button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
 
             <VoiceOutput textToSpeak={lastSpokenText} enabled={audioEnabled} />
@@ -4029,6 +4760,272 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
 
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\MessageBubble.tsx ---
+
+// components/MessageBubble.tsx
+'use client';
+import { Shield } from 'lucide-react';
+import Markdown from 'react-markdown';
+
+interface MessageBubbleProps {
+    message: { role: string; content: string };
+    onSendPing?: (topic: string) => void;
+}
+
+export default function MessageBubble({ message, onSendPing }: MessageBubbleProps) {
+    // On cherche si le message contient la balise TRIGGER_PING
+    const pingMatch = message.content.match(/\[TRIGGER_PING:(.*?)\]/);
+    // Remove both the trigger ping tag and any [SOURCE: ...] tags for cleaner display
+    let cleanContent = message.content
+        .replace(/\[TRIGGER_PING:.*?\]/, "")
+        .replace(/\[SOURCE:.*?\]/, "")
+        .trim();
+
+    const isUser = message.role === 'user';
+
+    return (
+        <div className={`p-4 rounded-xl max-w-[85%] ${isUser ? 'bg-blue-600 self-end ml-auto' : 'bg-slate-800 self-start border border-slate-700'}`}>
+            <div className="text-sm prose prose-invert max-w-none">
+                <Markdown>{cleanContent}</Markdown>
+            </div>
+
+            {pingMatch && onSendPing && (
+                <div className="mt-4 p-3 border border-blue-500/30 bg-blue-500/10 rounded-lg flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
+                    <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest flex items-center gap-1">
+                        <Shield size={12} className="text-blue-400" /> Action de sÃ©curitÃ© disponible
+                    </p>
+                    <button
+                        onClick={() => onSendPing(pingMatch[1])}
+                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                    >
+                        ðŸ”” ENVOYER UN PING AU CLONE
+                        <span className="bg-black/20 px-1 py-0.5 rounded text-[10px] opacity-80">
+                            (Sujet: {pingMatch[1]})
+                        </span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\NetworkPing.tsx ---
+
+import { useMemo } from 'react';
+import { Send, X, MessageSquare, Shield } from 'lucide-react';
+
+interface NetworkPingProps {
+    request: {
+        id: string;
+        match_score: number;
+        topic: string;
+        requester_id: string;
+    } | null;
+    onAccept: (request: any) => void;
+    onDecline: (id: string) => void;
+}
+
+export default function NetworkPing({ request, onAccept, onDecline }: NetworkPingProps) {
+    if (!request) return null;
+
+    const matchPercentage = request.match_score;
+    const scoreColor = matchPercentage > 80 ? 'text-green-400' : 'text-yellow-400';
+    const scoreBg = matchPercentage > 80 ? 'bg-green-900/30 border-green-500/50' : 'bg-yellow-900/30 border-yellow-500/50';
+
+    return (
+        <div className="bg-slate-900/90 backdrop-blur-sm border-l-4 border-blue-500 p-4 rounded-r-lg shadow-lg mb-4 flex items-center justify-between animate-in slide-in-from-top-4 duration-500 ring-1 ring-blue-500/20">
+            <div className="flex-1 pr-4">
+                <div className="flex items-center gap-3 mb-1">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                        <Shield size={12} className="text-blue-500 animate-pulse" />
+                        RequÃªte Inter-Clones
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${scoreBg} ${scoreColor}`}>
+                        [{matchPercentage}% MATCH]
+                    </span>
+                </div>
+                <p className="text-slate-200 text-sm leading-tight">
+                    Sujet dÃ©tectÃ© : <span className="font-bold text-white">"{request.topic}"</span>
+                </p>
+            </div>
+
+            <div className="flex gap-3 items-center">
+                <button
+                    onClick={() => onDecline(request.id)}
+                    className="text-slate-500 hover:text-red-400 text-[10px] font-bold transition-colors uppercase tracking-wider flex items-center gap-1"
+                >
+                    <X size={12} /> Ignorer
+                </button>
+                <button
+                    onClick={() => onAccept(request)}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-md hover:shadow-blue-500/20 flex items-center gap-2 group"
+                >
+                    <MessageSquare size={14} className="group-hover:scale-110 transition-transform" />
+                    OUVRIR CANAL
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\NotificationDecision.tsx ---
+
+'use client';
+import { Shield, Check, X, Bell } from 'lucide-react';
+import { useState } from 'react';
+
+export default function NotificationDecision({ request, onAction }: { request: any, onAction: (id: string, action: string) => void }) {
+    // request contient : topic, match_score, requester_id, id
+
+    const [loading, setLoading] = useState(false);
+
+    const handleAction = (action: string) => {
+        setLoading(true);
+        onAction(request.id, action);
+    };
+
+    return (
+        <div className="p-4 bg-slate-900 border border-blue-500/50 rounded-xl shadow-lg mb-4 animate-in fade-in slide-in-from-right-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-10 text-blue-500"><Bell size={64} /></div>
+
+            <div className="flex justify-between items-start mb-3 relative z-10">
+                <h4 className="font-bold text-blue-400 text-xs uppercase flex items-center gap-2">
+                    <Shield size={14} className="animate-pulse" /> Signal de RÃ©seau
+                </h4>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded border ${request.match_score > 80 ? 'bg-green-900/50 text-green-300 border-green-500' : 'bg-orange-900/50 text-orange-300 border-orange-500'}`}>
+                    MATCH : {request.match_score}%
+                </span>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-4 relative z-10">
+                Un clone demande Ã  ouvrir une discussion sur le sujet : <br />
+                <span className="font-mono text-white bg-slate-950 px-2 py-1 rounded mt-1 inline-block border border-slate-700">"{request.topic}"</span>
+            </p>
+
+            <div className="flex gap-2 relative z-10">
+                <button
+                    onClick={() => handleAction('approved')}
+                    disabled={loading}
+                    className="flex-1 bg-green-600/80 hover:bg-green-500 py-2 rounded text-[10px] font-bold transition flex items-center justify-center gap-1 text-white border border-green-500"
+                >
+                    <Check size={12} /> ACCEPTER
+                </button>
+                <button
+                    onClick={() => handleAction('declined')}
+                    disabled={loading}
+                    className="flex-1 bg-red-900/80 hover:bg-red-800 py-2 rounded text-[10px] font-bold transition flex items-center justify-center gap-1 text-red-300 border border-red-800"
+                >
+                    <X size={12} /> REFUSER
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\RadarManager.tsx ---
+
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabaseBrowser'
+import { Plus, Trash, Rss, Save } from 'lucide-react'
+
+export default function RadarManager({ profileId }: { profileId: string | null }) {
+    const [sources, setSources] = useState<any[]>([])
+    const [name, setName] = useState('')
+    const [url, setUrl] = useState('')
+    const [loading, setLoading] = useState(false)
+    const supabase = createClient()
+
+    // Charger les sources au dÃ©marrage
+    useEffect(() => {
+        if (profileId) fetchSources()
+    }, [profileId])
+
+    async function fetchSources() {
+        const { data } = await supabase.from('RadarSource').select('*').order('createdAt', { ascending: false })
+        if (data) setSources(data)
+    }
+
+    async function addSource(e: React.FormEvent) {
+        e.preventDefault()
+        if (!profileId || !name || !url) return
+
+        setLoading(true)
+        const { error } = await supabase
+            .from('RadarSource')
+            .insert([{ name, url, profileId }])
+
+        if (!error) {
+            setName(''); setUrl(''); fetchSources()
+        } else {
+            alert("Erreur lors de l'ajout : " + error.message)
+        }
+        setLoading(false)
+    }
+
+    async function deleteSource(id: string) {
+        if (!confirm("Supprimer ce flux ?")) return
+        await supabase.from('RadarSource').delete().eq('id', id)
+        fetchSources()
+    }
+
+    if (!profileId) return null
+
+    return (
+        <div className="flex flex-col h-full bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden shadow-lg p-4">
+            <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Rss size={14} className="animate-pulse" /> Configuration Flux
+            </h3>
+
+            {/* Formulaire d'ajout */}
+            <form onSubmit={addSource} className="flex flex-col gap-2 mb-6 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <div className="flex gap-2">
+                    <input
+                        placeholder="Nom (ex: Le Monde)"
+                        value={name} onChange={e => setName(e.target.value)}
+                        className="flex-1 bg-slate-900 p-2 rounded text-xs text-white border border-slate-700 outline-none focus:border-cyan-500 placeholder-slate-600"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    <input
+                        placeholder="URL RSS (https://...)"
+                        value={url} onChange={e => setUrl(e.target.value)}
+                        className="flex-1 bg-slate-900 p-2 rounded text-xs text-white border border-slate-700 outline-none focus:border-cyan-500 placeholder-slate-600 font-mono"
+                    />
+                    <button disabled={loading} className="bg-cyan-600 hover:bg-cyan-500 p-2 rounded text-white transition disabled:opacity-50">
+                        {loading ? <Save size={14} className="animate-spin" /> : <Plus size={14} />}
+                    </button>
+                </div>
+            </form>
+
+            {/* Liste des sources */}
+            <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
+                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisÃ©.</p>}
+                {sources.map(s => (
+                    <div key={s.id} className="flex justify-between items-center p-2 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-800 hover:border-slate-600 transition group">
+                        <div className="overflow-hidden">
+                            <p className="font-bold text-xs text-slate-300 truncate">{s.name}</p>
+                            <p className="text-[10px] text-slate-500 truncate font-mono opacity-70 w-32">{s.url}</p>
+                        </div>
+                        <button onClick={() => deleteSource(s.id)} className="text-slate-600 hover:text-red-400 p-2 transition" title="Supprimer ce flux">
+                            <Trash size={14} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\components\RadarWidget.tsx ---
 
 'use client';
@@ -4036,9 +5033,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
 
-export default function RadarWidget() {
+export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState<string | null>(null);
 
     const fetchNews = async () => {
         setLoading(true);
@@ -4050,6 +5048,29 @@ export default function RadarWidget() {
             console.error("Erreur Radar", e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const saveToMemory = async (e: React.MouseEvent, item: any) => {
+        e.preventDefault(); // EmpÃªche l'ouverture du lien
+        if (!profileId) return;
+
+        setSaving(item.link);
+        try {
+            await fetch('/api/memories/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profileId,
+                    content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
+                    type: 'news'
+                })
+            });
+            alert("News mÃ©morisÃ©e !");
+        } catch (error) {
+            console.error("Erreur sauvegarde", error);
+        } finally {
+            setSaving(null);
         }
     };
 
@@ -4081,21 +5102,29 @@ export default function RadarWidget() {
                 ) : (
                     <div className="divide-y divide-slate-800/50">
                         {news.map((item, idx) => (
-                            <a
-                                key={idx}
-                                href={item.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block p-3 hover:bg-cyan-900/10 transition-colors group/item"
-                            >
-                                <div className="flex justify-between items-start gap-2">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase">{item.source}</span>
-                                    <span className="text-[10px] text-slate-600">{new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <h4 className="text-xs text-slate-300 font-medium leading-relaxed group-hover/item:text-cyan-300 transition-colors line-clamp-2">
-                                    {item.title}
-                                </h4>
-                            </a>
+                            <div key={idx} className="block hover:bg-cyan-900/10 transition-colors group/item relative">
+                                <a
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block p-3 pr-10"
+                                >
+                                    <div className="flex justify-between items-start gap-2">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">{item.source}</span>
+                                        <span className="text-[10px] text-slate-600">{new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <h4 className="text-xs text-slate-300 font-medium leading-relaxed group-hover/item:text-cyan-300 transition-colors line-clamp-2">
+                                        {item.title}
+                                    </h4>
+                                </a>
+                                <button
+                                    onClick={(e) => saveToMemory(e, item)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                    title="MÃ©moriser cette news"
+                                >
+                                    {saving === item.link ? <RefreshCw size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+                                </button>
+                            </div>
                         ))}
                     </div>
                 )}
@@ -4308,6 +5337,53 @@ export async function getMistralEmbedding(text: string): Promise<number[] | null
         console.error('Crash Embedding:', error);
         return null;
     }
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\supabaseBrowser.ts ---
+
+import { createBrowserClient } from '@supabase/ssr'
+
+export const createClient = () => {
+    return createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+}
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\supabaseServer.ts ---
+
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+    const cookieStore = await cookies()
+
+    return createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        )
+                    } catch {
+                        // The `setAll` method was called from a Server Component.
+                        // This can be ignored if you have middleware refreshing
+                        // user sessions.
+                    }
+                },
+            },
+        }
+    )
 }
 
 
@@ -5739,6 +6815,62 @@ COMMENT ON FUNCTION match_memories IS 'Performs semantic search on memories usin
 
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\scripts\add_expires_column.sql ---
+
+-- Ajout de la colonne d'expiration pour les souvenirs Ã©phÃ©mÃ¨res (news, etc.)
+ALTER TABLE "Memory" ADD COLUMN IF NOT EXISTS "expires_at" TIMESTAMP WITH TIME ZONE;
+
+-- Index pour nettoyer efficacement les souvenirs expirÃ©s
+CREATE INDEX IF NOT EXISTS "Memory_expires_at_idx" ON "Memory" ("expires_at");
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\scripts\create_access_request_tables.sql ---
+
+-- CrÃ©ation de la table AccessRequest si elle n'existe pas
+CREATE TABLE IF NOT EXISTS "AccessRequest" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "requester_id" TEXT NOT NULL,
+  "provider_id" TEXT NOT NULL,
+  "topic" TEXT,
+  "match_score" INTEGER,
+  "status" TEXT DEFAULT 'pending',
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Index pour des recherches rapides
+CREATE INDEX IF NOT EXISTS "AccessRequest_provider_id_idx" ON "AccessRequest"("provider_id");
+CREATE INDEX IF NOT EXISTS "AccessRequest_requester_id_idx" ON "AccessRequest"("requester_id");
+
+-- CrÃ©ation de la table DirectMessage si elle n'existe pas (pour l'Ã©tape 4)
+CREATE TABLE IF NOT EXISTS "DirectMessage" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "sender_id" TEXT NOT NULL,
+  "receiver_id" TEXT NOT NULL,
+  "content" TEXT NOT NULL,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "DirectMessage_sender_receiver_idx" ON "DirectMessage"("sender_id", "receiver_id");
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\scripts\create_radar_source_table.sql ---
+
+-- Table pour gÃ©rer les sources dynamiques du Radar
+CREATE TABLE IF NOT EXISTS "RadarSource" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "profileId" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "url" TEXT NOT NULL,
+  "isActive" BOOLEAN DEFAULT TRUE,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "RadarSource_profileId_idx" ON "RadarSource" ("profileId");
+
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\scripts\init.js ---
 
 #!/usr/bin/env node
@@ -5807,6 +6939,32 @@ console.log('   - Save your BIP39 recovery phrase in a safe place');
 console.log('   - Loss of both = permanent data loss\n');
 
 console.log('ðŸŽ‰ Happy coding!\n');
+
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\scripts\init_cortex_maintenance.sql ---
+
+-- Fonction de maintenance du Cortex (Nettoyage)
+CREATE OR REPLACE FUNCTION run_cortex_maintenance(p_profile_id TEXT)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- 1. Supprimer les souvenirs expirÃ©s (ex: News de plus de 7 jours)
+  DELETE FROM "Memory"
+  WHERE "profileId" = p_profile_id
+    AND "expires_at" < NOW();
+
+  -- 2. Supprimer les doublons exacts (on garde le plus rÃ©cent grace Ã  l'ID ou CreatedAt)
+  -- Ici on supprime A si B existe avec le mÃªme content et un ID plus "grand" (ou crÃ©Ã© aprÃ¨s)
+  DELETE FROM "Memory" a
+  USING "Memory" b
+  WHERE a.id < b.id
+    AND a."profileId" = p_profile_id
+    AND b."profileId" = p_profile_id
+    AND a.content = b.content;
+END;
+$$;
 
 
 

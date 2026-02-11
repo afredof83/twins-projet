@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
 
-export default function RadarWidget() {
+export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState<string | null>(null);
 
     const fetchNews = async () => {
         setLoading(true);
@@ -17,6 +18,29 @@ export default function RadarWidget() {
             console.error("Erreur Radar", e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const saveToMemory = async (e: React.MouseEvent, item: any) => {
+        e.preventDefault(); // Empêche l'ouverture du lien
+        if (!profileId) return;
+
+        setSaving(item.link);
+        try {
+            await fetch('/api/memories/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profileId,
+                    content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
+                    type: 'news'
+                })
+            });
+            alert("News mémorisée !");
+        } catch (error) {
+            console.error("Erreur sauvegarde", error);
+        } finally {
+            setSaving(null);
         }
     };
 
@@ -48,21 +72,29 @@ export default function RadarWidget() {
                 ) : (
                     <div className="divide-y divide-slate-800/50">
                         {news.map((item, idx) => (
-                            <a
-                                key={idx}
-                                href={item.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block p-3 hover:bg-cyan-900/10 transition-colors group/item"
-                            >
-                                <div className="flex justify-between items-start gap-2">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase">{item.source}</span>
-                                    <span className="text-[10px] text-slate-600">{new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <h4 className="text-xs text-slate-300 font-medium leading-relaxed group-hover/item:text-cyan-300 transition-colors line-clamp-2">
-                                    {item.title}
-                                </h4>
-                            </a>
+                            <div key={idx} className="block hover:bg-cyan-900/10 transition-colors group/item relative">
+                                <a
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block p-3 pr-10"
+                                >
+                                    <div className="flex justify-between items-start gap-2">
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">{item.source}</span>
+                                        <span className="text-[10px] text-slate-600">{new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <h4 className="text-xs text-slate-300 font-medium leading-relaxed group-hover/item:text-cyan-300 transition-colors line-clamp-2">
+                                        {item.title}
+                                    </h4>
+                                </a>
+                                <button
+                                    onClick={(e) => saveToMemory(e, item)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                    title="Mémoriser cette news"
+                                >
+                                    {saving === item.link ? <RefreshCw size={14} className="animate-spin" /> : <ExternalLink size={14} />}
+                                </button>
+                            </div>
                         ))}
                     </div>
                 )}

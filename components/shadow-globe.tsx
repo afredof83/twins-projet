@@ -22,14 +22,21 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
 
     useEffect(() => {
         setMounted(true);
-        // Rotation automatique lente
-        const interval = setInterval(() => {
+
+        const checkControls = setInterval(() => {
             if (globeEl.current) {
-                globeEl.current.controls().autoRotate = true;
-                globeEl.current.controls().autoRotateSpeed = 0.5;
+                // CONTROLS : VERROUILLAGE
+                const controls = globeEl.current.controls();
+                if (controls) {
+                    controls.enableZoom = false;
+                    controls.enablePan = false;
+                    controls.enableRotate = false; // Désactive rotation MANUELLE
+                    controls.autoRotate = true; // Garde la rotation AUTO
+                    controls.autoRotateSpeed = 0.5;
+                }
             }
-        }, 1000);
-        return () => clearInterval(interval);
+        }, 100); // Check rapide au début
+        return () => clearInterval(checkControls);
     }, []);
 
     if (!mounted) return null;
@@ -57,14 +64,6 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
                 arcDashAnimateTime={2000}
                 arcStroke={0.5}
 
-                // Anneaux (Pings)
-                ringsData={[{ lat: 48.8566, lng: 2.3522 }]} // Ping sur Paris
-                ringColor={() => '#10b981'}
-                ringMaxRadius={5}
-                ringPropagationSpeed={2}
-                ringRepeatPeriod={1000}
-
-                // Configuration
                 width={300} // Taille ajustée pour le conteneur - réduite de 400 à 300 pour mieux s'adapter au dashboard
                 height={300}
             />
