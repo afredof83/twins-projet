@@ -268,12 +268,19 @@ export default function MissionControl() {
             </div>
 
             {/* DROPZONE */}
+            {/* DROPZONE MOBILE-FRIENDLY */}
             {!isChatOpen && (
-                <div className={`w-full max-w-2xl mx-auto border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer mb-6 z-40 ${isDragging ? 'border-yellow-400 bg-cyan-900/50 scale-105 animate-pulse' : 'border-slate-800 bg-slate-900/40'}`}
-                    onClick={() => document.getElementById('hidden-file-input')?.click()}>
+                <div className={`w-full max-w-2xl mx-auto border-2 border-dashed ${isDragging ? 'border-yellow-400 bg-cyan-900/50 scale-105 animate-pulse' : 'border-slate-800 bg-slate-900/40'} rounded-xl p-10 flex flex-col items-center justify-center active:scale-95 transition-transform cursor-pointer mb-6 z-40`}
+                    onClick={() => document.getElementById('hidden-file-input')?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                    onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]); }}
+                >
                     <input type="file" id="hidden-file-input" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
-                    <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-slate-500">
-                        <UploadCloud size={32} /> {isDragging ? 'RELACHER' : 'DÉPOSER / CLIQUER'}
+                    <div className="flex flex-col items-center gap-2 text-slate-500">
+                        <UploadCloud size={40} className="mb-2 text-cyan-500" />
+                        <span className="block sm:hidden text-base font-bold text-gray-400">Appuyez pour envoyer un fichier</span>
+                        <span className="hidden sm:block text-sm font-bold uppercase tracking-widest">{isDragging ? 'RELACHER' : 'DÉPOSER / CLIQUER'}</span>
                     </div>
                 </div>
             )}
@@ -282,9 +289,9 @@ export default function MissionControl() {
             {!isChatOpen && (
                 <div className="w-full max-w-xl mx-auto mb-2 relative z-30">
                     <div className="relative bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl flex items-center p-2">
-                        <button onClick={() => setIsPrivateMemory(!isPrivateMemory)} className={`p-2 rounded-xl text-xs mr-2 border ${isPrivateMemory ? 'bg-red-900/30 text-red-400 border-red-500' : 'bg-green-900/30 text-green-400 border-green-500'}`}>{isPrivateMemory ? '🔒' : '🌐'}</button>
-                        <input type="text" value={neuroInput} onChange={(e) => setNeuroInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleNeuroSave()} placeholder="Encoder une pensée..." className="flex-1 bg-transparent border-none text-white text-sm" />
-                        <button onClick={handleNeuroSave} disabled={!neuroInput} className="p-2 ml-2 text-cyan-500"><CheckSquare /></button>
+                        <button onClick={() => setIsPrivateMemory(!isPrivateMemory)} className={`p-3 rounded-xl text-base mr-2 border ${isPrivateMemory ? 'bg-red-900/30 text-red-400 border-red-500' : 'bg-green-900/30 text-green-400 border-green-500'}`}>{isPrivateMemory ? '🔒' : '🌐'}</button>
+                        <input type="text" value={neuroInput} onChange={(e) => setNeuroInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleNeuroSave()} placeholder="Encoder une pensée..." className="flex-1 bg-transparent border-none text-white text-base py-3" />
+                        <button onClick={handleNeuroSave} disabled={!neuroInput} className="p-3 ml-2 text-cyan-500"><CheckSquare size={24} /></button>
                     </div>
                 </div>
             )}

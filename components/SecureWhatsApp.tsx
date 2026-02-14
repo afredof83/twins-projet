@@ -153,7 +153,7 @@ export default function SecureWhatsApp({ profileId, partnerId, channelId, onClos
     if (!mounted) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in">
 
             {/* NOTIFICATION VISUELLE FLOTTANTE */}
             {showNewMessageNotif && (
@@ -162,7 +162,7 @@ export default function SecureWhatsApp({ profileId, partnerId, channelId, onClos
                 </div>
             )}
 
-            <div className="w-full max-w-md h-[600px] bg-[#0d0d0d] border border-cyan-500/30 shadow-2xl rounded-2xl flex flex-col overflow-hidden ring-1 ring-white/10">
+            <div className="w-full h-full sm:max-w-md sm:h-[600px] sm:rounded-2xl bg-[#0d0d0d] border-t sm:border border-cyan-500/30 shadow-2xl flex flex-col overflow-hidden ring-1 ring-white/10">
                 {/* HEADER */}
                 <div className="p-3 border-b border-white/10 flex justify-between items-center bg-zinc-900/50">
                     <div className="flex items-center gap-2 text-white text-sm font-medium">
@@ -213,14 +213,14 @@ export default function SecureWhatsApp({ profileId, partnerId, channelId, onClos
                                 handleTyping(); // Déclenche le signal "écrit..."
                             }}
                             placeholder="Entrez vos données..."
-                            className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-600"
+                            className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-600"
                         />
                         <button
                             type="submit"
                             disabled={!newMessage.trim()}
-                            className="bg-cyan-600 p-2 rounded-lg text-white hover:bg-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(8,145,178,0.3)]"
+                            className="bg-cyan-600 p-3 rounded-lg text-white hover:bg-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(8,145,178,0.3)]"
                         >
-                            <Send size={18} />
+                            <Send size={24} />
                         </button>
                     </div>
                 </form>
