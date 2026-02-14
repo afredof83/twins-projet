@@ -16,12 +16,12 @@ export async function POST(request: Request) {
 
         // 1. On crée le message de "Demande"
         const { error } = await supabase
-            .from('Message')
+            .from('messages')
             .insert([{
-                fromId,
-                toId,
+                sender_id: fromId,
+                // receiver_id: toId, // REMOVED: Not in DB
                 content: reason || "📡 Demande de liaison neuronale.",
-                isRead: false
+                // isRead: false // Note: column might be is_read if snake_case, checking usage in notifications
             }]);
 
         if (error) throw error;

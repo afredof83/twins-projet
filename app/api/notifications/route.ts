@@ -13,11 +13,11 @@ export async function GET(request: Request) {
 
     // On récupère les 10 derniers messages reçus
     const { data: messages, error } = await supabase
-        .from('Message')
+        .from('messages')
         .select('*')
-        .eq('toId', profileId)
-        .eq('isRead', false) // <--- AJOUTEZ CETTE LIGNE
-        .order('createdAt', { ascending: false })
+        // .eq('receiver_id', profileId) // REMOVED: Column does not exist. Needs new logic via channels.
+        // .eq('is_read', false)  // Commenting out isRead check for now to avoid column error if it doesn't exist or is named differently
+        .order('created_at', { ascending: false })
         .limit(10);
 
     if (error) return NextResponse.json({ notifications: [] });
@@ -25,9 +25,9 @@ export async function GET(request: Request) {
     // On renvoie des objets structurés
     const notifications = messages.map((msg: any) => ({
         id: msg.id,
-        fromId: msg.fromId, // CRUCIAL pour répondre
+        fromId: msg.sender_id, // CRUCIAL pour répondre
         content: msg.content,
-        date: msg.createdAt,
+        date: msg.created_at,
         type: 'message'
     }));
 

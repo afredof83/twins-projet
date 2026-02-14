@@ -1,0 +1,29 @@
+    useEffect(() => {
+        if (!profileId) return;
+    
+        const setupRealtime = async () => {
+            const { createClient } = await import('@supabase/supabase-js');
+            const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    
+            const channel = sb
+                .channel('ping-channel')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'AccessRequest',
+                        filter: `provider_id=eq.${profileId}` // <-- BIEN UTILISER L'UNDERSCORE ICI
+                    },
+                    (payload) => {
+                        console.log('🔔 SIGNAL REÇU :', payload.new);
+                        setActiveRequest(payload.new); // C'est ici que l'alerte se déclenche
+                        playSFX(SFX.PING);
+                    }
+                )
+                .subscribe();
+    
+            return () => { sb.removeChannel(channel); };
+        };
+        setupRealtime();
+    }, [profileId]);

@@ -1,183 +1,231 @@
-'use client';
-import { useState, useEffect, useRef } from 'react';
-import { X, Send, ShieldCheck, CheckCheck } from 'lucide-react';
-import { createClient } from '@/lib/supabaseBrowser';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Send, X, Shield, Cpu, MessageSquare } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
 
-interface SecureWhatsAppProps {
-    myId: string;
-    channelId: string | null;
-    partnerId?: string | null;
-    topic: string;
-    onClose: () => void;
-}
-
-export default function SecureWhatsApp({ myId, channelId, partnerId, topic, onClose }: SecureWhatsAppProps) {
+export default function SecureWhatsApp({ profileId, partnerId, channelId, onClose }: any) {
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const supabase = createClient();
+    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+    const [showNewMessageNotif, setShowNewMessageNotif] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
-    // Scroll automatique vers le bas
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    // Pour la gestion du typing
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    // On garde une ref vers le channel pour éviter de re-souscrire sans cesse
+    const channelRef = useRef<any>(null);
 
     useEffect(() => {
+        setMounted(true);
         if (!channelId) return;
-
-        // 1. Charger l'historique du CANAL
-        const fetchMessages = async () => {
-            const { data, error } = await supabase
-                .from('Message')
-                .select('*')
-                .eq('channel_id', channelId) // <-- FILTRE PAR CANAL
-                .order('created_at', { ascending: true });
-
-            if (data) {
-                setMessages(data);
-                setTimeout(scrollToBottom, 100);
-            }
-        };
 
         fetchMessages();
 
-        // 2. Écouter les nouveaux messages (Realtime)
-        const channel = supabase
-            .channel(`room:${channelId}`) // Canal unique pour cette discussion
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'Message',
-                filter: `channel_id=eq.${channelId}` // <-- Écoute uniquement ce canal
-            }, (payload) => {
-                setMessages((prev) => [...prev, payload.new]);
-                setTimeout(scrollToBottom, 100);
+        // 📡 CONFIGURATION DU CANAL REALTIME (Messages + Typing)
+        // On détruit l'ancien channel s'il existe pour nettoyage
+        if (channelRef.current) supabase.removeChannel(channelRef.current);
+
+        const channel = supabase.channel(`chat:${channelId}`, {
+            config: { broadcast: { self: false } }
+        });
+        channelRef.current = channel;
+
+        channel
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'messages', filter: `communication_id=eq.${channelId}` },
+                (payload) => {
+                    setMessages((prev) => {
+                        // Anti-doublon (si optimistic UI l'a déjà ajouté ou double event)
+                        if (prev.find(m => m.id === payload.new.id)) return prev;
+
+                        // Notification visuelle si le message vient de l'autre
+                        if (payload.new.sender_id !== profileId) {
+                            setShowNewMessageNotif(true);
+                        }
+                        return [...prev, payload.new];
+                    });
+                })
+            .on('broadcast', { event: 'typing' }, (payload: any) => {
+                // On vérifie que ce n'est pas nous-mêmes (filtré par self:false normalement, mais sécu)
+                if (payload.payload?.senderId !== profileId) {
+                    setIsPartnerTyping(payload.payload?.isTyping || false);
+                }
             })
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        return () => {
+            if (channelRef.current) supabase.removeChannel(channelRef.current);
+        };
     }, [channelId]);
 
-    // 3. Envoyer un message (Version Blindée)
-    const handleSend = async () => {
-        // 1. Vérifications de survie
-        if (!newMessage.trim()) return;
-        if (!channelId) {
-            console.error("❌ ERREUR : channelId est manquant.");
-            alert("Erreur : Aucun canal sélectionné.");
-            return;
+    // Cleanup du timeout typing
+    useEffect(() => {
+        return () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         }
+    }, []);
 
-        const msgContent = newMessage;
-        setNewMessage(''); // Vider la zone de texte immédiatement (UX)
+    // Scroll auto à chaque nouveau message ou changement de typing
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (showNewMessageNotif) {
+            const timer = setTimeout(() => setShowNewMessageNotif(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [messages, isPartnerTyping, showNewMessageNotif]);
 
-        console.log("🚀 Tentative d'envoi...");
+    const fetchMessages = async () => {
+        const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('communication_id', channelId)
+            .order('created_at', { ascending: true });
+        if (data) setMessages(data);
+    };
 
-        try {
-            // 2. L'insertion avec gestion des deux formats de colonnes
-            const { data, error } = await supabase.from('Message').insert([
-                {
-                    content: msgContent,
-                    channel_id: channelId,
-                    // On remplit les deux formats pour être SÛR que ça passe
-                    fromId: myId,
-                    createdAt: new Date().toISOString(),
-                    // On ajoute les formats snake_case au cas où
-                    toId: partnerId || null
-                }
-            ]).select();
+    // ✍️ FONCTION : Signaler que je suis en train d'écrire
+    const handleTyping = () => {
+        if (!channelRef.current) return;
 
-            if (error) {
-                console.error("❌ Erreur Supabase détaillée :", error);
+        // On envoie un signal 'typing' = true
+        channelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { isTyping: true, senderId: profileId }
+        });
 
-                // Si ça échoue, on tente une version ultra-simplifiée (juste les champs obligatoires supposés)
-                // Note: cela suppose que 'content' et 'channel_id' sont les seuls VRAIMENT obligatoires ou que les défauts fonctionnent
-                console.log("⚠️ Tentative de fallback minimaliste...");
-                const { error: retryError } = await supabase.from('Message').insert([
-                    {
-                        content: msgContent,
-                        channel_id: channelId,
-                        // On doit souvent mettre au moins l'ID user, essayons les deux formats
-                        from_id: myId
-                    }
-                ]);
-
-                if (retryError) {
-                    console.error("❌ Echec du fallback snake_case:", retryError);
-                    // Dernier espoir : CamelCase minimal
-                    const { error: lastResortError } = await supabase.from('Message').insert([
-                        {
-                            content: msgContent,
-                            channel_id: channelId,
-                            fromId: myId
-                        }
-                    ]);
-                    if (lastResortError) throw lastResortError;
-                }
+        // On reset le timeout pour envoyer 'typing' = false dans 2s si pas de nouvelle frappe
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            if (channelRef.current) {
+                channelRef.current.send({
+                    type: 'broadcast',
+                    event: 'typing',
+                    payload: { isTyping: false, senderId: profileId }
+                });
             }
+            setIsPartnerTyping(false); // Juste pour être sûr localement
+        }, 2000);
+    };
 
-            console.log("✅ Message envoyé avec succès !");
-        } catch (err) {
-            console.error("💥 Crash critique envoi :", err);
-            setNewMessage(msgContent); // On restaure le texte pour ne pas le perdre
-            alert("Échec de l'envoi. Vérifiez la console (F12).");
+    const handleSend = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+        const content = newMessage.trim();
+        if (!content || !channelId) return;
+
+        // 🚀 OPTIMISTIC UI : Affichage immédiat avant même la réponse serveur
+        const optimisticMsg = {
+            id: 'temp-' + Date.now(),
+            content,
+            sender_id: profileId,
+            communication_id: channelId,
+            created_at: new Date().toISOString(),
+            status: 'sending'
+        };
+
+        setMessages((prev) => [...prev, optimisticMsg]);
+        setNewMessage('');
+
+        // On arrête explicitement le typing quand on envoie
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { isTyping: false, senderId: profileId }
+            });
+        }
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        const { error } = await supabase
+            .from('messages')
+            .insert([{ content, sender_id: profileId, communication_id: channelId }])
+            .select();
+
+        if (error) {
+            // Rollback si erreur
+            setMessages((prev) => prev.filter(m => m.id !== optimisticMsg.id));
+            alert("Erreur d'envoi");
         }
     };
 
-    return (
-        <div className="flex flex-col h-full bg-[#0b141a] border-l border-gray-700 shadow-2xl w-full">
-            {/* HEADER */}
-            <div className="bg-[#202c33] p-3 flex items-center justify-between border-b border-gray-700">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center">
-                        <ShieldCheck size={20} className="text-white" />
-                    </div>
-                    <div>
-                        <h3 className="text-gray-100 font-bold text-sm truncate max-w-[200px]">{topic || "Canal Sécurisé"}</h3>
-                        <p className="text-teal-500 text-[10px]">Chiffré de bout en bout</p>
-                    </div>
-                </div>
-                <button onClick={onClose} className="text-gray-400 hover:text-white">
-                    <X size={24} />
-                </button>
-            </div>
+    if (!mounted) return null;
 
-            {/* MESSAGES */}
-            <div className="flex-1 overflow-y-auto p-4 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-fixed opacity-90 custom-scrollbar space-y-2">
-                {messages.map((msg) => {
-                    const isMe = msg.fromId === myId;
-                    return (
-                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] p-2 rounded-lg text-sm relative shadow-md ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-gray-100 rounded-tl-none'
-                                }`}>
-                                <span>{msg.content}</span>
-                                <div className={`flex items-center gap-1 mt-1 opacity-60 text-[10px] ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                    <span>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                    {isMe && <CheckCheck size={12} className="text-blue-300" />}
+    return createPortal(
+        <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in">
+
+            {/* NOTIFICATION VISUELLE FLOTTANTE */}
+            {showNewMessageNotif && (
+                <div className="absolute top-10 bg-cyan-500 text-black px-4 py-2 rounded-full font-bold text-xs shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-bounce flex items-center gap-2 z-50">
+                    <MessageSquare size={14} /> NOUVEAU MESSAGE REÇU
+                </div>
+            )}
+
+            <div className="w-full max-w-md h-[600px] bg-[#0d0d0d] border border-cyan-500/30 shadow-2xl rounded-2xl flex flex-col overflow-hidden ring-1 ring-white/10">
+                {/* HEADER */}
+                <div className="p-3 border-b border-white/10 flex justify-between items-center bg-zinc-900/50">
+                    <div className="flex items-center gap-2 text-white text-sm font-medium">
+                        <Shield size={16} className="text-cyan-400" /> Flux Quantique
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
+                </div>
+
+                {/* ZONE DE MESSAGES */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
+                    {messages.map((msg) => {
+                        const isMe = msg.sender_id === profileId;
+                        return (
+                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-1 fade-in duration-300`}>
+                                <div className={`
+                                    max-w-[85%] p-3 rounded-xl text-sm shadow-md break-words
+                                    ${isMe
+                                        ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
+                                        : 'bg-zinc-800 border border-white/5 text-gray-200 rounded-tl-none'}
+                                `}>
+                                    {msg.content}
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
-                <div ref={messagesEndRef} />
-            </div>
+                        );
+                    })}
 
-            {/* INPUT */}
-            <div className="bg-[#202c33] p-3 flex items-center gap-2">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Message..."
-                    className="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                />
-                <button onClick={handleSend} className="p-3 bg-teal-600 rounded-full hover:bg-teal-500 text-white transition-colors">
-                    <Send size={18} />
-                </button>
+                    {/* 💬 LES TROIS PETITS POINTS (Typing Indicator) */}
+                    {isPartnerTyping && (
+                        <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="bg-zinc-800 border border-white/5 p-3 rounded-xl rounded-tl-none flex gap-1 items-center">
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.32s]"></div>
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.16s]"></div>
+                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* INPUT BAR */}
+                <form onSubmit={handleSend} className="p-4 bg-zinc-900/80 border-t border-white/10 backdrop-blur-md">
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => {
+                                setNewMessage(e.target.value);
+                                handleTyping(); // Déclenche le signal "écrit..."
+                            }}
+                            placeholder="Entrez vos données..."
+                            className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-600"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!newMessage.trim()}
+                            className="bg-cyan-600 p-2 rounded-lg text-white hover:bg-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(8,145,178,0.3)]"
+                        >
+                            <Send size={18} />
+                        </button>
+                    </div>
+                </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

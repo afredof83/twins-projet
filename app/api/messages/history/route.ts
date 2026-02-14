@@ -21,10 +21,10 @@ export async function GET(req: Request) {
         });
     }
 
-    // Sinon, vraie requête DB (Table 'Message' à créer si besoin)
+    // Sinon, vraie requête DB (Table 'messages' à créer si besoin)
     /*
     const { data: messages } = await supabase
-      .from('Message')
+      .from('messages')
       .select('*')
       .or(`and(fromId.eq.${myId},toId.eq.${contactId}),and(fromId.eq.${contactId},toId.eq.${myId})`)
       .order('createdAt', { ascending: true });

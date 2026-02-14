@@ -1,189 +1,73 @@
-// Prisma Schema for Digital Twin Profile System
-// Zero-Knowledge Architecture with Supabase pgvector
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [vector]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Profile represents a digital twin instance
-// Each profile is completely isolated with its own encryption
 model Profile {
-  id                String   @id @default(cuid())
-  name              String   // Non-sensitive display name
-  
-  // Zero-Knowledge Security
-  saltBase64        String   // Base64 encoded salt for key derivation
-  passwordHash      String   // Hash for password verification (not the encryption key)
-  
-  // Encrypted Metadata (JSON)
-  encryptedMetadata String   @db.Text // Contains encrypted profile settings, preferences, etc.
-  
-  // Vector Store Configuration
-  vectorNamespace   String   @unique // Unique namespace for this profile's vectors
-  
-  // Timestamps
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  lastAccessedAt    DateTime @default(now())
-  
-  // Relations
-  memories           Memory[]
-  missions           Mission[]
-  shadowInteractions ShadowInteraction[]
-  dataSources        DataSource[]
-  
-  @@index([vectorNamespace])
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  bio       String?
+  skills    String[]
+  goals     String[]
+  memories  Memory[]
+  networks  NetworkEntity[]
+  intentions Intention[]
 }
 
-// Memory represents a single memory/data point
-// All content is encrypted before storage
 model Memory {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   // 'user', 'ai', 'system', 'directive', 'knowledge'
+  source    String?  // 'chat', 'oracle_prophecy', 'web_ingest'
+  embedding Json?    // Vector embedding from Mistral
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model NetworkEntity {
+  id              String   @id @default(cuid())
+  name            String   // Nom de l'agent/entreprise (ex: "Rapala Innovation")
+  type            String   // "Competitor", "Partner", "Investor", "Client"
+  sector          String   // ex: "Fishing Tech", "Supply Chain"
+  matchScore      Int      // Score de 0 à 100 calculé par l'IA
+  status          String   @default("DETECTED") // "DETECTED", "CONTACTED", "IGNORED"
+  
+  // Pourquoi c'est une opportunité ?
+  reasoning       String   
+  
+  profileId       String
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+model Intention {
   id                String   @id @default(cuid())
   
-  // Profile Association (strict isolation)
+  abstractNeed      String   // Ce que le clone cherche (anonymisé) mais assez précis (ex: "Cherche partenaire industriel plastique")
+  keywords          String[] // ex: ["pêche", "fabrication", "var"]
+  isPublic          Boolean  @default(true) // Visible par les autres clones
+  
+  status            String   @default("SEEKING") // SEEKING, MATCHED, ARCHIVED
+  
   profileId         String
   profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  // Encrypted Content
-  encryptedContent  String   @db.Text // The actual memory content (encrypted)
-  encryptedMetadata String   @db.Text // Additional metadata like tags, context (encrypted)
-  
-  // Vector Embedding (stored in pgvector)
-  // The embedding itself is derived from encrypted content
-  embedding         Unsupported("vector(1024)")?  // Mistral Embed dimension (optional for now)
-  
-  // Memory Type
-  type              MemoryType @default(TEXT)
-  
-  // Timestamps
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
-  @@index([profileId])
-  @@index([profileId, type])
-  @@index([profileId, createdAt])
-}
 
-// Enum for memory types
-enum MemoryType {
-  TEXT
-  IMAGE
-  VIDEO
-  AUDIO
-  DOCUMENT
-  CONVERSATION
-}
-
-// Mission represents an autonomous task given to the Digital Twin
-model Mission {
-  id          String        @id @default(cuid())
-  profileId   String
-  profile     Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  title       String        // e.g., "Find investors"
-  description String?       @db.Text
-  status      MissionStatus @default(ACTIVE)
-  progress    Int           @default(0) // 0-100
-  
-  // JSON log of actions taken
-  log         String        @db.Text @default("[]")
-  
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  completedAt DateTime?
-  
-  @@index([profileId])
-  @@index([profileId, status])
-}
-
-// ShadowInteraction tracks the clone's autonomous network activity
-model ShadowInteraction {
-  id                String            @id @default(cuid())
-  profileId         String
-  profile           Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  // The anonymous ID encountered in the network
-  targetProfileId   String
-  
-  // AI-computed compatibility score
-  compatibilityScore Float            @default(0.0)
-  
-  // Interaction status
-  status            InteractionStatus @default(IGNORED)
-  
-  // Metadata about the interaction
-  metadata          String            @db.Text @default("{}")
-  
-  timestamp         DateTime          @default(now())
-  
-  @@index([profileId])
-  @@index([profileId, status])
-  @@index([profileId, timestamp])
-}
-
-// Enum for mission status
-enum MissionStatus {
-  ACTIVE
-  COMPLETED
-  PAUSED
-  FAILED
-}
-
-// Enum for shadow interaction status
-enum InteractionStatus {
-  IGNORED      // Clone ignored this profile
-  MATCHED      // Clone found a match
-  ESCALATED    // Requires human review
-}
-
-// DataSource represents a connected social media platform for data ingestion
-// CRITICAL: Read-only. Twin NEVER posts to real social networks.
-model DataSource {
-  id          String     @id @default(cuid())
-  profileId   String
-  profile     Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
-  platform    String     // 'LINKEDIN', 'TWITTER', 'INSTAGRAM'
-  isConnected Boolean    @default(false)
-  syncStatus  SyncStatus @default(IDLE)
-  
-  lastSync    DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  @@index([profileId])
-  @@index([profileId, platform])
-  @@unique([profileId, platform])
-}
-
-// Enum for data source sync status
- enum SyncStatus {
-  IDLE
-  SYNCING
-  CONNECTED
-  ERROR
-}
-
-// Recovery Phrase Storage (optional - for BIP39 backup)
-// This should be encrypted with a separate recovery key
-model RecoveryPhrase {
-  id                String   @id @default(cuid())
-  profileId         String   @unique
-  
-  // Encrypted BIP39 phrase (encrypted with a recovery-specific key)
-  encryptedPhrase   String   @db.Text
-  
-  // Verification hash to confirm recovery phrase without decrypting
-  phraseHash        String
-  
-  createdAt         DateTime @default(now())
-  
-  @@index([profileId])
+  @@index([keywords])
 }

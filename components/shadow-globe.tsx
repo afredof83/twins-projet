@@ -42,7 +42,7 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
     if (!mounted) return null;
 
     return (
-        <div className="w-full h-full flex items-center justify-center relative overflow-hidden rounded-xl cursor-move">
+        <div className="w-full h-full flex items-center justify-center relative overflow-hidden rounded-xl cursor-default pointer-events-none">
             <Globe
                 ref={globeEl}
                 backgroundColor="rgba(0,0,0,0)" // Transparent pour voir le fond du dashboard
