@@ -152,80 +152,67 @@ export default function SecureWhatsApp({ profileId, partnerId, channelId, onClos
 
     if (!mounted) return null;
 
-    return createPortal(
-        <div className="fixed inset-0 z-[2147483647] flex items-center justify-center bg-black/40 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in">
-
-            {/* NOTIFICATION VISUELLE FLOTTANTE */}
-            {showNewMessageNotif && (
-                <div className="absolute top-10 bg-cyan-500 text-black px-4 py-2 rounded-full font-bold text-xs shadow-[0_0_20px_rgba(6,182,212,0.5)] animate-bounce flex items-center gap-2 z-50">
-                    <MessageSquare size={14} /> NOUVEAU MESSAGE REÇU
+    return (
+        <div className="flex flex-col h-full w-full bg-[#0a0a0a] text-white">
+            {/* --- HEADER SOLIDE --- */}
+            <div className="p-4 border-b border-white/10 bg-[#141414] flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+                    <span className="text-xs font-black uppercase tracking-widest text-cyan-400 flex items-center gap-2"><Shield size={14} /> Liaison Sécurisée</span>
                 </div>
-            )}
-
-            <div className="w-full h-full sm:max-w-md sm:h-[600px] sm:rounded-2xl bg-[#0d0d0d] border-t sm:border border-cyan-500/30 shadow-2xl flex flex-col overflow-hidden ring-1 ring-white/10">
-                {/* HEADER */}
-                <div className="p-3 border-b border-white/10 flex justify-between items-center bg-zinc-900/50">
-                    <div className="flex items-center gap-2 text-white text-sm font-medium">
-                        <Shield size={16} className="text-cyan-400" /> Flux Quantique
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-gray-500 hover:text-white transition-colors"><X size={20} /></button>
-                </div>
-
-                {/* ZONE DE MESSAGES */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide">
-                    {messages.map((msg) => {
-                        const isMe = msg.sender_id === profileId;
-                        return (
-                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-1 fade-in duration-300`}>
-                                <div className={`
-                                    max-w-[85%] p-3 rounded-xl text-sm shadow-md break-words
-                                    ${isMe
-                                        ? 'bg-cyan-600/20 border border-cyan-500/30 text-white rounded-tr-none'
-                                        : 'bg-zinc-800 border border-white/5 text-gray-200 rounded-tl-none'}
-                                `}>
-                                    {msg.content}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {/* 💬 LES TROIS PETITS POINTS (Typing Indicator) */}
-                    {isPartnerTyping && (
-                        <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <div className="bg-zinc-800 border border-white/5 p-3 rounded-xl rounded-tl-none flex gap-1 items-center">
-                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.32s]"></div>
-                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.16s]"></div>
-                                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
-                            </div>
-                        </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* INPUT BAR */}
-                <form onSubmit={handleSend} className="p-4 bg-zinc-900/80 border-t border-white/10 backdrop-blur-md">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => {
-                                setNewMessage(e.target.value);
-                                handleTyping(); // Déclenche le signal "écrit..."
-                            }}
-                            placeholder="Entrez vos données..."
-                            className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-600"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!newMessage.trim()}
-                            className="bg-cyan-600 p-3 rounded-lg text-white hover:bg-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(8,145,178,0.3)]"
-                        >
-                            <Send size={24} />
-                        </button>
-                    </div>
-                </form>
+                <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white">
+                    <X size={20} />
+                </button>
             </div>
-        </div>,
-        document.body
+
+            {/* --- ZONE DE MESSAGES (FOND NOIR SOLIDE) --- */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#050505]">
+                {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender_id === profileId ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-lg break-words ${msg.sender_id === profileId
+                                ? 'bg-[#083344] text-cyan-50 border border-cyan-500/30' // Cyan très foncé mais OPAQUE
+                                : 'bg-[#1c1c1c] text-slate-200 border border-white/5'   // Gris anthracite OPAQUE
+                            }`}>
+                            {msg.content}
+                        </div>
+                    </div>
+                ))}
+
+                {/* 💬 LES TROIS PETITS POINTS (Typing Indicator) */}
+                {isPartnerTyping && (
+                    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="bg-[#1c1c1c] border border-white/5 p-3 rounded-xl rounded-tl-none flex gap-1 items-center">
+                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.32s]"></div>
+                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.16s]"></div>
+                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        </div>
+                    </div>
+                )}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* INPUT BAR */}
+            <form onSubmit={handleSend} className="p-4 bg-[#141414] border-t border-white/10">
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => {
+                            setNewMessage(e.target.value);
+                            handleTyping();
+                        }}
+                        placeholder="Entrez vos données..."
+                        className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-3 text-base text-white focus:outline-none focus:border-cyan-500/50 transition-all placeholder:text-zinc-600"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!newMessage.trim()}
+                        className="bg-cyan-600 p-3 rounded-lg text-white hover:bg-cyan-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                    >
+                        <Send size={24} />
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 }
