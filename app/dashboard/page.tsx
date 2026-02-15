@@ -3,14 +3,13 @@
 import { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    Radio, MessageCircle, Send, X, Volume2, VolumeX, Activity, Mic, MicOff,
-    UserPlus, Trash2, CheckSquare, BrainCircuit, AlertTriangle, LogOut,
-    FileText, UploadCloud, Radar, Loader2, ShieldOff
+    Radio, Send, Activity, CheckSquare, LogOut,
+    UploadCloud, Radar, Loader2, ShieldOff
 } from 'lucide-react';
 import ShadowGlobe from '@/components/shadow-globe';
-import CommlinkButton from '@/components/CommlinkButton';
+
 import GuardianFeed from '@/components/cortex/GuardianFeed';
-import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
+
 import SecureWhatsApp from '@/components/SecureWhatsApp';
 
 const SFX = {
@@ -35,7 +34,7 @@ export default function MissionControl() {
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [neuroInput, setNeuroInput] = useState('');
     const [isPrivateMemory, setIsPrivateMemory] = useState(false);
-    const [showCortexPanel, setShowCortexPanel] = useState(false);
+
     const [interventions, setInterventions] = useState<any[]>([]);
 
     const addLog = (message: string) => setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev].slice(0, 50));
@@ -109,100 +108,122 @@ export default function MissionControl() {
     return (
         <main className="relative min-h-screen w-full bg-slate-950 text-white font-mono flex flex-col overflow-x-hidden">
 
-            {/* BACKGROUND GLOBE (FIXED) */}
-            <div className="fixed inset-0 pointer-events-none opacity-20">
+            {/* BACKGROUND GLOBE - Optimisé pour ne pas gêner le tactile */}
+            <div className="fixed inset-0 pointer-events-none opacity-10 z-0">
                 <ShadowGlobe onLocationChange={() => { }} />
             </div>
 
-            {/* CONTENU WRAPPER - Gère le flou quand le chat est ouvert */}
-            <div className={`flex-1 flex flex-col p-4 md:p-8 transition-all duration-500 ${isChatOpen ? 'blur-md scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
+            {/* WRAPPER PRINCIPAL */}
+            <div className={`flex-1 flex flex-col p-4 md:p-8 transition-all duration-500 z-10 ${isChatOpen ? 'blur-md scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
 
-                {/* HEADER RESPONSIVE */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-white/10 pb-6">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-black italic bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">MISSION CONTROL</h1>
-                        <p className="text-[10px] text-slate-500 tracking-[0.3em] uppercase">Security Level: Maximum • {profileId.slice(0, 8)}</p>
+                {/* HEADER - Plus compact sur mobile */}
+                <header className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 border-b border-white/10 pb-4">
+                    <div className="text-center sm:text-left">
+                        <h1 className="text-xl md:text-3xl font-black italic bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">MISSION CONTROL</h1>
+                        <p className="text-[9px] text-slate-500 tracking-[0.2em] uppercase">Protocol v2.1 • {profileId.slice(0, 8)}</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button onClick={() => router.push(`/dashboard/blocked?profileId=${profileId}`)} className="p-2 bg-red-950/20 border border-red-900/30 text-red-500 rounded-lg text-[10px] font-bold uppercase"><ShieldOff size={16} /></button>
-                        <button onClick={triggerManualScan} disabled={isScanning} className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest">{isScanning ? <Loader2 className="animate-spin" size={16} /> : <Radar size={16} />} Scan</button>
+                    <div className="flex gap-2 scale-90 sm:scale-100">
+                        <button onClick={triggerManualScan} disabled={isScanning} className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-[10px] font-bold flex items-center gap-2 uppercase tracking-widest">
+                            {isScanning ? <Loader2 className="animate-spin" size={14} /> : <Radar size={14} />} Scan
+                        </button>
+                        <button onClick={() => router.push(`/dashboard/blocked?profileId=${profileId}`)} className="p-2 bg-red-950/20 border border-red-900/30 text-red-500 rounded-lg"><ShieldOff size={16} /></button>
                         <button onClick={() => {
                             import('@supabase/supabase-js').then(({ createClient }) => {
                                 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
                                 sb.auth.signOut().then(() => router.push('/'));
                             });
-                        }} className="p-2 bg-red-950/30 border border-red-900/50 rounded hover:bg-red-900 transition-all"><LogOut size={16} /></button>
+                        }} className="p-2 bg-red-950/30 border border-red-900/50 rounded hover:bg-red-900"><LogOut size={16} /></button>
                     </div>
                 </header>
 
-                {/* ZONE D'ACTION : DROPZONE & ENCODAGE */}
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    <div
-                        onClick={() => document.getElementById('file-input')?.click()}
-                        className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer ${isDragging ? 'border-cyan-400 bg-cyan-900/20' : 'border-slate-800 bg-slate-900/40 hover:border-slate-600'}`}
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={(e) => { e.preventDefault(); setIsDragging(false); if (e.dataTransfer.files[0]) handleFileUpload(e.dataTransfer.files[0]); }}
-                    >
-                        <input type="file" id="file-input" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
-                        <UploadCloud size={32} className="text-cyan-500 mb-2" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Transférer Données</span>
-                    </div>
+                {/* GRILLE DYNAMIQUE */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-                    <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col justify-center gap-3">
-                        <div className="flex items-center gap-2 bg-black/40 rounded-xl p-2 border border-white/5">
-                            <button onClick={() => setIsPrivateMemory(!isPrivateMemory)} className={`p-2 rounded-lg text-sm ${isPrivateMemory ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>{isPrivateMemory ? '🔒' : '🌐'}</button>
-                            <input type="text" value={neuroInput} onChange={(e) => setNeuroInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleNeuroSave()} placeholder="Encoder une pensée..." className="flex-1 bg-transparent border-none text-sm outline-none" />
-                            <button onClick={handleNeuroSave} disabled={!neuroInput} className="text-cyan-500 p-2"><CheckSquare size={20} /></button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* GRILLE DES MODULES : GARDIEN & LIAISONS */}
-                <section className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-
-                    {/* FENÊTRE GARDIEN (60% LARGEUR PC) */}
-                    <div className="xl:col-span-8 bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden flex flex-col min-h-[500px] shadow-2xl relative">
-                        <div className="p-4 border-b border-white/5 bg-zinc-900/30 flex items-center justify-between">
-                            <span className="text-[10px] font-black tracking-[0.3em] text-cyan-500 uppercase">Guardian Matrix Feed</span>
+                    {/* 1. LE FEED DU GARDIEN (Priorité Mobile) */}
+                    {/* On le met en premier dans l'ordre visuel sur mobile avec 'order-1' */}
+                    <div className="lg:col-span-8 order-1 flex flex-col bg-slate-900/60 border border-slate-800 rounded-3xl overflow-hidden min-h-[450px] sm:min-h-[500px] shadow-2xl relative">
+                        <div className="p-3 border-b border-white/5 bg-zinc-900/30 flex items-center justify-between">
+                            <span className="text-[9px] font-black tracking-widest text-cyan-500 uppercase">Guardian Matrix Feed</span>
                             <Activity size={14} className="text-cyan-500 animate-pulse" />
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
-                            <GuardianFeed interventions={interventions} profileId={profileId} onClear={() => setInterventions([])} onRefresh={triggerManualScan} />
+
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                            {/* Si pas d'interventions, on met un placeholder visuel pour éviter le sentiment de "fenêtre vide" */}
+                            {interventions.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center opacity-20 text-center space-y-2">
+                                    <Radar size={40} />
+                                    <p className="text-[10px] uppercase">En attente de données de scan...</p>
+                                </div>
+                            ) : (
+                                <GuardianFeed interventions={interventions} profileId={profileId} onClear={() => setInterventions([])} onRefresh={triggerManualScan} />
+                            )}
                         </div>
-                        <div className="p-4 bg-black/40 border-t border-white/5">
+
+                        {/* L'INPUT D'ORDRE : Toujours visible en bas du module */}
+                        <div className="p-3 bg-black/60 border-t border-white/5 backdrop-blur-md">
                             <div className="flex gap-2 bg-slate-950 border border-white/10 rounded-xl p-1 focus-within:border-cyan-500/50 transition-all">
-                                <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} className="flex-1 bg-transparent px-4 py-2 text-sm outline-none" placeholder="Donner un ordre au Gardien..." />
-                                <button className="bg-cyan-600 p-2 rounded-lg text-white"><Send size={18} /></button>
+                                <input
+                                    type="text"
+                                    value={chatInput}
+                                    onChange={(e) => setChatInput(e.target.value)}
+                                    className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-slate-600"
+                                    placeholder="Ordre au Gardien..."
+                                />
+                                <button className="bg-cyan-600 p-2 rounded-lg text-white active:scale-90 transition-transform"><Send size={16} /></button>
                             </div>
                         </div>
                     </div>
 
-                    {/* FENÊTRE LIAISONS (40% LARGEUR PC) */}
-                    <div className="xl:col-span-4 flex flex-col gap-4">
-                        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 flex flex-col h-full min-h-[500px]">
-                            <h3 className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-6 flex items-center gap-2">
-                                <Radio size={14} /> Liaisons Actives ({channels.length})
+                    {/* 2. LES OUTILS : DROPZONE & PENSÉE (En dessous sur mobile) */}
+                    <div className="lg:col-span-4 order-2 flex flex-col gap-6">
+
+                        {/* DROPZONE COMPACTE */}
+                        <div
+                            onClick={() => document.getElementById('file-input')?.click()}
+                            className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center transition-all cursor-pointer ${isDragging ? 'border-cyan-400 bg-cyan-900/20 scale-105' : 'border-slate-800 bg-slate-900/40'}`}
+                        >
+                            <input type="file" id="file-input" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+                            <UploadCloud size={28} className="text-cyan-500 mb-2" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Toucher pour Transférer</span>
+                        </div>
+
+                        {/* ENCODAGE DE PENSÉE */}
+                        <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-4">
+                            <div className="flex items-center gap-2 bg-black/40 rounded-xl p-1.5 border border-white/5">
+                                <button onClick={() => setIsPrivateMemory(!isPrivateMemory)} className={`p-2 rounded-lg text-xs ${isPrivateMemory ? 'bg-red-900/30 text-red-400' : 'bg-green-900/30 text-green-400'}`}>
+                                    {isPrivateMemory ? '🔒' : '🌐'}
+                                </button>
+                                <input
+                                    type="text"
+                                    value={neuroInput}
+                                    onChange={(e) => setNeuroInput(e.target.value)}
+                                    className="flex-1 bg-transparent border-none text-xs outline-none"
+                                    placeholder="Pensée..."
+                                />
+                                <button onClick={handleNeuroSave} className="text-cyan-500 p-2"><CheckSquare size={18} /></button>
+                            </div>
+                        </div>
+
+                        {/* LIAISONS ACTIVES (En bas de pile) */}
+                        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 flex-1">
+                            <h3 className="text-[9px] font-black tracking-widest text-slate-500 uppercase mb-4 flex items-center gap-2">
+                                <Radio size={12} /> Liaisons ({channels.length})
                             </h3>
-                            <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2">
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {channels.map((channel: any) => {
                                     const isInitiator = channel.member_one_id === profileId;
                                     const partnerId = isInitiator ? channel.member_two_id : channel.member_one_id;
                                     return (
-                                        <div key={channel.id} className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-all">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-[9px] font-mono text-slate-500 uppercase">ID: {partnerId?.slice(0, 8)}</span>
-                                                <span className={`text-[8px] px-2 py-0.5 rounded-full ${isInitiator ? 'bg-indigo-500/20 text-indigo-400' : 'bg-green-500/20 text-green-400'}`}>{isInitiator ? 'Sortant' : 'Entrant'}</span>
+                                        <div key={channel.id} className="p-3 rounded-xl bg-black/40 border border-white/5 flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-mono text-slate-600 uppercase">ID:{partnerId.slice(0, 6)}</span>
+                                                <span className="text-[10px] font-bold text-slate-300">Liaison Directe</span>
                                             </div>
                                             <button
-                                                onClick={() => {
-                                                    setActiveChannelId(channel.id);
-                                                    setChatPartnerId(partnerId);
-                                                    setIsChatOpen(true);
-                                                }}
-                                                className="w-full py-2.5 bg-zinc-800 hover:bg-cyan-600 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2"
+                                                onClick={() => { setActiveChannelId(channel.id); setChatPartnerId(partnerId); setIsChatOpen(true); }}
+                                                className="px-3 py-1.5 bg-cyan-600/20 border border-cyan-500/40 text-cyan-400 rounded-lg text-[9px] font-black uppercase"
                                             >
-                                                <MessageCircle size={14} /> Chat
+                                                Chat
                                             </button>
                                         </div>
                                     );
@@ -210,10 +231,10 @@ export default function MissionControl() {
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
             </div>
 
-            {/* --- PORTALS (Toujours à l'extérieur du wrapper flou) --- */}
+            {/* PORTALS (Restent en dehors du flou) */}
             {isChatOpen && chatPartnerId && (
                 <SecureWhatsApp
                     profileId={profileId}
@@ -221,20 +242,6 @@ export default function MissionControl() {
                     channelId={activeChannelId}
                     onClose={() => setIsChatOpen(false)}
                 />
-            )}
-
-            {showCortexPanel && (
-                <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden flex flex-col">
-                        <div className="p-6 flex justify-between items-center border-b border-white/10">
-                            <h2 className="text-lg font-bold flex items-center gap-3"><BrainCircuit className="text-cyan-400" /> Cortex Data</h2>
-                            <button onClick={() => setShowCortexPanel(false)}><X /></button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-6">
-                            <KnowledgeIngester profileId={profileId!} memories={memories} onRefresh={() => loadMemories(profileId!)} />
-                        </div>
-                    </div>
-                </div>
             )}
         </main>
     );
