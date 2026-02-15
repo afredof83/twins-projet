@@ -20,8 +20,18 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
         { startLat: 40.7128, startLng: -74.0060, endLat: 34.0522, endLng: -118.2437, color: '#10b981' } // NYC -> LA
     ], []);
 
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
     useEffect(() => {
         setMounted(true);
+        // Initial size
+        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+
+        const handleResize = () => {
+            setDimensions({ width: window.innerWidth, height: window.innerHeight });
+        };
+
+        window.addEventListener('resize', handleResize);
 
         const checkControls = setInterval(() => {
             if (globeEl.current) {
@@ -36,7 +46,10 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
                 }
             }
         }, 100); // Check rapide au début
-        return () => clearInterval(checkControls);
+        return () => {
+            clearInterval(checkControls);
+            window.removeEventListener('resize', handleResize);
+        };
     }, []);
 
     if (!mounted) return null;
@@ -64,8 +77,8 @@ export default function ShadowGlobe({ onLocationChange }: { onLocationChange?: (
                 arcDashAnimateTime={2000}
                 arcStroke={0.5}
 
-                width={300} // Taille ajustée pour le conteneur - réduite de 400 à 300 pour mieux s'adapter au dashboard
-                height={300}
+                width={dimensions.width}
+                height={dimensions.height}
             />
 
             {/* Overlay Décoratif */}

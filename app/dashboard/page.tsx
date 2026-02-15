@@ -6,7 +6,12 @@ import {
     Radio, Send, Activity, CheckSquare, LogOut,
     UploadCloud, Radar, Loader2, ShieldOff, BrainCircuit, X
 } from 'lucide-react';
-import ShadowGlobe from '@/components/shadow-globe';
+import dynamic from 'next/dynamic';
+
+const ShadowGlobe = dynamic(() => import('@/components/shadow-globe'), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 bg-slate-950" />
+});
 import CommlinkButton from '@/components/CommlinkButton';
 import GuardianFeed from '@/components/cortex/GuardianFeed';
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
@@ -117,9 +122,10 @@ export default function MissionControl() {
         <main className="relative min-h-screen w-full bg-slate-950 text-white font-mono flex flex-col overflow-x-hidden">
 
             {/* --- 1. LE GLOBE 3D (BACKDROP) --- */}
-            {/* On augmente l'opacité à 30% pour qu'il soit visible sur mobile */}
-            <div className="fixed inset-0 pointer-events-none opacity-30 z-0">
-                <ShadowGlobe onLocationChange={() => addLog(`[NOEUD] Activité détectée`)} />
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                <div className="w-full h-full opacity-40 scale-110 sm:scale-100 transition-opacity duration-1000">
+                    <ShadowGlobe onLocationChange={() => addLog(`[NOEUD] Activité détectée`)} />
+                </div>
             </div>
 
             {/* CONTENU WRAPPER */}
