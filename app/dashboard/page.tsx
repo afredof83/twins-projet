@@ -6,12 +6,12 @@ import {
     Radio, Send, Activity, CheckSquare, LogOut,
     UploadCloud, Radar, Loader2, ShieldOff, BrainCircuit, X
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-const ShadowGlobe = dynamic(() => import('@/components/shadow-globe'), {
-    ssr: false,
-    loading: () => <div className="fixed inset-0 bg-slate-950" />
-});
+// On commente l'import dynamique pour l'instant
+// import dynamic from 'next/dynamic';
+// const ShadowGlobe = dynamic(() => import('@/components/shadow-globe'), { 
+//     ssr: false,
+//     loading: () => <div className="fixed inset-0 bg-slate-950" /> 
+// });
 import CommlinkButton from '@/components/CommlinkButton';
 import GuardianFeed from '@/components/cortex/GuardianFeed';
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
@@ -121,15 +121,17 @@ export default function MissionControl() {
     return (
         <main className="relative min-h-screen w-full bg-slate-950 text-white font-mono flex flex-col overflow-x-hidden">
 
-            {/* --- 1. LE GLOBE 3D (BACKDROP) --- */}
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div className="w-full h-full opacity-40 scale-110 sm:scale-100 transition-opacity duration-1000">
-                    <ShadowGlobe onLocationChange={() => addLog(`[NOEUD] Activité détectée`)} />
-                </div>
-            </div>
+            {/* --- GLOBE DÉSACTIVÉ --- */}
+            {/* <div className="fixed inset-0 pointer-events-none opacity-30 z-0">
+                <ShadowGlobe onLocationChange={() => {}} />
+            </div> 
+            */}
+
+            {/* FOND DE SUBSTITUTION (Dégradé subtil pour ne pas avoir un noir trop plat) */}
+            <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black pointer-events-none z-0" />
 
             {/* CONTENU WRAPPER */}
-            <div className={`flex-1 flex flex-col p-4 md:p-8 transition-all duration-500 z-10 ${isChatOpen ? 'blur-md scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
+            <div className={`relative flex-1 flex flex-col p-4 md:p-8 transition-all duration-500 z-10 ${isChatOpen ? 'blur-md scale-[0.98] pointer-events-none' : 'blur-0 scale-100'}`}>
 
                 {/* --- 2. HEADER OPTIMISÉ (PC \u0026 MOBILE) --- */}
                 <header className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-8 border-b border-white/10 pb-6 bg-slate-950/50 backdrop-blur-sm rounded-b-2xl p-4">
