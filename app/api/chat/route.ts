@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { ALCHEMIST_TOOLS, executeAlchemyTool } from '@/lib/oracle/alchemy'; // Importe tes outils
 import { readUrlContent } from '@/lib/tools/web-reader';
 
-export const runtime = 'edge'; // Edge pour la vitesse
+// export const runtime = 'nodejs'; // Node.js par défaut pour la stabilité
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 

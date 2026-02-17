@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+// export const runtime = 'nodejs'; // Node.js par défaut pour la stabilité
 
 // On garde Mistral pour l'instant car OpenAI n'est pas forcément configuré sur ce projet
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;

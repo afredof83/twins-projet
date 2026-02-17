@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+export const runtime = 'nodejs'; // On force la stabilité
+
 export const metadata: Metadata = {
   title: "Twins - Mission Control",
   description: "Tactical Mobile Interface",
