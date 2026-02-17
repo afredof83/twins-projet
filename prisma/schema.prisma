@@ -35,15 +35,17 @@ model Profile {
 
 // --- NOUVEAUX MODÈLES ---
 
+
 model DataSource {
-  id          String   @id @default(uuid())
-  platform    String   // ex: "Google", "LinkedIn", "Instagram"
-  status      String   @default("CONNECTED")
-  lastSync    DateTime @default(now())
+  id              String   @id @default(uuid())
+  platform        String   // ex: "Google"
+  isConnected     Boolean  @default(true)  // Ajouté (Boolean car l'API attend true/false)
+  syncStatus      String   @default("IDLE") // Ajouté
+  lastSync        DateTime @default(now())
+  createdAt       DateTime @default(now())  // Ajouté
   
-  // Relation avec le Profile
-  profileId   String
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId       String
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model ShadowInteraction {
