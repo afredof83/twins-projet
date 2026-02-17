@@ -413,19 +413,26 @@ function BlockListManager({ profileId, onClose }: any) {
 function InterceptorInterface({ interventions, onAnalyze, onAccept, onIgnore }: any) {
     const item = interventions[0];
     if (item?.viewMode === 'SUMMARY') return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-in zoom-in-95">
+        <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-in zoom-in-95 relative z-50">
             <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-4 relative">
                 <div className="absolute inset-0 border-t-2 border-primary rounded-full animate-spin"></div>
                 <Radar size={24} className="text-primary" />
             </div>
             <h2 className="text-primary font-bold text-lg animate-pulse tracking-widest">SIGNAL DÉTECTÉ</h2>
             <p className="text-white text-sm my-2 font-mono bg-white/5 px-2 py-1 rounded">{item.targetName}</p>
-            <button onClick={() => onAnalyze(item.id)} className="bg-primary text-black px-6 py-3 rounded-full font-bold text-xs mt-4 w-full hover:bg-white transition-colors shadow-[0_0_15px_rgba(19,200,236,0.4)]">ANALYSER</button>
-            <button onClick={onIgnore} className="text-gray-500 text-[10px] mt-4 hover:text-white">IGNORER</button>
+
+            <button
+                onClick={() => onAnalyze(item.id)}
+                className="bg-primary text-black px-6 py-4 rounded-xl font-bold text-xs mt-6 w-full hover:bg-white transition-all shadow-[0_0_15px_rgba(19,200,236,0.4)] active:scale-95 min-h-[56px] flex items-center justify-center relative z-50 cursor-pointer uppercase tracking-widest"
+            >
+                ANALYSER
+            </button>
+
+            <button onClick={onIgnore} className="text-gray-500 text-[10px] mt-6 hover:text-white p-2 min-h-[44px] flex items-center justify-center w-full">IGNORER</button>
         </div>
     );
     if (item?.viewMode === 'DEEP_AUDIT') return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-in slide-in-from-right">
+        <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-in slide-in-from-right relative z-50">
             <h2 className="text-accent-amber font-bold text-sm tracking-[0.2em] mb-4">AUDIT TERMINÉ</h2>
             <div className="relative mb-6">
                 <svg className="w-24 h-24 transform -rotate-90">
@@ -434,10 +441,20 @@ function InterceptorInterface({ interventions, onAnalyze, onAccept, onIgnore }: 
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center text-2xl font-black text-white">{item.matchScore}%</div>
             </div>
-            <div className="flex gap-2 w-full">
-                <button onClick={() => onAccept(item.targetId)} className="flex-1 bg-accent-amber text-black px-4 py-3 rounded-xl font-bold text-xs hover:bg-white transition-colors">CONNECTER</button>
+            <div className="flex flex-col gap-3 w-full">
+                <button
+                    onClick={() => onAccept(item.targetId)}
+                    className="bg-accent-amber text-black px-4 py-4 rounded-xl font-bold text-xs hover:bg-white transition-all active:scale-95 min-h-[56px] flex items-center justify-center relative z-50 cursor-pointer"
+                >
+                    CONNECTER
+                </button>
+                <button
+                    onClick={onIgnore}
+                    className="text-gray-500 text-[10px] hover:text-white border-b border-transparent hover:border-gray-500 p-2 min-h-[44px] flex items-center justify-center w-full"
+                >
+                    FERMER LE DOSSIER
+                </button>
             </div>
-            <button onClick={onIgnore} className="text-gray-500 text-[10px] mt-4 hover:text-white border-b border-transparent hover:border-gray-500">FERMER LE DOSSIER</button>
         </div>
     );
     return null;
