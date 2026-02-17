@@ -33,7 +33,7 @@
 
 html,
 body {
-  height: auto !important;
+  height: -webkit-fill-available;
   /* Force la hauteur à s'adapter au contenu */
   min-height: 100% !important;
   overflow-y: auto !important;
@@ -214,4 +214,9 @@ body>div:first-child {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+main {
+  min-height: 100dvh;
+  /* Utilise la hauteur dynamique réelle du mobile */
 }
