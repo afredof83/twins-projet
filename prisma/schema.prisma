@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,22 +10,59 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// --- MODÈLE PROFIL (LE CŒUR DU SYSTÈME) ---
 model Profile {
-  id           String   @id @default(uuid())
-  name         String?
-  email        String?  @unique
-  bio          String?
-  saltBase64   String?
-  passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                      String    @id @default(uuid())
+  name                    String?
+  email                   String?   @unique
+  bio                     String?
+  avatarUrl               String?
+  
+  // Champs de Sécurité & Auth (Zero-Knowledge)
+  passwordHash            String?
+  saltBase64              String?
+  verifierBase64          String?
+  encryptionKeyEncrypted  String?
+  encryptedMetadata       String?   // Le champ qui bloquait
+  encryptedPhrase         String?
+  subscription            Json?     // Pour les notifications push
+  
+  // IA & Vecteurs
+  vectorNamespace         String?   // Le champ qui bloquait aussi
+  
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
-  shadowInteractions  ShadowInteraction[] @relation("SourceProfile")
-  receivedInteractions ShadowInteraction[] @relation("TargetProfile")
-  channels            Channel[]
-  dataSources         DataSource[]
+  // Relations
+  memories                Memory[]
+  dataSources             DataSource[]
+  shadowInteractions      ShadowInteraction[] @relation("SourceProfile")
+  receivedInteractions    ShadowInteraction[] @relation("TargetProfile")
+  channels                Channel[]           @relation("MemberProfile")
+  initiatedNegotiations   Negotiation[]       @relation("Initiator")
+  receivedNegotiations    Negotiation[]       @relation("Receiver")
+  blocking                BlockList[]         @relation("Blocker")
+  blockedBy               BlockList[]         @relation("Blocked")
 }
 
+// --- MODÈLE MÉMOIRE (VOS FRAGMENTS) ---
+model Memory {
+  id                String   @id @default(uuid())
+  content           String
+  encryptedContent  String?
+  type              String   @default("thought")
+  source            String?
+  embedding         Json?    // Stockage flexible des vecteurs (dimension 1024)
+  expires_at        DateTime?
+  
+  createdAt         DateTime @default(now())
+  created_at        DateTime @default(now()) // Doublon sécu utilisé dans votre code
+  
+  profileId         String
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// --- MODÈLE DATA SOURCE (SITES WEB / RÉSEAUX SOCIAUX) ---
 model DataSource {
   id              String   @id @default(uuid())
   platform        String   
@@ -36,10 +75,10 @@ model DataSource {
   profileId       String
   profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  // CETTE LIGNE EST LA CLÉ : Elle crée l'index unique composé attendu par l'API
   @@unique([profileId, platform])
 }
 
+// --- MODÈLE SHADOW (ACTIVITÉ AUTONOME DES CLONES) ---
 model ShadowInteraction {
   id                 String   @id @default(uuid())
   timestamp          DateTime @default(now())
@@ -55,10 +94,53 @@ model ShadowInteraction {
   targetProfile      Profile? @relation("TargetProfile", fields: [targetProfileId], references: [id])
 }
 
+// --- MODÈLE CHANNEL & MESSAGE (LE CHAT) ---
 model Channel {
-  id        String   @id @default(uuid())
-  topic     String?
-  createdAt DateTime @default(now())
-  profileId String?
-  profile   Profile? @relation(fields: [profileId], references: [id])
+  id              String   @id @default(uuid())
+  topic           String?  @default("LIAISON SÉCURISÉE")
+  member_one_id   String
+  member_two_id   String
+  last_message_at DateTime @default(now())
+  initiatorId     String?
+  
+  profile         Profile? @relation("MemberProfile", fields: [member_one_id], references: [id])
+  messages        Message[]
+}
+
+model Message {
+  id               String   @id @default(uuid())
+  content          String
+  sender_id        String
+  communication_id String
+  created_at       DateTime @default(now())
+  
+  channel          Channel  @relation(fields: [communication_id], references: [id], onDelete: Cascade)
+}
+
+// --- MODÈLE NEGOTIATION (AUDIT INDUSTRIEL) ---
+model Negotiation {
+  id            String   @id @default(uuid())
+  status        String   @default("ACTIVE")
+  summary       String?
+  verdict       String?  @default("ANALYSE EN COURS")
+  nextStep      String?
+  createdAt     DateTime @default(now())
+
+  initiatorId   String
+  initiator     Profile  @relation("Initiator", fields: [initiatorId], references: [id])
+  
+  receiverId    String
+  receiver      Profile  @relation("Receiver", fields: [receiverId], references: [id])
+}
+
+// --- MODÈLE BLOCKLIST (CONFINEMENT) ---
+model BlockList {
+  id          String   @id @default(uuid())
+  blockerId   String
+  blockedId   String
+  
+  blocker     Profile  @relation("Blocker", fields: [blockerId], references: [id])
+  blocked     Profile  @relation("Blocked", fields: [blockedId], references: [id])
+  
+  @@unique([blockerId, blockedId])
 }
