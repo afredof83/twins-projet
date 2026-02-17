@@ -16,53 +16,106 @@ model Profile {
   name         String?
   email        String?  @unique
   bio          String?
-  
-  // Champs d'Authentification (Fix erreur précédente)
   saltBase64   String?
   passwordHash String?
-  
-  // Métadonnées système
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relations
-  // 1. Les interactions lancées par ce profil
+  // Relations Système (Nouveaux)
   shadowInteractions ShadowInteraction[] @relation("SourceProfile")
-  
-  // 2. Les interactions reçues par ce profil (Optionnel mais recommandé)
   receivedInteractions ShadowInteraction[] @relation("TargetProfile")
-  
-  // 3. Les channels de discussion
-  channels     Channel[]
+  channels           Channel[]
+  dataSources        DataSource[]
+
+  // Relations Métier (Existants)
+  memories    Memory[]
+  networks    NetworkEntity[]
+  intentions  Intention[]
 }
 
-// --- MODÈLE SHADOW INTERACTION (Fix erreur actuelle) ---
+// --- NOUVEAUX MODÈLES ---
+
+model DataSource {
+  id          String   @id @default(uuid())
+  platform    String   // ex: "Google", "LinkedIn", "Instagram"
+  status      String   @default("CONNECTED")
+  lastSync    DateTime @default(now())
+  
+  // Relation avec le Profile
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
 model ShadowInteraction {
   id                 String   @id @default(uuid())
   timestamp          DateTime @default(now())
+  type               String?  
+  status             String?  
+  compatibilityScore Float?   
+  metadata           Json?    
   
-  // Champs techniques demandés par votre code (route.ts)
-  type               String?  // ex: "SCAN", "MATCH", "PING"
-  status             String?  // ex: "PENDING", "ACCEPTED"
-  compatibilityScore Float?   // Score de 0 à 100
-  metadata           Json?    // Pour stocker des infos flexibles (JSON)
-  
-  // Relation : Qui a lancé l'action ?
   profileId          String
   profile            Profile  @relation("SourceProfile", fields: [profileId], references: [id], onDelete: Cascade)
 
-  // Relation : Qui est la cible ? (targetProfileId)
   targetProfileId    String?
   targetProfile      Profile? @relation("TargetProfile", fields: [targetProfileId], references: [id])
 }
 
-// --- MODÈLE CHANNEL (Pour le Dashboard) ---
 model Channel {
   id        String   @id @default(uuid())
   topic     String?
   createdAt DateTime @default(now())
   
-  // Propriétaire du channel
   profileId String?
   profile   Profile? @relation(fields: [profileId], references: [id])
+}
+
+// --- MODÈLES EXISTANTS (Restaurés pour compatibilité) ---
+
+model Memory {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   // 'user', 'ai', 'system', 'directive', 'knowledge'
+  source    String?  // 'chat', 'oracle_prophecy', 'web_ingest'
+  embedding Json?    // Vector embedding from Mistral
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model NetworkEntity {
+  id              String   @id @default(cuid())
+  name            String   // Nom de l'agent/entreprise (ex: "Rapala Innovation")
+  type            String   // "Competitor", "Partner", "Investor", "Client"
+  sector          String   // ex: "Fishing Tech", "Supply Chain"
+  matchScore      Int      // Score de 0 à 100 calculé par l'IA
+  status          String   @default("DETECTED") // "DETECTED", "CONTACTED", "IGNORED"
+  
+  reasoning       String   
+  
+  profileId       String
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+model Intention {
+  id                String   @id @default(cuid())
+  
+  abstractNeed      String   // Ce que le clone cherche (anonymisé) mais assez précis
+  keywords          String[] // ex: ["pêche", "fabrication", "var"]
+  isPublic          Boolean  @default(true) // Visible par les autres clones
+  
+  status            String   @default("SEEKING") // SEEKING, MATCHED, ARCHIVED
+  
+  profileId         String
+  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([keywords])
 }
