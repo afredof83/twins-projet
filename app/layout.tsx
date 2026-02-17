@@ -1,29 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Configuration de la fenêtre d'affichage pour mobile
-export const viewport: Viewport = {
-  themeColor: "#020617",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
-
 export const metadata: Metadata = {
-  title: "TWINS | Mission Control",
-  description: "Interface de gestion du Jumeau Numérique",
+  title: "Twins - Mission Control",
+  description: "Tactical Mobile Interface",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -32,14 +12,27 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#050a0c",
+};
+
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="fr" className="dark">
-      <body className="bg-slate-950 text-slate-200 antialiased selection:bg-cyan-500/30">
+      <head>
+        {/* On gère les liens ici pour éviter les erreurs */}
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+      </head>
+      <body className="bg-background-dark text-slate-300 antialiased overflow-hidden">
         {children}
       </body>
     </html>

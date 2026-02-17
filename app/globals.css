@@ -1,24 +1,33 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
+@import "tailwindcss";
 
 :root {
   /* On définit une hauteur dynamique pour mobile */
   --vh: 100dvh;
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #020405;
+  --foreground: #cbd5e1;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Space Grotesk", sans-serif;
+  --font-mono: "Space Mono", monospace;
+
+  /* Custom Palette from new design */
+  --color-primary: #13c8ec;
+  --color-primary-dim: #0e8fa9;
+  --color-accent-amber: #ffb020;
+  --color-surface-dark: #0a1113;
+  --color-background-dark: #020405;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #020405;
+    --foreground: #cbd5e1;
   }
 }
 
@@ -36,7 +45,7 @@ body {
   position: relative;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* On s'assure que le container de Next.js ne bloque rien */
@@ -62,8 +71,19 @@ body>div:first-child {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .5;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse 3s infinite;
 }
 
 .animate-pulse-slow {
@@ -72,7 +92,7 @@ body>div:first-child {
 
 /* Scrollbar personnalisée */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -80,10 +100,114 @@ body>div:first-child {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.3);
+  background: rgba(19, 200, 236, 0.3);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.6);
+  background: rgba(19, 200, 236, 0.6);
+}
+
+/* NEW DESIGN UTILITIES */
+.crt-overlay::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 20;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+.glass-card {
+  background: rgba(10, 20, 25, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(19, 200, 236, 0.15);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(19, 200, 236, 0.05), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+}
+
+.glass-card:hover::after {
+  left: 150%;
+}
+
+.neon-border-amber {
+  border-top: 2px solid #ffb020;
+  box-shadow: 0 -10px 15px -10px rgba(255, 176, 32, 0.4);
+}
+
+.neon-border-cyan {
+  border-top: 2px solid #13c8ec;
+  box-shadow: 0 -10px 15px -10px rgba(19, 200, 236, 0.4);
+}
+
+/* --- TACTICAL UI UTILS --- */
+.glass-panel {
+  background: rgba(16, 31, 34, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(19, 200, 236, 0.15);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-active {
+  background: rgba(19, 200, 236, 0.1);
+  border: 1px solid rgba(19, 200, 236, 0.4);
+  box-shadow: 0 0 15px rgba(19, 200, 236, 0.15);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(19, 200, 236, 0.7);
+}
+
+.text-glow-amber {
+  text-shadow: 0 0 10px rgba(255, 176, 32, 0.7);
+}
+
+
+
+.breathing-dot {
+  animation: breathe 2s infinite ease-in-out;
+}
+
+@keyframes breathe {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Hide Scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
