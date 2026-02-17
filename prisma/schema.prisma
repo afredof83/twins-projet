@@ -21,10 +21,12 @@ model Profile {
   verifierBase64          String?
   encryptionKeyEncrypted  String?
   encryptedMetadata       String?
+  encryptedPhrase         String?
   subscription            Json?     // Pour les notifications Push
   
-  // IA & Réseau
+  // IA & Monitoring
   vectorNamespace         String?
+  lastAccessedAt          DateTime? @default(now()) // LE CHAMP QUI BLOQUAIT LE BUILD
   
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
@@ -44,14 +46,15 @@ model Profile {
   radarSources            RadarSource[]
   accessRequestsSent      AccessRequest[]     @relation("Requester")
   accessRequestsReceived  AccessRequest[]     @relation("Provider")
+  directMessagesSent      DirectMessage[]     @relation("DMSent")
+  directMessagesReceived  DirectMessage[]     @relation("DMReceived")
 }
 
 model RecoveryPhrase {
   id              String   @id @default(uuid())
   encryptedPhrase String
-  phraseHash      String?  // LE CHAMP QUI BLOQUAIT LE BUILD
+  phraseHash      String?
   createdAt       DateTime @default(now())
-  
   profileId       String   @unique
   profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
@@ -63,9 +66,10 @@ model Memory {
   type              String   @default("thought")
   source            String?
   embedding         Json?    
+  tags              Json?    // Utilisé dans embedding-service
   expires_at        DateTime?
   createdAt         DateTime @default(now())
-  created_at        DateTime @default(now()) // Doublon sécu utilisé dans votre code
+  created_at        DateTime @default(now()) // Doublon sécu détecté dans votre code
   
   profileId         String
   profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
@@ -79,7 +83,6 @@ model DataSource {
   lastSync        DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-
   profileId       String
   profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
@@ -93,7 +96,6 @@ model ShadowInteraction {
   status             String?  
   compatibilityScore Float?   
   metadata           Json?    
-  
   profileId          String
   profile            Profile  @relation("SourceProfile", fields: [profileId], references: [id], onDelete: Cascade)
   targetProfileId    String?
@@ -107,7 +109,6 @@ model Channel {
   member_two_id   String
   last_message_at DateTime @default(now())
   initiatorId     String?
-  
   profile         Profile? @relation("MemberProfile", fields: [member_one_id], references: [id])
   messages        Message[]
 }
@@ -118,8 +119,17 @@ model Message {
   sender_id        String
   communication_id String
   created_at       DateTime @default(now())
-  
   channel          Channel  @relation(fields: [communication_id], references: [id], onDelete: Cascade)
+}
+
+model DirectMessage {
+  id          String   @id @default(uuid())
+  content     String
+  created_at  DateTime @default(now())
+  sender_id   String
+  sender      Profile  @relation("DMSent", fields: [sender_id], references: [id])
+  receiver_id String
+  receiver    Profile  @relation("DMReceived", fields: [receiver_id], references: [id])
 }
 
 model Negotiation {
@@ -129,7 +139,6 @@ model Negotiation {
   verdict       String?  @default("ANALYSE EN COURS")
   nextStep      String?
   createdAt     DateTime @default(now())
-
   initiatorId   String
   initiator     Profile  @relation("Initiator", fields: [initiatorId], references: [id])
   receiverId    String
@@ -142,7 +151,6 @@ model AccessRequest {
   match_score    Int?
   status         String   @default("pending")
   created_at     DateTime @default(now())
-
   requester_id   String
   requester      Profile  @relation("Requester", fields: [requester_id], references: [id])
   provider_id    String
@@ -153,10 +161,8 @@ model BlockList {
   id          String   @id @default(uuid())
   blockerId   String
   blockedId   String
-  
   blocker     Profile  @relation("Blocker", fields: [blockerId], references: [id])
   blocked     Profile  @relation("Blocked", fields: [blockedId], references: [id])
-  
   @@unique([blockerId, blockedId])
 }
 
@@ -168,7 +174,6 @@ model NetworkEntity {
   matchScore  Int?
   reasoning   String?
   status      String?  @default("DETECTED")
-  
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
@@ -177,7 +182,6 @@ model RadarSource {
   id          String   @id @default(uuid())
   url         String
   name        String?
-  
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
