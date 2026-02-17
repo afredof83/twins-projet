@@ -18,6 +18,10 @@ model Profile {
   bio       String?
   skills    String[]
   goals     String[]
+
+  saltBase64   String?  // Clé de salage (Optionnel pour l'instant avec le ?)
+  passwordHash String?  // Hash du mot de passe (Optionnel)
+
   memories  Memory[]
   networks  NetworkEntity[]
   intentions Intention[]
