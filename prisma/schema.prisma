@@ -25,6 +25,7 @@ model Profile {
   memories  Memory[]
   networks  NetworkEntity[]
   intentions Intention[]
+  shadowInteractions ShadowInteraction[]
 }
 
 model Memory {
@@ -74,4 +75,15 @@ model Intention {
   updatedAt         DateTime @updatedAt
 
   @@index([keywords])
+}
+
+model ShadowInteraction {
+  id        String   @id @default(cuid())
+  type      String   // Ex: "LOGIN", "SCAN", "ALERT"
+  details   String?
+  timestamp DateTime @default(now()) // Important: le code attend 'timestamp', pas 'createdAt'
+  
+  // Relation avec le Profile
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
