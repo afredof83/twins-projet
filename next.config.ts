@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
     // Force Vercel à déployer même si TS trouve des erreurs
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Idem pour ESLint
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
