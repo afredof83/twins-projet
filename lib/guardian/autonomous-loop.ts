@@ -59,9 +59,11 @@ export async function runGuardianCycle(profileId: string) {
 
     // 3. ACTION (Spontanéité)
     // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crée une "Intervention"
-    if (content && !content.includes("RIEN") && content.length > 20) {
-        await createGuardianIntervention(profileId, content);
-        return { intervention: content };
+    const textContent = String(content);
+
+    if (textContent && !textContent.includes("RIEN") && textContent.length > 20) {
+        await createGuardianIntervention(profileId, textContent);
+        return { intervention: textContent };
     }
 
     return { intervention: null };
