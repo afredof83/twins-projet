@@ -413,48 +413,55 @@ function BlockListManager({ profileId, onClose }: any) {
 function InterceptorInterface({ interventions, onAnalyze, onAccept, onIgnore }: any) {
     const item = interventions[0];
     if (item?.viewMode === 'SUMMARY') return (
-        <div className="relative w-full h-auto min-h-[200px] flex flex-col justify-end p-2 animate-in zoom-in-95 relative z-50">
-            {/* La boîte noire de texte : PAS DE H-FIXE ici */}
-            <div className="w-full h-auto bg-black/99 border-t-2 border-primary/50 backdrop-blur-2xl px-6 pt-6 pb-24 flex flex-col gap-6 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] rounded-xl">
-                {/* Titre du signal */}
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-primary animate-ping rounded-full" />
-                    <span className="text-[10px] uppercase tracking-[0.4em] text-primary/80 font-bold font-mono">
-                        Signal Détecté
-                    </span>
-                </div>
+        <div className="fixed inset-x-0 bottom-0 z-[100] w-full h-auto animate-in slide-in-from-bottom duration-500">
+            {/* Le dégradé pour que le texte reste lisible sur le globe */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-transparent -z-10 h-[140%] pointer-events-none" />
 
-                {/* Zone d'identification : on force l'affichage clair */}
-                <div className="bg-primary/5 p-3 border-l-2 border-primary/30">
-                    <span className="text-[9px] text-primary/40 block mb-1 font-mono tracking-tighter">DATA_STREAM:</span>
-                    <div className="text-xl font-mono text-primary break-all leading-none font-bold">
-                        {item.targetName || "AUTHENTICATION..."}
+            <div className="w-full h-auto px-6 pt-10 pb-[calc(env(safe-area-inset-bottom)+40px)] flex flex-col gap-6 border-t border-primary/30 backdrop-blur-3xl">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                        <span className="text-[10px] uppercase tracking-[0.4em] text-primary/80 font-bold font-mono">
+                            Signal Détecté
+                        </span>
                     </div>
                 </div>
 
-                {/* Le bouton : on lui donne une marge pour ne pas qu'il colle au texte */}
+                <div className="text-2xl font-mono text-primary break-all leading-tight bg-primary/5 p-4 rounded-sm border-l-2 border-primary font-bold">
+                    {item.targetName || "SYNCHRONISATION..."}
+                </div>
+
+                {/* BOUTON MASSIF ET LIBÉRÉ */}
                 <button
                     onClick={() => onAnalyze(item.id)}
-                    className="w-full h-16 mt-2 bg-primary border-2 border-primary/50 text-black font-black uppercase tracking-tighter active:bg-white transition-all flex items-center justify-center text-lg shadow-[0_0_20px_rgba(19,200,236,0.4)] rounded-lg touch-manipulation relative z-50"
+                    className="w-full h-16 bg-primary text-black font-black uppercase text-lg shadow-[0_0_30px_rgba(19,200,236,0.4)] active:scale-95 transition-transform flex items-center justify-center touch-manipulation cursor-pointer"
                 >
-                    ANALYSER
+                    ANALYSER L'ENTITÉ
                 </button>
 
                 <button
                     onClick={onIgnore}
-                    className="text-gray-500 text-[10px] mt-2 hover:text-white p-2 min-h-[40px] flex items-center justify-center w-full font-mono tracking-widest uppercase"
+                    className="text-gray-500 text-[10px] hover:text-white p-2 min-h-[40px] flex items-center justify-center w-full font-mono tracking-widest uppercase"
                 >
-                    Ignorer_Signal
+                    Abandonner_Signal
                 </button>
             </div>
         </div>
     );
     if (item?.viewMode === 'DEEP_AUDIT') return (
-        <div className="relative w-full h-auto min-h-[200px] flex flex-col justify-end p-2 animate-in slide-in-from-right relative z-50 transition-all">
-            {/* Boîte Tactique Ambre */}
-            <div className="w-full h-auto bg-black/99 border-t-2 border-accent-amber/50 backdrop-blur-2xl px-6 pt-6 pb-24 flex flex-col gap-6 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] rounded-xl">
+        <div className="fixed inset-x-0 bottom-0 z-[100] w-full h-auto animate-in slide-in-from-bottom duration-500">
+            {/* Le dégradé Ambre */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-transparent -z-10 h-[140%] pointer-events-none" />
+
+            <div className="w-full h-auto px-6 pt-10 pb-[calc(env(safe-area-inset-bottom)+40px)] flex flex-col gap-6 border-t border-accent-amber/30 backdrop-blur-3xl">
                 <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-accent-amber animate-ping rounded-full" />
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-amber opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-amber"></span>
+                    </span>
                     <h2 className="text-accent-amber font-bold text-[10px] tracking-[0.4em] uppercase font-mono">
                         Audit_Terminé
                     </h2>
@@ -470,17 +477,17 @@ function InterceptorInterface({ interventions, onAnalyze, onAccept, onIgnore }: 
                     </div>
 
                     <div className="flex-1 text-left overflow-hidden">
-                        <p className="text-[9px] text-accent-amber/60 font-mono leading-tight tracking-wider">SYNERGIE_CALCULÉE</p>
-                        <p className="text-xs text-slate-300 font-mono mt-1 italic truncate">"{item.opportunities[0]}"</p>
+                        <p className="text-[9px] text-accent-amber/60 font-mono leading-tight tracking-wider uppercase">Synergie_Calculée</p>
+                        <p className="text-xs text-slate-300 font-mono mt-1 italic font-bold">"{item.opportunities[0]}"</p>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-3 w-full">
                     <button
                         onClick={() => onAccept(item.targetId)}
-                        className="w-full h-16 bg-accent-amber border-2 border-accent-amber/50 text-black font-black uppercase tracking-tighter active:bg-white transition-all rounded-lg text-lg flex items-center justify-center touch-manipulation shadow-[0_0_20px_rgba(255,176,32,0.4)] relative z-50"
+                        className="w-full h-16 bg-accent-amber text-black font-black uppercase text-lg flex items-center justify-center shadow-[0_0_30px_rgba(255,176,32,0.4)] active:scale-95 transition-transform touch-manipulation cursor-pointer"
                     >
-                        CONNECTER
+                        CONNECTER L'ENTITÉ
                     </button>
 
                     <button
