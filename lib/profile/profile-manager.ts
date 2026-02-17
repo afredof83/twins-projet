@@ -83,11 +83,16 @@ export class ProfileManager {
             throw new Error('Profile not found');
         }
 
+        if (!profile.saltBase64 || !profile.passwordHash) {
+            throw new Error("Données de sécurité corrompues ou manquantes pour ce profil.");
+        }
+
+        // Grâce au check ci-dessus, TypeScript sait que ces champs ne sont plus 'null'
         const salt = base64ToArray(profile.saltBase64);
 
         // Verify password
         if (!verifyPassword(masterPassword, salt, profile.passwordHash)) {
-            return false;
+            throw new Error("Mot de passe maître invalide.");
         }
 
         // Initialize session

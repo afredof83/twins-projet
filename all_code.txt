@@ -3837,7 +3837,7 @@ export default function LiaisonPage() {
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight } from 'lucide-react';
+import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 // Components
@@ -4016,11 +4016,31 @@ export default function MissionControl() {
     };
     const toggleChannelChat = (id: string) => { setActiveChannelId(id); setIsChatOpen(true); setUnreadIds(prev => prev.filter(uid => uid !== id)); };
 
+    const handleDeleteChannel = async (channelId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Empêche d'ouvrir le chat quand on clique sur supprimer
+
+        // Petit son ou effet tactique serait bien ici, mais on reste simple
+        if (!confirm("CONFIRMATION REQUISE : Rompre définitivement cette liaison sécurisée ?")) return;
+
+        // Mise à jour optimiste de l'interface (immédiat)
+        setChannels(prev => prev.filter(c => c.id !== channelId));
+        addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue.`);
+
+        // Suppression en base de données
+        const { error } = await supabase.from('Channel').delete().eq('id', channelId);
+
+        if (error) {
+            addLog("ERREUR: Échec de la rupture du lien.");
+            // Si erreur, on recharge la liste pour remettre le channel
+            if (profileId) fetchChannels(profileId);
+        }
+    };
+
     if (!isInitialized) return <div className="h-screen bg-black flex items-center justify-center text-primary"><Loader2 className="animate-spin" /></div>;
 
     return (
         <div
-            className="bg-background-dark text-slate-300 font-display h-screen w-full overflow-hidden flex flex-col relative"
+            className="bg-background-dark text-slate-300 font-display h-[100dvh] w-full overflow-hidden flex flex-col relative touch-none"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -4111,12 +4131,28 @@ export default function MissionControl() {
                         </div>
                         <div className="space-y-2 overflow-y-auto max-h-32 custom-scrollbar">
                             {channels.map(c => (
-                                <div key={c.id} onClick={() => toggleChannelChat(c.id)} className="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer group">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full ${unreadIds.includes(c.id) ? 'bg-accent-amber animate-pulse' : 'bg-primary/50'}`}></div>
-                                        <span className="text-[10px] font-mono text-slate-300">{c.topic}</span>
+                                <div
+                                    key={c.id}
+                                    onClick={() => toggleChannelChat(c.id)}
+                                    className="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer group transition-all border border-transparent hover:border-primary/20"
+                                >
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${unreadIds.includes(c.id) ? 'bg-accent-amber animate-pulse' : 'bg-primary/50'}`}></div>
+                                        <span className="text-[10px] font-mono text-slate-300 truncate">{c.topic}</span>
                                     </div>
-                                    <ChevronRight size={12} className="text-gray-500 group-hover:text-white" />
+
+                                    <div className="flex items-center gap-2">
+                                        {/* Bouton de suppression (visible au hover) */}
+                                        <button
+                                            onClick={(e) => handleDeleteChannel(c.id, e)}
+                                            className="p-1 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                                            title="Rompre la liaison"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+
+                                        <ChevronRight size={12} className="text-gray-500 group-hover:text-white transition-colors" />
+                                    </div>
                                 </div>
                             ))}
                             {channels.length === 0 && <p className="text-[10px] text-gray-600 italic text-center py-2">Aucun signal.</p>}
@@ -4148,7 +4184,7 @@ export default function MissionControl() {
                 </main>
 
                 {/* Bottom Navigation Dock */}
-                <div className="absolute bottom-6 left-4 right-4 z-50">
+                <div className="absolute bottom-6 left-4 right-4 z-50 pb-[env(safe-area-inset-bottom)]">
                     <div className="glass-panel rounded-2xl p-2 flex items-center justify-between shadow-2xl bg-black/90">
                         <button onClick={() => setShowBlockPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-2 group">
                             <div className="w-10 h-10 rounded-xl bg-transparent group-hover:bg-red-500/20 flex items-center justify-center text-gray-400 group-hover:text-red-500 transition-all">
@@ -4458,12 +4494,26 @@ body>div:first-child {
 }
 
 --- app\layout.tsx ---
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Twins - Mission Control",
-  description: "Tactical Dashboard",
+  description: "Tactical Mobile Interface",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Twins",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#050a0c",
 };
 
 export default function RootLayout({
@@ -6160,56 +6210,44 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
 
 
 --- components\NeuralLink.tsx ---
-'use client';
 
 import React from 'react';
 
 export const NeuralLink: React.FC = () => {
     return (
-        <div className="glass-panel rounded-2xl p-1 relative overflow-hidden aspect-square flex items-center justify-center group bg-black/40">
-            {/* Coins Décoratifs */}
-            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-primary/50 z-20"></div>
-            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-primary/50 z-20"></div>
-            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-primary/50 z-20"></div>
-            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-primary/50 z-20"></div>
+        <div className="glass-panel rounded-2xl p-1 relative overflow-hidden aspect-square flex items-center justify-center group">
+            {/* Decorative Corners */}
+            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-primary"></div>
+            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-primary"></div>
+            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-primary"></div>
+            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-primary"></div>
 
-            {/* Grille de Fond */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(19,200,236,0.1)_0%,transparent_70%)] z-0"></div>
+            <div className="relative w-full h-full rounded-xl overflow-hidden bg-black/40">
+                <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(19,200,236,0.1)_0%,transparent_70%)]"></div>
+                <img
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAqc2MUNZfB4YyJqlqRW5aWQyXq7RhxNf6fF4w1PPVt6N5eR2KEKzXaATdxd-pnPT_U30EDoh5ykzBuJUBVnh0FXPLS69Z8LssaD-ngB3VNRi0aO63uUAvtbyZvbTGIps0V2tVKah4oLqR169WZx-XtgClTzHj1SGBAct5-KvGMKz01vx5xyNk55mxpkWJairrarl80hE07VUAESvNFfYpnhnn1dp3raYek2F7XcqF4q8kZHLws0iDW1_7RT98E7Ls6_M0rOmUH5Lp"
+                    alt="Neural Map"
+                    className="w-full h-full object-cover opacity-60 mix-blend-screen group-hover:scale-110 transition-transform duration-[10s] ease-linear"
+                />
 
-            {/* Construction du Globe Holographique (Pure CSS) */}
-            <div className="relative w-[70%] h-[70%] flex items-center justify-center z-10 perspective-[1000px]">
-                {/* Lueur Centrale */}
-                <div className="absolute w-[40%] h-[40%] bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+                {/* Animated HUD Elements */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] border border-primary/30 rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                    <div className="w-[80%] h-[80%] border border-dashed border-primary/20 rounded-full"></div>
+                </div>
 
-                {/* Anneaux Rotatifs */}
-                {/* Anneau principal lent */}
-                <div className="absolute inset-0 border border-primary/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
-                {/* Anneau pointillé inversé */}
-                <div className="absolute inset-2 border border-dashed border-primary/20 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
-                {/* Anneau rapide partiel */}
-                <div className="absolute inset-0 border border-transparent border-t-primary/40 rounded-full animate-[spin_3s_linear_infinite]"></div>
-
-                {/* Anneaux 3D Inclinés (Effet Sphère) */}
-                <div className="absolute w-full h-full border border-primary/10 rounded-full animate-[spin_7s_linear_infinite] [transform:rotateX(60deg)]"></div>
-                <div className="absolute w-full h-full border border-primary/10 rounded-full animate-[spin_9s_linear_infinite_reverse] [transform:rotateY(60deg)]"></div>
-
-                {/* Point de Données Central */}
-                <div className="absolute w-2 h-2 bg-primary rounded-full shadow-[0_0_10px_#13c8ec] animate-ping"></div>
+                {/* Floating Markers */}
+                <div className="absolute top-[30%] left-[20%] flex items-center gap-2 animate-pulse">
+                    <div className="w-2 h-2 bg-accent-amber rounded-full shadow-[0_0_8px_#ffb020]"></div>
+                    <span className="text-[8px] bg-black/60 px-1 text-accent-amber border border-accent-amber/30 font-mono">ALERT_04</span>
+                </div>
+                <div className="absolute bottom-[40%] right-[25%] flex items-center gap-2">
+                    <span className="text-[8px] bg-black/60 px-1 text-primary border border-primary/30 font-mono">SEC_09</span>
+                    <div className="w-2 h-2 bg-primary rounded-full shadow-[0_0_8px_#13c8ec]"></div>
+                </div>
             </div>
 
-            {/* Marqueurs Flottants (HUD) */}
-            <div className="absolute top-[25%] left-[15%] flex items-center gap-2 z-20 animate-[pulse_3s_infinite]">
-                <div className="w-1.5 h-1.5 bg-accent-amber rounded-full shadow-[0_0_8px_#ffb020]"></div>
-                <span className="text-[7px] bg-black/60 px-1 text-accent-amber border border-accent-amber/30 font-mono tracking-widest">ALERT_04</span>
-            </div>
-            <div className="absolute bottom-[30%] right-[20%] flex items-center gap-2 z-20">
-                <span className="text-[7px] bg-black/60 px-1 text-primary border border-primary/30 font-mono tracking-widest">SEC_09</span>
-                <div className="w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_8px_#13c8ec]"></div>
-            </div>
-
-            {/* Texte de Statut */}
-            <div className="absolute bottom-4 left-0 right-0 text-center z-20">
-                <p className="text-[9px] text-primary/80 tracking-[0.3em] font-mono bg-black/20 inline-block px-2 py-0.5 rounded backdrop-blur-sm">GLOBAL_LINK_ACTIVE</p>
+            <div className="absolute bottom-4 left-0 right-0 text-center">
+                <p className="text-[10px] text-primary/80 tracking-[0.2em] font-mono">NEURAL_LINK_ESTABLISHED</p>
             </div>
         </div>
     );
@@ -7280,9 +7318,11 @@ export async function runGuardianCycle(profileId: string) {
 
     // 3. ACTION (Spontanéité)
     // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crée une "Intervention"
-    if (content && !content.includes("RIEN") && content.length > 20) {
-        await createGuardianIntervention(profileId, content);
-        return { intervention: content };
+    const textContent = String(content);
+
+    if (textContent && !textContent.includes("RIEN") && textContent.length > 20) {
+        await createGuardianIntervention(profileId, textContent);
+        return { intervention: textContent };
     }
 
     return { intervention: null };
@@ -8626,9 +8666,6 @@ COMMENT ON FUNCTION match_memories IS 'Performs semantic search on memories usin
 
 
 --- prisma\schema.prisma ---
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8640,66 +8677,59 @@ datasource db {
 }
 
 model Profile {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  bio       String?
-  skills    String[]
-  goals     String[]
-  memories  Memory[]
-  networks  NetworkEntity[]
-  intentions Intention[]
+  id           String   @id @default(uuid())
+  name         String?
+  email        String?  @unique
+  bio          String?
+  saltBase64   String?
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shadowInteractions  ShadowInteraction[] @relation("SourceProfile")
+  receivedInteractions ShadowInteraction[] @relation("TargetProfile")
+  channels            Channel[]
+  dataSources         DataSource[]
 }
 
-model Memory {
-  id        String   @id @default(cuid())
-  content   String
-  type      String   // 'user', 'ai', 'system', 'directive', 'knowledge'
-  source    String?  // 'chat', 'oracle_prophecy', 'web_ingest'
-  embedding Json?    // Vector embedding from Mistral
-  profileId String
-  profile   Profile  @relation(fields: [profileId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-model NetworkEntity {
-  id              String   @id @default(cuid())
-  name            String   // Nom de l'agent/entreprise (ex: "Rapala Innovation")
-  type            String   // "Competitor", "Partner", "Investor", "Client"
-  sector          String   // ex: "Fishing Tech", "Supply Chain"
-  matchScore      Int      // Score de 0 à 100 calculé par l'IA
-  status          String   @default("DETECTED") // "DETECTED", "CONTACTED", "IGNORED"
-  
-  // Pourquoi c'est une opportunité ?
-  reasoning       String   
-  
-  profileId       String
-  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  
+model DataSource {
+  id              String   @id @default(uuid())
+  platform        String   
+  isConnected     Boolean  @default(true)
+  syncStatus      String   @default("IDLE")
+  lastSync        DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([profileId])
+  profileId       String
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  // CETTE LIGNE EST LA CLÉ : Elle crée l'index unique composé attendu par l'API
+  @@unique([profileId, platform])
 }
 
-model Intention {
-  id                String   @id @default(cuid())
+model ShadowInteraction {
+  id                 String   @id @default(uuid())
+  timestamp          DateTime @default(now())
+  type               String?  
+  status             String?  
+  compatibilityScore Float?   
+  metadata           Json?    
   
-  abstractNeed      String   // Ce que le clone cherche (anonymisé) mais assez précis (ex: "Cherche partenaire industriel plastique")
-  keywords          String[] // ex: ["pêche", "fabrication", "var"]
-  isPublic          Boolean  @default(true) // Visible par les autres clones
-  
-  status            String   @default("SEEKING") // SEEKING, MATCHED, ARCHIVED
-  
-  profileId         String
-  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId          String
+  profile            Profile  @relation("SourceProfile", fields: [profileId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([keywords])
+  targetProfileId    String?
+  targetProfile      Profile? @relation("TargetProfile", fields: [targetProfileId], references: [id])
 }
 
+model Channel {
+  id        String   @id @default(uuid())
+  topic     String?
+  createdAt DateTime @default(now())
+  profileId String?
+  profile   Profile? @relation(fields: [profileId], references: [id])
+}
 
 --- public\manifest.json ---
 {
