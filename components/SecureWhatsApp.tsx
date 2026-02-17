@@ -76,8 +76,8 @@ export default function SecureWhatsApp({ profileId, channelId }: any) {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#050505] border-l border-slate-800 shadow-2xl">
-            <div className={`p-2 text-[10px] font-mono border-b border-slate-900 flex items-center gap-2 ${status === 'SUBSCRIBED' ? 'text-cyan-400' : 'text-red-400'}`}>
+        <div className="flex flex-col h-full bg-[#050505] border-l border-slate-800 shadow-2xl overflow-hidden">
+            <div className={`p-4 pt-[env(safe-area-inset-top,1rem)] text-[10px] font-mono border-b border-slate-900 flex items-center gap-2 ${status === 'SUBSCRIBED' ? 'text-cyan-400' : 'text-red-400'}`}>
                 <div className={`w-2 h-2 rounded-full ${status === 'SUBSCRIBED' ? 'bg-cyan-500 animate-pulse shadow-[0_0_8px_cyan]' : 'bg-red-500'}`} />
                 {status === 'SUBSCRIBED' ? 'LIAISON CRYPTÉE ACTIVE' : 'RECONNEXION...'}
             </div>
@@ -109,13 +109,15 @@ export default function SecureWhatsApp({ profileId, channelId }: any) {
                 <input
                     type="text" value={newMessage}
                     onChange={handleInputChange}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm outline-none text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-base md:text-sm outline-none text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
                     placeholder="Échange sécurisé..."
                 />
                 <button className="px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-all active:scale-90 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
                     <Send size={18} />
                 </button>
             </form>
+            {/* Safe area spacer for mobile keyboards */}
+            <div className="h-[env(safe-area-inset-bottom,1rem)] bg-black" />
         </div>
     );
 }

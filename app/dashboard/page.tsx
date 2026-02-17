@@ -219,7 +219,7 @@ export default function MissionControl() {
 
             <div className="relative z-10 flex flex-col h-full w-full max-w-md mx-auto bg-black/20 border-x border-white/5 shadow-2xl">
                 {/* Header */}
-                <header className="flex items-center justify-between px-5 pt-6 pb-4">
+                <header className="flex items-center justify-between px-5 pt-[env(safe-area-inset-top,1.5rem)] pb-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-primary border border-primary/30 shadow-[0_0_15px_rgba(19,200,236,0.2)]">
                             <ShieldAlert size={20} />
@@ -307,13 +307,13 @@ export default function MissionControl() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {/* Bouton de suppression (visible au hover) */}
+                                        {/* Bouton de suppression (visible au hover ou tactile) */}
                                         <button
                                             onClick={(e) => handleDeleteChannel(c.id, e)}
-                                            className="p-1 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100"
+                                            className="p-3 -m-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-90"
                                             title="Rompre la liaison"
                                         >
-                                            <Trash2 size={12} />
+                                            <Trash2 size={14} />
                                         </button>
 
                                         <ChevronRight size={12} className="text-gray-500 group-hover:text-white transition-colors" />
@@ -339,9 +339,9 @@ export default function MissionControl() {
                             value={quickThought}
                             onChange={e => setQuickThought(e.target.value)}
                             placeholder="Saisir pensée rapide..."
-                            className="bg-transparent border-none text-xs text-white focus:ring-0 flex-1 placeholder:text-gray-600"
+                            className="bg-transparent border-none text-base md:text-xs text-white focus:ring-0 flex-1 placeholder:text-gray-600"
                         />
-                        <button type="submit" className="p-2 bg-primary/20 rounded-full text-primary hover:bg-primary hover:text-black transition-colors">
+                        <button type="submit" className="p-2 bg-primary/20 rounded-full text-primary hover:bg-primary hover:text-black transition-colors active:scale-90">
                             <Send size={14} />
                         </button>
                     </form>
@@ -351,7 +351,7 @@ export default function MissionControl() {
                 {/* Bottom Navigation Dock */}
                 <div className="absolute bottom-6 left-4 right-4 z-50 pb-[env(safe-area-inset-bottom)]">
                     <div className="glass-panel rounded-2xl p-2 flex items-center justify-between shadow-2xl bg-black/90">
-                        <button onClick={() => setShowBlockPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-2 group">
+                        <button onClick={() => setShowBlockPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-1 group active:scale-95">
                             <div className="w-10 h-10 rounded-xl bg-transparent group-hover:bg-red-500/20 flex items-center justify-center text-gray-400 group-hover:text-red-500 transition-all">
                                 <ShieldX size={20} />
                             </div>
@@ -364,7 +364,7 @@ export default function MissionControl() {
                             </div>
                         </button>
 
-                        <button onClick={() => setShowCortexPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-2 group">
+                        <button onClick={() => setShowCortexPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-1 group active:scale-95">
                             <div className="w-10 h-10 rounded-xl bg-transparent group-hover:bg-primary/20 flex items-center justify-center text-gray-400 group-hover:text-primary transition-all">
                                 <BrainCircuit size={20} />
                             </div>
