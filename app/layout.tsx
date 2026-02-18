@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import BottomNav from '@/components/nav-bar';
 
 export const runtime = 'nodejs'; // On force la stabilité
 
@@ -36,6 +37,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background-dark text-slate-300 antialiased overflow-hidden">
         {children}
+        <BottomNav />
       </body>
     </html>
   );

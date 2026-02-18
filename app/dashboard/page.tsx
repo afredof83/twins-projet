@@ -10,6 +10,13 @@ import SecureWhatsApp from '@/components/SecureWhatsApp';
 
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
+import Scanner from '@/components/dashboard/Scanner';
+import TacticalGlobe from '@/components/Globe';
+import MatchOverlay from '@/components/dashboard/MatchOverlay';
+import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
+import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
+import { generateTacticalAudit } from '@/app/actions/generate-audit';
+import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 
 // --- LOGIQUE METIER (INCHANGÉE) ---
 const calculateSynergy = (target: any, memories: any[]) => {
@@ -27,13 +34,46 @@ const calculateSynergy = (target: any, memories: any[]) => {
     return { score, opportunities };
 };
 
+const mockDeepAudit = {
+    identity: {
+        name: "Cible Alpha",
+        role: "Full Stack Architect",
+        clearance: "LEVEL 4",
+        lastActive: "14min ago",
+    },
+    scores: {
+        match: 89,
+        reliability: 94,
+        influence: 72,
+    },
+    psyche: [
+        { trait: "Openness", value: 90, label: "Visionary" },
+        { trait: "Conscientiousness", value: 85, label: "Disciplined" },
+        { trait: "Neuroticism", value: 12, label: "Stable" },
+    ],
+    network: [
+        "Connecté au Cluster 'React Core'",
+        "Accès confirmé : 3 investisseurs",
+        "Pont potentiel vers 'Silicon Valley Node'",
+    ],
+    risks: [
+        "Divergence politique mineure (2%)",
+        "Localisation instable (Nomade)",
+    ]
+};
+
 export default function MissionControl() {
     const router = useRouter();
     const [profileId, setProfileId] = useState<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
     const [memories, setMemories] = useState<any[]>([]);
     const [logs, setLogs] = useState<string[]>([]);
-    const [isScanning, setIsScanning] = useState(false);
+
+    // New Tactical States
+    const [status, setStatus] = useState<'IDLE' | 'SCANNING' | 'LOCKED' | 'AUDIT' | 'LIST'>('IDLE');
+    const [matchData, setMatchData] = useState<any>(null);
+    const [strategicReport, setStrategicReport] = useState<any>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // États UI
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -47,7 +87,6 @@ export default function MissionControl() {
     const [isDragging, setIsDragging] = useState(false);
 
     const [unreadIds, setUnreadIds] = useState<string[]>([]);
-    const [interventions, setInterventions] = useState<any[]>([]);
     const [blockedIds, setBlockedIds] = useState<string[]>([]);
 
     const addLog = (message: string) => setLogs(prev => [`> ${new Date().toLocaleTimeString().slice(0, 5)} ${message}`, ...prev].slice(0, 10));
@@ -143,41 +182,68 @@ export default function MissionControl() {
 
     const triggerManualScan = async () => {
         if (!profileId) return;
-        setIsScanning(true);
-        setInterventions([]);
-        addLog("RADAR: Triangulation...");
-        setTimeout(async () => {
-            const { data: blocks } = await supabase.from('BlockList').select('blockedId').eq('blockerId', profileId);
-            const currentBlockedIds = blocks?.map(b => b.blockedId) || [];
-            setBlockedIds(currentBlockedIds);
-            const { data: targets } = await supabase.from('Profile').select('*').neq('id', profileId).not('id', 'in', `(${currentBlockedIds.length > 0 ? currentBlockedIds.join(',') : '00000000-0000-0000-0000-000000000000'})`).limit(1);
+        setStatus('SCANNING');
+        setMatchData(null);
+        setStrategicReport(null);
+        addLog("RADAR: Scan global initié...");
 
-            if (targets && targets.length > 0) {
-                const target = targets[0];
-                const { data: intel } = await supabase.from('Memory').select('*').eq('profileId', target.id);
-                const analysis = calculateSynergy(target, intel || []);
-                setInterventions([{
-                    id: `scan-${Date.now()}`, viewMode: 'SUMMARY',
-                    targetName: target.name || 'Inconnu', targetId: target.id, bio: target.bio,
-                    thoughts: intel?.filter(m => m.type === 'thought').map(m => m.content) || [],
-                    knowledge: intel?.filter(m => m.type === 'knowledge').map(m => m.content) || [],
-                    matchScore: analysis.score, opportunities: analysis.opportunities
-                }]);
-                addLog(`CONTACT: ${analysis.score}% Match`);
-            } else { addLog(`RADAR: Aucune cible.`); }
-            setIsScanning(false);
-        }, 1500);
+        try {
+            const report = await scanGlobalNetwork(profileId);
+            console.log("📝 RAPPORT MISTRAL REÇU:", report); // Debug Log
+
+            setStrategicReport(report);
+
+            // On affiche TOUJOURS le rapport, même s'il n'y a pas d'opportunités, 
+            // pour voir le résumé de l'analyse et le statut global.
+            setStatus('LIST');
+
+            if (report.opportunities && report.opportunities.length > 0) {
+                addLog(`CONTACT: ${report.opportunities.length} vecteurs identifiés.`);
+            } else {
+                addLog("RADAR: Analyse terminée (Aucune cible immédiate).");
+            }
+        } catch (e) {
+            console.error(e);
+            setStatus('IDLE');
+            addLog("ERREUR: Échec du scan.");
+        }
     };
 
-    const handleAnalyze = (scanId: string) => setInterventions(prev => prev.map(item => item.id === scanId ? { ...item, viewMode: 'DEEP_AUDIT' } : item));
-    const handleAcceptConnection = async (targetId: string) => {
-        await supabase.from('Channel').insert({ member_one_id: profileId, member_two_id: targetId, topic: "LIAISON SÉCURISÉE", last_message_at: new Date().toISOString(), initiatorId: profileId });
-        setInterventions([]); addLog("LIAISON: Établie.");
+    const handleSelectOpportunity = async (opp: any) => {
+        if (!profileId) return;
+        setIsAnalyzing(true);
+        addLog(`CORTEX: Analyse tactique de ${opp.targetName}...`);
+
+        try {
+            const aiAudit = await generateTacticalAudit(opp.targetId, profileId);
+            setMatchData({
+                ...aiAudit,
+                targetId: opp.targetId,
+                name: opp.targetName,
+                identity: { ...aiAudit.identity, name: opp.targetName }
+            });
+            setStatus('AUDIT');
+        } catch (e) {
+            addLog("ERREUR: Analyse détaillée échouée.");
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
-    const handleBlock = async (targetId: string) => {
-        if (!confirm("Confirmer le ban ?")) return;
-        await supabase.from('BlockList').insert({ blockerId: profileId, blockedId: targetId });
-        setBlockedIds(prev => [...prev, targetId]); setInterventions([]); addLog("SÉCURITÉ: Cible bannie.");
+
+    const handleAction = async (action: 'LINK' | 'BLOCK' | 'CANCEL') => {
+        if (!matchData) return;
+
+        if (action === 'LINK') {
+            await supabase.from('Channel').insert({ member_one_id: profileId, member_two_id: matchData.targetId, topic: "LIAISON SÉCURISÉE", last_message_at: new Date().toISOString(), initiatorId: profileId });
+            addLog("LIAISON: Établie.");
+        } else if (action === 'BLOCK') {
+            await supabase.from('BlockList').insert({ blockerId: profileId, blockedId: matchData.targetId });
+            setBlockedIds(prev => [...prev, matchData.targetId]);
+            addLog("SÉCURITÉ: Cible bannie.");
+        }
+
+        setStatus('IDLE');
+        setMatchData(null);
     };
     const toggleChannelChat = (id: string) => { setActiveChannelId(id); setIsChatOpen(true); setUnreadIds(prev => prev.filter(uid => uid !== id)); };
 
@@ -210,11 +276,12 @@ export default function MissionControl() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            {/* Background Elements (SCANLINE RETIRÉE) */}
+            {/* Background Elements (TACTICAL GLOBE) */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-grid-pattern bg-[length:40px_40px] opacity-10"></div>
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[100px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-primary/5 blur-[120px]"></div>
+                <TacticalGlobe
+                    mode={status === 'LIST' ? 'LOCKED' : status}
+                    targetCoordinates={(status === 'LOCKED' || status === 'LIST') ? [48.8566, 2.3522] : null}
+                />
             </div>
 
             <div className="relative z-10 flex flex-col h-full w-full max-w-md mx-auto bg-black/20 border-x border-white/5 shadow-2xl">
@@ -232,6 +299,7 @@ export default function MissionControl() {
                             </div>
                         </div>
                     </div>
+
                     <div className="glass-panel px-3 py-1 rounded-full flex items-center gap-2">
                         <span className="text-xs font-mono text-primary animate-pulse">SECURE</span>
                     </div>
@@ -256,35 +324,98 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* CENTRAL NEURAL MAP (Avec le Nouveau Globe) */}
-                    <div className="glass-panel rounded-2xl p-1 relative overflow-hidden aspect-square flex items-center justify-center group">
-                        <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-primary/50"></div>
-                        <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-primary/50"></div>
+                    {/* CENTRAL NEURAL MAP (Scanner & Overlays) */}
+                    <div className="glass-panel rounded-2xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px]">
 
-                        <div className="relative w-full h-full rounded-xl overflow-hidden bg-black/40 flex flex-col">
-                            {interventions.length > 0 || isScanning ? (
-                                <div className="flex-1 p-2">
-                                    <InterceptorInterface
-                                        interventions={interventions}
-                                        onAnalyze={handleAnalyze}
-                                        onAccept={handleAcceptConnection}
-                                        onBlock={handleBlock}
-                                        onIgnore={() => setInterventions([])}
-                                        onRefresh={triggerManualScan}
-                                    />
-                                </div>
-                            ) : (
-                                /* Mode Veille avec Globe Holographique CSS */
-                                <NeuralLink />
-                            )}
+                        {/* ÉTAT 1 : SCANNER (Visible si IDLE ou SCANNING) */}
+                        {(status === 'IDLE' || status === 'SCANNING') && (
+                            <div className={`transition-all duration-500 w-full ${status === 'SCANNING' ? 'opacity-80 pointer-events-none' : 'opacity-100'}`}>
+                                <Scanner onScanStart={triggerManualScan} />
+                                {status === 'SCANNING' && (
+                                    <p className="text-center text-cyan-400 mt-2 animate-pulse font-mono text-xs">
+                                        TRIANGULATION EN COURS...
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
-                            {isDragging && (
-                                <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center border-2 border-primary border-dashed m-2 rounded-xl">
-                                    <Upload className="text-primary animate-bounce" size={32} />
-                                    <p className="text-xs font-bold text-white mt-2">INGESTION DONNÉES</p>
+                        {/* ÉTAT 2 : LISTE STRATEGIQUE (Global Scan Result) */}
+                        {status === 'LIST' && strategicReport && (
+                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+                                <button
+                                    onClick={() => setStatus('IDLE')}
+                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
+                                >
+                                    <X size={24} />
+                                </button>
+
+                                <div className="mt-4 space-y-6">
+                                    {/* Header du Rapport */}
+                                    <div className={`p-4 border-l-4 bg-white/5 ${strategicReport.globalStatus === 'ORANGE' ? 'border-orange-500' : 'border-emerald-500'}`}>
+                                        <h2 className="text-xl font-bold tracking-tighter uppercase text-white">
+                                            Statut Global : <span className={strategicReport.globalStatus === 'ORANGE' ? 'text-orange-500' : 'text-emerald-500'}>
+                                                {strategicReport.globalStatus}
+                                            </span>
+                                        </h2>
+                                        <p className="text-gray-400 italic text-sm mt-2">{strategicReport.analysisSummary}</p>
+                                    </div>
+
+                                    {/* Liste des Opportunités */}
+                                    <div className="grid gap-3 pb-8">
+                                        {strategicReport.opportunities.map((op: any, index: number) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => handleSelectOpportunity(op)}
+                                                className="p-4 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h3 className="text-lg font-semibold text-blue-400 group-hover:text-primary transition-colors">{op.targetName}</h3>
+                                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-mono rounded border border-blue-500/30">
+                                                        MATCH: {op.matchScore}%
+                                                    </span>
+                                                </div>
+
+                                                <div className="space-y-3 text-sm">
+                                                    <p><span className="text-gray-500 uppercase font-bold text-xs">Analyse :</span> <span className="text-slate-300">{op.reason}</span></p>
+                                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded">
+                                                        <p className="text-emerald-400">
+                                                            <span className="font-bold uppercase text-xs">Action suggérée :</span> {op.suggestedAction}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {strategicReport.opportunities.length === 0 && (
+                                            <div className="text-center py-8 text-gray-500 italic">
+                                                Aucune opportunité détectée pour le moment.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+
+                        {/* ÉTAT 3 : MATCH LOCKED (Legacy/Single Audit - kept for compatibility if needed, but not reached via scanGlobalNetwork) */}
+                        {status === 'LOCKED' && matchData && (
+                            <div className="absolute inset-0 z-20 flex items-center justify-center p-2">
+                                <MatchOverlay
+                                    data={matchData}
+                                    onAudit={async () => {
+                                        // Legacy path if we ever manually set LOCKED
+                                        if (matchData.targetId) handleSelectOpportunity({ targetId: matchData.targetId, targetName: matchData.name });
+                                    }}
+                                    onCancel={() => { setStatus('IDLE'); setMatchData(null); }}
+                                />
+                            </div>
+                        )}
+
+                        {isDragging && (
+                            <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center border-2 border-primary border-dashed m-2 rounded-xl">
+                                <Upload className="text-primary animate-bounce" size={32} />
+                                <p className="text-xs font-bold text-white mt-2">INGESTION DONNÉES</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Active Channels List */}
@@ -357,10 +488,10 @@ export default function MissionControl() {
                             </div>
                         </button>
 
-                        <button onClick={triggerManualScan} className="flex items-center justify-center -mt-8 mx-2 group">
+                        <button onClick={triggerManualScan} className="flex items-center justify-center -mt-8 mx-2 group" disabled={isAnalyzing}>
                             <div className="w-16 h-16 rounded-full bg-surface-dark border border-primary/50 shadow-[0_0_20px_rgba(19,200,236,0.3)] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform">
-                                {isScanning && <div className="absolute inset-0 border-2 border-primary/30 rounded-full border-t-primary animate-spin"></div>}
-                                <Radar className={`relative z-10 ${isScanning ? 'text-accent-amber' : 'text-primary'}`} size={28} />
+                                {(status === 'SCANNING' || isAnalyzing) && <div className="absolute inset-0 border-2 border-primary/30 rounded-full border-t-primary animate-spin"></div>}
+                                <Radar className={`relative z-10 ${(status === 'SCANNING' || isAnalyzing) ? 'text-accent-amber' : 'text-primary'}`} size={28} />
                             </div>
                         </button>
 
@@ -371,27 +502,41 @@ export default function MissionControl() {
                         </button>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* MODALS */}
-            {isChatOpen && activeChannelId && (
-                <div className="fixed inset-0 z-[100] bg-black animate-in slide-in-from-bottom">
-                    <button onClick={() => setIsChatOpen(false)} className="absolute top-4 right-4 z-50 p-2 bg-white/10 rounded-full text-white"><X /></button>
-                    <SecureWhatsApp profileId={profileId} channelId={activeChannelId} />
-                </div>
-            )}
-
-            {showCortexPanel && (
-                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl p-4 flex flex-col animate-in fade-in">
-                    <button onClick={() => setShowCortexPanel(false)} className="self-end p-2 text-white mb-2"><X /></button>
-                    <div className="flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black">
-                        <KnowledgeIngester profileId={profileId!} memories={memories} onRefresh={() => loadMemories(profileId!)} />
+            {
+                isChatOpen && activeChannelId && (
+                    <div className="fixed inset-0 z-[100] bg-black animate-in slide-in-from-bottom">
+                        <button onClick={() => setIsChatOpen(false)} className="absolute top-4 right-4 z-50 p-2 bg-white/10 rounded-full text-white"><X /></button>
+                        <SecureWhatsApp profileId={profileId} channelId={activeChannelId} />
                     </div>
-                </div>
-            )}
+                )
+            }
+
+            {
+                showCortexPanel && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl p-4 flex flex-col animate-in fade-in">
+                        <button onClick={() => setShowCortexPanel(false)} className="self-end p-2 text-white mb-2"><X /></button>
+                        <div className="flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black">
+                            <KnowledgeIngester profileId={profileId!} memories={memories} onRefresh={() => loadMemories(profileId!)} />
+                        </div>
+                    </div>
+                )
+            }
 
             {showBlockPanel && <BlockListManager profileId={profileId!} onClose={() => setShowBlockPanel(false)} />}
-        </div>
+
+            {/* ÉTAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
+            {
+                status === 'AUDIT' && matchData && (
+                    <DeepAuditReport
+                        data={matchData}
+                        onAction={handleAction}
+                    />
+                )
+            }
+        </div >
     );
 }
 
@@ -410,95 +555,4 @@ function BlockListManager({ profileId, onClose }: any) {
     );
 }
 
-function InterceptorInterface({ interventions, onAnalyze, onAccept, onIgnore }: any) {
-    const item = interventions[0];
-    if (item?.viewMode === 'SUMMARY') return (
-        <div className="fixed inset-x-0 bottom-0 z-[100] w-full h-auto animate-in slide-in-from-bottom duration-500">
-            {/* Le dégradé pour que le texte reste lisible sur le globe */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-transparent -z-10 h-[140%] pointer-events-none" />
-
-            <div className="w-full h-auto px-6 pt-10 pb-[calc(env(safe-area-inset-bottom)+40px)] flex flex-col gap-6 border-t border-primary/30 backdrop-blur-3xl">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        <span className="text-[10px] uppercase tracking-[0.4em] text-primary/80 font-bold font-mono">
-                            Signal Détecté
-                        </span>
-                    </div>
-                </div>
-
-                <div className="text-2xl font-mono text-primary break-all leading-tight bg-primary/5 p-4 rounded-sm border-l-2 border-primary font-bold">
-                    {item.targetName || "SYNCHRONISATION..."}
-                </div>
-
-                {/* BOUTON MASSIF ET LIBÉRÉ */}
-                <button
-                    onClick={() => onAnalyze(item.id)}
-                    className="w-full h-16 bg-primary text-black font-black uppercase text-lg shadow-[0_0_30px_rgba(19,200,236,0.4)] active:scale-95 transition-transform flex items-center justify-center touch-manipulation cursor-pointer"
-                >
-                    ANALYSER L'ENTITÉ
-                </button>
-
-                <button
-                    onClick={onIgnore}
-                    className="text-gray-500 text-[10px] hover:text-white p-2 min-h-[40px] flex items-center justify-center w-full font-mono tracking-widest uppercase"
-                >
-                    Abandonner_Signal
-                </button>
-            </div>
-        </div>
-    );
-    if (item?.viewMode === 'DEEP_AUDIT') return (
-        <div className="fixed inset-x-0 bottom-0 z-[100] w-full h-auto animate-in slide-in-from-bottom duration-500">
-            {/* Le dégradé Ambre */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-transparent -z-10 h-[140%] pointer-events-none" />
-
-            <div className="w-full h-auto px-6 pt-10 pb-[calc(env(safe-area-inset-bottom)+40px)] flex flex-col gap-6 border-t border-accent-amber/30 backdrop-blur-3xl">
-                <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-amber opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-amber"></span>
-                    </span>
-                    <h2 className="text-accent-amber font-bold text-[10px] tracking-[0.4em] uppercase font-mono">
-                        Audit_Terminé
-                    </h2>
-                </div>
-
-                <div className="flex items-center gap-6 bg-accent-amber/5 p-4 border-l-2 border-accent-amber/30">
-                    <div className="relative">
-                        <svg className="w-16 h-16 transform -rotate-90">
-                            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-gray-800" />
-                            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" fill="transparent" strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * item.matchScore) / 100} className="text-accent-amber" />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-lg font-black text-white font-mono">{item.matchScore}%</div>
-                    </div>
-
-                    <div className="flex-1 text-left overflow-hidden">
-                        <p className="text-[9px] text-accent-amber/60 font-mono leading-tight tracking-wider uppercase">Synergie_Calculée</p>
-                        <p className="text-xs text-slate-300 font-mono mt-1 italic font-bold">"{item.opportunities[0]}"</p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-3 w-full">
-                    <button
-                        onClick={() => onAccept(item.targetId)}
-                        className="w-full h-16 bg-accent-amber text-black font-black uppercase text-lg flex items-center justify-center shadow-[0_0_30px_rgba(255,176,32,0.4)] active:scale-95 transition-transform touch-manipulation cursor-pointer"
-                    >
-                        CONNECTER L'ENTITÉ
-                    </button>
-
-                    <button
-                        onClick={onIgnore}
-                        className="text-gray-500 text-[10px] hover:text-white p-2 min-h-[40px] flex items-center justify-center w-full font-mono tracking-widest uppercase"
-                    >
-                        Archiver_Dossier
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-    return null;
-}
+// InterceptorInterface removed as it is replaced by Scanner/MatchOverlay/AuditReport logic

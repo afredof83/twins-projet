@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@/lib/prisma'; // Vérifie que ce chemin est correct vers ton client prisma
 import { NextResponse } from 'next/server';
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -12,22 +7,22 @@ export async function GET(req: Request) {
 
     if (!pid) return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
 
-    // CORRECTION : On cherche dans la colonne TEXTE 'profileId'
-    // On tente les deux tables par sécurité (Memory ou memories)
-    let query = supabase
-        .from('Memory') // On essaie la table principale
-        .select('*')
-        .eq('profileId', pid) // Colonne TEXTE
-        .order('createdAt', { ascending: false });
+    try {
+        // Prisma gère automatiquement la casse (profileId)
+        const memories = await prisma.memory.findMany({
+            where: {
+                profileId: pid
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
 
-    const { data, error } = await query;
-
-    if (error) {
-        // Si erreur, c'est peut-être la table minuscule qui est utilisée
+        return NextResponse.json({ memories });
+    } catch (error: any) {
+        console.error("Erreur lecture Prisma:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    return NextResponse.json({ memories: data || [] });
 }
 
 export async function POST(req: Request) {
@@ -35,25 +30,17 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { content, profileId, type } = body;
 
-        // INSERTION : On écrit dans 'Memory' avec la colonne 'profileId' (Texte)
-        const { data, error } = await supabase
-            .from('Memory')
-            .insert([
-                {
-                    content,
-                    profileId: profileId, // <-- Colonne TEXTE (compatible "afredof83")
-                    type: type || 'THOUGHT',
-                    createdAt: new Date().toISOString() // Colonne CamelCase
-                }
-            ])
-            .select()
-            .single();
+        const newMemory = await prisma.memory.create({
+            data: {
+                content,
+                profileId,
+                type: type || 'THOUGHT',
+            }
+        });
 
-        if (error) throw error;
-
-        return NextResponse.json(data);
+        return NextResponse.json(newMemory);
     } catch (error: any) {
-        console.error("Erreur save:", error);
+        console.error("Erreur sauvegarde Prisma:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

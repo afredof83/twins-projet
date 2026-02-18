@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
 }
 
 datasource db {
@@ -14,6 +14,17 @@ model Profile {
   email                   String?   @unique
   bio                     String?
   avatarUrl               String?
+
+  // --- NOUVEAUX CHAMPS ---
+  age                     Int?
+  gender                  String?
+  profession              String?
+  hobbies                 String[]
+  objectives              String[] // Ex: ["Travail", "Rencontres"]
+  // -----------------------
+  
+  // IA Tags (générés automatiquement plus tard)
+  tags            String[]
   
   // Auth & Sécurité Zero-Knowledge
   passwordHash            String?
@@ -29,7 +40,7 @@ model Profile {
   lastAccessedAt          DateTime? @default(now()) // LE CHAMP QUI BLOQUAIT LE BUILD
   
   createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  updatedAt               DateTime  @updatedAt @default(now())
 
   // Relations
   recoveryPhrase          RecoveryPhrase?
@@ -43,12 +54,13 @@ model Profile {
   blocking                BlockList[]         @relation("Blocker")
   blockedBy               BlockList[]         @relation("Blocked")
   networkEntities         NetworkEntity[]
-  radarSources            RadarSource[]
   accessRequestsSent      AccessRequest[]     @relation("Requester")
   accessRequestsReceived  AccessRequest[]     @relation("Provider")
   directMessagesSent      DirectMessage[]     @relation("DMSent")
   directMessagesReceived  DirectMessage[]     @relation("DMReceived")
 }
+
+
 
 model RecoveryPhrase {
   id              String   @id @default(uuid())
@@ -68,11 +80,12 @@ model Memory {
   embedding         Json?    
   tags              Json?    // Utilisé dans embedding-service
   expires_at        DateTime?
-  createdAt         DateTime @default(now())
-  created_at        DateTime @default(now()) // Doublon sécu détecté dans votre code
+  createdAt         DateTime @default(now()) @map("created_at")
   
-  profileId         String
+  profileId         String   @map("profile_id")
   profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("memory")
 }
 
 model DataSource {
@@ -163,6 +176,7 @@ model BlockList {
   blockedId   String
   blocker     Profile  @relation("Blocker", fields: [blockerId], references: [id])
   blocked     Profile  @relation("Blocked", fields: [blockedId], references: [id])
+  
   @@unique([blockerId, blockedId])
 }
 
@@ -174,14 +188,6 @@ model NetworkEntity {
   matchScore  Int?
   reasoning   String?
   status      String?  @default("DETECTED")
-  profileId   String
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-}
-
-model RadarSource {
-  id          String   @id @default(uuid())
-  url         String
-  name        String?
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

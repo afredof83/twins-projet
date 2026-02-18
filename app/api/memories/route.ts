@@ -21,19 +21,15 @@ export async function GET(req: Request) {
 
     console.log(`🔍 Lecture Memory pour ${pid}`);
 
-    // Lecture "Large" : On cherche dans les deux colonnes pour être sûr de tout trouver
+    // Lecture : On utilise les noms de colonnes de la BDD (snake_case)
     const { data, error } = await supabase
-        .from('Memory')
+        .from('memory')
         .select('*')
-        // SÉCURITÉ : On cherche dans profileId (Texte) OU profile_id (UUID)
-        // Mais on doit faire attention que le paramètre soit compatible
-        .or(`profileId.eq.${pid},profile_id.eq.${pid}`)
-        .order('createdAt', { ascending: false });
+        .eq('profile_id', pid)
+        .order('created_at', { ascending: false });
 
     if (error) {
         console.error("❌ Erreur lecture:", error);
-        // Si l'erreur est liée au type UUID (ex: on cherche un non-UUID dans une colonne UUID),
-        // on peut tenter un fallback, mais ici on logue déjà l'erreur.
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -48,24 +44,16 @@ export async function POST(req: Request) {
         console.log(`📝 Tentative sauvegarde pour ID: ${profileId}`);
 
         // Préparation de l'objet à insérer
-        const memoryData: any = {
+        // On mappe les champs vers les colonnes BDD (snake_case)
+        const memoryData = {
             content,
-            profileId: profileId, // On remplit TOUJOURS la colonne texte (filet de sécurité)
+            profile_id: profileId,
             type: type || 'THOUGHT',
-            createdAt: new Date().toISOString(), // CamelCase
-            created_at: new Date().toISOString() // SnakeCase (Doublon sécu)
+            created_at: new Date().toISOString()
         };
 
-        // INTELLIGENCE ICI : On ne remplit la colonne UUID (profile_id) que si c'est un VRAI UUID
-        // Sinon, on laisse NULL pour éviter le crash "Invalid input syntax for type uuid" de Postgres
-        if (profileId && isUUID(profileId)) {
-            memoryData.profile_id = profileId;
-        } else {
-            console.warn(`⚠️ ID non-UUID détecté (${profileId}), colonne profile_id ignorée.`);
-        }
-
         const { data, error } = await supabase
-            .from('Memory')
+            .from('memory')
             .insert([memoryData])
             .select()
             .single();
