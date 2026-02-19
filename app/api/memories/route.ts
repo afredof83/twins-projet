@@ -1,17 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { Mistral } from '@mistralai/mistralai';
 
-// On utilise la clé SERVICE pour contourner les permissions si besoin (BYPASS RLS)
+// Client service-role pour les lectures (GET) — bypasse RLS
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-// Fonction utilitaire pour vérifier si c'est un UUID valide
-function isUUID(str: string) {
-    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return regex.test(str);
-}
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -21,7 +16,6 @@ export async function GET(req: Request) {
 
     console.log(`🔍 Lecture Memory pour ${pid}`);
 
-    // Lecture : On utilise les noms de colonnes de la BDD (snake_case)
     const { data, error } = await supabase
         .from('memory')
         .select('*')
@@ -43,12 +37,14 @@ export async function POST(req: Request) {
 
         console.log(`📝 Tentative sauvegarde pour ID: ${profileId}`);
 
-        // Préparation de l'objet à insérer
-        // On mappe les champs vers les colonnes BDD (snake_case)
+        // ✅ Nettoyage d'urgence côté serveur (null bytes)
+        const sanitizedContent = (content || '').replace(/\0/g, '').replace(/\u0000/g, '');
+
         const memoryData = {
-            content,
+            id: crypto.randomUUID(),
+            content: sanitizedContent,
             profile_id: profileId,
-            type: type || 'THOUGHT',
+            type: type || 'thought',
             created_at: new Date().toISOString()
         };
 
@@ -68,5 +64,104 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PATCH(req: Request) {
+    try {
+        // Contrôle d'accès : Bearer token obligatoire
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return Response.json({ error: "Token manquant." }, { status: 401 });
+
+        const body = await req.json();
+        const { id, content, profileId } = body;
+
+        if (!id || !content || !profileId) {
+            return Response.json({ error: "Paramètres invalides (id, content, profileId requis)." }, { status: 400 });
+        }
+
+        // 1. Re-vectorisation via Mistral (le vecteur doit refléter le nouveau texte)
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const embeddingResponse = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [content],
+        });
+        const newEmbedding = embeddingResponse.data[0]?.embedding;
+
+        // 2. Client BDD blindé avec l'identité de l'utilisateur
+        const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
+
+        // 3. Mise à jour du fragment (contenu + nouveau vecteur)
+        const { error } = await supabaseAuth
+            .from('memory')
+            .update({ content, embedding: newEmbedding })
+            .eq('id', id)
+            .eq('profile_id', profileId);
+
+        if (error) throw error;
+
+        console.log(`✅ Fragment ${id} re-vectorisé et mis à jour.`);
+        return Response.json({ success: true });
+
+    } catch (error: any) {
+        console.error("[CRITIQUE ÉDITION MÉMOIRE]", error);
+        return Response.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        // Contrôle d'accès : Bearer token obligatoire
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return Response.json({ error: "Token manquant." }, { status: 401 });
+
+        const body = await req.json();
+        const { id, profileId } = body;
+
+        if (!id || !profileId) {
+            return Response.json({ error: "Paramètres invalides (id et profileId requis)." }, { status: 400 });
+        }
+
+        // Client BDD blindé avec l'identité de l'utilisateur (RLS actif)
+        const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
+
+        // Ordre de destruction (double sécurité : id ET profile_id)
+        const { data, error } = await supabaseAuth
+            .from('memory')
+            .delete()
+            .eq('id', id)
+            .eq('profile_id', profileId)
+            .select(); // Force Supabase à retourner les lignes supprimées
+
+        if (error) throw error;
+
+        // Tableau vide = RLS a bloqué ou ID inexistant → on refuse de mentir
+        if (!data || data.length === 0) {
+            return Response.json(
+                { error: "Échec de la purge : Fragment introuvable ou accès refusé." },
+                { status: 403 }
+            );
+        }
+
+        console.log(`🗑️ Fragment ${id} purgé.`);
+        return Response.json({ success: true });
+
+    } catch (error: any) {
+        console.error("[CRITIQUE PURGE MÉMOIRE]", error);
+        return Response.json({ error: error.message }, { status: 500 });
     }
 }

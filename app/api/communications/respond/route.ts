@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: NextRequest) {
     try {
+        const supabase = await createClient();
         const { communicationId, status } = await req.json();
 
         if (!communicationId || !['ACCEPTED', 'REJECTED'].includes(status)) {

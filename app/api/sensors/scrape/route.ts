@@ -1,76 +1,84 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
 import * as cheerio from 'cheerio';
-import { getMistralEmbedding } from '@/lib/mistral';
+import crypto from 'crypto';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
-        const { url, profileId } = await request.json();
+        // 1. Contrôle d'accès strict
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
+        }
 
-        if (!url) return NextResponse.json({ error: "URL manquante" }, { status: 400 });
+        const body = await req.json();
+        const { url, profileId } = body;
 
-        console.log(`[SCRAPER] Cible : ${url}`);
+        if (!url || !profileId) {
+            return NextResponse.json({ error: "Paramètres manquants (URL ou ProfileID)" }, { status: 400 });
+        }
 
-        // 1. Récupération du HTML
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Impossible d'accéder à la page.");
-        const html = await res.text();
+        // 2. Initialisation du client BDD avec l'identité de l'utilisateur
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
 
-        // 2. Nettoyage avec Cheerio
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+        // 3. INFILTRATION DU RÉSEAU (Scraping)
+        console.log(`[SCRAPER] Infiltration de la cible : ${url}`);
+        const response = await fetch(url);
+        const html = await response.text();
+
+        // Nettoyage du code avec Cheerio
         const $ = cheerio.load(html);
+        $('script, style, noscript, iframe, img, svg, nav, footer').remove();
+        const textContent = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // On supprime les éléments inutiles (scripts, styles, pubs, nav)
-        $('script, style, nav, footer, iframe, svg, button').remove();
+        if (!textContent || textContent.length < 10) {
+            return NextResponse.json({ error: "La cible est vide ou protégée contre le scraping." }, { status: 400 });
+        }
 
-        // On récupère le titre et le texte principal
-        const title = $('title').text() || 'Article Web';
-        // On cherche le contenu dans 'article', 'main', ou 'body' par défaut
-        let content = $('article').text() || $('main').text() || $('body').text();
+        // 4. DÉCOUPAGE ET VECTORISATION
+        const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
+        let savedCount = 0;
 
-        // Nettoyage des espaces blancs multiples
-        content = content.replace(/\s+/g, ' ').trim().substring(0, 25000);
+        console.log(`[SCRAPER] ${chunks.length} fragments à vectoriser.`);
 
-        if (content.length < 100) throw new Error("Contenu trop court ou illisible.");
+        for (const chunk of chunks) {
+            const embeddingResponse = await mistral.embeddings.create({
+                model: "mistral-embed",
+                inputs: [chunk],
+            });
 
-        // 3. Analyse Mistral
-        const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "mistral-small",
-                messages: [
-                    { role: "system", content: "Tu es un analyste. Résume cet article en Markdown (Titre, Résumé, Points clés). Sois technique et précis." },
-                    { role: "user", content: `Titre: ${title}\n\nContenu: ${content}` }
-                ]
-            })
-        });
+            const embedding = embeddingResponse.data[0]?.embedding;
+            if (!embedding) continue;
 
-        const mistralData = await mistralResponse.json();
-        const summary = mistralData.choices?.[0]?.message?.content || "Analyse impossible.";
+            // 5. INSERTION BDD avec UUID forcé
+            const { error } = await supabase.from('memory').insert({
+                id: crypto.randomUUID(),
+                profile_id: profileId,
+                content: `[WEB: ${url}] ${chunk}`,
+                type: 'link',
+                source: url,
+                embedding: embedding,
+                created_at: new Date().toISOString()
+            });
 
-        // 4. Vectorisation & Sauvegarde
-        const embedding = await getMistralEmbedding(summary);
+            if (!error) savedCount++;
+            else console.error("[ERREUR BDD SCRAPE]", error);
+        }
 
-        await supabase.from('Memory').insert([{
-            profileId,
-            content: `[WEB] ${title}\nSource: ${url}\n\n${summary}`,
-            type: 'knowledge',
-            source: 'web_scraper',
-            embedding: embedding
-        }]);
-
-        return NextResponse.json({ success: true, title, summary });
+        return NextResponse.json({ success: true, fragments: savedCount });
 
     } catch (error: any) {
-        console.error("❌ Erreur Scraper:", error);
+        console.error("[CRITIQUE SCRAPER]", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

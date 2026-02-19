@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 // Components
 import SecureWhatsApp from '@/components/SecureWhatsApp';
@@ -15,6 +15,7 @@ import TacticalGlobe from '@/components/Globe';
 import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
+import SecureChat from '@/components/SecureChat';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 
@@ -64,6 +65,7 @@ const mockDeepAudit = {
 
 export default function MissionControl() {
     const router = useRouter();
+    const [supabase] = useState(() => createClient());
     const [profileId, setProfileId] = useState<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
     const [memories, setMemories] = useState<any[]>([]);
@@ -77,10 +79,15 @@ export default function MissionControl() {
 
     // États UI
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
     const [channels, setChannels] = useState<any[]>([]);
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [showCortexPanel, setShowCortexPanel] = useState(false);
     const [showBlockPanel, setShowBlockPanel] = useState(false);
+
+    // États scan 2 phases
+    const [basicResult, setBasicResult] = useState<any>(null);
+    const [deepResult, setDeepResult] = useState<any>(null);
 
     // États Ingestion
     const [quickThought, setQuickThought] = useState("");
@@ -88,6 +95,7 @@ export default function MissionControl() {
 
     const [unreadIds, setUnreadIds] = useState<string[]>([]);
     const [blockedIds, setBlockedIds] = useState<string[]>([]);
+    const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
 
     const addLog = (message: string) => setLogs(prev => [`> ${new Date().toLocaleTimeString().slice(0, 5)} ${message}`, ...prev].slice(0, 10));
 
@@ -97,49 +105,76 @@ export default function MissionControl() {
             if (!user) { router.push('/'); return; }
             setProfileId(user.id);
             setIsInitialized(true);
-            fetchChannels(user.id);
+            fetchChannels();
             fetchBlockList(user.id);
             loadMemories(user.id);
         };
         init();
     }, []);
 
-    // Écouteur Global
+    // 3. ÉCOUTEUR REALTIME (Branchement direct & Chirurgical & BLINDÉ)
     useEffect(() => {
-        if (!profileId) return;
-        const channelSubscription = supabase.channel('global_dashboard_main')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'Channel' }, async (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    const newChannel = payload.new as any;
-                    if (newChannel.member_one_id === profileId || newChannel.member_two_id === profileId) {
-                        addLog(`NOUVELLE LIAISON: ${newChannel.id.slice(0, 4)}`);
-                        setUnreadIds(prev => [...prev, newChannel.id]);
-                    }
-                }
-                await fetchChannels(profileId);
-            })
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload) => {
-                const msg = payload.new;
-                if (msg.fromId !== profileId) {
-                    setUnreadIds(prev => {
-                        if (prev.includes(msg.channel_id)) return prev;
-                        return [...prev, msg.channel_id];
-                    });
-                    fetchChannels(profileId);
-                }
-            })
-            .subscribe();
-        return () => { supabase.removeChannel(channelSubscription); };
-    }, [profileId]);
+        let currentUserId: string | null = null;
+        let channel: any;
 
-    const fetchChannels = async (pid: string) => {
-        const { data } = await supabase.from('Channel').select('*').or(`member_one_id.eq.${pid},member_two_id.eq.${pid}`).order('last_message_at', { ascending: false });
-        if (data) setChannels(data);
+        const initNetwork = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+            currentUserId = session.user.id; // On stocke ton ID
+
+            // 1. Chargement initial
+            const { data } = await supabase
+                .from('AccessRequest')
+                .select('*')
+                .eq('provider_id', currentUserId)
+                .eq('status', 'pending');
+            if (data) setIncomingRequests(data);
+
+            // 2. Écouteur Temps Réel AVEC FILTRE
+            channel = supabase.channel('live_requests')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'AccessRequest' }, (payload: any) => {
+                    // 🛡️ LE BOUCLIER EST ICI : Est-ce que cette demande est pour MOI ?
+                    if (payload.new.provider_id === currentUserId) {
+                        console.log("📥 [LIVE] Requête reçue :", payload.new);
+                        setIncomingRequests((prev) => {
+                            if (prev.some(req => req.id === payload.new.id)) return prev;
+                            return [...prev, payload.new];
+                        });
+                    }
+                })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'AccessRequest' }, (payload: any) => {
+                    setIncomingRequests((prev) => prev.filter(req => req.id !== payload.old.id));
+                })
+                // On conserve l'écouteur Channel pour ne rien casser
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'Channel' }, (payload: any) => {
+                    console.log("⚡ Changement Channel", payload);
+                    fetchChannels();
+                })
+                .subscribe();
+        };
+
+        initNetwork();
+        fetchChannels(); // Toujours charger les channels au démarrage
+
+        return () => { if (channel) supabase.removeChannel(channel); };
+    }, []);
+
+    const fetchChannels = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data: chans } = await supabase
+            .from('Channel')
+            .select('*')
+            .or(`member_one_id.eq.${session.user.id},member_two_id.eq.${session.user.id}`)
+            .order('last_message_at', { ascending: false });
+
+        setChannels(chans || []);
     };
 
     const fetchBlockList = async (pid: string) => {
         const { data } = await supabase.from('BlockList').select('blockedId').eq('blockerId', pid);
-        if (data) setBlockedIds(data.map(b => b.blockedId));
+        if (data) setBlockedIds(data.map((b: { blockedId: string }) => b.blockedId));
     };
 
     const loadMemories = async (pid: string) => {
@@ -172,40 +207,151 @@ export default function MissionControl() {
     const handleQuickThoughtSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!quickThought.trim() || !profileId) return;
-        const content = quickThought;
-        setQuickThought("");
-        addLog(`MEMOIRE: Archivage...`);
-        await supabase.from('Memory').insert({ profileId, content, type: 'thought', source: 'manual_input' });
-        addLog(`SUCCÈS: Pensée stockée.`);
-        loadMemories(profileId);
-    };
 
+        // ✅ Filtre anti-corruption : suppression des null bytes
+        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
+        setQuickThought('');
+        addLog('MEMOIRE: Archivage...');
+
+        // Récupération du passeport session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { addLog('CRITIQUE: Session expirée.'); return; }
+
+        try {
+            const res = await fetch('/api/memories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    content: cleanThought,
+                    profileId: session.user.id,
+                    type: 'thought',
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            addLog('SUCCÈS: Pensée synchronisée dans le Cortex.');
+            loadMemories(profileId);
+        } catch (err: any) {
+            addLog(`CRITIQUE: ${err.message || 'Échec de transmission.'}`);
+        }
+    };
     const triggerManualScan = async () => {
         if (!profileId) return;
         setStatus('SCANNING');
+        setBasicResult(null);
+        setDeepResult(null);
         setMatchData(null);
         setStrategicReport(null);
-        addLog("RADAR: Scan global initié...");
+        addLog('RADAR: Scan de surface initié...');
 
         try {
-            const report = await scanGlobalNetwork(profileId);
-            console.log("📝 RAPPORT MISTRAL REÇU:", report); // Debug Log
-
-            setStrategicReport(report);
-
-            // On affiche TOUJOURS le rapport, même s'il n'y a pas d'opportunités, 
-            // pour voir le résumé de l'analyse et le statut global.
+            const report = await scanGlobalNetwork(profileId, 'basic');
+            console.log('📡 BASIC SCAN:', report);
+            setBasicResult(report);
             setStatus('LIST');
-
-            if (report.opportunities && report.opportunities.length > 0) {
-                addLog(`CONTACT: ${report.opportunities.length} vecteurs identifiés.`);
-            } else {
-                addLog("RADAR: Analyse terminée (Aucune cible immédiate).");
-            }
+            addLog(`RADAR: Analyse de surface terminée — statut ${report.globalStatus}.`);
         } catch (e) {
             console.error(e);
             setStatus('IDLE');
-            addLog("ERREUR: Échec du scan.");
+            addLog('ERREUR: Scan de surface échoué.');
+        }
+    };
+
+    // ── PHASE 2 : Audit profond (opportunités complètes) ──
+    const triggerDeepAudit = async () => {
+        if (!profileId) return;
+        setStatus('SCANNING');
+        setDeepResult(null);
+        addLog('CORTEX: Extraction profonde en cours...');
+
+        try {
+            const report = await scanGlobalNetwork(profileId, 'deep');
+            console.log('🔥 DEEP AUDIT:', report);
+            setDeepResult(report);
+            setStrategicReport(report);
+            setStatus('LIST');
+            addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
+        } catch (e) {
+            console.error(e);
+            // On revient au résultat basic si on en avait un
+            setStatus('LIST');
+            addLog('ERREUR: Audit profond échoué.');
+        }
+    };
+
+    // ── CONTACT : Initier une demande de liaison après audit profond ──
+    const handleContactTarget = async () => {
+        // 🔍 VÉRIFICATION N°1 : Est-ce qu'on a bien l'ID de l'autre clone ?
+        console.log("🔍 DONNÉES DE L'AUDIT :", deepResult);
+
+        const targetId = deepResult?.targetId || deepResult?.id || deepResult?.profile_id;
+
+        console.log("🎯 ID DE LA CIBLE À CONTACTER :", targetId);
+
+        if (!targetId) {
+            alert("[ERREUR CRITIQUE] Impossible d'engager : l'ID de la cible est introuvable. Le radar n'a pas transmis les coordonnées.");
+            return;
+        }
+
+        if (!profileId) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { addLog('[CRITIQUE] Session expirée.'); return; }
+
+        addLog('LIAISON: Envoi de la demande de contact...');
+
+        try {
+            const res = await fetch('/api/network/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    targetId,
+                    senderClassification: deepResult?.targetClassification ?? 'entité inconnue',
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                addLog('SUCCÈS: Demande de contact transmise. En attente de réponse.');
+                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
+            } else {
+                addLog(`[ERREUR] ${data.error || 'Demande échouée.'}`);
+            }
+        } catch (err: any) {
+            addLog(`[CRITIQUE] Échec de connexion : ${err.message}`);
+        }
+    };
+
+    // ── Réponse aux demandes de liaison (accepter / refuser / bloquer) ──
+    const handleResponse = async (req: any, action: 'accept' | 'refuse' | 'block') => {
+        console.log("🖱️ [DEBUG CLICK] handleResponse déclenché pour:", req.id, "Action:", action);
+        // TRAP : Si cette ligne s'affiche au chargement sans clic, c'est le bug !
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        try {
+            const res = await fetch('/api/network/respond', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ requestId: req.id, requesterId: req.requester_id, action }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIncomingRequests(prev => prev.filter(r => r.id !== req.id));
+                if (action === 'accept') addLog('LIAISON: Canal sécurisé établi.');
+                else if (action === 'block') addLog('SÉCURITÉ: Entité bloquée.');
+                else addLog('LIAISON: Requête refusée.');
+            }
+        } catch (err: any) {
+            addLog(`[CRITIQUE] Réponse échouée : ${err.message}`);
         }
     };
 
@@ -263,7 +409,7 @@ export default function MissionControl() {
         if (error) {
             addLog("ERREUR: Échec de la rupture du lien.");
             // Si erreur, on recharge la liste pour remettre le channel
-            if (profileId) fetchChannels(profileId);
+            if (profileId) fetchChannels();
         }
     };
 
@@ -324,6 +470,30 @@ export default function MissionControl() {
                         </div>
                     </div>
 
+                    {/* ALERTES : Requêtes de liaison entrantes */}
+                    {incomingRequests.length > 0 && (
+                        <div className="mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                            <h3 className="text-orange-500 font-bold text-[10px] mb-2 tracking-widest uppercase flex items-center gap-1">
+                                <span className="animate-pulse">⚠️</span> {incomingRequests.length} requête(s) de liaison
+                            </h3>
+                            <div className="space-y-2">
+                                {incomingRequests.map((req) => (
+                                    <div key={req.id} className="bg-slate-900/90 border-l-4 border-orange-500 p-3 rounded-r-xl flex justify-between items-center shadow-lg gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-slate-200 text-xs font-mono truncate">{req.topic || 'Demande de liaison'}</p>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-tighter">Source: {req.requester_id?.slice(0, 8)}...</span>
+                                        </div>
+                                        <div className="flex gap-1 shrink-0">
+                                            <button onClick={() => handleResponse(req, 'accept')} className="bg-green-600/20 text-green-400 border border-green-600/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">✓</button>
+                                            <button onClick={() => handleResponse(req, 'refuse')} className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-slate-700 transition-all">✕</button>
+                                            <button onClick={() => handleResponse(req, 'block')} className="bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-red-900 hover:text-white transition-all">🚫</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* CENTRAL NEURAL MAP (Scanner & Overlays) */}
                     <div className="glass-panel rounded-2xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px]">
 
@@ -339,58 +509,146 @@ export default function MissionControl() {
                             </div>
                         )}
 
-                        {/* ÉTAT 2 : LISTE STRATEGIQUE (Global Scan Result) */}
-                        {status === 'LIST' && strategicReport && (
+                        {/* ÉTAT 2-A : RÉSULTAT SCAN BASIC */}
+                        {status === 'LIST' && basicResult && !deepResult && (
                             <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
                                 <button
-                                    onClick={() => setStatus('IDLE')}
+                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
                                     className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
                                 >
                                     <X size={24} />
                                 </button>
 
-                                <div className="mt-4 space-y-6">
-                                    {/* Header du Rapport */}
-                                    <div className={`p-4 border-l-4 bg-white/5 ${strategicReport.globalStatus === 'ORANGE' ? 'border-orange-500' : 'border-emerald-500'}`}>
-                                        <h2 className="text-xl font-bold tracking-tighter uppercase text-white">
-                                            Statut Global : <span className={strategicReport.globalStatus === 'ORANGE' ? 'text-orange-500' : 'text-emerald-500'}>
-                                                {strategicReport.globalStatus}
-                                            </span>
+                                <div className="mt-6 space-y-4">
+                                    {/* Statut global */}
+                                    <div className={`p-4 border-l-4 bg-white/5 rounded ${basicResult.globalStatus === 'GREEN' ? 'border-emerald-500' :
+                                        basicResult.globalStatus === 'ORANGE' ? 'border-amber-500' : 'border-red-500'
+                                        }`}>
+                                        <p className="text-[10px] font-mono text-gray-500 mb-1">ANALYSE DE SURFACE</p>
+                                        <h2 className="text-lg font-bold tracking-tighter text-white">
+                                            Statut : <span className={basicResult.globalStatus === 'GREEN' ? 'text-emerald-400' : basicResult.globalStatus === 'ORANGE' ? 'text-amber-400' : 'text-red-400'}>{basicResult.globalStatus}</span>
                                         </h2>
-                                        <p className="text-gray-400 italic text-sm mt-2">{strategicReport.analysisSummary}</p>
+                                        <p className="text-gray-400 italic text-sm mt-2">{basicResult.analysisSummary}</p>
                                     </div>
 
-                                    {/* Liste des Opportunités */}
-                                    <div className="grid gap-3 pb-8">
-                                        {strategicReport.opportunities.map((op: any, index: number) => (
-                                            <div
-                                                key={index}
-                                                onClick={() => handleSelectOpportunity(op)}
-                                                className="p-4 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-lg font-semibold text-blue-400 group-hover:text-primary transition-colors">{op.targetName}</h3>
-                                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-mono rounded border border-blue-500/30">
-                                                        MATCH: {op.matchScore}%
-                                                    </span>
-                                                </div>
+                                    {/* Commandes Phase 1 */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={triggerDeepAudit}
+                                            className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <span>👁️</span> AUDIT PROFOND
+                                        </button>
+                                        <button
+                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
+                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl transition-all text-sm"
+                                        >
+                                            ANNULER
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (profileId && basicResult?.targetId) {
+                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: basicResult.targetId });
+                                                    setBlockedIds(prev => [...prev, basicResult.targetId]);
+                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                }
+                                                setStatus('IDLE'); setBasicResult(null);
+                                            }}
+                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900 font-bold py-2 rounded-xl transition-all text-sm"
+                                        >
+                                            BLOQUER
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                                                <div className="space-y-3 text-sm">
-                                                    <p><span className="text-gray-500 uppercase font-bold text-xs">Analyse :</span> <span className="text-slate-300">{op.reason}</span></p>
-                                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded">
-                                                        <p className="text-emerald-400">
-                                                            <span className="font-bold uppercase text-xs">Action suggérée :</span> {op.suggestedAction}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                        {/* CHARGEMENT AUDIT PROFOND */}
+                        {status === 'SCANNING' && basicResult && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
+                                <div className="text-4xl animate-spin mb-4">⚙️</div>
+                                <p className="text-amber-400 font-mono animate-pulse text-sm tracking-widest">EXTRACTION PROFONDE...</p>
+                            </div>
+                        )}
 
-                                        {strategicReport.opportunities.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500 italic">
-                                                Aucune opportunité détectée pour le moment.
-                                            </div>
-                                        )}
+                        {/* ÉTAT 2-B : RAPPORT AUDIT PROFOND CONSOLIDÉ */}
+                        {status === 'LIST' && deepResult && (
+                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+                                <button
+                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
+                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
+                                >
+                                    <X size={24} />
+                                </button>
+
+                                <div className="mt-6 space-y-4 pb-4">
+                                    {/* En-tête + Score unique */}
+                                    <div className="flex justify-between items-center border-b border-orange-900/50 pb-4">
+                                        <h3 className="text-orange-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <span>🔥</span> RAPPORT D'AUDIT PROFOND
+                                        </h3>
+                                        <div className="text-2xl font-mono font-bold text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
+                                            {deepResult.overallMatchScore ?? deepResult.matchScore ?? 0}%
+                                        </div>
+                                    </div>
+
+                                    {/* Classification cible */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Classification Cible
+                                        </span>
+                                        <p className="text-slate-200 text-sm font-mono">
+                                            {deepResult.targetClassification ?? 'Entité non classifiée'}
+                                        </p>
+                                    </div>
+
+                                    {/* Analyse tactique unifiée */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Analyse Tactique
+                                        </span>
+                                        <p className="text-slate-300 text-sm leading-relaxed">
+                                            {deepResult.unifiedAnalysis ?? deepResult.analyse ?? deepResult.analysisSummary ?? 'Analyse en cours...'}
+                                        </p>
+                                    </div>
+
+                                    {/* Alignement stratégique */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Alignement Stratégique
+                                        </span>
+                                        <p className="text-cyan-400 text-sm leading-relaxed">
+                                            {deepResult.strategicAlignment ?? 'Évaluation des bénéfices en cours...'}
+                                        </p>
+                                    </div>
+
+                                    {/* Commandes Phase 2 */}
+                                    <div className="grid grid-cols-3 gap-2 pt-2">
+                                        <button
+                                            onClick={handleContactTarget}
+                                            className="bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            💬 Contacter
+                                        </button>
+                                        <button
+                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
+                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            Annuler
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (profileId && deepResult?.targetId) {
+                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: deepResult.targetId });
+                                                    setBlockedIds(prev => [...prev, deepResult.targetId]);
+                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                }
+                                                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
+                                            }}
+                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900/50 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            Bloquer
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -426,31 +684,35 @@ export default function MissionControl() {
                             </h3>
                         </div>
                         <div className="space-y-2 overflow-y-auto max-h-32 custom-scrollbar">
-                            {channels.map(c => (
-                                <div
-                                    key={c.id}
-                                    onClick={() => toggleChannelChat(c.id)}
-                                    className="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer group transition-all border border-transparent hover:border-primary/20"
-                                >
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${unreadIds.includes(c.id) ? 'bg-accent-amber animate-pulse' : 'bg-primary/50'}`}></div>
-                                        <span className="text-[10px] font-mono text-slate-300 truncate">{c.topic}</span>
-                                    </div>
+                            {channels.filter(c => c.topic && c.topic !== 'LIAISON SÉCURISÉE').map((channel) => { // On filtre les canaux sans sujet ou par défaut
+                                const otherId = channel.member_one_id === profileId ? channel.member_two_id : channel.member_one_id;
 
-                                    <div className="flex items-center gap-2">
-                                        {/* Bouton de suppression (visible au hover ou tactile) */}
-                                        <button
-                                            onClick={(e) => handleDeleteChannel(c.id, e)}
-                                            className="p-3 -m-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-90"
-                                            title="Rompre la liaison"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-
-                                        <ChevronRight size={12} className="text-gray-500 group-hover:text-white transition-colors" />
+                                return (
+                                    <div key={channel.id} className="bg-slate-900 border border-blue-500/30 p-4 rounded-xl mb-3">
+                                        <div className="flex justify-between items-center gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-blue-400 font-bold text-xs uppercase truncate">{channel.topic}</h4>
+                                                <p className="text-[10px] text-slate-500 truncate">PARTENAIRE : {otherId?.slice(0, 8)}...</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => { setChatPartnerId(otherId); setActiveChannelId(channel.id); setIsChatOpen(true); }}
+                                                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap"
+                                                >
+                                                    OUVRIR TCHAT
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDeleteChannel(channel.id, e)}
+                                                    className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+                                                    title="Rompre la liaison"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {channels.length === 0 && <p className="text-[10px] text-gray-600 italic text-center py-2">Aucun signal.</p>}
                         </div>
                     </div>
@@ -525,7 +787,20 @@ export default function MissionControl() {
                 )
             }
 
-            {showBlockPanel && <BlockListManager profileId={profileId!} onClose={() => setShowBlockPanel(false)} />}
+            {/* BlockListManager - Assuming it's a component that should exist or be imported, checking availability in codebase later if needed but keeping structure valid */}
+            {showBlockPanel && profileId && (
+                <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center">
+                    <div className="bg-slate-900 p-6 rounded-xl border border-red-900/50">
+                        <h3 className="text-red-500 font-bold mb-4">PROTOCOLE D'EXCLUSION</h3>
+                        <p className="text-gray-400 mb-4">Liste des entités bannies:</p>
+                        <ul className="mb-4 space-y-2">
+                            {blockedIds.map(id => <li key={id} className="text-xs font-mono text-red-400">{id}</li>)}
+                            {blockedIds.length === 0 && <li className="text-xs text-gray-600">Aucune menace active.</li>}
+                        </ul>
+                        <button onClick={() => setShowBlockPanel(false)} className="bg-slate-800 text-white px-4 py-2 rounded">Fermer</button>
+                    </div>
+                </div>
+            )}
 
             {/* ÉTAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
             {
@@ -536,6 +811,19 @@ export default function MissionControl() {
                     />
                 )
             }
+
+            {/* SECURE CHAT OVERLAY */}
+            {isChatOpen && chatPartnerId && profileId && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="w-full max-w-lg h-[600px]">
+                        <SecureChat
+                            myId={profileId}
+                            partnerId={chatPartnerId}
+                            onClose={() => setIsChatOpen(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

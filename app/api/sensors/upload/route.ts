@@ -1,105 +1,130 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
-import PDFParser from 'pdf2json'; // Nouvelle librairie
+import PDFParser from 'pdf2json';
+import mammoth from 'mammoth';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-// Fonction utilitaire pour transformer pdf2json en Promesse (Async/Await)
+// Fonction utilitaire pour lire le PDF en texte brut
 function parsePDFBuffer(buffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
-        const parser = new PDFParser(null, true); // true = Texte brut
-
-        parser.on("pdfParser_dataError", (errData: any) => {
-            reject(new Error(errData.parserError));
-        });
-
-        parser.on("pdfParser_dataReady", (pdfData: any) => {
-            // Extraction du texte brut depuis le JSON généré
-            const text = parser.getRawTextContent();
-            resolve(text);
-        });
-
+        const parser = new PDFParser(null, true);
+        parser.on("pdfParser_dataError", (errData: any) => reject(new Error(errData.parserError)));
+        parser.on("pdfParser_dataReady", () => resolve(parser.getRawTextContent()));
         parser.parseBuffer(buffer);
     });
 }
 
 export async function POST(req: Request) {
     try {
+        // 1. Extraction du Bearer token depuis le header Authorization
+        const authHeader = req.headers.get('Authorization');
+
+        if (!authHeader) {
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
+        }
+
+        // 2. Client Supabase blindé : obéit uniquement au Bearer token, sans session propre
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: {
+                    persistSession: false,   // Empêche Supabase d'écraser notre Token
+                    autoRefreshToken: false,
+                },
+                global: {
+                    headers: { Authorization: authHeader }
+                }
+            }
+        );
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const profileId = formData.get('profileId') as string;
 
         if (!file || !profileId) {
-            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
+            return NextResponse.json({ error: "Fichier ou ID Clone manquant" }, { status: 400 });
         }
 
-        console.log(`[SENSOR] Réception fichier: ${file.name} (${file.type})`);
+        console.log(`[SENSOR] Analyse du fichier: ${file.name} (${file.type})`);
+        let textContent = '';
 
-        let textContent = "";
+        // 1. EXTRACTION DU TEXTE MULTI-FORMATS
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        // 1. EXTRACTION PDF (Via PDF2JSON)
-        if (file.type === "application/pdf") {
+        if (file.type === 'application/pdf') {
+            // Décodage PDF
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
-
-                // Appel de notre fonction wrapper
                 textContent = await parsePDFBuffer(buffer);
-
             } catch (err: any) {
-                console.error("Erreur PDF2JSON:", err);
-                return NextResponse.json({ error: "Lecture PDF impossible: " + err.message }, { status: 500 });
+                return NextResponse.json({ error: 'Architecture PDF corrompue.' }, { status: 500 });
+            }
+        } else if (
+            file.name.toLowerCase().endsWith('.docx') ||
+            file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ) {
+            // Décodage DOCX via Mammoth
+            try {
+                const result = await mammoth.extractRawText({ buffer });
+                textContent = result.value;
+            } catch (err: any) {
+                return NextResponse.json({ error: 'Échec de lecture du fichier Word.' }, { status: 500 });
             }
         } else {
-            // Fichiers texte
+            // Texte brut : TXT, CSV, MD, JSON…
             textContent = await file.text();
         }
 
-        // Nettoyage et Validation
-        // pdf2json laisse parfois des caractères de saut de page (----------------Page (0) Break----------------)
+        // Nettoyage des balises PDF + null bytes + espaces superflus
         textContent = textContent.replace(/----------------Page \(\d+\) Break----------------/g, '\n');
+        textContent = textContent.replace(/\0/g, '').replace(/\u0000/g, ''); // Sécurité anti-Null Byte
         textContent = textContent.replace(/\s+/g, ' ').trim();
 
         if (!textContent || textContent.length < 5) {
-            return NextResponse.json({ error: "Fichier vide ou illisible." }, { status: 400 });
+            return NextResponse.json({ error: 'Le fichier est vide ou illisible.' }, { status: 400 });
         }
 
-        // 2. DÉCOUPAGE
+        // 2. DÉCOUPAGE (Fragments de 2000 caractères)
         const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
         let savedCount = 0;
 
-        console.log(`[SENSOR] Extraction OK (${textContent.length} chars). ${chunks.length} fragments à traiter.`);
+        console.log(`[SENSOR] ${chunks.length} fragment(s) à vectoriser.`);
 
-        // 3. ENCODAGE
+        // 3. VECTORISATION + STOCKAGE
         for (const chunk of chunks) {
             const embeddingResponse = await mistral.embeddings.create({
                 model: "mistral-embed",
                 inputs: [chunk],
             });
 
-            if (!embeddingResponse.data || !embeddingResponse.data[0]) continue;
-            const embedding = embeddingResponse.data[0].embedding;
+            const embedding = embeddingResponse.data[0]?.embedding;
+            if (!embedding) continue;
 
-            const { error } = await supabase.from('Memory').insert({
-                profileId,
+            // Génération d'un UUID natif (disponible nativement dans Next.js / Node.js moderne)
+            const fragmentId = crypto.randomUUID();
+
+            // Table 'memory' minuscule + colonnes snake_case
+            const { error } = await supabase.from('memory').insert({
+                id: fragmentId,
+                profile_id: profileId,
                 content: `[DOC: ${file.name}] ${chunk}`,
                 type: 'document',
-                source: 'visual_sensor',
-                embedding: embedding
+                source: 'cortex_dropzone',
+                embedding: embedding,
+                created_at: new Date().toISOString()
             });
 
             if (!error) savedCount++;
+            else console.error("[ERREUR BDD]", error);
         }
 
         return NextResponse.json({ success: true, fragments: savedCount });
 
     } catch (error: any) {
-        console.error("[SENSOR ERROR]", error);
-        return NextResponse.json({ error: error.message || "Erreur inconnue" }, { status: 500 });
+        console.error("[SENSOR CRASH]", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

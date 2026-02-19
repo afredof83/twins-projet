@@ -69,41 +69,50 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                             Aucune opportunité détectée dans le périmètre actuel.
                         </div>
                     ) : (
-                        report.opportunities.map((opp, idx) => (
-                            <div
-                                key={opp.targetId || idx}
-                                onClick={() => onSelect(opp)}
-                                className="group relative p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all cursor-pointer active:scale-[0.98]"
-                            >
-                                {/* Visual Connector Line */}
-                                <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        report.opportunities.map((opp: any, idx: number) => {
+                            // Lecture pare-balles : gère toutes les orthographes possibles de Mistral
+                            const score = opp.matchScore ?? opp.MatchScore ?? opp.score ?? opp["Match Score"] ?? 0;
+                            const reason = opp.reason ?? opp.Reason ?? opp.analyse ?? opp.Analyse ?? "Analyse en cours...";
+                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggérée"] ?? "Aucune action définie.";
+                            const name = opp.targetName ?? opp.TargetName ?? opp.name ?? opp["Nom"] ?? `Cible #${idx + 1}`;
+                            const id = opp.targetId ?? opp.id ?? String(idx);
 
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                                        {opp.targetName}
-                                    </h3>
-                                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/30 border border-white/10 ${opp.matchScore > 80 ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400'}`}>
-                                        {opp.matchScore}%
-                                    </span>
-                                </div>
+                            return (
+                                <div
+                                    key={id}
+                                    onClick={() => onSelect({ ...opp, targetId: id, targetName: name, matchScore: score, reason, suggestedAction: action })}
+                                    className="group relative p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all cursor-pointer active:scale-[0.98]"
+                                >
+                                    {/* Visual Connector Line */}
+                                    <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                <p className="text-[11px] text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                                    {opp.reason}
-                                </p>
-
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                                    <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
-                                        <TrendingUp size={12} />
-                                        <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                                            {name}
+                                        </h3>
+                                        <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/30 border border-white/10 ${score > 80 ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400'}`}>
+                                            {score}%
+                                        </span>
                                     </div>
-                                    <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
-                                </div>
 
-                                <p className="text-[10px] text-gray-500 mt-1 italic pl-4 border-l-2 border-white/5">
-                                    "{opp.suggestedAction}"
-                                </p>
-                            </div>
-                        ))
+                                    <p className="text-[11px] text-gray-400 mb-3 line-clamp-2 leading-relaxed">
+                                        {reason}
+                                    </p>
+
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                                        <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
+                                            <TrendingUp size={12} />
+                                            <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
+                                        </div>
+                                        <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
+                                    </div>
+
+                                    <p className="text-[10px] text-gray-500 mt-1 italic pl-4 border-l-2 border-white/5">
+                                        "{action}"
+                                    </p>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
 

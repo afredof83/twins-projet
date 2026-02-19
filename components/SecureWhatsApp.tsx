@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Send, CheckCheck, Loader2, Wifi } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SecureWhatsApp({ profileId, channelId }: any) {
+    const [supabase] = useState(() => createClient());
     const [messages, setMessages] = useState<any[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [status, setStatus] = useState<string>('CONNECTING');
@@ -15,27 +16,41 @@ export default function SecureWhatsApp({ profileId, channelId }: any) {
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const TABLE = 'Message';
-    const COL_SENDER = 'fromId';
-    const COL_CHANNEL = 'channel_id';
+    const COL_CHANNEL = 'communication_id'; // <-- Correction ici
+    const COL_SENDER = 'sender_id'; // <-- Et ici pour être sûr
 
     useEffect(() => {
         if (!channelId || !profileId) return;
 
         // 1. Historique
-        supabase.from(TABLE).select('*').eq(COL_CHANNEL, channelId).order('createdAt', { ascending: true })
-            .then(({ data }) => {
-                if (data) setMessages(data);
+        const fetchMessages = async () => {
+            const { data, error } = await supabase
+                .from(TABLE)
+                .select('*')
+                .eq(COL_CHANNEL, channelId)
+                .order('created_at', { ascending: true }); // <-- Minuscules : created_at
+
+            if (error) console.error("Erreur chargement messages:", error);
+            if (data) {
+                setMessages(data);
                 setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'instant' }), 100);
-            });
+            }
+        };
+        fetchMessages();
 
         // 2. Realtime
         const channel = supabase.channel(`chat_${channelId}`);
 
         channel
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: TABLE }, (payload) => {
-                if (payload.new[COL_CHANNEL] === channelId) {
-                    const newMsg = { ...(payload.new as any), isNew: true }; // Marqueur de nouveau message
-                    setMessages(prev => [...prev.filter(m => m.id !== newMsg.id), newMsg]);
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: TABLE }, (payload: any) => {
+                const newMsg = payload.new as any;
+                if (newMsg[COL_CHANNEL] === channelId) {
+                    const msgWithFlag = { ...newMsg, isNew: true };
+                    setMessages(prev => {
+                        // Anti-doublon
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        return [...prev, msgWithFlag];
+                    });
                     setIsPartnerTyping(false);
                     setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
@@ -45,20 +60,20 @@ export default function SecureWhatsApp({ profileId, channelId }: any) {
                     }, 5000);
                 }
             })
-            .on('broadcast', { event: 'typing' }, (p) => {
+            .on('broadcast', { event: 'typing' }, (p: any) => {
                 if (p.payload.userId !== profileId) {
                     setIsPartnerTyping(true);
                     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                     typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 3000);
                 }
             })
-            .subscribe((state) => {
+            .subscribe((state: any) => {
                 setStatus(state);
                 if (state === 'SUBSCRIBED') activeChannelRef.current = channel;
             });
 
-        return () => { channel.unsubscribe(); };
-    }, [channelId]);
+        return () => { supabase.removeChannel(channel); };
+    }, [channelId, profileId]); // Ajout de profileId aux dépendances
 
     const handleInputChange = (e: any) => {
         setNewMessage(e.target.value);
@@ -72,7 +87,12 @@ export default function SecureWhatsApp({ profileId, channelId }: any) {
         if (!newMessage.trim()) return;
         const content = newMessage.trim();
         setNewMessage('');
-        await supabase.from(TABLE).insert({ content, [COL_SENDER]: profileId, [COL_CHANNEL]: channelId });
+
+        await supabase.from(TABLE).insert([{
+            sender_id: profileId,
+            content: content,
+            communication_id: channelId
+        }]);
     };
 
     return (

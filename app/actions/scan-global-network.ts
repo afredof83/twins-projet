@@ -5,22 +5,21 @@ import { prisma } from "@/lib/prisma";
 
 const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export async function scanGlobalNetwork(userId: string) {
-    // 1. On récupère le profil de l'agent AVEC ses nouveaux champs
-    // Casting 'any' pour éviter les erreurs de build si les types Prisma ne sont pas à jour
-    const agent: any = await prisma.profile.findUnique({
-        where: { id: userId }
-    });
+export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
+  // 1. Récupération du profil agent
+  const agent: any = await prisma.profile.findUnique({
+    where: { id: userId }
+  });
 
-    if (!agent) throw new Error("Agent introuvable.");
+  if (!agent) throw new Error("Agent introuvable.");
 
-    // 2. On récupère les autres clones
-    const networkNodes: any[] = await prisma.profile.findMany({
-        where: { id: { not: userId } },
-        include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
-    });
+  // 2. Récupération du réseau
+  const networkNodes: any[] = await prisma.profile.findMany({
+    where: { id: { not: userId } },
+    include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
+  });
 
-    const identityContext = `
+  const identityContext = `
         AGENT PRINCIPAL:
         - Profession: ${agent.profession || 'Inconnue'}
         - Âge: ${agent.age || 'Inconnu'}
@@ -28,28 +27,89 @@ export async function scanGlobalNetwork(userId: string) {
         - Hobbies: ${agent.hobbies?.join(', ') || 'N/A'}
     `;
 
-    const prompt = `
-        Tu es l'IA Tactique MISTRAL-TWIN. 
+  // ── PROMPT BASIC : léger, rapide, économie de tokens ──
+  const basicPrompt = `
+        Tu es l'IA Tactique MISTRAL-TWIN. Tu dois répondre UNIQUEMENT en JSON valide, sans aucun texte avant ou après.
+
         CONTEXTE DE L'AGENT : ${identityContext}
+        RÉSEAU (${networkNodes.length} nœud(s)) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, name: n.name, profession: n.profession })))}
 
-        ANALYSE DU RÉSEAU : ${JSON.stringify(networkNodes)}
+        MISSION : Évalue la situation globale du réseau en 2 phrases maximum.
 
-        MISSION : Identifie 3 opportunités de matching. 
-        Si l'objectif est "Rencontres", cherche des affinités personnelles. 
-        Si c'est "Travail", cherche des synergies de compétences.
-
-        Réponds en JSON uniquement : 
-        { "globalStatus": "GREEN|ORANGE|RED", "analysisSummary": "...", "opportunities": [...] }
+        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (sans clé "opportunities") :
+        {
+          "globalStatus": "GREEN",
+          "analysisSummary": "Résumé de la situation du réseau en 1-2 phrases."
+        }
     `;
 
-    const response = await client.chat.complete({
-        model: "mistral-large-latest",
-        messages: [{ role: "system", content: prompt }],
-        responseFormat: { type: "json_object" }
-    });
+  // ── PRÉPARATION DES MÉMOIRES ──
+  const contexteMemoire = networkNodes
+    .flatMap(node => node.memories.map((m: any) => `[ID: ${node.id}] ${m.content}`))
+    .join('\n');
 
-    const rawContent = response.choices?.[0].message.content;
-    if (!rawContent) throw new Error("Réponse vide de Mistral");
+  // ── PROMPT DEEP : analyse consolidée, bloc unique, censure PII ──
+  const deepPrompt = `
+        Tu es une IA d'analyse tactique. Tu dois analyser les profils ci-dessous et générer une réponse STRICTEMENT au format JSON valide, sans aucun texte avant ou après.
+        
+        CONTEXTE DE L'AGENT : ${identityContext}
+        RÉSEAU DISPONIBLE (IDs et rôles uniquement) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, profession: n.profession, hobbies: n.hobbies, objectives: n.objectives })))}
 
-    return JSON.parse(rawContent as string);
+        🧠 ARCHIVES ET MÉMOIRES INTERCEPTÉES (TRÈS IMPORTANT POUR L'ANALYSE) :
+        """
+        ${contexteMemoire || "Aucune archive disponible."}
+        """
+
+        ⚠️ RÈGLES DE CENSURE ABSOLUES (NIVEAU OMEGA) :
+        - NE JAMAIS inclure de nom propre, de nom de famille ou de prénom.
+        - NE JAMAIS inclure d'adresse email.
+        - NE JAMAIS inclure de numéro de téléphone ou d'adresse physique.
+        - Désigne toujours la cible par son rôle générique (ex: "Le Fabricant", "L'Expert en PI", "Le Développeur Senior").
+
+        MISSION : Identifie le MEILLEUR profil du réseau pour l'Agent en te basant sur les ARCHIVES INTERCEPTÉES, puis génère une analyse consolidée.
+
+        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (camelCase strict) :
+        {
+          "targetId": "l'UUID exact de la cible choisie, copié depuis la liste RÉSEAU ci-dessus",
+          "overallMatchScore": 95,
+          "targetClassification": "Description générique du profil (ex: Détenteur de brevet en ingénierie mécanique)",
+          "unifiedAnalysis": "Une analyse profonde, globale et unique des synergies possibles entre l'Agent et la cible. Min 2 phrases.",
+          "strategicAlignment": "Le bénéfice tactique final et concret de cette connexion pour l'Agent."
+        }
+    `;
+
+  const promptContent = mode === 'basic' ? basicPrompt : deepPrompt;
+
+  // 🚨 LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
+  console.log("🧠 PROMPT ENVOYÉ À MISTRAL (Global Scan) :", promptContent);
+
+  if (!promptContent || promptContent.trim() === "") {
+    console.warn("⚠️ ALERTE : Prompt vide pour le scan global !");
+  }
+
+  const response = await client.chat.complete({
+    model: "mistral-large-latest",
+    messages: [{ role: "system", content: promptContent }],
+    responseFormat: { type: "json_object" }
+  });
+
+  const rawContent = response.choices?.[0].message.content;
+  if (!rawContent) throw new Error("Réponse vide de Mistral");
+
+  const aiAnalysis = JSON.parse(rawContent as string);
+
+  // ── FUSION TACTIQUE : injection blindée du targetId ──
+  // Mistral peut oublier ou halluciner l'UUID. On valide qu'il correspond
+  // à un nœud réel du réseau. Si invalide, on prend le premier nœud comme fallback.
+  const knownIds = new Set(networkNodes.map(n => n.id));
+  const validatedTargetId = knownIds.has(aiAnalysis.targetId)
+    ? aiAnalysis.targetId
+    : (networkNodes[0]?.id ?? null);
+
+  console.log(`[SCAN-DEEP] targetId Mistral: ${aiAnalysis.targetId} → validé: ${validatedTargetId}`);
+
+  return {
+    ...aiAnalysis,
+    targetId: validatedTargetId, // Toujours présent, toujours fiable
+  };
 }

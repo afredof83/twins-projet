@@ -80,6 +80,11 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
       ? agentMemories
       : await fetchMemories(targetProfile.id);
 
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Agent):", agentMemories.length);
+    console.log("CONTENU (Agent):", agentMemories);
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Cible):", targetMemories.length);
+    console.log("CONTENU (Cible):", targetMemories);
+
     // -------------------------------------------------------------------------
     // 3. PRÉPARATION IA (Mise en forme)
     // -------------------------------------------------------------------------
@@ -125,6 +130,13 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
     // -------------------------------------------------------------------------
     // 4. ANALYSE (Mistral)
     // -------------------------------------------------------------------------
+
+    // 🚨 LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
+    console.log("🧠 TEXTE ENVOYÉ À MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
+
+    if (!userPrompt || userPrompt.trim() === "") {
+      console.warn("⚠️ ALERTE : On envoie un texte vide à l'IA !");
+    }
 
     console.log("📡 Envoi à l'IA...");
     const chatResponse = await client.chat.complete({

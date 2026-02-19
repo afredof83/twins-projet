@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabaseServer';
 
 // 1. RÉCUPÉRER L'HISTORIQUE
 export async function GET(req: NextRequest) {
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const commId = searchParams.get('commId');
 
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
 // 2. ENVOYER UN MESSAGE
 export async function POST(req: NextRequest) {
     try {
+        const supabase = await createClient();
         const { commId, senderId, content } = await req.json();
 
         const { data, error } = await supabase

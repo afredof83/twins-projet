@@ -163,6 +163,32 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
   }
 }
 
+--- app\actions\profile.ts ---
+'use server'
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+export async function updateProfile(userId: string, formData: any) {
+    try {
+        await prisma.profile.update({
+            where: { id: userId },
+            data: {
+                age: parseInt(formData.age),
+                gender: formData.gender,
+                profession: formData.profession,
+                hobbies: formData.hobbies,
+                objectives: formData.objectives,
+            }
+        });
+        revalidatePath('/profile');
+        return { success: true };
+    } catch (error) {
+        console.error("Erreur updateProfile:", error);
+        return { success: false, error: "Erreur de mise à jour" };
+    }
+}
+
+
 --- app\actions\scan-global-network.ts ---
 'use server'
 
@@ -172,134 +198,52 @@ import { prisma } from "@/lib/prisma";
 const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function scanGlobalNetwork(userId: string) {
-    console.log(`🚀 [COMMAND_CENTER] Clone ${userId} lance un SCAN GLOBAL...`);
+    // 1. On récupère le profil de l'agent AVEC ses nouveaux champs
+    // Casting 'any' pour éviter les erreurs de build si les types Prisma ne sont pas à jour
+    const agent: any = await prisma.profile.findUnique({
+        where: { id: userId }
+    });
 
-    try {
-        // -------------------------------------------------------------------------
-        // 1. RÉCUPÉRATION DE L'AGENT (TOI)
-        // -------------------------------------------------------------------------
-        const agent = await prisma.profile.findUnique({
-            where: { id: userId }
-        });
+    if (!agent) throw new Error("Agent introuvable.");
 
-        if (!agent) {
-            console.error("❌ Agent non trouvé dans la BDD pour l'ID:", userId);
-            throw new Error("Agent introuvable.");
-        }
+    // 2. On récupère les autres clones
+    const networkNodes: any[] = await prisma.profile.findMany({
+        where: { id: { not: userId } },
+        include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
+    });
 
-        // 2. Récupérer les souvenirs avec Prisma
-        // Note: Prisma Client utilise "profileId" (camelCase) qui est mappé vers "profile_id" en DB
-        const agentMemories = await prisma.memory.findMany({
-            where: { profileId: userId },
-            take: 20,
-            orderBy: { createdAt: 'desc' }
-        });
-
-        const agentContext = agentMemories.map((m: any) => m.content || m.text).join(" | ");
-
-        // -------------------------------------------------------------------------
-        // 2. ASPIRATION DU RÉSEAU (TOUS LES AUTRES CLONES)
-        // -------------------------------------------------------------------------
-        // On prend tous les profils SAUF toi
-        const networkNodes = await prisma.profile.findMany({
-            where: {
-                id: { not: userId }
-            },
-            select: {
-                id: true,
-                name: true,
-                // On inclut leurs souvenirs directement dans la requête
-                memories: {
-                    take: 5, // On prend les 5 derniers souvenirs de chaque clone pour être rapide
-                    orderBy: { createdAt: 'desc' },
-                    select: { content: true, type: true }
-                }
-            },
-            take: 50 // Limite à 50 clones pour l'instant (pour ne pas exploser le token limit)
-        });
-
-        console.log(`📡 Radar: ${networkNodes.length} entités détectées.`);
-
-        // -------------------------------------------------------------------------
-        // 3. PRÉPARATION DU RAPPORT POUR MISTRAL
-        // -------------------------------------------------------------------------
-
-        // On formate la liste des cibles pour l'IA
-        const networkData = networkNodes.map((node: any) => {
-            // memories est maintenant un tableau imbriqué grâce à la jointure Supabase
-            // Attention: Supabase renvoie parfois un objet ou tableau selon la relation (one-to-many ici)
-            const memsArray = Array.isArray(node.memories) ? node.memories : [];
-            const mems = memsArray.slice(0, 5).map((m: any) => m.content || "Data chiffrée").join(" | ");
-            return `ID: ${node.id} | NOM: ${node.name} | DATA: ${mems || "Vide"}`;
-        }).join("\n---\n");
-
-        const systemPrompt = `
-      Tu es le CLONE CENTRAL (Architecte Réseau).
-      TA MISSION : Analyser l'ensemble des clones du réseau pour trouver des opportunités pour l'Agent Principal.
-      
-      RÈGLES :
-      1. Compare les souvenirs de l'Agent avec ceux de CHAQUE nœud du réseau.
-      2. Ignore les profils vides ou non pertinents.
-      3. Sélectionne UNIQUEMENT les 3 meilleures opportunités (Match > 70%).
-      4. Pour chaque opportunité, propose une "Action Tactique" précise.
-      
-      FORMAT DE SORTIE : JSON STRICT.
+    const identityContext = `
+        AGENT PRINCIPAL:
+        - Profession: ${agent.profession || 'Inconnue'}
+        - Âge: ${agent.age || 'Inconnu'}
+        - Objectifs: ${agent.objectives?.join(', ') || 'Scan Global'}
+        - Hobbies: ${agent.hobbies?.join(', ') || 'N/A'}
     `;
 
-        const userPrompt = `
-      === AGENT PRINCIPAL (${agent.name}) ===
-      Mémoire Vive: ${agentContext || "Inconnue"}
+    const prompt = `
+        Tu es l'IA Tactique MISTRAL-TWIN. 
+        CONTEXTE DE L'AGENT : ${identityContext}
 
-      === SCAN RÉSEAU (${networkNodes.length} Noeuds) ===
-      ${networkData}
+        ANALYSE DU RÉSEAU : ${JSON.stringify(networkNodes)}
 
-      === RAPPORT ATTENDU (JSON) ===
-      {
-        "globalStatus": "Code couleur (VERT/ORANGE/ROUGE)",
-        "analysisSummary": "Phrase de synthèse globale (ex: '3 vecteurs de brevets détectés')",
-        "opportunities": [
-          {
-            "targetId": "ID du profil",
-            "targetName": "Nom du profil",
-            "matchScore": 0-100,
-            "reason": "Pourquoi c'est un match (ex: Il parle aussi de brevets)",
-            "suggestedAction": "L'action à faire (ex: Proposer fusion data)"
-          }
-        ]
-      }
+        MISSION : Identifie 3 opportunités de matching. 
+        Si l'objectif est "Rencontres", cherche des affinités personnelles. 
+        Si c'est "Travail", cherche des synergies de compétences.
+
+        Réponds en JSON uniquement : 
+        { "globalStatus": "GREEN|ORANGE|RED", "analysisSummary": "...", "opportunities": [...] }
     `;
 
-        // -------------------------------------------------------------------------
-        // 4. TRAITEMENT IA
-        // -------------------------------------------------------------------------
+    const response = await client.chat.complete({
+        model: "mistral-large-latest",
+        messages: [{ role: "system", content: prompt }],
+        responseFormat: { type: "json_object" }
+    });
 
-        console.log("⚡ Traitement neural en cours...");
-        const chatResponse = await client.chat.complete({
-            model: 'mistral-large-latest',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-            ],
-            responseFormat: { type: 'json_object' },
-            temperature: 0.2,
-        });
+    const rawContent = response.choices?.[0].message.content;
+    if (!rawContent) throw new Error("Réponse vide de Mistral");
 
-        const raw = chatResponse.choices?.[0].message.content;
-        if (!raw) throw new Error("Réponse vide");
-
-        const report = JSON.parse(raw as string);
-        console.log(`✅ Rapport généré : ${report.opportunities.length} opportunités identifiées.`);
-
-        return report;
-
-    } catch (error) {
-        console.error("❌ ERREUR SCAN GLOBAL:", error);
-        return {
-            globalStatus: "ROUGE",
-            analysisSummary: "Échec du scan réseau. Interférences détectées.",
-            opportunities: []
-        };
-    }
+    return JSON.parse(rawContent as string);
 }
 
 
@@ -4303,14 +4247,18 @@ export default function MissionControl() {
 
         try {
             const report = await scanGlobalNetwork(profileId);
+            console.log("📝 RAPPORT MISTRAL REÇU:", report); // Debug Log
+
             setStrategicReport(report);
 
+            // On affiche TOUJOURS le rapport, même s'il n'y a pas d'opportunités, 
+            // pour voir le résumé de l'analyse et le statut global.
+            setStatus('LIST');
+
             if (report.opportunities && report.opportunities.length > 0) {
-                setStatus('LIST');
                 addLog(`CONTACT: ${report.opportunities.length} vecteurs identifiés.`);
             } else {
-                setStatus('IDLE');
-                addLog("RADAR: Aucune cible pertinente.");
+                addLog("RADAR: Analyse terminée (Aucune cible immédiate).");
             }
         } catch (e) {
             console.error(e);
@@ -4451,12 +4399,58 @@ export default function MissionControl() {
 
                         {/* ÉTAT 2 : LISTE STRATEGIQUE (Global Scan Result) */}
                         {status === 'LIST' && strategicReport && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center p-2 w-full h-full">
-                                <StrategicListOverlay
-                                    report={strategicReport}
-                                    onSelect={handleSelectOpportunity}
-                                    onClose={() => setStatus('IDLE')}
-                                />
+                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+                                <button
+                                    onClick={() => setStatus('IDLE')}
+                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
+                                >
+                                    <X size={24} />
+                                </button>
+
+                                <div className="mt-4 space-y-6">
+                                    {/* Header du Rapport */}
+                                    <div className={`p-4 border-l-4 bg-white/5 ${strategicReport.globalStatus === 'ORANGE' ? 'border-orange-500' : 'border-emerald-500'}`}>
+                                        <h2 className="text-xl font-bold tracking-tighter uppercase text-white">
+                                            Statut Global : <span className={strategicReport.globalStatus === 'ORANGE' ? 'text-orange-500' : 'text-emerald-500'}>
+                                                {strategicReport.globalStatus}
+                                            </span>
+                                        </h2>
+                                        <p className="text-gray-400 italic text-sm mt-2">{strategicReport.analysisSummary}</p>
+                                    </div>
+
+                                    {/* Liste des Opportunités */}
+                                    <div className="grid gap-3 pb-8">
+                                        {strategicReport.opportunities.map((op: any, index: number) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => handleSelectOpportunity(op)}
+                                                className="p-4 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h3 className="text-lg font-semibold text-blue-400 group-hover:text-primary transition-colors">{op.targetName}</h3>
+                                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-mono rounded border border-blue-500/30">
+                                                        MATCH: {op.matchScore}%
+                                                    </span>
+                                                </div>
+
+                                                <div className="space-y-3 text-sm">
+                                                    <p><span className="text-gray-500 uppercase font-bold text-xs">Analyse :</span> <span className="text-slate-300">{op.reason}</span></p>
+                                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded">
+                                                        <p className="text-emerald-400">
+                                                            <span className="font-bold uppercase text-xs">Action suggérée :</span> {op.suggestedAction}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {strategicReport.opportunities.length === 0 && (
+                                            <div className="text-center py-8 text-gray-500 italic">
+                                                Aucune opportunité détectée pour le moment.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -4848,6 +4842,7 @@ main {
 --- app\layout.tsx ---
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import BottomNav from '@/components/nav-bar';
 
 export const runtime = 'nodejs'; // On force la stabilité
 
@@ -4884,6 +4879,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background-dark text-slate-300 antialiased overflow-hidden">
         {children}
+        <BottomNav />
       </body>
     </html>
   );
@@ -5505,6 +5501,135 @@ export default function NewProfilePage() {
                     <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
                         ← Retour à l'accueil
                     </a>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+
+--- app\profile\page.tsx ---
+'use client'
+import { useState, useEffect } from 'react';
+import { updateProfile } from '@/app/actions/profile';
+
+// Mock pour satisfaire le lintersi nécessaire, ou on utilise l'ID en dur comme demandé par l'utilisateur
+// Mais pour être propre, on va utiliser l'ID en dur + une fausse auth si le client supabase n'est pas prêt
+
+export default function ProfilePage() {
+    // ID Hardcodé comme demandé explicitement
+    const userId = "710fc2a1-f078-409d-8f82-faa7e4f99951";
+
+    const [status, setStatus] = useState('');
+    const [profile, setProfile] = useState({
+        age: 30, // Valeur par défaut
+        gender: 'M',
+        profession: '',
+        hobbies: '',
+        objectives: [] as string[]
+    });
+
+    const handleSave = async () => {
+        setStatus('SYNCHRONISATION...');
+        // Transformation de string "a, b, c" en array ["a", "b", "c"]
+        const hobbiesArray = profile.hobbies.split(',').map(h => h.trim()).filter(h => h);
+
+        const res = await updateProfile(userId, {
+            ...profile,
+            hobbies: hobbiesArray
+        });
+
+        if (res.success) {
+            setStatus('PROFIL MIS À JOUR.');
+        } else {
+            setStatus('ERREUR DE SYNCHRONISATION.');
+        }
+    };
+
+    const toggleObjective = (obj: string) => {
+        setProfile(prev => {
+            const exists = prev.objectives.includes(obj);
+            if (exists) return { ...prev, objectives: prev.objectives.filter(o => o !== obj) };
+            return { ...prev, objectives: [...prev.objectives, obj] };
+        });
+    };
+
+    return (
+        <div className="min-h-screen bg-black text-green-500 font-mono p-8 border-x border-green-900 max-w-4xl mx-auto">
+            <h1 className="text-2xl mb-8 border-b border-green-900 pb-2 uppercase tracking-tighter text-green-300">
+                👤 Configuration de l'Entité Clone
+            </h1>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-xs text-green-800 mb-1">ÂGE</label>
+                        <input
+                            type="number"
+                            value={profile.age}
+                            onChange={e => setProfile({ ...profile, age: parseInt(e.target.value) || 0 })}
+                            className="bg-black border border-green-900 p-2 w-full focus:border-green-400 outline-none text-green-400"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs text-green-800 mb-1">SEXE / GENRE</label>
+                        <select
+                            value={profile.gender}
+                            onChange={e => setProfile({ ...profile, gender: e.target.value })}
+                            className="bg-black border border-green-900 p-2 w-full outline-none text-green-400"
+                        >
+                            <option value="M">Masculin</option>
+                            <option value="F">Féminin</option>
+                            <option value="X">Non-binaire</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs text-green-800 mb-1">PROFESSION / SECTEUR</label>
+                        <input
+                            type="text"
+                            value={profile.profession}
+                            onChange={e => setProfile({ ...profile, profession: e.target.value })}
+                            placeholder="ex: Architecte, Codeur, Freelance..."
+                            className="bg-black border border-green-900 p-2 w-full outline-none text-green-400 placeholder:text-green-900/50"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs text-green-800 mb-1">HOBBIES (séparés par des virgules)</label>
+                        <textarea
+                            value={profile.hobbies}
+                            onChange={e => setProfile({ ...profile, hobbies: e.target.value })}
+                            className="bg-black border border-green-900 p-2 w-full h-24 outline-none text-green-400 custom-scrollbar"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <label className="block text-xs text-green-800 mb-4">THÉMATIQUES RECHERCHÉES</label>
+                    {['Travail', 'Rencontres', 'Networking', 'Loisirs', 'Projets Open Source'].map(obj => (
+                        <label key={obj} className="flex items-center gap-3 cursor-pointer p-2 border border-green-900/30 hover:bg-green-900/10 transition-all select-none">
+                            <div className={`w-4 h-4 border border-green-600 flex items-center justify-center ${profile.objectives.includes(obj) ? 'bg-green-600' : ''}`}>
+                                {profile.objectives.includes(obj) && <span className="text-black text-xs font-bold">X</span>}
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={profile.objectives.includes(obj)}
+                                onChange={() => toggleObjective(obj)}
+                                className="hidden"
+                            />
+                            <span className={`text-sm uppercase ${profile.objectives.includes(obj) ? 'text-green-400 font-bold' : 'text-green-700'}`}>{obj}</span>
+                        </label>
+                    ))}
+
+                    <button
+                        onClick={handleSave}
+                        className="w-full bg-green-900/20 border border-green-500 py-4 mt-8 hover:bg-green-500 hover:text-black font-bold transition-all uppercase tracking-widest relative overflow-hidden group"
+                    >
+                        {status || 'SAUVEGARDER L\'IDENTITÉ'}
+                        <div className="absolute inset-0 bg-green-400/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 w-full transform skew-x-12"></div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -6986,6 +7111,59 @@ export default function MessageBubble({ message, onSendPing }: MessageBubbleProp
                     </button>
                 </div>
             )}
+        </div>
+    );
+}
+
+
+--- components\nav-bar.tsx ---
+'use client'
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Database, UserCircle, Radar } from 'lucide-react';
+
+export default function BottomNav() {
+    const pathname = usePathname();
+
+    return (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/90 backdrop-blur-2xl border border-green-900/40 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+
+                {/* CORTEX : Archives de données */}
+                <Link href="/memories" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/memories' ? 'bg-blue-500/10' : ''}`}>
+                    <Database className={`w-5 h-5 ${pathname === '/memories' ? 'text-blue-400' : 'text-blue-900 group-hover:text-blue-400'}`} />
+                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-blue-900">Cortex</span>
+                </Link>
+
+                {/* SÉPARATEUR */}
+                <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
+
+                {/* SCAN : Centre de Commande (Dashboard) */}
+                <Link href="/dashboard" className="relative group flex flex-col items-center">
+                    <div className={`p-4 rounded-full border-2 transition-all duration-500 ${pathname === '/dashboard'
+                            ? 'bg-orange-500/20 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]'
+                            : 'bg-orange-500/5 border-orange-900/50 hover:border-orange-500'
+                        }`}>
+                        <Radar className={`w-7 h-7 ${pathname === '/dashboard' ? 'text-orange-500 animate-[spin_4s_linear_infinite]' : 'text-orange-900 group-hover:text-orange-500'}`} />
+                    </div>
+                    <span className="text-[9px] uppercase mt-1 font-black tracking-widest text-orange-900 group-hover:text-orange-500">Scan</span>
+
+                    {/* Effet Neural Pulse */}
+                    {pathname === '/dashboard' && (
+                        <div className="absolute inset-0 rounded-full bg-orange-500/20 animate-ping -z-10" />
+                    )}
+                </Link>
+
+                {/* SÉPARATEUR */}
+                <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
+
+                {/* IDENTITÉ : Profil Agent */}
+                <Link href="/profile" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/profile' ? 'bg-green-500/10' : ''}`}>
+                    <UserCircle className={`w-5 h-5 ${pathname === '/profile' ? 'text-green-400' : 'text-green-900 group-hover:text-green-400'}`} />
+                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">Identité</span>
+                </Link>
+
+            </div>
         </div>
     );
 }
@@ -9284,7 +9462,7 @@ export interface VectorStore {
 --- next-env.d.ts ---
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-import "./.next/dev/types/routes.d.ts";
+import "./.next/types/routes.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
@@ -9544,6 +9722,17 @@ model Profile {
   email                   String?   @unique
   bio                     String?
   avatarUrl               String?
+
+  // --- NOUVEAUX CHAMPS ---
+  age                     Int?
+  gender                  String?
+  profession              String?
+  hobbies                 String[]
+  objectives              String[] // Ex: ["Travail", "Rencontres"]
+  // -----------------------
+  
+  // IA Tags (générés automatiquement plus tard)
+  tags            String[]
   
   // Auth & Sécurité Zero-Knowledge
   passwordHash            String?

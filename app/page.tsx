@@ -2,16 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseBrowser';
 import { Shield, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function Home() {
   const router = useRouter();
+  const [supabase] = useState(() => createClient());
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -86,11 +82,11 @@ export default function Home() {
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 font-mono ml-1">EMAIL</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="pilote@twins.com" required />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="pilote@twins.com" autoComplete="username" required />
           </div>
           <div>
             <label className="text-xs text-slate-500 font-mono ml-1">MOT DE PASSE</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="••••••••" required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="••••••••" autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required />
           </div>
 
           {error && <div className={`text-xs p-3 rounded border ${error.includes('!') ? 'bg-green-900/30 text-green-400 border-green-900' : 'bg-red-900/30 text-red-400 border-red-900'}`}>{error}</div>}
