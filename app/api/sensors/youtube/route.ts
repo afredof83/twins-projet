@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getMistralEmbedding } from '@/lib/mistral';
 
@@ -9,17 +9,17 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
     try {
-        // On reçoit maintenant le texte DÉJÀ extrait par le client
+        // On reÃ§oit maintenant le texte DÃ‰JÃ€ extrait par le client
         const { videoUrl, transcriptText, title, profileId } = await request.json();
 
         if (!videoUrl || !transcriptText || !profileId) {
-            return NextResponse.json({ error: "Données manquantes (URL, Texte ou ProfileID)" }, { status: 400 });
+            return NextResponse.json({ error: "DonnÃ©es manquantes (URL, Texte ou ProfileID)" }, { status: 400 });
         }
 
-        // On limite le texte pour Mistral (max ~20k chars pour être safe)
+        // On limite le texte pour Mistral (max ~20k chars pour Ãªtre safe)
         const truncatedText = transcriptText.substring(0, 20000);
 
-        // 2. Analyse par Mistral (Résumé intelligent)
+        // 2. Analyse par Mistral (RÃ©sumÃ© intelligent)
         const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
             body: JSON.stringify({
                 model: "mistral-small",
                 messages: [
-                    { role: "system", content: "Tu es un assistant cybernétique. Analyse cette transcription vidéo. Donne : 1) Un titre court de sujet. 2) Trois points clés. 3) Une conclusion. Sois concis." },
-                    { role: "user", content: `Titre Vidéo: ${title}\n\nTranscription: ${truncatedText}` }
+                    { role: "system", content: "Tu es un assistant cybernÃ©tique. Analyse cette transcription vidÃ©o. Donne : 1) Un titre court de sujet. 2) Trois points clÃ©s. 3) Une conclusion. Sois concis." },
+                    { role: "user", content: `Titre VidÃ©o: ${title}\n\nTranscription: ${truncatedText}` }
                 ]
             })
         });
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
         const mistralData = await mistralResponse.json();
         const summary = mistralData.choices[0].message.content;
 
-        // 3. Vectorisation du résumé
+        // 3. Vectorisation du rÃ©sumÃ©
         const embedding = await getMistralEmbedding(summary);
 
-        // 4. Sauvegarde dans la mémoire
+        // 4. Sauvegarde dans la mÃ©moire
         const { data, error } = await supabase.from('Memory').insert([{
             profileId,
             content: `[VISION] ${title || videoUrl}\n\n${summary}`,

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 export default function CommlinkButton({ profileId }: { profileId: string | null }) {
     return (
         <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-green-900/10 border border-green-900/50 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.2)]">

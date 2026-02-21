@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
 
@@ -6,13 +6,13 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 // Filtres de pertinence
-const NOISE_KEYWORDS = ["publicité", "promo", "sponsored", "cookies", "abonnez-vous"];
+const NOISE_KEYWORDS = ["publicitÃ©", "promo", "sponsored", "cookies", "abonnez-vous"];
 
 async function shouldMemorize(content: string): Promise<boolean> {
     // 1. Longueur min
     if (content.length < 50) return false;
 
-    // 2. Mots-clés bruit
+    // 2. Mots-clÃ©s bruit
     if (NOISE_KEYWORDS.some(word => content.toLowerCase().includes(word))) return false;
 
     return true;
@@ -24,7 +24,7 @@ async function fetchWithRetry(fn: () => Promise<any>, retries = 3, delay = 1000)
         return await fn();
     } catch (error: any) {
         if (error?.status === 429 && retries > 0) {
-            console.log(`⏳ Rate limit atteint. Nouvelle tentative dans ${delay}ms...`);
+            console.log(`â³ Rate limit atteint. Nouvelle tentative dans ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return fetchWithRetry(fn, retries - 1, delay * 2);
         }
@@ -44,24 +44,24 @@ export async function POST(req: Request) {
         let contentToEmbed = content;
         let finalContent = content;
 
-        // 2. Résumé intelligent (si trop long)
+        // 2. RÃ©sumÃ© intelligent (si trop long)
         if (content.length > 1500) {
-            console.log("📝 Contenu long détecté -> Résumé en cours...");
+            console.log("ðŸ“ Contenu long dÃ©tectÃ© -> RÃ©sumÃ© en cours...");
             try {
                 const summaryResponse = await fetchWithRetry(() => mistral.chat.complete({
                     model: "mistral-small-latest",
                     messages: [
-                        { role: "system", content: "Tu es un archiviste expert. Résume ce texte en un paragraphe dense et factuel de 150 mots maximum. Capture les entités nommées et les idées clés." },
+                        { role: "system", content: "Tu es un archiviste expert. RÃ©sume ce texte en un paragraphe dense et factuel de 150 mots maximum. Capture les entitÃ©s nommÃ©es et les idÃ©es clÃ©s." },
                         { role: "user", content: content }
                     ]
                 }));
                 const summary = summaryResponse.choices?.[0]?.message?.content || content.substring(0, 500); // Fallback
-                contentToEmbed = `[RÉSUMÉ] ${summary}`;
-                // Optionnel : On peut stocker le résumé ou garder le texte complet. 
-                // Ici on garde le texte complet dans 'content' mais on vectorise le résumé.
+                contentToEmbed = `[RÃ‰SUMÃ‰] ${summary}`;
+                // Optionnel : On peut stocker le rÃ©sumÃ© ou garder le texte complet. 
+                // Ici on garde le texte complet dans 'content' mais on vectorise le rÃ©sumÃ©.
             } catch (e) {
-                console.error("Erreur résumé:", e);
-                // On continue avec le texte complet si le résumé échoue
+                console.error("Erreur rÃ©sumÃ©:", e);
+                // On continue avec le texte complet si le rÃ©sumÃ© Ã©choue
             }
         }
 
@@ -81,16 +81,16 @@ export async function POST(req: Request) {
             expiresAt = date.toISOString();
         }
 
-        // 5. Stockage Supabase
+        // 5. Stockage Supabase (StandardisÃ© snake_case)
         const { error } = await supabase
-            .from('Memory')
+            .from('memory') // â¬…ï¸ Minuscule
             .insert({
-                profileId,
-                content: finalContent, // On stocke le contenu original
+                profile_id: profileId, // â¬…ï¸ snake_case
+                content: finalContent,
                 type: type || 'thought',
                 embedding: embedding,
                 source: 'manual_input',
-                expires_at: expiresAt // Colonne d'expiration (assurez-vous d'avoir ajouté la colonne)
+                expires_at: expiresAt // â¬…ï¸ snake_case (dÃ©jÃ  correct si la DB a la colonne)
             });
 
         if (error) throw error;

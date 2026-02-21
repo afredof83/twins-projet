@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -23,7 +23,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Technique",
-        description: "Ingère votre savoir-faire et votre logique.",
+        description: "IngÃ¨re votre savoir-faire et votre logique.",
         color: "from-slate-500 to-gray-400",
         platforms: [
             { id: 'github', name: 'GitHub', icon: Github, xp: '+30 LOGIC', private: false },
@@ -33,8 +33,8 @@ const MODULES = [
         ]
     },
     {
-        title: "Intelligence Émotionnelle",
-        description: "Analyse privée. Comprend votre humour et vos sentiments.",
+        title: "Intelligence Ã‰motionnelle",
+        description: "Analyse privÃ©e. Comprend votre humour et vos sentiments.",
         color: "from-green-500 to-emerald-400",
         platforms: [
             { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, xp: '+50 SOUL', private: true },
@@ -44,7 +44,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Culturelle",
-        description: "Définit vos goûts musicaux et artistiques.",
+        description: "DÃ©finit vos goÃ»ts musicaux et artistiques.",
         color: "from-pink-500 to-rose-500",
         platforms: [
             { id: 'spotify', name: 'Spotify', icon: Music, xp: '+15 VIBE', private: false },
@@ -105,7 +105,7 @@ export default function NeuralLinkPage() {
                     </div>
                 </div>
 
-                {/* Boucle sur les Catégories */}
+                {/* Boucle sur les CatÃ©gories */}
                 {MODULES.map((module, idx) => (
                     <section key={idx} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
 
@@ -144,20 +144,20 @@ export default function NeuralLinkPage() {
                                             </span>
                                         </div>
 
-                                        {/* Icône & Titre */}
+                                        {/* IcÃ´ne & Titre */}
                                         <div className={`mb-3 ${isConnected ? 'text-green-400' : 'text-slate-300 group-hover:text-white'}`}>
                                             <Icon size={24} />
                                         </div>
                                         <div className="font-bold text-sm mb-1">{platform.name}</div>
 
-                                        {/* État */}
+                                        {/* Ã‰tat */}
                                         <div className="text-xs font-mono">
                                             {isConnected ? (
-                                                <span className="text-green-500">● ACTIF</span>
+                                                <span className="text-green-500">â— ACTIF</span>
                                             ) : isSyncing ? (
-                                                <span className="text-purple-400 animate-pulse">↻ SYNC...</span>
+                                                <span className="text-purple-400 animate-pulse">â†» SYNC...</span>
                                             ) : (
-                                                <span className="text-slate-500">○ DÉCONNECTÉ</span>
+                                                <span className="text-slate-500">â—‹ DÃ‰CONNECTÃ‰</span>
                                             )}
                                         </div>
 

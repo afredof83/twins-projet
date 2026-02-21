@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,8 +6,6 @@ import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upl
 import { createClient } from '@/lib/supabase/client';
 
 // Components
-import SecureWhatsApp from '@/components/SecureWhatsApp';
-
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
 import Scanner from '@/components/dashboard/Scanner';
@@ -19,7 +17,7 @@ import SecureChat from '@/components/SecureChat';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 
-// --- LOGIQUE METIER (INCHANGÉE) ---
+// --- LOGIQUE METIER (INCHANGÃ‰E) ---
 const calculateSynergy = (target: any, memories: any[]) => {
     let score = 45;
     if (target.bio && target.bio.length > 20) score += 15;
@@ -53,8 +51,8 @@ const mockDeepAudit = {
         { trait: "Neuroticism", value: 12, label: "Stable" },
     ],
     network: [
-        "Connecté au Cluster 'React Core'",
-        "Accès confirmé : 3 investisseurs",
+        "ConnectÃ© au Cluster 'React Core'",
+        "AccÃ¨s confirmÃ© : 3 investisseurs",
         "Pont potentiel vers 'Silicon Valley Node'",
     ],
     risks: [
@@ -77,7 +75,7 @@ export default function MissionControl() {
     const [strategicReport, setStrategicReport] = useState<any>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    // États UI
+    // Ã‰tats UI
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
     const [channels, setChannels] = useState<any[]>([]);
@@ -85,11 +83,11 @@ export default function MissionControl() {
     const [showCortexPanel, setShowCortexPanel] = useState(false);
     const [showBlockPanel, setShowBlockPanel] = useState(false);
 
-    // États scan 2 phases
+    // Ã‰tats scan 2 phases
     const [basicResult, setBasicResult] = useState<any>(null);
     const [deepResult, setDeepResult] = useState<any>(null);
 
-    // États Ingestion
+    // Ã‰tats Ingestion
     const [quickThought, setQuickThought] = useState("");
     const [isDragging, setIsDragging] = useState(false);
 
@@ -108,56 +106,110 @@ export default function MissionControl() {
             fetchChannels();
             fetchBlockList(user.id);
             loadMemories(user.id);
+            fetchAccessRequests(user.id);
         };
         init();
     }, []);
 
-    // 3. ÉCOUTEUR REALTIME (Branchement direct & Chirurgical & BLINDÉ)
+    const fetchAccessRequests = async (id: string) => {
+        const { data } = await supabase
+            .from('AccessRequest')
+            .select('*')
+            .eq('provider_id', id)
+            .eq('status', 'pending');
+        if (data) setIncomingRequests(data);
+    };
+
+    // -------------------------------------------------------------
+    // 1. Ã‰COUTEUR GLOBAL : Nouveaux Canaux (Channel)
+    // -------------------------------------------------------------
     useEffect(() => {
-        let currentUserId: string | null = null;
-        let channel: any;
+        if (!profileId) return;
 
-        const initNetwork = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-            currentUserId = session.user.id; // On stocke ton ID
+        let isMounted = true;
+        let channelRadar: any = null;
 
-            // 1. Chargement initial
-            const { data } = await supabase
-                .from('AccessRequest')
-                .select('*')
-                .eq('provider_id', currentUserId)
-                .eq('status', 'pending');
-            if (data) setIncomingRequests(data);
+        const initDelay = setTimeout(() => {
+            if (!isMounted) return;
 
-            // 2. Écouteur Temps Réel AVEC FILTRE
-            channel = supabase.channel('live_requests')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'AccessRequest' }, (payload: any) => {
-                    // 🛡️ LE BOUCLIER EST ICI : Est-ce que cette demande est pour MOI ?
-                    if (payload.new.provider_id === currentUserId) {
-                        console.log("📥 [LIVE] Requête reçue :", payload.new);
-                        setIncomingRequests((prev) => {
-                            if (prev.some(req => req.id === payload.new.id)) return prev;
-                            return [...prev, payload.new];
-                        });
-                    }
-                })
-                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'AccessRequest' }, (payload: any) => {
-                    setIncomingRequests((prev) => prev.filter(req => req.id !== payload.old.id));
-                })
-                // On conserve l'écouteur Channel pour ne rien casser
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'Channel' }, (payload: any) => {
-                    console.log("⚡ Changement Channel", payload);
+            channelRadar = supabase.channel('radar_channels_v4')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Channel' }, () => {
                     fetchChannels();
                 })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'Channel' }, () => {
+                    fetchChannels();
+                    setIsChatOpen(false);
+                })
                 .subscribe();
+        }, 300);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(initDelay);
+            if (channelRadar) supabase.removeChannel(channelRadar);
         };
+    }, [profileId]);
 
-        initNetwork();
-        fetchChannels(); // Toujours charger les channels au démarrage
+    // -------------------------------------------------------------
+    // 1b. Ã‰COUTEUR GLOBAL : Demandes de Liaison (AccessRequest)
+    // -------------------------------------------------------------
+    useEffect(() => {
+        if (!profileId) return;
 
-        return () => { if (channel) supabase.removeChannel(channel); };
-    }, []);
+        const requestRadar = supabase.channel('radar_requests')
+            .on(
+                'postgres_changes',
+                // ðŸŸ¢ SUPPRESSION DU FILTRE SERVEUR QUI CAUSAIT LE "MISMATCH"
+                { event: 'INSERT', schema: 'public', table: 'AccessRequest' },
+                (payload: any) => {
+                    const req = payload.new;
+                    // ðŸŸ¢ FILTRAGE CÃ”TÃ‰ CLIENT avec la bonne colonne 'provider_id'
+                    if (req.provider_id === profileId) {
+                        console.log("âš¡ Nouvelle demande de liaison entrante !");
+                        fetchAccessRequests(profileId);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                // ðŸŸ¢ SUPPRESSION DU FILTRE SERVEUR Ã‰GALEMENT POUR LE DELETE
+                { event: 'DELETE', schema: 'public', table: 'AccessRequest' },
+                () => {
+                    // Refresh la liste quand une demande est supprimÃ©e (ex: annulÃ©e, refusÃ©e)
+                    fetchAccessRequests(profileId);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(requestRadar); };
+    }, [profileId]);
+
+
+    // -------------------------------------------------------------
+    // 2. Ã‰COUTEUR GLOBAL : Messages non lus (La pastille rouge)
+    // -------------------------------------------------------------
+    useEffect(() => {
+        if (!profileId) return;
+        const supabase = createClient();
+
+        const radar = supabase.channel('global_radar')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
+                const newMsg = payload.new;
+                // Si le message est pour moi (pas de moi)
+                if (newMsg.sender_id !== profileId) {
+                    setUnreadIds(prev => {
+                        // Si on n'est pas dÃ©jÃ  dans ce chat, on ajoute Ã  la liste des non-lus
+                        if (activeChannelId !== newMsg.communication_id) {
+                            return [...new Set([...prev, newMsg.communication_id])];
+                        }
+                        return prev;
+                    });
+                }
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(radar); };
+    }, [profileId, activeChannelId]); // TrÃ¨s important d'avoir activeChannelId ici
 
     const fetchChannels = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -199,8 +251,23 @@ export default function MissionControl() {
         try {
             const res = await fetch('/api/sensors/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { addLog(`SUCCÈS: Données ingérées.`); loadMemories(profileId); }
-            else { addLog(`ERREUR: Échec lecture.`); }
+            if (data.success) {
+                addLog(`SUCCÃˆS: DonnÃ©es ingÃ©rÃ©es.`);
+                loadMemories(profileId);
+
+                // ðŸŸ¢ NOUVEAU : On rÃ©veille le Gardien silencieusement en arriÃ¨re-plan !
+                // On ne met pas de "await" devant le fetch, pour ne pas geler l'Ã©cran de l'utilisateur.
+                console.log("ðŸ¦‡ Envoi du signal au Gardien...");
+                fetch('/api/guardian', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        profileId: profileId,
+                        newMemoryContent: `Nouveau fichier analysÃ© : ${file.name}. Ce document a Ã©tÃ© ajoutÃ© Ã  sa base de donnÃ©es.`
+                    })
+                }).catch(err => console.error("Erreur du Gardien :", err));
+            }
+            else { addLog(`ERREUR: Ã‰chec lecture.`); }
         } catch (err) { addLog(`CRITIQUE: Erreur upload.`); }
     };
 
@@ -208,14 +275,14 @@ export default function MissionControl() {
         e?.preventDefault();
         if (!quickThought.trim() || !profileId) return;
 
-        // ✅ Filtre anti-corruption : suppression des null bytes
+        // âœ… Filtre anti-corruption : suppression des null bytes
         const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
         setQuickThought('');
         addLog('MEMOIRE: Archivage...');
 
-        // Récupération du passeport session
+        // RÃ©cupÃ©ration du passeport session
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('CRITIQUE: Session expirée.'); return; }
+        if (!session) { addLog('CRITIQUE: Session expirÃ©e.'); return; }
 
         try {
             const res = await fetch('/api/memories', {
@@ -232,10 +299,10 @@ export default function MissionControl() {
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
-            addLog('SUCCÈS: Pensée synchronisée dans le Cortex.');
+            addLog('SUCCÃˆS: PensÃ©e synchronisÃ©e dans le Cortex.');
             loadMemories(profileId);
         } catch (err: any) {
-            addLog(`CRITIQUE: ${err.message || 'Échec de transmission.'}`);
+            addLog(`CRITIQUE: ${err.message || 'Ã‰chec de transmission.'}`);
         }
     };
     const triggerManualScan = async () => {
@@ -245,22 +312,22 @@ export default function MissionControl() {
         setDeepResult(null);
         setMatchData(null);
         setStrategicReport(null);
-        addLog('RADAR: Scan de surface initié...');
+        addLog('RADAR: Scan de surface initiÃ©...');
 
         try {
             const report = await scanGlobalNetwork(profileId, 'basic');
-            console.log('📡 BASIC SCAN:', report);
+            console.log('ðŸ“¡ BASIC SCAN:', report);
             setBasicResult(report);
             setStatus('LIST');
-            addLog(`RADAR: Analyse de surface terminée — statut ${report.globalStatus}.`);
+            addLog(`RADAR: Analyse de surface terminÃ©e â€” statut ${report.globalStatus}.`);
         } catch (e) {
             console.error(e);
             setStatus('IDLE');
-            addLog('ERREUR: Scan de surface échoué.');
+            addLog('ERREUR: Scan de surface Ã©chouÃ©.');
         }
     };
 
-    // ── PHASE 2 : Audit profond (opportunités complètes) ──
+    // â”€â”€ PHASE 2 : Audit profond (opportunitÃ©s complÃ¨tes) â”€â”€
     const triggerDeepAudit = async () => {
         if (!profileId) return;
         setStatus('SCANNING');
@@ -269,37 +336,37 @@ export default function MissionControl() {
 
         try {
             const report = await scanGlobalNetwork(profileId, 'deep');
-            console.log('🔥 DEEP AUDIT:', report);
+            console.log('ðŸ”¥ DEEP AUDIT:', report);
             setDeepResult(report);
             setStrategicReport(report);
             setStatus('LIST');
-            addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
+            addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifiÃ©(s).`);
         } catch (e) {
             console.error(e);
-            // On revient au résultat basic si on en avait un
+            // On revient au rÃ©sultat basic si on en avait un
             setStatus('LIST');
-            addLog('ERREUR: Audit profond échoué.');
+            addLog('ERREUR: Audit profond Ã©chouÃ©.');
         }
     };
 
-    // ── CONTACT : Initier une demande de liaison après audit profond ──
+    // â”€â”€ CONTACT : Initier une demande de liaison aprÃ¨s audit profond â”€â”€
     const handleContactTarget = async () => {
-        // 🔍 VÉRIFICATION N°1 : Est-ce qu'on a bien l'ID de l'autre clone ?
-        console.log("🔍 DONNÉES DE L'AUDIT :", deepResult);
+        // ðŸ” VÃ‰RIFICATION NÂ°1 : Est-ce qu'on a bien l'ID de l'autre Agent IA ?
+        console.log("ðŸ” DONNÃ‰ES DE L'AUDIT :", deepResult);
 
         const targetId = deepResult?.targetId || deepResult?.id || deepResult?.profile_id;
 
-        console.log("🎯 ID DE LA CIBLE À CONTACTER :", targetId);
+        console.log("ðŸŽ¯ ID DE LA CIBLE Ã€ CONTACTER :", targetId);
 
         if (!targetId) {
-            alert("[ERREUR CRITIQUE] Impossible d'engager : l'ID de la cible est introuvable. Le radar n'a pas transmis les coordonnées.");
+            alert("[ERREUR CRITIQUE] Impossible d'engager : l'ID de la cible est introuvable. Le radar n'a pas transmis les coordonnÃ©es.");
             return;
         }
 
         if (!profileId) return;
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('[CRITIQUE] Session expirée.'); return; }
+        if (!session) { addLog('[CRITIQUE] Session expirÃ©e.'); return; }
 
         addLog('LIAISON: Envoi de la demande de contact...');
 
@@ -312,24 +379,24 @@ export default function MissionControl() {
                 },
                 body: JSON.stringify({
                     targetId,
-                    senderClassification: deepResult?.targetClassification ?? 'entité inconnue',
+                    senderClassification: deepResult?.targetClassification ?? 'entitÃ© inconnue',
                 }),
             });
             const data = await res.json();
             if (data.success) {
-                addLog('SUCCÈS: Demande de contact transmise. En attente de réponse.');
+                addLog('SUCCÃˆS: Demande de contact transmise. En attente de rÃ©ponse.');
                 setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
             } else {
-                addLog(`[ERREUR] ${data.error || 'Demande échouée.'}`);
+                addLog(`[ERREUR] ${data.error || 'Demande Ã©chouÃ©e.'}`);
             }
         } catch (err: any) {
-            addLog(`[CRITIQUE] Échec de connexion : ${err.message}`);
+            addLog(`[CRITIQUE] Ã‰chec de connexion : ${err.message}`);
         }
     };
 
-    // ── Réponse aux demandes de liaison (accepter / refuser / bloquer) ──
+    // â”€â”€ RÃ©ponse aux demandes de liaison (accepter / refuser / bloquer) â”€â”€
     const handleResponse = async (req: any, action: 'accept' | 'refuse' | 'block') => {
-        console.log("🖱️ [DEBUG CLICK] handleResponse déclenché pour:", req.id, "Action:", action);
+        console.log("ðŸ–±ï¸ [DEBUG CLICK] handleResponse dÃ©clenchÃ© pour:", req.id, "Action:", action);
         // TRAP : Si cette ligne s'affiche au chargement sans clic, c'est le bug !
 
         const { data: { session } } = await supabase.auth.getSession();
@@ -346,12 +413,12 @@ export default function MissionControl() {
             const data = await res.json();
             if (data.success) {
                 setIncomingRequests(prev => prev.filter(r => r.id !== req.id));
-                if (action === 'accept') addLog('LIAISON: Canal sécurisé établi.');
-                else if (action === 'block') addLog('SÉCURITÉ: Entité bloquée.');
-                else addLog('LIAISON: Requête refusée.');
+                if (action === 'accept') addLog('LIAISON: Canal sÃ©curisÃ© Ã©tabli.');
+                else if (action === 'block') addLog('SÃ‰CURITÃ‰: EntitÃ© bloquÃ©e.');
+                else addLog('LIAISON: RequÃªte refusÃ©e.');
             }
         } catch (err: any) {
-            addLog(`[CRITIQUE] Réponse échouée : ${err.message}`);
+            addLog(`[CRITIQUE] RÃ©ponse Ã©chouÃ©e : ${err.message}`);
         }
     };
 
@@ -370,7 +437,7 @@ export default function MissionControl() {
             });
             setStatus('AUDIT');
         } catch (e) {
-            addLog("ERREUR: Analyse détaillée échouée.");
+            addLog("ERREUR: Analyse dÃ©taillÃ©e Ã©chouÃ©e.");
         } finally {
             setIsAnalyzing(false);
         }
@@ -380,12 +447,12 @@ export default function MissionControl() {
         if (!matchData) return;
 
         if (action === 'LINK') {
-            await supabase.from('Channel').insert({ member_one_id: profileId, member_two_id: matchData.targetId, topic: "LIAISON SÉCURISÉE", last_message_at: new Date().toISOString(), initiatorId: profileId });
-            addLog("LIAISON: Établie.");
+            await supabase.from('Channel').insert({ member_one_id: profileId, member_two_id: matchData.targetId, topic: "LIAISON SÃ‰CURISÃ‰E", last_message_at: new Date().toISOString(), initiatorId: profileId });
+            addLog("LIAISON: Ã‰tablie.");
         } else if (action === 'BLOCK') {
             await supabase.from('BlockList').insert({ blockerId: profileId, blockedId: matchData.targetId });
             setBlockedIds(prev => [...prev, matchData.targetId]);
-            addLog("SÉCURITÉ: Cible bannie.");
+            addLog("SÃ‰CURITÃ‰: Cible bannie.");
         }
 
         setStatus('IDLE');
@@ -394,22 +461,37 @@ export default function MissionControl() {
     const toggleChannelChat = (id: string) => { setActiveChannelId(id); setIsChatOpen(true); setUnreadIds(prev => prev.filter(uid => uid !== id)); };
 
     const handleDeleteChannel = async (channelId: string, e: React.MouseEvent) => {
-        e.stopPropagation(); // Empêche d'ouvrir le chat quand on clique sur supprimer
+        e.stopPropagation(); // EmpÃªche d'ouvrir le chat quand on clique sur supprimer
 
-        // Petit son ou effet tactique serait bien ici, mais on reste simple
-        if (!confirm("CONFIRMATION REQUISE : Rompre définitivement cette liaison sécurisée ?")) return;
+        if (!confirm("CONFIRMATION REQUISE : Rompre dÃ©finitivement cette liaison sÃ©curisÃ©e et purger l'historique ?")) return;
 
-        // Mise à jour optimiste de l'interface (immédiat)
+        // 1. Mise Ã  jour optimiste de l'interface (immÃ©diat)
         setChannels(prev => prev.filter(c => c.id !== channelId));
-        addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue.`);
 
-        // Suppression en base de données
-        const { error } = await supabase.from('Channel').delete().eq('id', channelId);
+        try {
+            // 2. PURGE : On supprime d'abord tous les messages liÃ©s Ã  ce canal
+            const { error: msgError } = await supabase
+                .from('Message') // Attention Ã  la majuscule/minuscule selon votre base !
+                .delete()
+                .eq('communication_id', channelId);
 
-        if (error) {
-            addLog("ERREUR: Échec de la rupture du lien.");
-            // Si erreur, on recharge la liste pour remettre le channel
-            if (profileId) fetchChannels();
+            if (msgError) throw msgError;
+
+            // 3. DESTRUCTION : Maintenant on peut dÃ©truire le canal
+            const { error: channelError } = await supabase
+                .from('Channel')
+                .delete()
+                .eq('id', channelId);
+
+            if (channelError) throw channelError;
+
+            addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue et purgÃ©e.`);
+
+        } catch (error: any) {
+            console.error("Erreur de suppression du canal :", error.message);
+            addLog("ERREUR: Le protocole de rupture a Ã©chouÃ© (Voir Console).");
+            // Si la DB refuse, on remet le canal dans l'interface pour ne pas mentir Ã  l'Agent
+            fetchChannels();
         }
     };
 
@@ -470,11 +552,11 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* ALERTES : Requêtes de liaison entrantes */}
+                    {/* ALERTES : RequÃªtes de liaison entrantes */}
                     {incomingRequests.length > 0 && (
                         <div className="mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
                             <h3 className="text-orange-500 font-bold text-[10px] mb-2 tracking-widest uppercase flex items-center gap-1">
-                                <span className="animate-pulse">⚠️</span> {incomingRequests.length} requête(s) de liaison
+                                <span className="animate-pulse">âš ï¸</span> {incomingRequests.length} requÃªte(s) de liaison
                             </h3>
                             <div className="space-y-2">
                                 {incomingRequests.map((req) => (
@@ -484,9 +566,9 @@ export default function MissionControl() {
                                             <span className="text-[9px] text-slate-500 uppercase tracking-tighter">Source: {req.requester_id?.slice(0, 8)}...</span>
                                         </div>
                                         <div className="flex gap-1 shrink-0">
-                                            <button onClick={() => handleResponse(req, 'accept')} className="bg-green-600/20 text-green-400 border border-green-600/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">✓</button>
-                                            <button onClick={() => handleResponse(req, 'refuse')} className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-slate-700 transition-all">✕</button>
-                                            <button onClick={() => handleResponse(req, 'block')} className="bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-red-900 hover:text-white transition-all">🚫</button>
+                                            <button onClick={() => handleResponse(req, 'accept')} className="bg-green-600/20 text-green-400 border border-green-600/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">âœ“</button>
+                                            <button onClick={() => handleResponse(req, 'refuse')} className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-slate-700 transition-all">âœ•</button>
+                                            <button onClick={() => handleResponse(req, 'block')} className="bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-red-900 hover:text-white transition-all">ðŸš«</button>
                                         </div>
                                     </div>
                                 ))}
@@ -497,7 +579,7 @@ export default function MissionControl() {
                     {/* CENTRAL NEURAL MAP (Scanner & Overlays) */}
                     <div className="glass-panel rounded-2xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px]">
 
-                        {/* ÉTAT 1 : SCANNER (Visible si IDLE ou SCANNING) */}
+                        {/* Ã‰TAT 1 : SCANNER (Visible si IDLE ou SCANNING) */}
                         {(status === 'IDLE' || status === 'SCANNING') && (
                             <div className={`transition-all duration-500 w-full ${status === 'SCANNING' ? 'opacity-80 pointer-events-none' : 'opacity-100'}`}>
                                 <Scanner onScanStart={triggerManualScan} />
@@ -509,7 +591,7 @@ export default function MissionControl() {
                             </div>
                         )}
 
-                        {/* ÉTAT 2-A : RÉSULTAT SCAN BASIC */}
+                        {/* Ã‰TAT 2-A : RÃ‰SULTAT SCAN BASIC */}
                         {status === 'LIST' && basicResult && !deepResult && (
                             <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
                                 <button
@@ -537,7 +619,7 @@ export default function MissionControl() {
                                             onClick={triggerDeepAudit}
                                             className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 text-sm"
                                         >
-                                            <span>👁️</span> AUDIT PROFOND
+                                            <span>ðŸ‘ï¸</span> AUDIT PROFOND
                                         </button>
                                         <button
                                             onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
@@ -550,7 +632,7 @@ export default function MissionControl() {
                                                 if (profileId && basicResult?.targetId) {
                                                     supabase.from('BlockList').insert({ blockerId: profileId, blockedId: basicResult.targetId });
                                                     setBlockedIds(prev => [...prev, basicResult.targetId]);
-                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                    addLog('SÃ‰CURITÃ‰: Cible bannie.');
                                                 }
                                                 setStatus('IDLE'); setBasicResult(null);
                                             }}
@@ -566,12 +648,12 @@ export default function MissionControl() {
                         {/* CHARGEMENT AUDIT PROFOND */}
                         {status === 'SCANNING' && basicResult && (
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
-                                <div className="text-4xl animate-spin mb-4">⚙️</div>
+                                <div className="text-4xl animate-spin mb-4">âš™ï¸</div>
                                 <p className="text-amber-400 font-mono animate-pulse text-sm tracking-widest">EXTRACTION PROFONDE...</p>
                             </div>
                         )}
 
-                        {/* ÉTAT 2-B : RAPPORT AUDIT PROFOND CONSOLIDÉ */}
+                        {/* Ã‰TAT 2-B : RAPPORT AUDIT PROFOND CONSOLIDÃ‰ */}
                         {status === 'LIST' && deepResult && (
                             <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
                                 <button
@@ -582,10 +664,10 @@ export default function MissionControl() {
                                 </button>
 
                                 <div className="mt-6 space-y-4 pb-4">
-                                    {/* En-tête + Score unique */}
+                                    {/* En-tÃªte + Score unique */}
                                     <div className="flex justify-between items-center border-b border-orange-900/50 pb-4">
                                         <h3 className="text-orange-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                                            <span>🔥</span> RAPPORT D'AUDIT PROFOND
+                                            <span>ðŸ”¥</span> RAPPORT D'AUDIT PROFOND
                                         </h3>
                                         <div className="text-2xl font-mono font-bold text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
                                             {deepResult.overallMatchScore ?? deepResult.matchScore ?? 0}%
@@ -598,11 +680,11 @@ export default function MissionControl() {
                                             Classification Cible
                                         </span>
                                         <p className="text-slate-200 text-sm font-mono">
-                                            {deepResult.targetClassification ?? 'Entité non classifiée'}
+                                            {deepResult.targetClassification ?? 'EntitÃ© non classifiÃ©e'}
                                         </p>
                                     </div>
 
-                                    {/* Analyse tactique unifiée */}
+                                    {/* Analyse tactique unifiÃ©e */}
                                     <div className="bg-black/60 p-4 rounded border border-orange-900/30">
                                         <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
                                             Analyse Tactique
@@ -612,13 +694,13 @@ export default function MissionControl() {
                                         </p>
                                     </div>
 
-                                    {/* Alignement stratégique */}
+                                    {/* Alignement stratÃ©gique */}
                                     <div className="bg-black/60 p-4 rounded border border-orange-900/30">
                                         <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
-                                            Alignement Stratégique
+                                            Alignement StratÃ©gique
                                         </span>
                                         <p className="text-cyan-400 text-sm leading-relaxed">
-                                            {deepResult.strategicAlignment ?? 'Évaluation des bénéfices en cours...'}
+                                            {deepResult.strategicAlignment ?? 'Ã‰valuation des bÃ©nÃ©fices en cours...'}
                                         </p>
                                     </div>
 
@@ -628,7 +710,7 @@ export default function MissionControl() {
                                             onClick={handleContactTarget}
                                             className="bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all uppercase tracking-wider text-[11px]"
                                         >
-                                            💬 Contacter
+                                            ðŸ’¬ Contacter
                                         </button>
                                         <button
                                             onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
@@ -641,7 +723,7 @@ export default function MissionControl() {
                                                 if (profileId && deepResult?.targetId) {
                                                     supabase.from('BlockList').insert({ blockerId: profileId, blockedId: deepResult.targetId });
                                                     setBlockedIds(prev => [...prev, deepResult.targetId]);
-                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                    addLog('SÃ‰CURITÃ‰: Cible bannie.');
                                                 }
                                                 setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
                                             }}
@@ -654,7 +736,7 @@ export default function MissionControl() {
                             </div>
                         )}
 
-                        {/* ÉTAT 3 : MATCH LOCKED (Legacy/Single Audit - kept for compatibility if needed, but not reached via scanGlobalNetwork) */}
+                        {/* Ã‰TAT 3 : MATCH LOCKED (Legacy/Single Audit - kept for compatibility if needed, but not reached via scanGlobalNetwork) */}
                         {status === 'LOCKED' && matchData && (
                             <div className="absolute inset-0 z-20 flex items-center justify-center p-2">
                                 <MatchOverlay
@@ -671,7 +753,7 @@ export default function MissionControl() {
                         {isDragging && (
                             <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center border-2 border-primary border-dashed m-2 rounded-xl">
                                 <Upload className="text-primary animate-bounce" size={32} />
-                                <p className="text-xs font-bold text-white mt-2">INGESTION DONNÉES</p>
+                                <p className="text-xs font-bold text-white mt-2">INGESTION DONNÃ‰ES</p>
                             </div>
                         )}
                     </div>
@@ -684,7 +766,7 @@ export default function MissionControl() {
                             </h3>
                         </div>
                         <div className="space-y-2 overflow-y-auto max-h-32 custom-scrollbar">
-                            {channels.filter(c => c.topic && c.topic !== 'LIAISON SÉCURISÉE').map((channel) => { // On filtre les canaux sans sujet ou par défaut
+                            {channels.filter(c => c.topic && c.topic !== 'LIAISON SÃ‰CURISÃ‰E').map((channel) => { // On filtre les canaux sans sujet ou par dÃ©faut
                                 const otherId = channel.member_one_id === profileId ? channel.member_two_id : channel.member_one_id;
 
                                 return (
@@ -696,10 +778,23 @@ export default function MissionControl() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => { setChatPartnerId(otherId); setActiveChannelId(channel.id); setIsChatOpen(true); }}
-                                                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap"
+                                                    onClick={() => {
+                                                        setChatPartnerId(otherId);
+                                                        setActiveChannelId(channel.id);
+                                                        setIsChatOpen(true);
+                                                        // ðŸŸ¢ On efface la notification quand on ouvre le canal
+                                                        setUnreadIds(prev => prev.filter(id => id !== channel.id));
+                                                    }}
+                                                    className="relative bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap"
                                                 >
                                                     OUVRIR TCHAT
+                                                    {/* ðŸŸ¢ LA PASTILLE ROUGE DE NOTIFICATION */}
+                                                    {unreadIds.includes(channel.id) && (
+                                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-black shadow-sm"></span>
+                                                        </span>
+                                                    )}
                                                 </button>
                                                 <button
                                                     onClick={(e) => handleDeleteChannel(channel.id, e)}
@@ -725,13 +820,13 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* Input Pensée Rapide */}
+                    {/* Input PensÃ©e Rapide */}
                     <form onSubmit={handleQuickThoughtSubmit} className="glass-panel rounded-full p-1 flex items-center gap-2 pl-4">
                         <input
                             type="text"
                             value={quickThought}
                             onChange={e => setQuickThought(e.target.value)}
-                            placeholder="Saisir pensée rapide..."
+                            placeholder="Saisir pensÃ©e rapide..."
                             className="bg-transparent border-none text-base md:text-xs text-white focus:ring-0 flex-1 placeholder:text-gray-600"
                         />
                         <button type="submit" className="p-2 bg-primary/20 rounded-full text-primary hover:bg-primary hover:text-black transition-colors active:scale-90">
@@ -766,15 +861,19 @@ export default function MissionControl() {
                 </div>
             </div >
 
-            {/* MODALS */}
-            {
-                isChatOpen && activeChannelId && (
-                    <div className="fixed inset-0 z-[100] bg-black animate-in slide-in-from-bottom">
-                        <button onClick={() => setIsChatOpen(false)} className="absolute top-4 right-4 z-50 p-2 bg-white/10 rounded-full text-white"><X /></button>
-                        <SecureWhatsApp profileId={profileId} channelId={activeChannelId} />
+            {/* SECURE CHAT OVERLAY */}
+            {isChatOpen && chatPartnerId && profileId && activeChannelId && ( // <-- Ajoutez activeChannelId ici
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="w-full max-w-lg h-[80vh] min-h-[500px]">
+                        <SecureChat
+                            myId={profileId}
+                            partnerId={chatPartnerId}
+                            channelId={activeChannelId} // â¬…ï¸ TRÃˆS IMPORTANT : Passer l'ID du Canal
+                            onClose={() => setIsChatOpen(false)}
+                        />
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {
                 showCortexPanel && (
@@ -792,7 +891,7 @@ export default function MissionControl() {
                 <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center">
                     <div className="bg-slate-900 p-6 rounded-xl border border-red-900/50">
                         <h3 className="text-red-500 font-bold mb-4">PROTOCOLE D'EXCLUSION</h3>
-                        <p className="text-gray-400 mb-4">Liste des entités bannies:</p>
+                        <p className="text-gray-400 mb-4">Liste des entitÃ©s bannies:</p>
                         <ul className="mb-4 space-y-2">
                             {blockedIds.map(id => <li key={id} className="text-xs font-mono text-red-400">{id}</li>)}
                             {blockedIds.length === 0 && <li className="text-xs text-gray-600">Aucune menace active.</li>}
@@ -802,7 +901,7 @@ export default function MissionControl() {
                 </div>
             )}
 
-            {/* ÉTAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
+            {/* Ã‰TAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
             {
                 status === 'AUDIT' && matchData && (
                     <DeepAuditReport
@@ -812,18 +911,7 @@ export default function MissionControl() {
                 )
             }
 
-            {/* SECURE CHAT OVERLAY */}
-            {isChatOpen && chatPartnerId && profileId && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-lg h-[600px]">
-                        <SecureChat
-                            myId={profileId}
-                            partnerId={chatPartnerId}
-                            onClose={() => setIsChatOpen(false)}
-                        />
-                    </div>
-                </div>
-            )}
+
         </div >
     );
 }

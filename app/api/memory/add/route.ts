@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { embeddingService } from '@/lib/vector/embedding-service';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
 
@@ -14,11 +14,11 @@ export async function POST(req: NextRequest) {
         // 1. Vectorisation
         const embedding = await embeddingService.generateEmbedding(content);
 
-        // 2. Sauvegarde dans la mémoire
+        // 2. Sauvegarde dans la mÃ©moire
         await vectorStore.addMemory({
             content: content,
             embedding: embedding,
-            tags: ['journal', 'direct_entry'], // On marque que c'est une entrée directe
+            tags: ['journal', 'direct_entry'], // On marque que c'est une entrÃ©e directe
             type: 'MEMORY',
             profileId: profileId
         });
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error: any) {
-        console.error("🔥 Add Memory Error:", error);
+        console.error("ðŸ”¥ Add Memory Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

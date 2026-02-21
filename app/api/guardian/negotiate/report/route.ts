@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -13,8 +13,8 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing IDs" }, { status: 400 });
         }
 
-        // Requête simplifiée : on cherche une négociation entre les deux participants
-        // On sélectionne summary et verdict. On utilise createdAt pour le tri.
+        // RequÃªte simplifiÃ©e : on cherche une nÃ©gociation entre les deux participants
+        // On sÃ©lectionne summary et verdict. On utilise createdAt pour le tri.
         const { data, error } = await supabase
             .from('Negotiation')
             .select('summary, verdict, createdAt')

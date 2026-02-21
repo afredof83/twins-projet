@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ShieldOff, Trash2 } from 'lucide-react';
@@ -40,7 +40,7 @@ export default function BlockedPage() {
                 {blockedList.length > 0 ? blockedList.map((item: any) => (
                     <div key={item.id} className="p-6 bg-slate-900/50 border border-red-900/20 rounded-2xl flex justify-between items-center">
                         <div>
-                            <p className="text-white font-bold">{item.blocked?.name || 'Clone Inconnu'}</p>
+                            <p className="text-white font-bold">{item.blocked?.name || 'Agent IA Inconnu'}</p>
                             <p className="text-[10px] text-slate-600">ID: {item.blockedId.slice(0, 8)}</p>
                         </div>
                         <button onClick={() => unblock(item.id)} className="p-3 bg-red-900/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
@@ -48,7 +48,7 @@ export default function BlockedPage() {
                         </button>
                     </div>
                 )) : (
-                    <div className="text-slate-600 text-sm italic">Aucun clone bloqué.</div>
+                    <div className="text-slate-600 text-sm italic">Aucun Agent IA bloquÃ©.</div>
                 )}
             </div>
         </main>

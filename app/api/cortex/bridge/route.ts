@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseServer';
+﻿import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 import { NextResponse } from 'next/server';
 
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         });
         const queryEmbedding = embeddingResponse.data[0].embedding;
 
-        // 1. Recherche profonde dans le Cortex de l'AUTRE clone
+        // 1. Recherche profonde dans le Cortex de l'AUTRE Agent IA
         const { data: foreignMemories, error } = await supabase.rpc('match_memories', {
             match_profile_id: toProfileId,
             match_count: 1, // Limit to most relevant
@@ -28,15 +28,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Bridge connection failed" }, { status: 500 });
         }
 
-        // 2. SÉCURITÉ : On ne renvoie PAS le contenu, juste le signal d'existence
+        // 2. SÃ‰CURITÃ‰ : On ne renvoie PAS le contenu, juste le signal d'existence
         if (foreignMemories && foreignMemories.length > 0) {
             const bestMatch = foreignMemories[0];
             const similarity = bestMatch.similarity || 0;
             const percentage = Math.round(similarity * 100);
 
-            // SIMULATION PING : Si le match est fort, on prévient le Provider
+            // SIMULATION PING : Si le match est fort, on prÃ©vient le Provider
             if (percentage > 70) {
-                console.log(`📡 PING SENT to Provider ${toProfileId} for topic "${task}" (Match: ${percentage}%)`);
+                console.log(`ðŸ“¡ PING SENT to Provider ${toProfileId} for topic "${task}" (Match: ${percentage}%)`);
                 // TODO: Appeler ici /api/cortex/bridge/ping REELLEMENT
             }
 

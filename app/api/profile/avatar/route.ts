@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -11,9 +11,9 @@ export async function POST(request: Request) {
 
         if (!profileId) return NextResponse.json({ error: 'ID requis' }, { status: 400 });
 
-        // 1. GÉNÉRATION DIRECTE (DiceBear)
+        // 1. GÃ‰NÃ‰RATION DIRECTE (DiceBear)
         // On utilise l'ID comme "graine" (seed) :
-        // Cela garantit que "afredof" aura toujours le même robot, unique à lui.
+        // Cela garantit que "afredof" aura toujours le mÃªme robot, unique Ã  lui.
         // Style 'bottts-neutral' = Robots au look propre et moderne.
         // Note: The user specified URL syntax seems correct for v9.x
         const avatarUrl = `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${profileId}&backgroundColor=transparent`;
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
         if (error) {
             console.error("Erreur SQL:", error);
-            return NextResponse.json({ error: "Erreur sauvegarde base de données" }, { status: 500 });
+            return NextResponse.json({ error: "Erreur sauvegarde base de donnÃ©es" }, { status: 500 });
         }
 
         return NextResponse.json({ success: true, url: avatarUrl });

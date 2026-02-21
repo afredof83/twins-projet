@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -7,29 +7,24 @@ const supabase = createClient(
 );
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url); // Fix: Added missing const declaration
-    const myId = searchParams.get('myId');
-    const contactId = searchParams.get('contactId');
+    const { searchParams } = new URL(req.url);
+    const communicationId = searchParams.get('channelId');
 
-    // Si c'est le contact fantôme, on simule une conversation
-    if (contactId === 'GHOST_AI_SYSTEM') {
-        return NextResponse.json({
-            messages: [
-                { fromId: 'GHOST_AI_SYSTEM', content: "Bienvenue sur le réseau Twins, Major.", createdAt: new Date(Date.now() - 1000000).toISOString() },
-                { fromId: 'GHOST_AI_SYSTEM', content: "Vos systèmes de mémoire sont actifs. En attente de données.", createdAt: new Date().toISOString() }
-            ]
-        });
+    if (!communicationId) {
+        return NextResponse.json({ error: 'Channel ID manquant' }, { status: 400 });
     }
 
-    // Sinon, vraie requête DB (Table 'messages' à créer si besoin)
-    /*
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`and(fromId.eq.${myId},toId.eq.${contactId}),and(fromId.eq.${contactId},toId.eq.${myId})`)
-      .order('createdAt', { ascending: true });
-    */
+    try {
+        const { data: messages, error } = await supabase
+            .from('Message')
+            .select('id, communication_id, sender_id, content, created_at')
+            .eq('communication_id', communicationId)
+            .order('created_at', { ascending: true }); // Du plus ancien au plus rÃ©cent pour le chat
 
-    // Pour l'instant, on renvoie vide pour éviter le crash si la table Message n'existe pas encore
-    return NextResponse.json({ messages: [] });
+        if (error) throw error;
+
+        return NextResponse.json({ messages });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 }

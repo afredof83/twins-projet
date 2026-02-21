@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -24,31 +24,31 @@ export default function Home() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // Succès -> Dashboard
+        // SuccÃ¨s -> Dashboard
         router.push('/dashboard');
 
       } else {
         // --- INSCRIPTION ---
-        // On crée juste le compte Auth. 
-        // Le Trigger SQL s'occupe de créer le profil dans la table "Profile" automatiquement.
+        // On crÃ©e juste le compte Auth. 
+        // Le Trigger SQL s'occupe de crÃ©er le profil dans la table "Profile" automatiquement.
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // Important: Empêche l'envoi du mail de confirm si désactivé dans Supabase,
-            // mais force la connexion immédiate si possible.
+            // Important: EmpÃªche l'envoi du mail de confirm si dÃ©sactivÃ© dans Supabase,
+            // mais force la connexion immÃ©diate si possible.
             emailRedirectTo: `${window.location.origin}/dashboard`
           }
         });
 
         if (error) throw error;
 
-        // Si l'utilisateur est créé mais pas de session immédiate (confirmation email requise)
+        // Si l'utilisateur est crÃ©Ã© mais pas de session immÃ©diate (confirmation email requise)
         if (data.user && !data.session) {
-          setError("Compte créé ! Si demandé, vérifiez vos emails.");
+          setError("Compte crÃ©Ã© ! Si demandÃ©, vÃ©rifiez vos emails.");
           setMode('LOGIN');
         }
-        // Si session immédiate (email confirm désactivé)
+        // Si session immÃ©diate (email confirm dÃ©sactivÃ©)
         else if (data.session) {
           router.push('/dashboard');
         }
@@ -70,13 +70,13 @@ export default function Home() {
         <div className="text-center mb-8">
           <Shield className="w-12 h-12 text-cyan-500 mx-auto mb-4 animate-pulse" />
           <h1 className="text-3xl font-bold tracking-widest">TWINS</h1>
-          <p className="text-xs text-cyan-600 uppercase mt-2">Accès Sécurisé v2.6</p>
+          <p className="text-xs text-cyan-600 uppercase mt-2">AccÃ¨s SÃ©curisÃ© v2.6</p>
         </div>
 
         {/* ONGLETS */}
         <div className="flex mb-6 border-b border-slate-700">
           <button onClick={() => { setMode('LOGIN'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'LOGIN' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CONNEXION</button>
-          <button onClick={() => { setMode('SIGNUP'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'SIGNUP' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CRÉATION</button>
+          <button onClick={() => { setMode('SIGNUP'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'SIGNUP' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CRÃ‰ATION</button>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -86,7 +86,7 @@ export default function Home() {
           </div>
           <div>
             <label className="text-xs text-slate-500 font-mono ml-1">MOT DE PASSE</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="••••••••" autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required />
           </div>
 
           {error && <div className={`text-xs p-3 rounded border ${error.includes('!') ? 'bg-green-900/30 text-green-400 border-green-900' : 'bg-red-900/30 text-red-400 border-red-900'}`}>{error}</div>}

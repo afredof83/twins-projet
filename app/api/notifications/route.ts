@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     if (!profileId) return NextResponse.json({ notifications: [] });
 
-    // On récupère les 10 derniers messages reçus
+    // On rÃ©cupÃ¨re les 10 derniers messages reÃ§us
     const { data: messages, error } = await supabase
         .from('messages')
         .select('*')
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
 
     if (error) return NextResponse.json({ notifications: [] });
 
-    // On renvoie des objets structurés
+    // On renvoie des objets structurÃ©s
     const notifications = messages.map((msg: any) => ({
         id: msg.id,
-        fromId: msg.sender_id, // CRUCIAL pour répondre
+        fromId: msg.sender_id, // CRUCIAL pour rÃ©pondre
         content: msg.content,
         date: msg.created_at,
         type: 'message'

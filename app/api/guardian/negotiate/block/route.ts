@@ -1,4 +1,4 @@
-
+﻿
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing IDs' }, { status: 400 });
         }
 
-        // 1. Ajouter à la liste noire
+        // 1. Ajouter Ã  la liste noire
         const { error } = await supabase.from('BlockList').insert([{ blockerId, blockedId }]);
 
         if (error) {
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // 2. Nettoyer la négociation en cours pour libérer le Gardien
+        // 2. Nettoyer la nÃ©gociation en cours pour libÃ©rer le Gardien
         if (negotiationId) {
             await supabase.from('Negotiation').delete().eq('id', negotiationId);
         }

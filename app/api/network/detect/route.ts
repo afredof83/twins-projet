@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
 import { scanNetworkForAgents } from '@/lib/tools/network-scanner';
@@ -10,10 +10,10 @@ export async function POST(req: Request) {
     try {
         const { profileId, sector } = await req.json();
 
-        console.log(`📡 [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
+        console.log(`ðŸ“¡ [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
 
-        // 1. SCAN INTERNE (Ta Base de Données)
-        // On cherche tous les profils SAUF toi-même
+        // 1. SCAN INTERNE (Ta Base de DonnÃ©es)
+        // On cherche tous les profils SAUF toi-mÃªme
         // Note: 'username' is not in the schema provided earlier (only name, email, bio). replaced with 'name'
         const { data: internalProfiles, error: dbError } = await supabase
             .from('Profile')
@@ -27,10 +27,10 @@ export async function POST(req: Request) {
         const internalSignals = internalProfiles?.map(p => ({
             name: p.name || "Utilisateur Anonyme",
             type: "Interne (Twin User)",
-            context: `Bio: ${p.bio || "Non renseignée"}. (Ceci est un autre utilisateur de la plateforme).`
+            context: `Bio: ${p.bio || "Non renseignÃ©e"}. (Ceci est un autre utilisateur de la plateforme).`
         })) || [];
 
-        // 2. SCAN EXTERNE (Simulation Web / Outil précédent)
+        // 2. SCAN EXTERNE (Simulation Web / Outil prÃ©cÃ©dent)
         const externalSignalsRaw = await scanNetworkForAgents(sector);
         // Note: scanNetworkForAgents returns an object, no need to parse JSON if it's already an object
         // But checking if it returns string or object to be safe based on previous iterations
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
         }
 
         // 4. ANALYSE IA (Le Filtre IFF)
-        // On récupère ton profil pour comparer
+        // On rÃ©cupÃ¨re ton profil pour comparer
         const { data: myProfile } = await supabase.from('Profile').select('bio').eq('id', profileId).single();
 
         // On force le format JSON strict
@@ -54,31 +54,31 @@ export async function POST(req: Request) {
                 {
                     role: "system",
                     content: `Tu es le Radar du projet Cortex. 
-          Ta mission : Analyser la compatibilité entre l'utilisateur courant et les cibles détectées.
+          Ta mission : Analyser la compatibilitÃ© entre l'utilisateur courant et les cibles dÃ©tectÃ©es.
           
-          Critères de compatibilité :
-          - Complémentarité des compétences (ex: Tech vs Fabriquant).
-          - Mots-clés communs (ex: Pêche, Leurre, Innovation).
+          CritÃ¨res de compatibilitÃ© :
+          - ComplÃ©mentaritÃ© des compÃ©tences (ex: Tech vs Fabriquant).
+          - Mots-clÃ©s communs (ex: PÃªche, Leurre, Innovation).
           
           Si une cible est pertinente, donne un score > 70.`
                 },
                 {
                     role: "user",
-                    content: `MON PROFIL : ${myProfile?.bio || "Expert Tech & Marine"}\n\nCIBLES DÉTECTÉES : ${JSON.stringify(allSignals)}\n\nFormat JSON attendu : { "agents": [{ "name": "...", "type": "...", "matchScore": 85, "reasoning": "..." }] }`
+                    content: `MON PROFIL : ${myProfile?.bio || "Expert Tech & Marine"}\n\nCIBLES DÃ‰TECTÃ‰ES : ${JSON.stringify(allSignals)}\n\nFormat JSON attendu : { "agents": [{ "name": "...", "type": "...", "matchScore": 85, "reasoning": "..." }] }`
                 }
             ],
             responseFormat: { type: "json_object" }
         });
 
         const content = analysisResponse.choices?.[0].message.content;
-        if (!content) throw new Error("Réponse Mistral vide");
+        if (!content) throw new Error("RÃ©ponse Mistral vide");
 
         let parsedContent;
         try {
             parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
         } catch (e) {
             console.error("Erreur parsing JSON Mistral:", content);
-            throw new Error("Format JSON invalide reçu de l'IA");
+            throw new Error("Format JSON invalide reÃ§u de l'IA");
         }
 
         const analyzedAgents = parsedContent.agents || (Array.isArray(parsedContent) ? parsedContent : []);
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
             type: agent.type,
             sector: sector,
             matchScore: agent.matchScore,
-            reasoning: agent.reasoning || "Détecté par le sonar hybride.",
+            reasoning: agent.reasoning || "DÃ©tectÃ© par le sonar hybride.",
             status: 'DETECTED'
         }));
 
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, count: validAgents.length, agents: validAgents });
 
     } catch (error: any) {
-        console.error("❌ Erreur Sonar:", error);
+        console.error("âŒ Erreur Sonar:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

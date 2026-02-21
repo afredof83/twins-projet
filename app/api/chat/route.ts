@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { ALCHEMIST_TOOLS, executeAlchemyTool } from '@/lib/oracle/alchemy'; // Importe tes outils
 import { readUrlContent } from '@/lib/tools/web-reader';
 
-// export const runtime = 'nodejs'; // Node.js par défaut pour la stabilité
+// export const runtime = 'nodejs'; // Node.js par dÃ©faut pour la stabilitÃ©
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
         // 1. Sauvegarde User
         await supabase.from('Memory').insert([{ profileId, content: message, type: 'user' }]);
 
-        // --- DÉBUT DU BLOC VISION ---
+        // --- DÃ‰BUT DU BLOC VISION ---
         // On cherche si le message contient une URL (http...)
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const foundUrls = message.match(urlRegex);
@@ -24,33 +24,33 @@ export async function POST(request: Request) {
 
         if (foundUrls && foundUrls.length > 0) {
             const targetUrl = foundUrls[0];
-            console.log("🔗 Lien détecté, activation du Web Reader sur :", targetUrl);
+            console.log("ðŸ”— Lien dÃ©tectÃ©, activation du Web Reader sur :", targetUrl);
 
-            // Le Clone va lire le site
+            // Le Agent IA va lire le site
             const siteContent = await readUrlContent(targetUrl);
 
             if (siteContent) {
                 webContext = `
-                [ALERTE : DONNÉES LIVE DU WEB]
+                [ALERTE : DONNÃ‰ES LIVE DU WEB]
                 L'utilisateur te demande d'analyser ce lien : ${targetUrl}
                 Voici le contenu TEXTUEL BRUT que tu viens de lire sur la page :
                 """
                 ${siteContent}
                 """
                 ------------------------------------------------
-                Utilise IMPÉRATIVEMENT ces informations ci-dessus pour répondre.
-                Si le site parle de FisherMade, c'est la priorité absolue.
+                Utilise IMPÃ‰RATIVEMENT ces informations ci-dessus pour rÃ©pondre.
+                Si le site parle de FisherMade, c'est la prioritÃ© absolue.
                 `;
             }
         }
         // --- FIN DU BLOC VISION ---
 
-        // Maintenant, on injecte ce contexte dans le message envoyé à l'IA
+        // Maintenant, on injecte ce contexte dans le message envoyÃ© Ã  l'IA
         const finalMessageForAI = webContext
             ? `${webContext}\n\nQuestion utilisateur : ${message}`
             : message;
 
-        // 2. Recherche Vectorielle (Mémoire)
+        // 2. Recherche Vectorielle (MÃ©moire)
         let contextString = "";
         const embRes = await fetch('https://api.mistral.ai/v1/embeddings', {
             method: 'POST',
@@ -72,19 +72,19 @@ export async function POST(request: Request) {
 
         // 3. LE SYSTEM PROMPT (L'ALCHIMISTE)
         const systemPrompt = `
-            TU ES L'ORACLE ALCHIMISTE DE FRÉDÉRIC REY. (ID: ${MY_ID}).
-            Tu as accès à des outils puissants pour simuler l'avenir.
+            TU ES L'ORACLE ALCHIMISTE DE FRÃ‰DÃ‰RIC REY. (ID: ${MY_ID}).
+            Tu as accÃ¨s Ã  des outils puissants pour simuler l'avenir.
             
             SOUVENIRS : ${contextString}
 
-            RÈGLES :
-            - Si Frédéric demande une prédiction chiffrée ou une analyse technique, UTILISE TES OUTILS.
+            RÃˆGLES :
+            - Si FrÃ©dÃ©ric demande une prÃ©diction chiffrÃ©e ou une analyse technique, UTILISE TES OUTILS.
             - Ne devine jamais un chiffre. Calcule-le.
             - Si c'est une discussion philosophique, utilise ta sagesse (Les 3 Lois).
-            - Ton ton est mystique mais précis.
+            - Ton ton est mystique mais prÃ©cis.
         `;
 
-        // 4. PREMIER APPEL À MISTRAL LARGE (Avec les outils)
+        // 4. PREMIER APPEL Ã€ MISTRAL LARGE (Avec les outils)
         const chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MISTRAL_API_KEY}` },
@@ -96,8 +96,8 @@ export async function POST(request: Request) {
                     { role: "user", content: finalMessageForAI }
                 ],
                 tools: ALCHEMIST_TOOLS, // On lui donne la ceinture
-                tool_choice: "auto",     // Il décide
-                temperature: 0.3         // Précis
+                tool_choice: "auto",     // Il dÃ©cide
+                temperature: 0.3         // PrÃ©cis
             })
         });
 
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
         // 5. SI L'IA VEUT UTILISER UN (OU PLUSIEURS) OUTILS
         if (initialMessage.tool_calls) {
 
-            // 1. On démarre l'historique avec l'intention de l'IA
+            // 1. On dÃ©marre l'historique avec l'intention de l'IA
             const conversationHistory: any[] = [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: finalMessageForAI },
@@ -124,30 +124,30 @@ export async function POST(request: Request) {
                 const functionName = toolCall.function.name;
                 const functionArgs = JSON.parse(toolCall.function.arguments);
 
-                console.log(`⚗️ [ALCHIMISTE] Activation : ${functionName}`, functionArgs);
+                console.log(`âš—ï¸ [ALCHIMISTE] Activation : ${functionName}`, functionArgs);
 
                 let toolResult = "";
 
                 try {
-                    // Exécution safe de l'outil
+                    // ExÃ©cution safe de l'outil
                     const rawResult = await executeAlchemyTool(functionName, functionArgs);
-                    // On s'assure que le résultat est bien une string JSON (Vital pour Mistral)
+                    // On s'assure que le rÃ©sultat est bien une string JSON (Vital pour Mistral)
                     toolResult = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
                 } catch (e: any) {
-                    console.error(`❌ Erreur outil ${functionName}:`, e);
+                    console.error(`âŒ Erreur outil ${functionName}:`, e);
                     toolResult = JSON.stringify({ error: `Echec de l'outil: ${e.message}` });
                 }
 
-                // 3. On ajoute le résultat dans l'historique avec le bon ID
+                // 3. On ajoute le rÃ©sultat dans l'historique avec le bon ID
                 conversationHistory.push({
                     role: "tool",
                     name: functionName,
                     content: toolResult,
-                    tool_call_id: toolCall.id // CRUCIAL : Lier la réponse à la demande
+                    tool_call_id: toolCall.id // CRUCIAL : Lier la rÃ©ponse Ã  la demande
                 });
             }
 
-            // 4. Seconde passe : Mistral analyse les résultats
+            // 4. Seconde passe : Mistral analyse les rÃ©sultats
             const secondResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MISTRAL_API_KEY}` },
@@ -161,8 +161,8 @@ export async function POST(request: Request) {
 
             // --- BLINDAGE FINAL ---
             if (!finalData.choices || !finalData.choices.length) {
-                console.error("❌ ERREUR MISTRAL (2ème passe) :", JSON.stringify(finalData, null, 2));
-                finalReply = "L'Oracle a effectué le calcul, mais la vision s'est troublée au moment de la restitution. (Erreur API: Voir logs serveur)";
+                console.error("âŒ ERREUR MISTRAL (2Ã¨me passe) :", JSON.stringify(finalData, null, 2));
+                finalReply = "L'Oracle a effectuÃ© le calcul, mais la vision s'est troublÃ©e au moment de la restitution. (Erreur API: Voir logs serveur)";
             } else {
                 finalReply = finalData.choices[0].message.content;
             }
@@ -177,6 +177,6 @@ export async function POST(request: Request) {
 
     } catch (error: any) {
         console.error("Erreur Alchimiste:", error);
-        return NextResponse.json({ reply: `L'Oracle a trébuché : ${error.message}` });
+        return NextResponse.json({ reply: `L'Oracle a trÃ©buchÃ© : ${error.message}` });
     }
 }

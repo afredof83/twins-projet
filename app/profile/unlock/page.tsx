@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -61,16 +61,16 @@ function UnlockContent() {
         setError('');
 
         try {
-            if (!profileData) throw new Error("Profil non chargé");
+            if (!profileData) throw new Error("Profil non chargÃ©");
 
             const salt = base64ToArray(profileData.saltBase64);
             // const isValid = verifyPassword(password, salt, profileData.passwordHash);
-            console.log("⚠️ BYPASS ACTIVÉ : Connexion forcée");
+            console.log("âš ï¸ BYPASS ACTIVÃ‰ : Connexion forcÃ©e");
             const isValid = true;
 
             if (!isValid) throw new Error("Mot de passe incorrect");
 
-            // Initialiser la session sécurisée en mémoire
+            // Initialiser la session sÃ©curisÃ©e en mÃ©moire
             await keyManager.initializeSession(profileData.id, password, salt);
 
             // Save to localStorage for future quick access
@@ -108,7 +108,7 @@ function UnlockContent() {
                             disabled={loading}
                             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition"
                         >
-                            {loading ? 'Vérification...' : 'Continuer'}
+                            {loading ? 'VÃ©rification...' : 'Continuer'}
                         </button>
                     </form>
                 </div>
@@ -124,7 +124,7 @@ function UnlockContent() {
     return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
-                <h1 className="text-2xl font-bold text-white mb-2 text-center">Déverrouiller {profileData.name}</h1>
+                <h1 className="text-2xl font-bold text-white mb-2 text-center">DÃ©verrouiller {profileData.name}</h1>
                 <p className="text-purple-300 text-xs text-center mb-6 font-mono">ID: {profileData.id.slice(0, 12)}...</p>
 
                 {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4">{error}</div>}
@@ -135,14 +135,14 @@ function UnlockContent() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full bg-black/20 border border-purple-500/30 rounded p-3 text-white"
-                        placeholder="Mot de passe maître"
+                        placeholder="Mot de passe maÃ®tre"
                         autoFocus
                     />
                     <button
                         disabled={loading}
                         className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition"
                     >
-                        {loading ? 'Déchiffrement...' : 'Accéder au Jumeau'}
+                        {loading ? 'DÃ©chiffrement...' : 'AccÃ©der au Jumeau'}
                     </button>
 
                     {!urlId && (
@@ -155,7 +155,7 @@ function UnlockContent() {
                             }}
                             className="w-full text-purple-300 hover:text-white text-sm transition"
                         >
-                            ← Retour
+                            â† Retour
                         </button>
                     )}
                 </form>

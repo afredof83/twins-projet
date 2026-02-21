@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
         if (channelError) throw channelError;
 
-        // 2. Supprimer la Négociation associée pour permettre un futur re-scan
+        // 2. Supprimer la NÃ©gociation associÃ©e pour permettre un futur re-scan
         const { error: negError } = await supabase
             .from('Negotiation')
             .delete()

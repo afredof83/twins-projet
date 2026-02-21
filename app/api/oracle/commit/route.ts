@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
 
@@ -14,12 +14,12 @@ export async function POST(req: Request) {
         const { profileId, prophecy } = await req.json();
 
         if (!profileId || !prophecy) {
-            return NextResponse.json({ error: "Données manquantes." }, { status: 400 });
+            return NextResponse.json({ error: "DonnÃ©es manquantes." }, { status: 400 });
         }
 
-        console.log(`🔮 [ORACLE] Gravure du destin pour ${profileId}...`);
+        console.log(`ðŸ”® [ORACLE] Gravure du destin pour ${profileId}...`);
 
-        // 1. Vectorisation de la prophétie (Pour que le Twin s'en souvienne sémantiquement)
+        // 1. Vectorisation de la prophÃ©tie (Pour que le Twin s'en souvienne sÃ©mantiquement)
         const embeddingResponse = await mistral.embeddings.create({
             model: "mistral-embed",
             inputs: [prophecy],
@@ -27,13 +27,13 @@ export async function POST(req: Request) {
         const embedding = embeddingResponse.data[0].embedding;
 
         // 2. Insertion en base comme "Souvenir Fondamental"
-        // On utilise un type spécial 'directive' ou on préfixe le contenu
+        // On utilise un type spÃ©cial 'directive' ou on prÃ©fixe le contenu
         const content = `[DESTIN] PROTOCOLE ACTIF : ${prophecy}`;
 
         const { error } = await supabase.from('Memory').insert([{
             profileId,
             content: content,
-            type: 'directive', // Type prioritaire (à ajouter à ton Enum si besoin, sinon 'thought')
+            type: 'directive', // Type prioritaire (Ã  ajouter Ã  ton Enum si besoin, sinon 'thought')
             source: 'oracle_prophecy',
             embedding: embedding,
             createdAt: new Date().toISOString()
@@ -41,10 +41,10 @@ export async function POST(req: Request) {
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true, message: "Destin accepté et mémorisé." });
+        return NextResponse.json({ success: true, message: "Destin acceptÃ© et mÃ©morisÃ©." });
 
     } catch (error: any) {
-        console.error("❌ Erreur Commit Oracle:", error);
+        console.error("âŒ Erreur Commit Oracle:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

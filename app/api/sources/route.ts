@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Data Sources API - Neural Link for Social Media Ingestion
  * CRITICAL: Read-only. Twin NEVER posts to real social networks.
  */
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log(`🔄 Data source ${platform} syncing for profile ${profileId}`);
+        console.log(`ðŸ”„ Data source ${platform} syncing for profile ${profileId}`);
 
         // Mock OAuth flow: Wait 2 seconds then update to CONNECTED
         setTimeout(async () => {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
                         lastSync: new Date(),
                     },
                 });
-                console.log(`✅ Data source ${platform} connected`);
+                console.log(`âœ… Data source ${platform} connected`);
             } catch (err) {
                 console.error('Error updating source after sync:', err);
             }

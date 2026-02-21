@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -7,15 +7,30 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-    const { fromId, toId, content } = await req.json();
+    try {
+        const { communicationId, senderId, content } = await req.json();
 
-    if (toId === 'GHOST_AI_SYSTEM') {
-        // Le fantôme ne stocke rien, il écoute juste.
-        return NextResponse.json({ success: true });
+        if (!communicationId || !senderId || !content) {
+            return NextResponse.json({ error: 'DonnÃ©es de transmission incomplÃ¨tes' }, { status: 400 });
+        }
+
+        // Insertion standardisÃ©e (snake_case)
+        const { data, error } = await supabase
+            .from('Message') // Assurez-vous que la majuscule correspond Ã  votre table
+            .insert({
+                communication_id: communicationId,
+                sender_id: senderId,
+                content: content,
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true, message: data });
+    } catch (error: any) {
+        console.error("Erreur Transmission:", error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    // Vraie sauvegarde si table existe
-    // await supabase.from('Message').insert({ fromId, toId, content });
-
-    return NextResponse.json({ success: true });
 }

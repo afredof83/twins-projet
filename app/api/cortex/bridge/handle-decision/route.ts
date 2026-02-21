@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabaseServer';
+﻿import { createClient } from '@/lib/supabaseServer';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
@@ -6,7 +6,7 @@ export async function POST(req: Request) {
         const { requestId, status } = await req.json();
         const supabase = await createClient();
 
-        // 1. Mettre à jour la requête
+        // 1. Mettre Ã  jour la requÃªte
         const { data: request, error } = await supabase
             .from('AccessRequest')
             .update({ status })
@@ -19,8 +19,8 @@ export async function POST(req: Request) {
         // 2. Envoyer le message automatique dans la messagerie DirectMessage
         // Note: status 'approved' vs 'declined'
         const messageContent = status === 'approved'
-            ? `✅ [AUTO] J'ai accepté ta demande sur le sujet "${request.topic}". On peut en discuter.`
-            : `❌ [AUTO] J'ai refusé la discussion sur le sujet "${request.topic}".`;
+            ? `âœ… [AUTO] J'ai acceptÃ© ta demande sur le sujet "${request.topic}". On peut en discuter.`
+            : `âŒ [AUTO] J'ai refusÃ© la discussion sur le sujet "${request.topic}".`;
 
         await supabase.from('DirectMessage').insert([{
             sender_id: request.provider_id,

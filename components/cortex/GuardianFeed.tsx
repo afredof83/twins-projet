@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { ShieldCheck, AlertTriangle, FileText, Activity } from 'lucide-react';
 
@@ -16,8 +16,8 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
             <div className="h-full flex flex-col items-center justify-center text-slate-700 space-y-4">
                 <ShieldCheck size={48} className="opacity-20" />
                 <div className="text-center space-y-1">
-                    <p className="text-xs font-mono uppercase tracking-widest">Système Nominal</p>
-                    <p className="text-[10px] opacity-60">Aucune menace active détectée par le Gardien.</p>
+                    <p className="text-xs font-mono uppercase tracking-widest">SystÃ¨me Nominal</p>
+                    <p className="text-[10px] opacity-60">Aucune menace active dÃ©tectÃ©e par le Gardien.</p>
                 </div>
                 <button
                     onClick={onRefresh}
@@ -46,12 +46,12 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
 
                     <div className="flex-1">
                         <div className="flex justify-between items-start">
-                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention Système"}</h4>
+                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention SystÃ¨me"}</h4>
                             <span className="text-[9px] font-mono text-slate-600">{new Date().toLocaleTimeString()}</span>
                         </div>
 
                         <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                            {item.description || "Une anomalie a été détectée et isolée par le protocole de sécurité."}
+                            {item.description || "Une anomalie a Ã©tÃ© dÃ©tectÃ©e et isolÃ©e par le protocole de sÃ©curitÃ©."}
                         </p>
 
                         {/* Actions Contextuelles */}

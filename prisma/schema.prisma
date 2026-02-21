@@ -21,6 +21,11 @@ model Profile {
   profession              String?
   hobbies                 String[]
   objectives              String[] // Ex: ["Travail", "Rencontres"]
+  unifiedAnalysis         String?  @db.Text
+  
+  // 🟢 NOUVEAUX PARAMÈTRES AGENT IA
+  country                 String?  @db.Text
+  thematicProfile         Json?
   // -----------------------
   
   // IA Tags (générés automatiquement plus tard)

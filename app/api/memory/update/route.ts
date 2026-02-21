@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { embeddingService } from '@/lib/vector/embedding-service';
 import { vectorStore } from '@/lib/vector/supabase-pgvector';
 import { createClient } from '@supabase/supabase-js';
@@ -13,12 +13,12 @@ export async function PATCH(req: NextRequest) {
         const body = await req.json();
         const { id, content } = body;
 
-        if (!id || !content) return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
+        if (!id || !content) return NextResponse.json({ error: "DonnÃ©es manquantes" }, { status: 400 });
 
-        // 1. On recalcule l'intelligence (Embedding) car le sens a changé
+        // 1. On recalcule l'intelligence (Embedding) car le sens a changÃ©
         const newEmbedding = await embeddingService.generateEmbedding(content);
 
-        // 2. On met à jour dans Supabase
+        // 2. On met Ã  jour dans Supabase
         const { error } = await supabase
             .from('memories')
             .update({
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error: any) {
-        console.error("🔥 Update Error:", error);
+        console.error("ðŸ”¥ Update Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,8 +1,8 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from '@/components/nav-bar';
 
-export const runtime = 'nodejs'; // On force la stabilité
+export const runtime = 'nodejs'; // On force la stabilitÃ©
 
 export const metadata: Metadata = {
   title: "Twins - Mission Control",
@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <head>
-        {/* On gère les liens ici pour éviter les erreurs */}
+        {/* On gÃ¨re les liens ici pour Ã©viter les erreurs */}
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>

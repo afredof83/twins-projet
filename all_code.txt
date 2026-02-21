@@ -82,6 +82,11 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
       ? agentMemories
       : await fetchMemories(targetProfile.id);
 
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Agent):", agentMemories.length);
+    console.log("CONTENU (Agent):", agentMemories);
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Cible):", targetMemories.length);
+    console.log("CONTENU (Cible):", targetMemories);
+
     // -------------------------------------------------------------------------
     // 3. PRÉPARATION IA (Mise en forme)
     // -------------------------------------------------------------------------
@@ -127,6 +132,13 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
     // -------------------------------------------------------------------------
     // 4. ANALYSE (Mistral)
     // -------------------------------------------------------------------------
+
+    // 🚨 LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
+    console.log("🧠 TEXTE ENVOYÉ À MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
+
+    if (!userPrompt || userPrompt.trim() === "") {
+      console.warn("⚠️ ALERTE : On envoie un texte vide à l'IA !");
+    }
 
     console.log("📡 Envoi à l'IA...");
     const chatResponse = await client.chat.complete({
@@ -197,22 +209,21 @@ import { prisma } from "@/lib/prisma";
 
 const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export async function scanGlobalNetwork(userId: string) {
-    // 1. On récupère le profil de l'agent AVEC ses nouveaux champs
-    // Casting 'any' pour éviter les erreurs de build si les types Prisma ne sont pas à jour
-    const agent: any = await prisma.profile.findUnique({
-        where: { id: userId }
-    });
+export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
+  // 1. Récupération du profil agent
+  const agent: any = await prisma.profile.findUnique({
+    where: { id: userId }
+  });
 
-    if (!agent) throw new Error("Agent introuvable.");
+  if (!agent) throw new Error("Agent introuvable.");
 
-    // 2. On récupère les autres clones
-    const networkNodes: any[] = await prisma.profile.findMany({
-        where: { id: { not: userId } },
-        include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
-    });
+  // 2. Récupération du réseau
+  const networkNodes: any[] = await prisma.profile.findMany({
+    where: { id: { not: userId } },
+    include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
+  });
 
-    const identityContext = `
+  const identityContext = `
         AGENT PRINCIPAL:
         - Profession: ${agent.profession || 'Inconnue'}
         - Âge: ${agent.age || 'Inconnu'}
@@ -220,30 +231,91 @@ export async function scanGlobalNetwork(userId: string) {
         - Hobbies: ${agent.hobbies?.join(', ') || 'N/A'}
     `;
 
-    const prompt = `
-        Tu es l'IA Tactique MISTRAL-TWIN. 
+  // ── PROMPT BASIC : léger, rapide, économie de tokens ──
+  const basicPrompt = `
+        Tu es l'IA Tactique MISTRAL-TWIN. Tu dois répondre UNIQUEMENT en JSON valide, sans aucun texte avant ou après.
+
         CONTEXTE DE L'AGENT : ${identityContext}
+        RÉSEAU (${networkNodes.length} nœud(s)) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, name: n.name, profession: n.profession })))}
 
-        ANALYSE DU RÉSEAU : ${JSON.stringify(networkNodes)}
+        MISSION : Évalue la situation globale du réseau en 2 phrases maximum.
 
-        MISSION : Identifie 3 opportunités de matching. 
-        Si l'objectif est "Rencontres", cherche des affinités personnelles. 
-        Si c'est "Travail", cherche des synergies de compétences.
-
-        Réponds en JSON uniquement : 
-        { "globalStatus": "GREEN|ORANGE|RED", "analysisSummary": "...", "opportunities": [...] }
+        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (sans clé "opportunities") :
+        {
+          "globalStatus": "GREEN",
+          "analysisSummary": "Résumé de la situation du réseau en 1-2 phrases."
+        }
     `;
 
-    const response = await client.chat.complete({
-        model: "mistral-large-latest",
-        messages: [{ role: "system", content: prompt }],
-        responseFormat: { type: "json_object" }
-    });
+  // ── PRÉPARATION DES MÉMOIRES ──
+  const contexteMemoire = networkNodes
+    .flatMap(node => node.memories.map((m: any) => `[ID: ${node.id}] ${m.content}`))
+    .join('\n');
 
-    const rawContent = response.choices?.[0].message.content;
-    if (!rawContent) throw new Error("Réponse vide de Mistral");
+  // ── PROMPT DEEP : analyse consolidée, bloc unique, censure PII ──
+  const deepPrompt = `
+        Tu es une IA d'analyse tactique. Tu dois analyser les profils ci-dessous et générer une réponse STRICTEMENT au format JSON valide, sans aucun texte avant ou après.
+        
+        CONTEXTE DE L'AGENT : ${identityContext}
+        RÉSEAU DISPONIBLE (IDs et rôles uniquement) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, profession: n.profession, hobbies: n.hobbies, objectives: n.objectives })))}
 
-    return JSON.parse(rawContent as string);
+        🧠 ARCHIVES ET MÉMOIRES INTERCEPTÉES (TRÈS IMPORTANT POUR L'ANALYSE) :
+        """
+        ${contexteMemoire || "Aucune archive disponible."}
+        """
+
+        ⚠️ RÈGLES DE CENSURE ABSOLUES (NIVEAU OMEGA) :
+        - NE JAMAIS inclure de nom propre, de nom de famille ou de prénom.
+        - NE JAMAIS inclure d'adresse email.
+        - NE JAMAIS inclure de numéro de téléphone ou d'adresse physique.
+        - Désigne toujours la cible par son rôle générique (ex: "Le Fabricant", "L'Expert en PI", "Le Développeur Senior").
+
+        MISSION : Identifie le MEILLEUR profil du réseau pour l'Agent en te basant sur les ARCHIVES INTERCEPTÉES, puis génère une analyse consolidée.
+
+        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (camelCase strict) :
+        {
+          "targetId": "l'UUID exact de la cible choisie, copié depuis la liste RÉSEAU ci-dessus",
+          "overallMatchScore": 95,
+          "targetClassification": "Description générique du profil (ex: Détenteur de brevet en ingénierie mécanique)",
+          "unifiedAnalysis": "Une analyse profonde, globale et unique des synergies possibles entre l'Agent et la cible. Min 2 phrases.",
+          "strategicAlignment": "Le bénéfice tactique final et concret de cette connexion pour l'Agent."
+        }
+    `;
+
+  const promptContent = mode === 'basic' ? basicPrompt : deepPrompt;
+
+  // 🚨 LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
+  console.log("🧠 PROMPT ENVOYÉ À MISTRAL (Global Scan) :", promptContent);
+
+  if (!promptContent || promptContent.trim() === "") {
+    console.warn("⚠️ ALERTE : Prompt vide pour le scan global !");
+  }
+
+  const response = await client.chat.complete({
+    model: "mistral-large-latest",
+    messages: [{ role: "system", content: promptContent }],
+    responseFormat: { type: "json_object" }
+  });
+
+  const rawContent = response.choices?.[0].message.content;
+  if (!rawContent) throw new Error("Réponse vide de Mistral");
+
+  const aiAnalysis = JSON.parse(rawContent as string);
+
+  // ── FUSION TACTIQUE : injection blindée du targetId ──
+  // Mistral peut oublier ou halluciner l'UUID. On valide qu'il correspond
+  // à un nœud réel du réseau. Si invalide, on prend le premier nœud comme fallback.
+  const knownIds = new Set(networkNodes.map(n => n.id));
+  const validatedTargetId = knownIds.has(aiAnalysis.targetId)
+    ? aiAnalysis.targetId
+    : (networkNodes[0]?.id ?? null);
+
+  console.log(`[SCAN-DEEP] targetId Mistral: ${aiAnalysis.targetId} → validé: ${validatedTargetId}`);
+
+  return {
+    ...aiAnalysis,
+    targetId: validatedTargetId, // Toujours présent, toujours fiable
+  };
 }
 
 
@@ -556,10 +628,11 @@ export async function POST(request: Request) {
 
 --- app\api\communications\respond\route.ts ---
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: NextRequest) {
     try {
+        const supabase = await createClient();
         const { communicationId, status } = await req.json();
 
         if (!communicationId || !['ACCEPTED', 'REJECTED'].includes(status)) {
@@ -1177,10 +1250,10 @@ export async function POST(req: Request) {
 
         // 1. Récupération d'un historique large (50 derniers éléments)
         const { data: history } = await supabase
-            .from('Memory')
-            .select('content, type, createdAt')
-            .eq('profileId', profileId) // Suppression du OR pour simplifier et éviter l'erreur si profile_id n'existe pas en type
-            .order('createdAt', { ascending: false })
+            .from('memory')
+            .select('content, type, created_at') // ⬅️ snake_case
+            .eq('profile_id', profileId) // ⬅️ snake_case
+            .order('created_at', { ascending: false })
             .limit(50);
 
         if (!history || history.length < 5) {
@@ -1233,12 +1306,12 @@ export async function POST(req: Request) {
         const shadowReflection = mistralData.choices[0].message.content;
 
         // 3. Sauvegarde en tant que réflexion spéciale
-        await supabase.from('Memory').insert([{
+        await supabase.from('memory').insert([{
             content: shadowReflection,
-            profileId: profileId,
+            profile_id: profileId, // ⬅️ snake_case
             type: 'reflection',
             source: 'shadow_mirror',
-            createdAt: new Date().toISOString()
+            created_at: new Date().toISOString() // ⬅️ snake_case
         }]);
 
         return NextResponse.json({ shadowReflection });
@@ -1761,16 +1834,16 @@ export async function POST(req: Request) {
             expiresAt = date.toISOString();
         }
 
-        // 5. Stockage Supabase
+        // 5. Stockage Supabase (Standardisé snake_case)
         const { error } = await supabase
-            .from('Memory')
+            .from('memory') // ⬅️ Minuscule
             .insert({
-                profileId,
-                content: finalContent, // On stocke le contenu original
+                profile_id: profileId, // ⬅️ snake_case
+                content: finalContent,
                 type: type || 'thought',
                 embedding: embedding,
                 source: 'manual_input',
-                expires_at: expiresAt // Colonne d'expiration (assurez-vous d'avoir ajouté la colonne)
+                expires_at: expiresAt // ⬅️ snake_case (déjà correct si la DB a la colonne)
             });
 
         if (error) throw error;
@@ -1892,18 +1965,13 @@ export async function POST(req: Request) {
 --- app\api\memories\route.ts ---
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { Mistral } from '@mistralai/mistralai';
 
-// On utilise la clé SERVICE pour contourner les permissions si besoin (BYPASS RLS)
+// Client service-role pour les lectures (GET) — bypasse RLS
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-// Fonction utilitaire pour vérifier si c'est un UUID valide
-function isUUID(str: string) {
-    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return regex.test(str);
-}
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -1913,7 +1981,6 @@ export async function GET(req: Request) {
 
     console.log(`🔍 Lecture Memory pour ${pid}`);
 
-    // Lecture : On utilise les noms de colonnes de la BDD (snake_case)
     const { data, error } = await supabase
         .from('memory')
         .select('*')
@@ -1935,12 +2002,14 @@ export async function POST(req: Request) {
 
         console.log(`📝 Tentative sauvegarde pour ID: ${profileId}`);
 
-        // Préparation de l'objet à insérer
-        // On mappe les champs vers les colonnes BDD (snake_case)
+        // ✅ Nettoyage d'urgence côté serveur (null bytes)
+        const sanitizedContent = (content || '').replace(/\0/g, '').replace(/\u0000/g, '');
+
         const memoryData = {
-            content,
+            id: crypto.randomUUID(),
+            content: sanitizedContent,
             profile_id: profileId,
-            type: type || 'THOUGHT',
+            type: type || 'thought',
             created_at: new Date().toISOString()
         };
 
@@ -1960,6 +2029,105 @@ export async function POST(req: Request) {
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PATCH(req: Request) {
+    try {
+        // Contrôle d'accès : Bearer token obligatoire
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return Response.json({ error: "Token manquant." }, { status: 401 });
+
+        const body = await req.json();
+        const { id, content, profileId } = body;
+
+        if (!id || !content || !profileId) {
+            return Response.json({ error: "Paramètres invalides (id, content, profileId requis)." }, { status: 400 });
+        }
+
+        // 1. Re-vectorisation via Mistral (le vecteur doit refléter le nouveau texte)
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const embeddingResponse = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [content],
+        });
+        const newEmbedding = embeddingResponse.data[0]?.embedding;
+
+        // 2. Client BDD blindé avec l'identité de l'utilisateur
+        const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
+
+        // 3. Mise à jour du fragment (contenu + nouveau vecteur)
+        const { error } = await supabaseAuth
+            .from('memory')
+            .update({ content, embedding: newEmbedding })
+            .eq('id', id)
+            .eq('profile_id', profileId);
+
+        if (error) throw error;
+
+        console.log(`✅ Fragment ${id} re-vectorisé et mis à jour.`);
+        return Response.json({ success: true });
+
+    } catch (error: any) {
+        console.error("[CRITIQUE ÉDITION MÉMOIRE]", error);
+        return Response.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        // Contrôle d'accès : Bearer token obligatoire
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return Response.json({ error: "Token manquant." }, { status: 401 });
+
+        const body = await req.json();
+        const { id, profileId } = body;
+
+        if (!id || !profileId) {
+            return Response.json({ error: "Paramètres invalides (id et profileId requis)." }, { status: 400 });
+        }
+
+        // Client BDD blindé avec l'identité de l'utilisateur (RLS actif)
+        const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
+
+        // Ordre de destruction (double sécurité : id ET profile_id)
+        const { data, error } = await supabaseAuth
+            .from('memory')
+            .delete()
+            .eq('id', id)
+            .eq('profile_id', profileId)
+            .select(); // Force Supabase à retourner les lignes supprimées
+
+        if (error) throw error;
+
+        // Tableau vide = RLS a bloqué ou ID inexistant → on refuse de mentir
+        if (!data || data.length === 0) {
+            return Response.json(
+                { error: "Échec de la purge : Fragment introuvable ou accès refusé." },
+                { status: 403 }
+            );
+        }
+
+        console.log(`🗑️ Fragment ${id} purgé.`);
+        return Response.json({ success: true });
+
+    } catch (error: any) {
+        console.error("[CRITIQUE PURGE MÉMOIRE]", error);
+        return Response.json({ error: error.message }, { status: 500 });
     }
 }
 
@@ -2230,31 +2398,26 @@ const supabase = createClient(
 );
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url); // Fix: Added missing const declaration
-    const myId = searchParams.get('myId');
-    const contactId = searchParams.get('contactId');
+    const { searchParams } = new URL(req.url);
+    const communicationId = searchParams.get('channelId');
 
-    // Si c'est le contact fantôme, on simule une conversation
-    if (contactId === 'GHOST_AI_SYSTEM') {
-        return NextResponse.json({
-            messages: [
-                { fromId: 'GHOST_AI_SYSTEM', content: "Bienvenue sur le réseau Twins, Major.", createdAt: new Date(Date.now() - 1000000).toISOString() },
-                { fromId: 'GHOST_AI_SYSTEM', content: "Vos systèmes de mémoire sont actifs. En attente de données.", createdAt: new Date().toISOString() }
-            ]
-        });
+    if (!communicationId) {
+        return NextResponse.json({ error: 'Channel ID manquant' }, { status: 400 });
     }
 
-    // Sinon, vraie requête DB (Table 'messages' à créer si besoin)
-    /*
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`and(fromId.eq.${myId},toId.eq.${contactId}),and(fromId.eq.${contactId},toId.eq.${myId})`)
-      .order('createdAt', { ascending: true });
-    */
+    try {
+        const { data: messages, error } = await supabase
+            .from('Message')
+            .select('id, communication_id, sender_id, content, created_at')
+            .eq('communication_id', communicationId)
+            .order('created_at', { ascending: true }); // Du plus ancien au plus récent pour le chat
 
-    // Pour l'instant, on renvoie vide pour éviter le crash si la table Message n'existe pas encore
-    return NextResponse.json({ messages: [] });
+        if (error) throw error;
+
+        return NextResponse.json({ messages });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 }
 
 
@@ -2269,10 +2432,11 @@ export async function POST(req: Request) {
 
 --- app\api\messages\route.ts ---
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabaseServer';
 
 // 1. RÉCUPÉRER L'HISTORIQUE
 export async function GET(req: NextRequest) {
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const commId = searchParams.get('commId');
 
@@ -2291,6 +2455,7 @@ export async function GET(req: NextRequest) {
 // 2. ENVOYER UN MESSAGE
 export async function POST(req: NextRequest) {
     try {
+        const supabase = await createClient();
         const { commId, senderId, content } = await req.json();
 
         const { data, error } = await supabase
@@ -2322,17 +2487,32 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-    const { fromId, toId, content } = await req.json();
+    try {
+        const { communicationId, senderId, content } = await req.json();
 
-    if (toId === 'GHOST_AI_SYSTEM') {
-        // Le fantôme ne stocke rien, il écoute juste.
-        return NextResponse.json({ success: true });
+        if (!communicationId || !senderId || !content) {
+            return NextResponse.json({ error: 'Données de transmission incomplètes' }, { status: 400 });
+        }
+
+        // Insertion standardisée (snake_case)
+        const { data, error } = await supabase
+            .from('Message') // Assurez-vous que la majuscule correspond à votre table
+            .insert({
+                communication_id: communicationId,
+                sender_id: senderId,
+                content: content,
+                created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true, message: data });
+    } catch (error: any) {
+        console.error("Erreur Transmission:", error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
-    // Vraie sauvegarde si table existe
-    // await supabase.from('Message').insert({ fromId, toId, content });
-
-    return NextResponse.json({ success: true });
 }
 
 
@@ -2592,6 +2772,151 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error("❌ Erreur Negotiation:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- app\api\network\request\route.ts ---
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+export async function POST(req: Request) {
+    try {
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            console.error("[ERROR] Authorization header missing");
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const { targetId } = await req.json();
+        console.log(`[NETWORK] Tentative d'envoi de requête vers : ${targetId}`);
+
+        if (!targetId) {
+            return NextResponse.json({ error: "targetId manquant" }, { status: 400 });
+        }
+
+        // Client anon pour vérifier l'identité (token utilisateur)
+        const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            { global: { headers: { Authorization: authHeader } } }
+        );
+
+        // Récupération de l'expéditeur via le token (source de vérité)
+        const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+        if (authError || !user) {
+            console.error("[ERROR] Auth user fail:", authError);
+            return NextResponse.json({ error: "Utilisateur non identifié" }, { status: 403 });
+        }
+
+        // Client service role pour l'insertion (bypass RLS côté serveur)
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        // Colonnes réelles du schéma Prisma : requester_id + provider_id + topic
+        const { error: insertError } = await supabase.from('AccessRequest').insert({
+            id: crypto.randomUUID(),
+            requester_id: user.id,   // Schéma Prisma : requester_id
+            provider_id: targetId,   // Schéma Prisma : provider_id
+            status: 'pending',
+            topic: `Demande de liaison`,
+            created_at: new Date().toISOString(),
+        });
+
+        if (insertError) {
+            console.error("[ERROR BDD] Détails de l'échec d'insertion:", insertError);
+            return NextResponse.json({ error: insertError.message }, { status: 400 });
+        }
+
+        console.log(`[SUCCESS] Requête enregistrée : ${user.id} → ${targetId}`);
+        return NextResponse.json({ success: true });
+
+    } catch (err: any) {
+        console.error("[CRASH SERVEUR /api/network/request]:", err);
+        return NextResponse.json({ error: "Erreur interne du serveur", details: err.message }, { status: 500 });
+    }
+}
+
+
+--- app\api\network\respond\route.ts ---
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+export async function POST(req: Request) {
+    try {
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+        const { requestId, requesterId, action } = await req.json();
+
+        // Client utilisateur pour identifier le répondant (via RLS)
+        const supabaseUser = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            { global: { headers: { Authorization: authHeader } } }
+        );
+
+        const { data: { user } } = await supabaseUser.auth.getUser();
+        if (!user) return NextResponse.json({ error: "Non identifié" }, { status: 403 });
+
+        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
+        const currentUserId = user?.id ? String(user.id).trim() : "";
+        const targetReqId = requesterId ? String(requesterId).trim() : "";
+
+        console.log(`[DEBUG RESPOND] Verif Boucle: Moi('${currentUserId}') vs Requester('${targetReqId}')`);
+
+        if (currentUserId === targetReqId) {
+            console.error("[SECURITY BLOCK] 🛑 BOUCLE TEMPORELLE INTERCEPTÉE !");
+            return NextResponse.json({ error: "Boucle temporelle détectée : Vous ne pouvez pas vous lier à vous-même." }, { status: 400 });
+        }
+
+        // Client service role pour les mutations (contourne RLS sur AccessRequest + Channel)
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+
+        if (action === 'accept') {
+            // 1. Créer le canal avec les noms de colonnes réels
+            const { error: chanError } = await supabase.from('Channel').insert({
+                id: crypto.randomUUID(),
+                topic: `Liaison Directe : ${user?.id.slice(0, 4)} x ${requesterId.slice(0, 4)}`,
+                member_one_id: user?.id,     // Toi
+                member_two_id: requesterId,  // Lui
+                initiatorId: requesterId     // Celui qui a fait la demande
+            });
+
+            if (chanError) {
+                console.error("[ERROR BDD Channel]", chanError);
+            } else {
+                // 2. Supprimer la requête UNIQUEMENT si le canal est créé
+                await supabase.from('AccessRequest').delete().eq('id', requestId);
+                console.log(`[RESPOND] ✅ Liaison acceptée et requête nettoyée : ${user?.id} ↔ ${requesterId}`);
+            }
+
+        } else if (action === 'block') {
+            // 1. Inscrire dans BlockList (colonnes camelCase selon le schéma)
+            await supabase.from('BlockList').insert({
+                blockerId: user.id,
+                blockedId: requesterId,
+            });
+            // 2. Supprimer la requête
+            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            console.log(`[RESPOND] 🚫 Entité bloquée : ${requesterId}`);
+
+        } else {
+            // Refus simple : on efface la trace
+            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            console.log(`[RESPOND] ✕ Requête refusée : ${requestId}`);
+        }
+
+        return NextResponse.json({ success: true });
+
+    } catch (err: any) {
+        console.error("[CRASH /api/network/respond]:", err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
 
@@ -3098,77 +3423,85 @@ export async function POST(req: Request) {
 --- app\api\sensors\scrape\route.ts ---
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
 import * as cheerio from 'cheerio';
-import { getMistralEmbedding } from '@/lib/mistral';
+import crypto from 'crypto';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
     try {
-        const { url, profileId } = await request.json();
+        // 1. Contrôle d'accès strict
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
+        }
 
-        if (!url) return NextResponse.json({ error: "URL manquante" }, { status: 400 });
+        const body = await req.json();
+        const { url, profileId } = body;
 
-        console.log(`[SCRAPER] Cible : ${url}`);
+        if (!url || !profileId) {
+            return NextResponse.json({ error: "Paramètres manquants (URL ou ProfileID)" }, { status: 400 });
+        }
 
-        // 1. Récupération du HTML
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Impossible d'accéder à la page.");
-        const html = await res.text();
+        // 2. Initialisation du client BDD avec l'identité de l'utilisateur
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
+            }
+        );
 
-        // 2. Nettoyage avec Cheerio
+        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+        // 3. INFILTRATION DU RÉSEAU (Scraping)
+        console.log(`[SCRAPER] Infiltration de la cible : ${url}`);
+        const response = await fetch(url);
+        const html = await response.text();
+
+        // Nettoyage du code avec Cheerio
         const $ = cheerio.load(html);
+        $('script, style, noscript, iframe, img, svg, nav, footer').remove();
+        const textContent = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // On supprime les éléments inutiles (scripts, styles, pubs, nav)
-        $('script, style, nav, footer, iframe, svg, button').remove();
+        if (!textContent || textContent.length < 10) {
+            return NextResponse.json({ error: "La cible est vide ou protégée contre le scraping." }, { status: 400 });
+        }
 
-        // On récupère le titre et le texte principal
-        const title = $('title').text() || 'Article Web';
-        // On cherche le contenu dans 'article', 'main', ou 'body' par défaut
-        let content = $('article').text() || $('main').text() || $('body').text();
+        // 4. DÉCOUPAGE ET VECTORISATION
+        const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
+        let savedCount = 0;
 
-        // Nettoyage des espaces blancs multiples
-        content = content.replace(/\s+/g, ' ').trim().substring(0, 25000);
+        console.log(`[SCRAPER] ${chunks.length} fragments à vectoriser.`);
 
-        if (content.length < 100) throw new Error("Contenu trop court ou illisible.");
+        for (const chunk of chunks) {
+            const embeddingResponse = await mistral.embeddings.create({
+                model: "mistral-embed",
+                inputs: [chunk],
+            });
 
-        // 3. Analyse Mistral
-        const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "mistral-small",
-                messages: [
-                    { role: "system", content: "Tu es un analyste. Résume cet article en Markdown (Titre, Résumé, Points clés). Sois technique et précis." },
-                    { role: "user", content: `Titre: ${title}\n\nContenu: ${content}` }
-                ]
-            })
-        });
+            const embedding = embeddingResponse.data[0]?.embedding;
+            if (!embedding) continue;
 
-        const mistralData = await mistralResponse.json();
-        const summary = mistralData.choices?.[0]?.message?.content || "Analyse impossible.";
+            // 5. INSERTION BDD avec UUID forcé
+            const { error } = await supabase.from('memory').insert({
+                id: crypto.randomUUID(),
+                profile_id: profileId,
+                content: `[WEB: ${url}] ${chunk}`,
+                type: 'link',
+                source: url,
+                embedding: embedding,
+                created_at: new Date().toISOString()
+            });
 
-        // 4. Vectorisation & Sauvegarde
-        const embedding = await getMistralEmbedding(summary);
+            if (!error) savedCount++;
+            else console.error("[ERREUR BDD SCRAPE]", error);
+        }
 
-        await supabase.from('Memory').insert([{
-            profileId,
-            content: `[WEB] ${title}\nSource: ${url}\n\n${summary}`,
-            type: 'knowledge',
-            source: 'web_scraper',
-            embedding: embedding
-        }]);
-
-        return NextResponse.json({ success: true, title, summary });
+        return NextResponse.json({ success: true, fragments: savedCount });
 
     } catch (error: any) {
-        console.error("❌ Erreur Scraper:", error);
+        console.error("[CRITIQUE SCRAPER]", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -3178,106 +3511,131 @@ export async function POST(request: Request) {
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
-import PDFParser from 'pdf2json'; // Nouvelle librairie
+import PDFParser from 'pdf2json';
+import mammoth from 'mammoth';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-// Fonction utilitaire pour transformer pdf2json en Promesse (Async/Await)
+// Fonction utilitaire pour lire le PDF en texte brut
 function parsePDFBuffer(buffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
-        const parser = new PDFParser(null, true); // true = Texte brut
-
-        parser.on("pdfParser_dataError", (errData: any) => {
-            reject(new Error(errData.parserError));
-        });
-
-        parser.on("pdfParser_dataReady", (pdfData: any) => {
-            // Extraction du texte brut depuis le JSON généré
-            const text = parser.getRawTextContent();
-            resolve(text);
-        });
-
+        const parser = new PDFParser(null, true);
+        parser.on("pdfParser_dataError", (errData: any) => reject(new Error(errData.parserError)));
+        parser.on("pdfParser_dataReady", () => resolve(parser.getRawTextContent()));
         parser.parseBuffer(buffer);
     });
 }
 
 export async function POST(req: Request) {
     try {
+        // 1. Extraction du Bearer token depuis le header Authorization
+        const authHeader = req.headers.get('Authorization');
+
+        if (!authHeader) {
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
+        }
+
+        // 2. Client Supabase blindé : obéit uniquement au Bearer token, sans session propre
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: {
+                    persistSession: false,   // Empêche Supabase d'écraser notre Token
+                    autoRefreshToken: false,
+                },
+                global: {
+                    headers: { Authorization: authHeader }
+                }
+            }
+        );
+
         const formData = await req.formData();
         const file = formData.get('file') as File;
         const profileId = formData.get('profileId') as string;
 
         if (!file || !profileId) {
-            return NextResponse.json({ error: "Fichier ou ID manquant" }, { status: 400 });
+            return NextResponse.json({ error: "Fichier ou ID Clone manquant" }, { status: 400 });
         }
 
-        console.log(`[SENSOR] Réception fichier: ${file.name} (${file.type})`);
+        console.log(`[SENSOR] Analyse du fichier: ${file.name} (${file.type})`);
+        let textContent = '';
 
-        let textContent = "";
+        // 1. EXTRACTION DU TEXTE MULTI-FORMATS
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        // 1. EXTRACTION PDF (Via PDF2JSON)
-        if (file.type === "application/pdf") {
+        if (file.type === 'application/pdf') {
+            // Décodage PDF
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
-
-                // Appel de notre fonction wrapper
                 textContent = await parsePDFBuffer(buffer);
-
             } catch (err: any) {
-                console.error("Erreur PDF2JSON:", err);
-                return NextResponse.json({ error: "Lecture PDF impossible: " + err.message }, { status: 500 });
+                return NextResponse.json({ error: 'Architecture PDF corrompue.' }, { status: 500 });
+            }
+        } else if (
+            file.name.toLowerCase().endsWith('.docx') ||
+            file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ) {
+            // Décodage DOCX via Mammoth
+            try {
+                const result = await mammoth.extractRawText({ buffer });
+                textContent = result.value;
+            } catch (err: any) {
+                return NextResponse.json({ error: 'Échec de lecture du fichier Word.' }, { status: 500 });
             }
         } else {
-            // Fichiers texte
+            // Texte brut : TXT, CSV, MD, JSON…
             textContent = await file.text();
         }
 
-        // Nettoyage et Validation
-        // pdf2json laisse parfois des caractères de saut de page (----------------Page (0) Break----------------)
+        // Nettoyage des balises PDF + null bytes + espaces superflus
         textContent = textContent.replace(/----------------Page \(\d+\) Break----------------/g, '\n');
+        textContent = textContent.replace(/\0/g, '').replace(/\u0000/g, ''); // Sécurité anti-Null Byte
         textContent = textContent.replace(/\s+/g, ' ').trim();
 
         if (!textContent || textContent.length < 5) {
-            return NextResponse.json({ error: "Fichier vide ou illisible." }, { status: 400 });
+            return NextResponse.json({ error: 'Le fichier est vide ou illisible.' }, { status: 400 });
         }
 
-        // 2. DÉCOUPAGE
+        // 2. DÉCOUPAGE (Fragments de 2000 caractères)
         const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
         let savedCount = 0;
 
-        console.log(`[SENSOR] Extraction OK (${textContent.length} chars). ${chunks.length} fragments à traiter.`);
+        console.log(`[SENSOR] ${chunks.length} fragment(s) à vectoriser.`);
 
-        // 3. ENCODAGE
+        // 3. VECTORISATION + STOCKAGE
         for (const chunk of chunks) {
             const embeddingResponse = await mistral.embeddings.create({
                 model: "mistral-embed",
                 inputs: [chunk],
             });
 
-            if (!embeddingResponse.data || !embeddingResponse.data[0]) continue;
-            const embedding = embeddingResponse.data[0].embedding;
+            const embedding = embeddingResponse.data[0]?.embedding;
+            if (!embedding) continue;
 
-            const { error } = await supabase.from('Memory').insert({
-                profileId,
+            // Génération d'un UUID natif (disponible nativement dans Next.js / Node.js moderne)
+            const fragmentId = crypto.randomUUID();
+
+            // Table 'memory' minuscule + colonnes snake_case
+            const { error } = await supabase.from('memory').insert({
+                id: fragmentId,
+                profile_id: profileId,
                 content: `[DOC: ${file.name}] ${chunk}`,
                 type: 'document',
-                source: 'visual_sensor',
-                embedding: embedding
+                source: 'cortex_dropzone',
+                embedding: embedding,
+                created_at: new Date().toISOString()
             });
 
             if (!error) savedCount++;
+            else console.error("[ERREUR BDD]", error);
         }
 
         return NextResponse.json({ success: true, fragments: savedCount });
 
     } catch (error: any) {
-        console.error("[SENSOR ERROR]", error);
-        return NextResponse.json({ error: error.message || "Erreur inconnue" }, { status: 500 });
+        console.error("[SENSOR CRASH]", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
@@ -3663,6 +4021,38 @@ export async function POST(req: Request) {
     }
 }
 
+--- app\auth\callback\route.ts ---
+import { NextResponse, type NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabaseServer'
+
+/**
+ * Route de callback OAuth/Magic Link.
+ * Supabase redirige ici après une connexion externe avec un `code` dans l'URL.
+ * On l'échange contre une session, qui sera ecrite dans les cookies SSR.
+ */
+export async function GET(request: NextRequest) {
+    const { searchParams, origin } = new URL(request.url)
+    const code = searchParams.get('code')
+    // `next` permet de rediriger vers une page précise après connexion (optionnel)
+    const next = searchParams.get('next') ?? '/dashboard'
+
+    if (code) {
+        const supabase = await createClient()
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (!error) {
+            // Redirection vers le dashboard (ou la page demandée)
+            return NextResponse.redirect(`${origin}${next}`)
+        }
+
+        console.error('[auth/callback] Erreur échange de code:', error.message)
+    }
+
+    // En cas d'erreur ou d'absence de code → page d'erreur ou page de connexion
+    return NextResponse.redirect(`${origin}/?error=auth_callback_failed`)
+}
+
+
 --- app\connections\page.tsx ---
 'use client';
 
@@ -3924,6 +4314,7 @@ export default function DashboardLayout({
 import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft, MessageCircle, ShieldCheck, FileText } from 'lucide-react';
+import SecureChat from '@/components/SecureChat';
 
 export default function LiaisonPage() {
     const params = useParams();
@@ -3936,6 +4327,7 @@ export default function LiaisonPage() {
 
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     useEffect(() => {
         if (!profileId || !partnerId) return;
@@ -4019,7 +4411,7 @@ export default function LiaisonPage() {
 
                     <div className="flex flex-col gap-4">
                         <button
-                            onClick={handleContact}
+                            onClick={() => setIsChatOpen(true)}
                             className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all"
                         >
                             <MessageCircle size={18} /> Contacter l'Humain
@@ -4032,22 +4424,32 @@ export default function LiaisonPage() {
                 </div>
 
                 {/* LE RAPPORT (PAGE PLEINE) */}
-                <div className="lg:col-span-3">
-                    <div className="bg-slate-900/20 border border-slate-800 rounded-3xl p-10 relative overflow-hidden">
-                        <div className="flex items-center gap-4 mb-8 text-cyan-400 border-b border-slate-800 pb-6">
-                            <FileText size={28} />
-                            <h2 className="text-xl font-black uppercase tracking-widest">Rapport d'Audit Technique</h2>
-                        </div>
+                <div className="lg:col-span-3 h-full mb-[500px]">
+                    {!isChatOpen ? (
+                        <div className="bg-slate-900/20 border border-slate-800 rounded-3xl p-10 relative overflow-hidden">
+                            <div className="flex items-center gap-4 mb-8 text-cyan-400 border-b border-slate-800 pb-6">
+                                <FileText size={28} />
+                                <h2 className="text-xl font-black uppercase tracking-widest">Rapport d'Audit Technique</h2>
+                            </div>
 
-                        <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-100 font-mono italic bg-black/40 p-8 rounded-2xl border border-white/5">
-                            {report?.summary || "Aucun rapport d'audit archivé pour cette liaison."}
-                        </div>
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-100 font-mono italic bg-black/40 p-8 rounded-2xl border border-white/5">
+                                {report?.summary || "Aucun rapport d'audit archivé pour cette liaison."}
+                            </div>
 
-                        <div className="mt-12 flex justify-between items-center opacity-20 text-[10px]">
-                            <span>SYSTÈME : CORTEX_V2</span>
-                            <span>{new Date(report?.createdAt || Date.now()).toLocaleString()}</span>
+                            <div className="mt-12 flex justify-between items-center opacity-20 text-[10px]">
+                                <span>SYSTÈME : CORTEX_V2</span>
+                                <span>{new Date(report?.createdAt || Date.now()).toLocaleString()}</span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="h-[600px]">
+                            <SecureChat
+                                partnerId={partnerId as string}
+                                myId={profileId || ''}
+                                onClose={() => setIsChatOpen(false)}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </main>
@@ -4061,11 +4463,9 @@ export default function LiaisonPage() {
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 // Components
-import SecureWhatsApp from '@/components/SecureWhatsApp';
-
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
 import Scanner from '@/components/dashboard/Scanner';
@@ -4073,6 +4473,7 @@ import TacticalGlobe from '@/components/Globe';
 import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
+import SecureChat from '@/components/SecureChat';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 
@@ -4122,6 +4523,7 @@ const mockDeepAudit = {
 
 export default function MissionControl() {
     const router = useRouter();
+    const [supabase] = useState(() => createClient());
     const [profileId, setProfileId] = useState<string | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
     const [memories, setMemories] = useState<any[]>([]);
@@ -4135,10 +4537,15 @@ export default function MissionControl() {
 
     // États UI
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
     const [channels, setChannels] = useState<any[]>([]);
     const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
     const [showCortexPanel, setShowCortexPanel] = useState(false);
     const [showBlockPanel, setShowBlockPanel] = useState(false);
+
+    // États scan 2 phases
+    const [basicResult, setBasicResult] = useState<any>(null);
+    const [deepResult, setDeepResult] = useState<any>(null);
 
     // États Ingestion
     const [quickThought, setQuickThought] = useState("");
@@ -4146,6 +4553,7 @@ export default function MissionControl() {
 
     const [unreadIds, setUnreadIds] = useState<string[]>([]);
     const [blockedIds, setBlockedIds] = useState<string[]>([]);
+    const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
 
     const addLog = (message: string) => setLogs(prev => [`> ${new Date().toLocaleTimeString().slice(0, 5)} ${message}`, ...prev].slice(0, 10));
 
@@ -4155,49 +4563,130 @@ export default function MissionControl() {
             if (!user) { router.push('/'); return; }
             setProfileId(user.id);
             setIsInitialized(true);
-            fetchChannels(user.id);
+            fetchChannels();
             fetchBlockList(user.id);
             loadMemories(user.id);
+            fetchAccessRequests(user.id);
         };
         init();
     }, []);
 
-    // Écouteur Global
+    const fetchAccessRequests = async (id: string) => {
+        const { data } = await supabase
+            .from('AccessRequest')
+            .select('*')
+            .eq('provider_id', id)
+            .eq('status', 'pending');
+        if (data) setIncomingRequests(data);
+    };
+
+    // -------------------------------------------------------------
+    // 1. ÉCOUTEUR GLOBAL : Nouveaux Canaux (Channel)
+    // -------------------------------------------------------------
     useEffect(() => {
         if (!profileId) return;
-        const channelSubscription = supabase.channel('global_dashboard_main')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'Channel' }, async (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    const newChannel = payload.new as any;
-                    if (newChannel.member_one_id === profileId || newChannel.member_two_id === profileId) {
-                        addLog(`NOUVELLE LIAISON: ${newChannel.id.slice(0, 4)}`);
-                        setUnreadIds(prev => [...prev, newChannel.id]);
+
+        let isMounted = true;
+        let channelRadar: any = null;
+
+        const initDelay = setTimeout(() => {
+            if (!isMounted) return;
+
+            channelRadar = supabase.channel('radar_channels_v4')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Channel' }, () => {
+                    fetchChannels();
+                })
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'Channel' }, () => {
+                    fetchChannels();
+                    setIsChatOpen(false);
+                })
+                .subscribe();
+        }, 300);
+
+        return () => {
+            isMounted = false;
+            clearTimeout(initDelay);
+            if (channelRadar) supabase.removeChannel(channelRadar);
+        };
+    }, [profileId]);
+
+    // -------------------------------------------------------------
+    // 1b. ÉCOUTEUR GLOBAL : Demandes de Liaison (AccessRequest)
+    // -------------------------------------------------------------
+    useEffect(() => {
+        if (!profileId) return;
+
+        const requestRadar = supabase.channel('radar_requests')
+            .on(
+                'postgres_changes',
+                // 🟢 SUPPRESSION DU FILTRE SERVEUR QUI CAUSAIT LE "MISMATCH"
+                { event: 'INSERT', schema: 'public', table: 'AccessRequest' },
+                (payload: any) => {
+                    const req = payload.new;
+                    // 🟢 FILTRAGE CÔTÉ CLIENT avec la bonne colonne 'provider_id'
+                    if (req.provider_id === profileId) {
+                        console.log("⚡ Nouvelle demande de liaison entrante !");
+                        fetchAccessRequests(profileId);
                     }
                 }
-                await fetchChannels(profileId);
-            })
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload) => {
-                const msg = payload.new;
-                if (msg.fromId !== profileId) {
+            )
+            .on(
+                'postgres_changes',
+                // 🟢 SUPPRESSION DU FILTRE SERVEUR ÉGALEMENT POUR LE DELETE
+                { event: 'DELETE', schema: 'public', table: 'AccessRequest' },
+                () => {
+                    // Refresh la liste quand une demande est supprimée (ex: annulée, refusée)
+                    fetchAccessRequests(profileId);
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(requestRadar); };
+    }, [profileId]);
+
+
+    // -------------------------------------------------------------
+    // 2. ÉCOUTEUR GLOBAL : Messages non lus (La pastille rouge)
+    // -------------------------------------------------------------
+    useEffect(() => {
+        if (!profileId) return;
+        const supabase = createClient();
+
+        const radar = supabase.channel('global_radar')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
+                const newMsg = payload.new;
+                // Si le message est pour moi (pas de moi)
+                if (newMsg.sender_id !== profileId) {
                     setUnreadIds(prev => {
-                        if (prev.includes(msg.channel_id)) return prev;
-                        return [...prev, msg.channel_id];
+                        // Si on n'est pas déjà dans ce chat, on ajoute à la liste des non-lus
+                        if (activeChannelId !== newMsg.communication_id) {
+                            return [...new Set([...prev, newMsg.communication_id])];
+                        }
+                        return prev;
                     });
-                    fetchChannels(profileId);
                 }
             })
             .subscribe();
-        return () => { supabase.removeChannel(channelSubscription); };
-    }, [profileId]);
 
-    const fetchChannels = async (pid: string) => {
-        const { data } = await supabase.from('Channel').select('*').or(`member_one_id.eq.${pid},member_two_id.eq.${pid}`).order('last_message_at', { ascending: false });
-        if (data) setChannels(data);
+        return () => { supabase.removeChannel(radar); };
+    }, [profileId, activeChannelId]); // Très important d'avoir activeChannelId ici
+
+    const fetchChannels = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { data: chans } = await supabase
+            .from('Channel')
+            .select('*')
+            .or(`member_one_id.eq.${session.user.id},member_two_id.eq.${session.user.id}`)
+            .order('last_message_at', { ascending: false });
+
+        setChannels(chans || []);
     };
 
     const fetchBlockList = async (pid: string) => {
         const { data } = await supabase.from('BlockList').select('blockedId').eq('blockerId', pid);
-        if (data) setBlockedIds(data.map(b => b.blockedId));
+        if (data) setBlockedIds(data.map((b: { blockedId: string }) => b.blockedId));
     };
 
     const loadMemories = async (pid: string) => {
@@ -4230,40 +4719,151 @@ export default function MissionControl() {
     const handleQuickThoughtSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!quickThought.trim() || !profileId) return;
-        const content = quickThought;
-        setQuickThought("");
-        addLog(`MEMOIRE: Archivage...`);
-        await supabase.from('Memory').insert({ profileId, content, type: 'thought', source: 'manual_input' });
-        addLog(`SUCCÈS: Pensée stockée.`);
-        loadMemories(profileId);
-    };
 
+        // ✅ Filtre anti-corruption : suppression des null bytes
+        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
+        setQuickThought('');
+        addLog('MEMOIRE: Archivage...');
+
+        // Récupération du passeport session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { addLog('CRITIQUE: Session expirée.'); return; }
+
+        try {
+            const res = await fetch('/api/memories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    content: cleanThought,
+                    profileId: session.user.id,
+                    type: 'thought',
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            addLog('SUCCÈS: Pensée synchronisée dans le Cortex.');
+            loadMemories(profileId);
+        } catch (err: any) {
+            addLog(`CRITIQUE: ${err.message || 'Échec de transmission.'}`);
+        }
+    };
     const triggerManualScan = async () => {
         if (!profileId) return;
         setStatus('SCANNING');
+        setBasicResult(null);
+        setDeepResult(null);
         setMatchData(null);
         setStrategicReport(null);
-        addLog("RADAR: Scan global initié...");
+        addLog('RADAR: Scan de surface initié...');
 
         try {
-            const report = await scanGlobalNetwork(profileId);
-            console.log("📝 RAPPORT MISTRAL REÇU:", report); // Debug Log
-
-            setStrategicReport(report);
-
-            // On affiche TOUJOURS le rapport, même s'il n'y a pas d'opportunités, 
-            // pour voir le résumé de l'analyse et le statut global.
+            const report = await scanGlobalNetwork(profileId, 'basic');
+            console.log('📡 BASIC SCAN:', report);
+            setBasicResult(report);
             setStatus('LIST');
-
-            if (report.opportunities && report.opportunities.length > 0) {
-                addLog(`CONTACT: ${report.opportunities.length} vecteurs identifiés.`);
-            } else {
-                addLog("RADAR: Analyse terminée (Aucune cible immédiate).");
-            }
+            addLog(`RADAR: Analyse de surface terminée — statut ${report.globalStatus}.`);
         } catch (e) {
             console.error(e);
             setStatus('IDLE');
-            addLog("ERREUR: Échec du scan.");
+            addLog('ERREUR: Scan de surface échoué.');
+        }
+    };
+
+    // ── PHASE 2 : Audit profond (opportunités complètes) ──
+    const triggerDeepAudit = async () => {
+        if (!profileId) return;
+        setStatus('SCANNING');
+        setDeepResult(null);
+        addLog('CORTEX: Extraction profonde en cours...');
+
+        try {
+            const report = await scanGlobalNetwork(profileId, 'deep');
+            console.log('🔥 DEEP AUDIT:', report);
+            setDeepResult(report);
+            setStrategicReport(report);
+            setStatus('LIST');
+            addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
+        } catch (e) {
+            console.error(e);
+            // On revient au résultat basic si on en avait un
+            setStatus('LIST');
+            addLog('ERREUR: Audit profond échoué.');
+        }
+    };
+
+    // ── CONTACT : Initier une demande de liaison après audit profond ──
+    const handleContactTarget = async () => {
+        // 🔍 VÉRIFICATION N°1 : Est-ce qu'on a bien l'ID de l'autre clone ?
+        console.log("🔍 DONNÉES DE L'AUDIT :", deepResult);
+
+        const targetId = deepResult?.targetId || deepResult?.id || deepResult?.profile_id;
+
+        console.log("🎯 ID DE LA CIBLE À CONTACTER :", targetId);
+
+        if (!targetId) {
+            alert("[ERREUR CRITIQUE] Impossible d'engager : l'ID de la cible est introuvable. Le radar n'a pas transmis les coordonnées.");
+            return;
+        }
+
+        if (!profileId) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { addLog('[CRITIQUE] Session expirée.'); return; }
+
+        addLog('LIAISON: Envoi de la demande de contact...');
+
+        try {
+            const res = await fetch('/api/network/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    targetId,
+                    senderClassification: deepResult?.targetClassification ?? 'entité inconnue',
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                addLog('SUCCÈS: Demande de contact transmise. En attente de réponse.');
+                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
+            } else {
+                addLog(`[ERREUR] ${data.error || 'Demande échouée.'}`);
+            }
+        } catch (err: any) {
+            addLog(`[CRITIQUE] Échec de connexion : ${err.message}`);
+        }
+    };
+
+    // ── Réponse aux demandes de liaison (accepter / refuser / bloquer) ──
+    const handleResponse = async (req: any, action: 'accept' | 'refuse' | 'block') => {
+        console.log("🖱️ [DEBUG CLICK] handleResponse déclenché pour:", req.id, "Action:", action);
+        // TRAP : Si cette ligne s'affiche au chargement sans clic, c'est le bug !
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        try {
+            const res = await fetch('/api/network/respond', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ requestId: req.id, requesterId: req.requester_id, action }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIncomingRequests(prev => prev.filter(r => r.id !== req.id));
+                if (action === 'accept') addLog('LIAISON: Canal sécurisé établi.');
+                else if (action === 'block') addLog('SÉCURITÉ: Entité bloquée.');
+                else addLog('LIAISON: Requête refusée.');
+            }
+        } catch (err: any) {
+            addLog(`[CRITIQUE] Réponse échouée : ${err.message}`);
         }
     };
 
@@ -4308,20 +4908,35 @@ export default function MissionControl() {
     const handleDeleteChannel = async (channelId: string, e: React.MouseEvent) => {
         e.stopPropagation(); // Empêche d'ouvrir le chat quand on clique sur supprimer
 
-        // Petit son ou effet tactique serait bien ici, mais on reste simple
-        if (!confirm("CONFIRMATION REQUISE : Rompre définitivement cette liaison sécurisée ?")) return;
+        if (!confirm("CONFIRMATION REQUISE : Rompre définitivement cette liaison sécurisée et purger l'historique ?")) return;
 
-        // Mise à jour optimiste de l'interface (immédiat)
+        // 1. Mise à jour optimiste de l'interface (immédiat)
         setChannels(prev => prev.filter(c => c.id !== channelId));
-        addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue.`);
 
-        // Suppression en base de données
-        const { error } = await supabase.from('Channel').delete().eq('id', channelId);
+        try {
+            // 2. PURGE : On supprime d'abord tous les messages liés à ce canal
+            const { error: msgError } = await supabase
+                .from('Message') // Attention à la majuscule/minuscule selon votre base !
+                .delete()
+                .eq('communication_id', channelId);
 
-        if (error) {
-            addLog("ERREUR: Échec de la rupture du lien.");
-            // Si erreur, on recharge la liste pour remettre le channel
-            if (profileId) fetchChannels(profileId);
+            if (msgError) throw msgError;
+
+            // 3. DESTRUCTION : Maintenant on peut détruire le canal
+            const { error: channelError } = await supabase
+                .from('Channel')
+                .delete()
+                .eq('id', channelId);
+
+            if (channelError) throw channelError;
+
+            addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue et purgée.`);
+
+        } catch (error: any) {
+            console.error("Erreur de suppression du canal :", error.message);
+            addLog("ERREUR: Le protocole de rupture a échoué (Voir Console).");
+            // Si la DB refuse, on remet le canal dans l'interface pour ne pas mentir à l'Agent
+            fetchChannels();
         }
     };
 
@@ -4382,6 +4997,30 @@ export default function MissionControl() {
                         </div>
                     </div>
 
+                    {/* ALERTES : Requêtes de liaison entrantes */}
+                    {incomingRequests.length > 0 && (
+                        <div className="mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                            <h3 className="text-orange-500 font-bold text-[10px] mb-2 tracking-widest uppercase flex items-center gap-1">
+                                <span className="animate-pulse">⚠️</span> {incomingRequests.length} requête(s) de liaison
+                            </h3>
+                            <div className="space-y-2">
+                                {incomingRequests.map((req) => (
+                                    <div key={req.id} className="bg-slate-900/90 border-l-4 border-orange-500 p-3 rounded-r-xl flex justify-between items-center shadow-lg gap-2">
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-slate-200 text-xs font-mono truncate">{req.topic || 'Demande de liaison'}</p>
+                                            <span className="text-[9px] text-slate-500 uppercase tracking-tighter">Source: {req.requester_id?.slice(0, 8)}...</span>
+                                        </div>
+                                        <div className="flex gap-1 shrink-0">
+                                            <button onClick={() => handleResponse(req, 'accept')} className="bg-green-600/20 text-green-400 border border-green-600/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">✓</button>
+                                            <button onClick={() => handleResponse(req, 'refuse')} className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-slate-700 transition-all">✕</button>
+                                            <button onClick={() => handleResponse(req, 'block')} className="bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-red-900 hover:text-white transition-all">🚫</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* CENTRAL NEURAL MAP (Scanner & Overlays) */}
                     <div className="glass-panel rounded-2xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px]">
 
@@ -4397,58 +5036,146 @@ export default function MissionControl() {
                             </div>
                         )}
 
-                        {/* ÉTAT 2 : LISTE STRATEGIQUE (Global Scan Result) */}
-                        {status === 'LIST' && strategicReport && (
+                        {/* ÉTAT 2-A : RÉSULTAT SCAN BASIC */}
+                        {status === 'LIST' && basicResult && !deepResult && (
                             <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
                                 <button
-                                    onClick={() => setStatus('IDLE')}
+                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
                                     className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
                                 >
                                     <X size={24} />
                                 </button>
 
-                                <div className="mt-4 space-y-6">
-                                    {/* Header du Rapport */}
-                                    <div className={`p-4 border-l-4 bg-white/5 ${strategicReport.globalStatus === 'ORANGE' ? 'border-orange-500' : 'border-emerald-500'}`}>
-                                        <h2 className="text-xl font-bold tracking-tighter uppercase text-white">
-                                            Statut Global : <span className={strategicReport.globalStatus === 'ORANGE' ? 'text-orange-500' : 'text-emerald-500'}>
-                                                {strategicReport.globalStatus}
-                                            </span>
+                                <div className="mt-6 space-y-4">
+                                    {/* Statut global */}
+                                    <div className={`p-4 border-l-4 bg-white/5 rounded ${basicResult.globalStatus === 'GREEN' ? 'border-emerald-500' :
+                                        basicResult.globalStatus === 'ORANGE' ? 'border-amber-500' : 'border-red-500'
+                                        }`}>
+                                        <p className="text-[10px] font-mono text-gray-500 mb-1">ANALYSE DE SURFACE</p>
+                                        <h2 className="text-lg font-bold tracking-tighter text-white">
+                                            Statut : <span className={basicResult.globalStatus === 'GREEN' ? 'text-emerald-400' : basicResult.globalStatus === 'ORANGE' ? 'text-amber-400' : 'text-red-400'}>{basicResult.globalStatus}</span>
                                         </h2>
-                                        <p className="text-gray-400 italic text-sm mt-2">{strategicReport.analysisSummary}</p>
+                                        <p className="text-gray-400 italic text-sm mt-2">{basicResult.analysisSummary}</p>
                                     </div>
 
-                                    {/* Liste des Opportunités */}
-                                    <div className="grid gap-3 pb-8">
-                                        {strategicReport.opportunities.map((op: any, index: number) => (
-                                            <div
-                                                key={index}
-                                                onClick={() => handleSelectOpportunity(op)}
-                                                className="p-4 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-lg font-semibold text-blue-400 group-hover:text-primary transition-colors">{op.targetName}</h3>
-                                                    <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs font-mono rounded border border-blue-500/30">
-                                                        MATCH: {op.matchScore}%
-                                                    </span>
-                                                </div>
+                                    {/* Commandes Phase 1 */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={triggerDeepAudit}
+                                            className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <span>👁️</span> AUDIT PROFOND
+                                        </button>
+                                        <button
+                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
+                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl transition-all text-sm"
+                                        >
+                                            ANNULER
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (profileId && basicResult?.targetId) {
+                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: basicResult.targetId });
+                                                    setBlockedIds(prev => [...prev, basicResult.targetId]);
+                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                }
+                                                setStatus('IDLE'); setBasicResult(null);
+                                            }}
+                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900 font-bold py-2 rounded-xl transition-all text-sm"
+                                        >
+                                            BLOQUER
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
-                                                <div className="space-y-3 text-sm">
-                                                    <p><span className="text-gray-500 uppercase font-bold text-xs">Analyse :</span> <span className="text-slate-300">{op.reason}</span></p>
-                                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded">
-                                                        <p className="text-emerald-400">
-                                                            <span className="font-bold uppercase text-xs">Action suggérée :</span> {op.suggestedAction}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                        {/* CHARGEMENT AUDIT PROFOND */}
+                        {status === 'SCANNING' && basicResult && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
+                                <div className="text-4xl animate-spin mb-4">⚙️</div>
+                                <p className="text-amber-400 font-mono animate-pulse text-sm tracking-widest">EXTRACTION PROFONDE...</p>
+                            </div>
+                        )}
 
-                                        {strategicReport.opportunities.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500 italic">
-                                                Aucune opportunité détectée pour le moment.
-                                            </div>
-                                        )}
+                        {/* ÉTAT 2-B : RAPPORT AUDIT PROFOND CONSOLIDÉ */}
+                        {status === 'LIST' && deepResult && (
+                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
+                                <button
+                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
+                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
+                                >
+                                    <X size={24} />
+                                </button>
+
+                                <div className="mt-6 space-y-4 pb-4">
+                                    {/* En-tête + Score unique */}
+                                    <div className="flex justify-between items-center border-b border-orange-900/50 pb-4">
+                                        <h3 className="text-orange-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <span>🔥</span> RAPPORT D'AUDIT PROFOND
+                                        </h3>
+                                        <div className="text-2xl font-mono font-bold text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
+                                            {deepResult.overallMatchScore ?? deepResult.matchScore ?? 0}%
+                                        </div>
+                                    </div>
+
+                                    {/* Classification cible */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Classification Cible
+                                        </span>
+                                        <p className="text-slate-200 text-sm font-mono">
+                                            {deepResult.targetClassification ?? 'Entité non classifiée'}
+                                        </p>
+                                    </div>
+
+                                    {/* Analyse tactique unifiée */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Analyse Tactique
+                                        </span>
+                                        <p className="text-slate-300 text-sm leading-relaxed">
+                                            {deepResult.unifiedAnalysis ?? deepResult.analyse ?? deepResult.analysisSummary ?? 'Analyse en cours...'}
+                                        </p>
+                                    </div>
+
+                                    {/* Alignement stratégique */}
+                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
+                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
+                                            Alignement Stratégique
+                                        </span>
+                                        <p className="text-cyan-400 text-sm leading-relaxed">
+                                            {deepResult.strategicAlignment ?? 'Évaluation des bénéfices en cours...'}
+                                        </p>
+                                    </div>
+
+                                    {/* Commandes Phase 2 */}
+                                    <div className="grid grid-cols-3 gap-2 pt-2">
+                                        <button
+                                            onClick={handleContactTarget}
+                                            className="bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            💬 Contacter
+                                        </button>
+                                        <button
+                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
+                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            Annuler
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (profileId && deepResult?.targetId) {
+                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: deepResult.targetId });
+                                                    setBlockedIds(prev => [...prev, deepResult.targetId]);
+                                                    addLog('SÉCURITÉ: Cible bannie.');
+                                                }
+                                                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
+                                            }}
+                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900/50 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
+                                        >
+                                            Bloquer
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -4484,31 +5211,48 @@ export default function MissionControl() {
                             </h3>
                         </div>
                         <div className="space-y-2 overflow-y-auto max-h-32 custom-scrollbar">
-                            {channels.map(c => (
-                                <div
-                                    key={c.id}
-                                    onClick={() => toggleChannelChat(c.id)}
-                                    className="flex items-center justify-between p-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer group transition-all border border-transparent hover:border-primary/20"
-                                >
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${unreadIds.includes(c.id) ? 'bg-accent-amber animate-pulse' : 'bg-primary/50'}`}></div>
-                                        <span className="text-[10px] font-mono text-slate-300 truncate">{c.topic}</span>
-                                    </div>
+                            {channels.filter(c => c.topic && c.topic !== 'LIAISON SÉCURISÉE').map((channel) => { // On filtre les canaux sans sujet ou par défaut
+                                const otherId = channel.member_one_id === profileId ? channel.member_two_id : channel.member_one_id;
 
-                                    <div className="flex items-center gap-2">
-                                        {/* Bouton de suppression (visible au hover ou tactile) */}
-                                        <button
-                                            onClick={(e) => handleDeleteChannel(c.id, e)}
-                                            className="p-3 -m-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-90"
-                                            title="Rompre la liaison"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-
-                                        <ChevronRight size={12} className="text-gray-500 group-hover:text-white transition-colors" />
+                                return (
+                                    <div key={channel.id} className="bg-slate-900 border border-blue-500/30 p-4 rounded-xl mb-3">
+                                        <div className="flex justify-between items-center gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-blue-400 font-bold text-xs uppercase truncate">{channel.topic}</h4>
+                                                <p className="text-[10px] text-slate-500 truncate">PARTENAIRE : {otherId?.slice(0, 8)}...</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setChatPartnerId(otherId);
+                                                        setActiveChannelId(channel.id);
+                                                        setIsChatOpen(true);
+                                                        // 🟢 On efface la notification quand on ouvre le canal
+                                                        setUnreadIds(prev => prev.filter(id => id !== channel.id));
+                                                    }}
+                                                    className="relative bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap"
+                                                >
+                                                    OUVRIR TCHAT
+                                                    {/* 🟢 LA PASTILLE ROUGE DE NOTIFICATION */}
+                                                    {unreadIds.includes(channel.id) && (
+                                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-black shadow-sm"></span>
+                                                        </span>
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDeleteChannel(channel.id, e)}
+                                                    className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
+                                                    title="Rompre la liaison"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {channels.length === 0 && <p className="text-[10px] text-gray-600 italic text-center py-2">Aucun signal.</p>}
                         </div>
                     </div>
@@ -4562,15 +5306,19 @@ export default function MissionControl() {
                 </div>
             </div >
 
-            {/* MODALS */}
-            {
-                isChatOpen && activeChannelId && (
-                    <div className="fixed inset-0 z-[100] bg-black animate-in slide-in-from-bottom">
-                        <button onClick={() => setIsChatOpen(false)} className="absolute top-4 right-4 z-50 p-2 bg-white/10 rounded-full text-white"><X /></button>
-                        <SecureWhatsApp profileId={profileId} channelId={activeChannelId} />
+            {/* SECURE CHAT OVERLAY */}
+            {isChatOpen && chatPartnerId && profileId && activeChannelId && ( // <-- Ajoutez activeChannelId ici
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="w-full max-w-lg h-[80vh] min-h-[500px]">
+                        <SecureChat
+                            myId={profileId}
+                            partnerId={chatPartnerId}
+                            channelId={activeChannelId} // ⬅️ TRÈS IMPORTANT : Passer l'ID du Canal
+                            onClose={() => setIsChatOpen(false)}
+                        />
                     </div>
-                )
-            }
+                </div>
+            )}
 
             {
                 showCortexPanel && (
@@ -4583,7 +5331,20 @@ export default function MissionControl() {
                 )
             }
 
-            {showBlockPanel && <BlockListManager profileId={profileId!} onClose={() => setShowBlockPanel(false)} />}
+            {/* BlockListManager - Assuming it's a component that should exist or be imported, checking availability in codebase later if needed but keeping structure valid */}
+            {showBlockPanel && profileId && (
+                <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center">
+                    <div className="bg-slate-900 p-6 rounded-xl border border-red-900/50">
+                        <h3 className="text-red-500 font-bold mb-4">PROTOCOLE D'EXCLUSION</h3>
+                        <p className="text-gray-400 mb-4">Liste des entités bannies:</p>
+                        <ul className="mb-4 space-y-2">
+                            {blockedIds.map(id => <li key={id} className="text-xs font-mono text-red-400">{id}</li>)}
+                            {blockedIds.length === 0 && <li className="text-xs text-gray-600">Aucune menace active.</li>}
+                        </ul>
+                        <button onClick={() => setShowBlockPanel(false)} className="bg-slate-800 text-white px-4 py-2 rounded">Fermer</button>
+                    </div>
+                </div>
+            )}
 
             {/* ÉTAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
             {
@@ -4594,6 +5355,8 @@ export default function MissionControl() {
                     />
                 )
             }
+
+
         </div >
     );
 }
@@ -4889,190 +5652,608 @@ export default function RootLayout({
 --- app\memories\page.tsx ---
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { cryptoManager } from '@/lib/security/crypto';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabaseBrowser';
+import {
+    Upload, Link2, Terminal, Brain, FileText,
+    Globe, ChevronRight, ArrowLeft, Trash2, Loader2,
+    CheckCircle2, AlertTriangle, Wifi
+} from 'lucide-react';
 
-function MemoriesContent() {
-    const searchParams = useSearchParams();
+// ─── TYPE ────────────────────────────────────────────────────────────────────
+interface Memory {
+    id: string;
+    content: string;
+    type: string;
+    source?: string;
+    created_at: string;
+}
+
+type LogLevel = 'info' | 'success' | 'error' | 'warning';
+interface Log { msg: string; level: LogLevel; ts: string }
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const typeIcon: Record<string, string> = {
+    document: '📄', knowledge: '🌐', THOUGHT: '💭', thought: '💭',
+    secret: '🔒', default: '🧩',
+};
+const typeColor: Record<string, string> = {
+    document: 'bg-blue-900/50 text-blue-300 border-blue-700/50',
+    knowledge: 'bg-violet-900/50 text-violet-300 border-violet-700/50',
+    THOUGHT: 'bg-cyan-900/50  text-cyan-300  border-cyan-700/50',
+    thought: 'bg-cyan-900/50  text-cyan-300  border-cyan-700/50',
+    secret: 'bg-red-900/50   text-red-300   border-red-700/50',
+    default: 'bg-slate-800    text-slate-400  border-slate-700',
+};
+
+// ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
+function CortexManager() {
     const router = useRouter();
-    const profileId = searchParams.get('profileId');
+    const [supabase] = useState(() => createClient());
 
-    const [memories, setMemories] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [profileId, setProfileId] = useState<string | null>(null);
+    const [memories, setMemories] = useState<Memory[]>([]);
+    const [logs, setLogs] = useState<Log[]>([
+        { msg: '[SYSTÈME] Cortex en ligne. En attente de données...', level: 'info', ts: now() }
+    ]);
+    const [isDragging, setIsDragging] = useState(false);
+    const [urlInput, setUrlInput] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [isScraping, setIsScraping] = useState(false);
+    // États éditeur de fragments
+    const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
+    const [isUpdating, setIsUpdating] = useState(false);
 
-    // 1. Chargement des souvenirs
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const logEndRef = useRef<HTMLDivElement>(null);
+
+    // ── Auth check ──
     useEffect(() => {
-        if (!profileId) return;
-        // USING SINGULAR /api/memory based on file verification
-        fetch(`/api/memory?profileId=${profileId}`)
-            .then(res => res.json())
-            .then(data => {
-                setMemories(Array.isArray(data) ? data : []);
-                setLoading(false);
-            });
+        supabase.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+            if (!user) { router.push('/'); return; }
+            setProfileId(user.id);
+        });
+    }, []);
+
+    // ── Load memories quand profileId est dispo ──
+    useEffect(() => {
+        if (profileId) fetchMemories();
     }, [profileId]);
 
-    // 2. Fonction de Suppression
-    const handleDelete = async (id: string) => {
-        if (!confirm("Voulez-vous vraiment effacer ce souvenir définitivement ?")) return;
-        setMemories(prev => prev.filter(m => m.id !== id)); // Optimiste
-        await fetch(`/api/memory/delete?id=${id}`, { method: 'DELETE' });
+    // ── Auto-scroll logs ──
+    useEffect(() => {
+        logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [logs]);
+
+    function now() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    const addLog = (msg: string, level: LogLevel = 'info') => {
+        setLogs(prev => [...prev.slice(-19), { msg, level, ts: now() }]);
     };
 
-    // 3. Fonction de Modification (Start)
-    const startEdit = (memory: any) => {
-        setEditingId(memory.id);
-        setEditContent(memory.content);
-    };
-
-    // 4. Sauvegarde de la Modification
-    const saveEdit = async (id: string) => {
-        // Optimiste : on met à jour l'affichage tout de suite
-        setMemories(prev => prev.map(m => m.id === id ? { ...m, content: editContent } : m));
-        setEditingId(null);
-
-        await fetch('/api/memory/update', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, content: editContent })
-        });
-    };
-
-    // 5. Déchiffrement à la volée
-    const handleUnlock = async (id: string, encryptedContent: string) => {
+    // ── Fetch mémoires récentes ──
+    const fetchMemories = async () => {
+        if (!profileId) return;
         try {
-            const clearText = await cryptoManager.decrypt(encryptedContent);
-            // On met à jour l'affichage localement pour montrer le texte clair
-            setMemories(prev => prev.map(m =>
-                m.id === id ? { ...m, content: clearText, isDecrypted: true } : m
-            ));
-        } catch (e) {
-            alert("Erreur de déchiffrement (Clé invalide ?)");
+            const res = await fetch(`/api/memories?profileId=${profileId}`);
+            const data = await res.json();
+            if (data.memories) setMemories(data.memories.slice(0, 20));
+        } catch {
+            addLog('[ERREUR] Impossible de charger les archives.', 'error');
         }
     };
 
-    if (!profileId) return <div className="p-10 text-center">Profil non identifié.</div>;
+    // ── Upload fichier ──
+    const handleFileUpload = async (file: File) => {
+        setIsUploading(true);
+        addLog(`[SENSOR] Analyse de la cible : ${file.name} (${(file.size / 1024).toFixed(1)} Ko)`, 'info');
 
-    return (
-        <div className="min-h-screen bg-slate-50 p-8 font-sans">
-            <div className="max-w-4xl mx-auto">
+        // Récupération de la session complète pour extraire le Bearer token
+        const { data: { session } } = await supabase.auth.getSession();
 
-                {/* EN-TÊTE */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-800">🧠 Cortex Manager</h1>
-                        <p className="text-slate-500">Gestion de la mémoire à long terme</p>
-                    </div>
-                    <Link
-                        href={`/dashboard?profileId=${profileId}`}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-                    >
-                        ← Retour au Cockpit
-                    </Link>
+        if (!session) {
+            addLog('[CRITIQUE] Utilisateur non authentifié. Connexion refusée.', 'error');
+            setIsUploading(false);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('profileId', session.user.id);
+
+        try {
+            const res = await fetch('/api/sensors/upload', {
+                method: 'POST',
+                // ✅ Passeport d'identité transmis à l'API
+                headers: { 'Authorization': `Bearer ${session.access_token}` },
+                body: formData,
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                addLog(`[SUCCÈS] ${data.fragments} fragment(s) de "${file.name}" gravés.`, 'success');
+                await fetchMemories();
+            } else {
+                addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
+            }
+        } catch {
+            addLog('[CRITIQUE] Échec de la liaison de transfert.', 'error');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    // ── Scrape URL ──
+    const handleUrlSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!urlInput) return;
+
+        const targetUrl = urlInput.trim();
+        setUrlInput('');
+        setIsScraping(true);
+        addLog(`[RÉSEAU] Extraction des données depuis : ${targetUrl}...`, 'info');
+
+        // Récupération du passeport session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            addLog('[CRITIQUE] Accès réseau refusé (Non authentifié).', 'error');
+            setIsScraping(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/sensors/scrape', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`, // ✅ Passeport transmis
+                },
+                body: JSON.stringify({ url: targetUrl, profileId: session.user.id }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                addLog(`[SUCCÈS] ${data.fragments} fragment(s) du site extraits et indexés.`, 'success');
+                await fetchMemories();
+            } else {
+                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping échoué.'}`, 'error');
+            }
+        } catch {
+            addLog('[CRITIQUE] Échec de la connexion au module Scraper.', 'error');
+        } finally {
+            setIsScraping(false);
+        }
+    };
+
+    // ── Drag & Drop ──
+    const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+    const handleDragLeave = () => setIsDragging(false);
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault(); setIsDragging(false);
+        if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+    };
+
+    // ── Delete mémoire (avec Bearer token + confirmation) ──
+    const handleDeleteMemory = async (e: React.MouseEvent, memoryId: string) => {
+        e.stopPropagation(); // Empêche d'ouvrir la modale d'édition
+
+        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mémoire ? Cette action est irréversible.')) return;
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { addLog('[CRITIQUE] Session expirée.', 'error'); return; }
+
+        // Mise à jour optimiste immédiate
+        setMemories(prev => prev.filter(m => m.id !== memoryId));
+        addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
+
+        try {
+            const res = await fetch('/api/memories', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ id: memoryId, profileId: session.user.id }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
+            } else {
+                addLog(`[ERREUR] La purge a échoué : ${data.error}`, 'error');
+                // Rollback : on recharge depuis l'API
+                fetchMemories();
+            }
+        } catch {
+            addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
+            fetchMemories();
+        }
+    };
+
+    // ── Sauvegarde édition avec re-vectorisation ──
+    const handleSaveEdit = async () => {
+        if (!editingMemory) return;
+        setIsUpdating(true);
+        addLog('[MODIFICATION] Re-calcul vectoriel du fragment...', 'info');
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            addLog('[CRITIQUE] Session expirée.', 'error');
+            setIsUpdating(false);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/memories', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    id: editingMemory.id,
+                    content: editContent,
+                    profileId: session.user.id,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
+                setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
+                setEditingMemory(null);
+            } else {
+                addLog(`[ERREUR] ${data.error || 'Modification échouée.'}`, 'error');
+            }
+        } catch {
+            addLog('[CRITIQUE] Échec de la connexion lors de l\'édition.', 'error');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    // ── Loading state ──
+    if (!profileId) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-blue-400 font-mono">
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>Authentification Cortex...</span>
                 </div>
-
-                {/* LISTE */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    {loading ? (
-                        <div className="p-8 text-center text-slate-400">Chargement des neurones...</div>
-                    ) : memories.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400">Aucun souvenir trouvé. Le cerveau est vide.</div>
-                    ) : (
-                        <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th className="p-4 border-b">Type</th>
-                                    <th className="p-4 border-b w-full">Contenu du souvenir</th>
-                                    <th className="p-4 border-b whitespace-nowrap">Date</th>
-                                    <th className="p-4 border-b text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {memories.map((m) => (
-                                    <tr key={m.id} className="hover:bg-slate-50 transition">
-
-                                        {/* TYPE (Icone) */}
-                                        <td className="p-4 align-top">
-                                            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${m.tags?.includes('upload') ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                                }`}>
-                                                {m.tags?.includes('upload') ? 'DOC' : 'NOTE'}
-                                            </span>
-                                        </td>
-
-                                        {/* CONTENU INTELLIGENT */}
-                                        <td className="p-4 align-top">
-                                            {editingId === m.id ? (
-                                                <textarea
-                                                    className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800"
-                                                    rows={3}
-                                                    value={editContent}
-                                                    onChange={(e) => setEditContent(e.target.value)}
-                                                />
-                                            ) : (
-                                                // LOGIQUE D'AFFICHAGE SÉCURISÉ
-                                                m.type === 'secret' && !m.isDecrypted ? (
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="bg-slate-100 p-3 rounded text-slate-400 italic text-xs border border-slate-200 w-full max-w-md">
-                                                            🔒 Contenu chiffré (Illisible pour l'IA)
-                                                        </div>
-                                                        <button
-                                                            onClick={() => handleUnlock(m.id, m.content)}
-                                                            className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full hover:bg-indigo-200 transition font-medium"
-                                                        >
-                                                            Déverrouiller 🔓
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    // Affichage normal (ou secret déchiffré)
-                                                    <p className={`whitespace-pre-wrap text-sm leading-relaxed ${m.isDecrypted ? 'text-green-700 font-medium bg-green-50 p-2 rounded' : 'text-slate-700'
-                                                        }`}>
-                                                        {m.content}
-                                                    </p>
-                                                )
-                                            )}
-                                        </td>
-
-                                        {/* DATE */}
-                                        <td className="p-4 align-top text-xs text-slate-400 whitespace-nowrap">
-                                            {new Date(m.createdAt).toLocaleDateString()}
-                                            <br />
-                                            {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-
-                                        {/* ACTIONS */}
-                                        <td className="p-4 align-top text-right space-x-2">
-                                            {editingId === m.id ? (
-                                                <>
-                                                    <button onClick={() => saveEdit(m.id)} className="text-green-600 hover:text-green-800 font-medium text-sm">Sauver</button>
-                                                    <button onClick={() => setEditingId(null)} className="text-slate-400 hover:text-slate-600 text-sm">Annuler</button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <button onClick={() => startEdit(m)} className="text-indigo-500 hover:text-indigo-700 text-sm">Éditer</button>
-                                                    <button onClick={() => handleDelete(m.id)} className="text-red-400 hover:text-red-600 text-sm ml-2">Supprimer</button>
-                                                </>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-
             </div>
+        );
+    }
+
+    // ─── RENDER ────────────────────────────────────────────────────────────────
+    return (
+        <div className="min-h-screen bg-slate-950 text-slate-300 font-mono p-4 md:p-8 selection:bg-blue-800">
+
+            {/* ── SCANLINES overlay (décoratif) ── */}
+            <div
+                className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
+                style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)' }}
+            />
+
+            <div className="relative z-10 max-w-6xl mx-auto">
+
+                {/* ── HEADER ── */}
+                <header className="flex items-start justify-between mb-8 pb-4 border-b border-blue-900/50">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                            <span className="text-[10px] text-blue-600 tracking-[0.3em] uppercase">Twins Neural Interface v2.6</span>
+                        </div>
+                        <h1 className="text-3xl font-black text-blue-400 tracking-tight drop-shadow-[0_0_20px_rgba(59,130,246,0.6)]">
+                            &gt; CORTEX_DATA_MANAGER
+                        </h1>
+                        <p className="text-xs text-slate-500 mt-1">
+                            Interface d'ingestion neuronale — Enrichissement de la mémoire vectorielle
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        className="flex items-center gap-2 text-xs text-slate-500 hover:text-blue-400 transition-colors px-3 py-2 border border-slate-800 hover:border-blue-800 rounded-lg"
+                    >
+                        <ArrowLeft size={14} /> Dashboard
+                    </button>
+                </header>
+
+                {/* ── GRID PRINCIPALE ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* ── COL GAUCHE : ZONE D'INGESTION ── */}
+                    <div className="lg:col-span-2 space-y-5">
+
+                        {/* DROPZONE */}
+                        <div
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={() => !isUploading && fileInputRef.current?.click()}
+                            className={`
+                relative flex flex-col items-center justify-center p-10 rounded-2xl border-2 border-dashed
+                cursor-pointer transition-all duration-300 group min-h-[220px]
+                ${isDragging
+                                    ? 'border-blue-400 bg-blue-950/40 shadow-[0_0_40px_rgba(59,130,246,0.15)] scale-[1.005]'
+                                    : isUploading
+                                        ? 'border-blue-600/50 bg-slate-900/50 cursor-not-allowed'
+                                        : 'border-slate-700 bg-slate-900/30 hover:border-blue-700 hover:bg-blue-950/20 hover:shadow-[0_0_30px_rgba(59,130,246,0.08)]'
+                                }
+              `}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.txt,.csv,.docx,.md,.json"
+                                onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                            />
+
+                            {isUploading ? (
+                                <div className="flex flex-col items-center gap-3 text-blue-400">
+                                    <Loader2 size={40} className="animate-spin" />
+                                    <span className="text-sm animate-pulse">Vectorisation en cours...</span>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className={`
+                    w-20 h-20 rounded-2xl border flex items-center justify-center mb-5 transition-all duration-300
+                    ${isDragging
+                                            ? 'border-blue-400 bg-blue-900/50 shadow-[0_0_20px_rgba(59,130,246,0.4)]'
+                                            : 'border-blue-900 bg-blue-950/30 group-hover:border-blue-700 group-hover:bg-blue-900/30'
+                                        }
+                  `}>
+                                        <Upload
+                                            size={32}
+                                            className={`transition-colors ${isDragging ? 'text-blue-300' : 'text-blue-600 group-hover:text-blue-400'}`}
+                                        />
+                                    </div>
+
+                                    <p className="text-base font-bold text-blue-300 mb-1 tracking-wide group-hover:text-blue-200 transition-colors">
+                                        [ INITIALISER TRANSFERT FICHIER ]
+                                    </p>
+                                    <p className="text-xs text-slate-500 text-center">
+                                        Glissez-déposez ou cliquez pour sélectionner<br />
+                                        <span className="text-slate-600">PDF · TXT · CSV · DOCX · MD · JSON</span>
+                                    </p>
+
+                                    {isDragging && (
+                                        <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
+                                            <div className="text-center">
+                                                <p className="text-2xl font-black text-blue-300 animate-pulse tracking-widest">
+                                                    DÉPOSER
+                                                </p>
+                                                <p className="text-xs text-blue-500 mt-1">Ingestion automatique</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* INGESTION URL */}
+                        <form
+                            onSubmit={handleUrlSubmit}
+                            className="flex gap-2 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl hover:border-slate-700 transition-colors"
+                        >
+                            <div className="flex items-center justify-center w-10 h-10 bg-blue-950/50 border border-blue-900 rounded-xl flex-shrink-0">
+                                <Link2 size={16} className="text-blue-400" />
+                            </div>
+                            <input
+                                type="url"
+                                value={urlInput}
+                                onChange={e => setUrlInput(e.target.value)}
+                                placeholder="https://article-cible.com/analyse..."
+                                disabled={isScraping}
+                                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-blue-100 outline-none
+                  focus:border-blue-600 focus:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all
+                  placeholder:text-slate-600 disabled:opacity-50"
+                            />
+                            <button
+                                type="submit"
+                                disabled={isScraping || !urlInput}
+                                className="flex items-center gap-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed
+                  text-white text-xs font-black px-5 py-2.5 rounded-xl transition-all
+                  shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)]"
+                            >
+                                {isScraping ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+                                {isScraping ? 'SCAN...' : 'SCAN'}
+                            </button>
+                        </form>
+
+                        {/* ARCHIVES NEURALES */}
+                        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl overflow-hidden">
+                            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
+                                <h3 className="text-xs font-bold text-blue-400 tracking-widest flex items-center gap-2">
+                                    <Brain size={13} /> ARCHIVES NEURALES
+                                    <span className="ml-2 text-slate-600 font-normal">({memories.length} fragments)</span>
+                                </h3>
+                                <button
+                                    onClick={fetchMemories}
+                                    className="text-[10px] text-slate-600 hover:text-blue-400 transition-colors tracking-widest"
+                                >
+                                    ACTUALISER
+                                </button>
+                            </div>
+
+                            <div className="divide-y divide-slate-800/50 max-h-80 overflow-y-auto custom-scrollbar">
+                                {memories.length === 0 ? (
+                                    <div className="p-8 text-center text-slate-600 text-xs italic">
+                                        Aucun fragment en mémoire. Déposez un fichier pour commencer.
+                                    </div>
+                                ) : (
+                                    memories.map(m => (
+                                        <div
+                                            key={m.id}
+                                            onClick={() => { setEditingMemory(m); setEditContent(m.content); }}
+                                            className="flex items-start gap-3 px-5 py-3 hover:bg-blue-950/20 hover:border-l-2 hover:border-l-blue-600 transition-all cursor-pointer group"
+                                        >
+                                            {/* Badge type */}
+                                            <span className={`mt-0.5 flex-shrink-0 text-[10px] px-2 py-0.5 rounded border font-bold tracking-wider ${typeColor[m.type] || typeColor.default}`}>
+                                                {typeIcon[m.type] || typeIcon.default}&nbsp;
+                                                {m.type?.toUpperCase().slice(0, 4)}
+                                            </span>
+
+                                            {/* Contenu */}
+                                            <p className="flex-1 text-xs text-slate-400 line-clamp-2 leading-relaxed group-hover:text-slate-300">
+                                                {m.content}
+                                            </p>
+
+                                            {/* Date + actions */}
+                                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                                <span className="text-[9px] text-slate-600">
+                                                    {new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                                                </span>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <span className="text-[9px] text-blue-500 tracking-wider">ÉDITER</span>
+                                                    <button
+                                                        onClick={e => handleDeleteMemory(e, m.id)}
+                                                        className="text-slate-700 hover:text-red-500 transition-colors"
+                                                        title="Purger ce fragment"
+                                                    >
+                                                        <Trash2 size={11} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── COL DROITE : TERMINAL ── */}
+                    <div className="space-y-5">
+
+                        {/* STATUS BAR */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 flex flex-col items-center">
+                                <span className="text-[9px] text-slate-600 tracking-widest mb-1">STATUT</span>
+                                <div className="flex items-center gap-1.5">
+                                    <Wifi size={12} className="text-blue-400 animate-pulse" />
+                                    <span className="text-xs font-bold text-blue-300">EN LIGNE</span>
+                                </div>
+                            </div>
+                            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 flex flex-col items-center">
+                                <span className="text-[9px] text-slate-600 tracking-widest mb-1">FRAGMENTS</span>
+                                <span className="text-xl font-black text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                                    {memories.length}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* TERMINAL LOGS */}
+                        <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden">
+                            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800 bg-slate-950">
+                                <Terminal size={12} className="text-blue-600" />
+                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÉRATIONS</span>
+                            </div>
+
+                            <div className="p-4 h-72 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
+                                {logs.map((log, i) => (
+                                    <div key={i} className={`flex gap-2 leading-relaxed ${log.level === 'error' ? 'text-red-400' :
+                                        log.level === 'success' ? 'text-emerald-400' :
+                                            log.level === 'warning' ? 'text-amber-400' :
+                                                'text-slate-500'
+                                        }`}>
+                                        <span className="text-slate-700 flex-shrink-0">{log.ts}</span>
+                                        <span className="flex-1">{log.msg}</span>
+                                        {log.level === 'success' && <CheckCircle2 size={11} className="flex-shrink-0 mt-0.5" />}
+                                        {log.level === 'error' && <AlertTriangle size={11} className="flex-shrink-0 mt-0.5" />}
+                                    </div>
+                                ))}
+                                <div ref={logEndRef} />
+                            </div>
+                        </div>
+
+                        {/* GUIDE RAPIDE */}
+                        <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-4 space-y-3">
+                            <h3 className="text-[10px] font-black text-slate-500 tracking-widest">PROTOCOLES D'INGESTION</h3>
+                            {[
+                                { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX — Extraction vectorielle automatique' },
+                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + résumé Mistral AI — Indexation en mémoire' },
+                            ].map(({ icon, label, desc }) => (
+                                <div key={label} className="flex items-start gap-3">
+                                    <div className="w-7 h-7 rounded-lg bg-blue-950/50 border border-blue-900/50 flex items-center justify-center flex-shrink-0 text-blue-500">
+                                        {icon}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-blue-300">{label}</p>
+                                        <p className="text-[10px] text-slate-600 leading-snug">{desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {/* ── MODALE D'ÉDITION SYNAPTIQUE ── */}
+            {editingMemory && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-900 border border-blue-500/50 rounded-2xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.15)]">
+                        {/* Header modale */}
+                        <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-sm font-black text-blue-400 tracking-wider">ÉDITION DU FRAGMENT NEURONAL</h2>
+                                <p className="text-[10px] text-slate-600 mt-0.5">{editingMemory.id}</p>
+                            </div>
+                            <button
+                                onClick={() => setEditingMemory(null)}
+                                className="text-slate-500 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Textarea */}
+                        <div className="p-4">
+                            <textarea
+                                value={editContent}
+                                onChange={e => setEditContent(e.target.value)}
+                                className="w-full h-64 bg-black border border-slate-700 rounded-xl p-4 text-cyan-50 font-mono text-xs outline-none
+                                    focus:border-blue-500 focus:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition-all resize-none leading-relaxed"
+                            />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-4 border-t border-slate-800 flex justify-end gap-3 bg-slate-950/50 rounded-b-2xl">
+                            <button
+                                onClick={() => setEditingMemory(null)}
+                                disabled={isUpdating}
+                                className="px-4 py-2 text-xs text-slate-400 hover:text-white transition-colors disabled:opacity-40"
+                            >
+                                ANNULER
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={isUpdating}
+                                className={`flex items-center gap-2 px-6 py-2 text-xs font-black text-white rounded-xl bg-blue-700 hover:bg-blue-600
+                                    shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] transition-all
+                                    ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {isUpdating ? <><Loader2 size={12} className="animate-spin" /> RE-VECTORISATION...</> : 'SAUVEGARDER & INJECTER'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-export default function MemoriesPage() {
+// ─── WRAPPER (Suspense boundary) ──────────────────────────────────────────────
+export default function CortexPage() {
     return (
-        <Suspense fallback={<div>Chargement...</div>}>
-            <MemoriesContent />
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <Loader2 className="animate-spin text-blue-500" size={28} />
+            </div>
+        }>
+            <CortexManager />
         </Suspense>
     );
 }
@@ -5083,16 +6264,12 @@ export default function MemoriesPage() {
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseBrowser';
 import { Shield, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function Home() {
   const router = useRouter();
+  const [supabase] = useState(() => createClient());
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -5167,11 +6344,11 @@ export default function Home() {
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
             <label className="text-xs text-slate-500 font-mono ml-1">EMAIL</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="pilote@twins.com" required />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="pilote@twins.com" autoComplete="username" required />
           </div>
           <div>
             <label className="text-xs text-slate-500 font-mono ml-1">MOT DE PASSE</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="••••••••" required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="••••••••" autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required />
           </div>
 
           {error && <div className={`text-xs p-3 rounded border ${error.includes('!') ? 'bg-green-900/30 text-green-400 border-green-900' : 'bg-red-900/30 text-red-400 border-red-900'}`}>{error}</div>}
@@ -6803,41 +7980,50 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                             Aucune opportunité détectée dans le périmètre actuel.
                         </div>
                     ) : (
-                        report.opportunities.map((opp, idx) => (
-                            <div
-                                key={opp.targetId || idx}
-                                onClick={() => onSelect(opp)}
-                                className="group relative p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all cursor-pointer active:scale-[0.98]"
-                            >
-                                {/* Visual Connector Line */}
-                                <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        report.opportunities.map((opp: any, idx: number) => {
+                            // Lecture pare-balles : gère toutes les orthographes possibles de Mistral
+                            const score = opp.matchScore ?? opp.MatchScore ?? opp.score ?? opp["Match Score"] ?? 0;
+                            const reason = opp.reason ?? opp.Reason ?? opp.analyse ?? opp.Analyse ?? "Analyse en cours...";
+                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggérée"] ?? "Aucune action définie.";
+                            const name = opp.targetName ?? opp.TargetName ?? opp.name ?? opp["Nom"] ?? `Cible #${idx + 1}`;
+                            const id = opp.targetId ?? opp.id ?? String(idx);
 
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                                        {opp.targetName}
-                                    </h3>
-                                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/30 border border-white/10 ${opp.matchScore > 80 ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400'}`}>
-                                        {opp.matchScore}%
-                                    </span>
-                                </div>
+                            return (
+                                <div
+                                    key={id}
+                                    onClick={() => onSelect({ ...opp, targetId: id, targetName: name, matchScore: score, reason, suggestedAction: action })}
+                                    className="group relative p-3 rounded-xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all cursor-pointer active:scale-[0.98]"
+                                >
+                                    {/* Visual Connector Line */}
+                                    <div className="absolute left-0 top-4 bottom-4 w-1 bg-gradient-to-b from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                <p className="text-[11px] text-gray-400 mb-3 line-clamp-2 leading-relaxed">
-                                    {opp.reason}
-                                </p>
-
-                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-                                    <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
-                                        <TrendingUp size={12} />
-                                        <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                                            {name}
+                                        </h3>
+                                        <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded bg-black/30 border border-white/10 ${score > 80 ? 'text-emerald-400 border-emerald-500/30' : 'text-amber-400'}`}>
+                                            {score}%
+                                        </span>
                                     </div>
-                                    <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
-                                </div>
 
-                                <p className="text-[10px] text-gray-500 mt-1 italic pl-4 border-l-2 border-white/5">
-                                    "{opp.suggestedAction}"
-                                </p>
-                            </div>
-                        ))
+                                    <p className="text-[11px] text-gray-400 mb-3 line-clamp-2 leading-relaxed">
+                                        {reason}
+                                    </p>
+
+                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                                        <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
+                                            <TrendingUp size={12} />
+                                            <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
+                                        </div>
+                                        <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
+                                    </div>
+
+                                    <p className="text-[10px] text-gray-500 mt-1 italic pl-4 border-l-2 border-white/5">
+                                        "{action}"
+                                    </p>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
 
@@ -7534,130 +8720,181 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
 }
 
 
---- components\SecureWhatsApp.tsx ---
-'use client';
+--- components\SecureChat.tsx ---
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import { Send, CheckCheck, Loader2, Wifi } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { X, Lock, Send, ShieldCheck } from 'lucide-react'
+import { RealtimeChannel } from '@supabase/supabase-js'
 
-export default function SecureWhatsApp({ profileId, channelId }: any) {
-    const [messages, setMessages] = useState<any[]>([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [status, setStatus] = useState<string>('CONNECTING');
-    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+interface SecureChatProps {
+    myId: string;
+    partnerId: string;
+    channelId?: string;
+    onClose: () => void;
+}
 
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const activeChannelRef = useRef<any>(null);
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+// 🟢 GARANTIE SINGLETON : On initialise une seule fois
+const supabase = createClient();
 
-    const TABLE = 'Message';
-    const COL_SENDER = 'fromId';
-    const COL_CHANNEL = 'channel_id';
+export default function SecureChat({ myId, partnerId, channelId, onClose }: SecureChatProps) {
+    const [messages, setMessages] = useState<any[]>([])
+    const [newMessage, setNewMessage] = useState('')
+    const [isLoading, setIsLoading] = useState(true)
+    const [isTyping, setIsTyping] = useState(false)
+    const [isConnected, setIsConnected] = useState(false)
+
+    const scrollRef = useRef<HTMLDivElement>(null)
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const channelRef = useRef<any>(null)
+    const lastTypingTime = useRef(0)
 
     useEffect(() => {
-        if (!channelId || !profileId) return;
+        if (!channelId) return;
 
-        // 1. Historique
-        supabase.from(TABLE).select('*').eq(COL_CHANNEL, channelId).order('createdAt', { ascending: true })
-            .then(({ data }) => {
-                if (data) setMessages(data);
-                setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'instant' }), 100);
+        let isMounted = true;
+        let room: any = null;
+        const roomName = `room_v4_${channelId}`;
+
+        // 🟢 LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
+        const initDelay = setTimeout(() => {
+            if (!isMounted) return;
+
+            console.log(`📡 Ouverture confirmée du tunnel... [${roomName}]`);
+
+            room = supabase.channel(roomName, {
+                config: { broadcast: { ack: false } }
             });
 
-        // 2. Realtime
-        const channel = supabase.channel(`chat_${channelId}`);
-
-        channel
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: TABLE }, (payload) => {
-                if (payload.new[COL_CHANNEL] === channelId) {
-                    const newMsg = { ...(payload.new as any), isNew: true }; // Marqueur de nouveau message
-                    setMessages(prev => [...prev.filter(m => m.id !== newMsg.id), newMsg]);
-                    setIsPartnerTyping(false);
-                    setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
-
-                    // Supprimer l'effet visuel "Nouveau" après 5 secondes
-                    setTimeout(() => {
-                        setMessages(current => current.map(m => m.id === newMsg.id ? { ...m, isNew: false } : m));
-                    }, 5000);
+            room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
+                if (payload.new.communication_id === channelId) {
+                    setMessages(prev => {
+                        if (prev.some(m => m.id === payload.new.id)) return prev;
+                        return [...prev, payload.new];
+                    });
+                    setIsTyping(false);
                 }
             })
-            .on('broadcast', { event: 'typing' }, (p) => {
-                if (p.payload.userId !== profileId) {
-                    setIsPartnerTyping(true);
-                    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                    typingTimeoutRef.current = setTimeout(() => setIsPartnerTyping(false), 3000);
-                }
-            })
-            .subscribe((state) => {
-                setStatus(state);
-                if (state === 'SUBSCRIBED') activeChannelRef.current = channel;
-            });
+                .on('broadcast', { event: 'typing' }, (payload: any) => {
+                    if (payload.payload.sender_id !== myId) {
+                        setIsTyping(true);
+                        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
+                    }
+                })
+                .subscribe((status: string) => {
+                    console.log(`📡 STATUT [${roomName}]:`, status);
+                    setIsConnected(status === 'SUBSCRIBED');
+                });
 
-        return () => { channel.unsubscribe(); };
-    }, [channelId]);
+            channelRef.current = room;
+        }, 300); // 300 millisecondes de délai tactique
 
-    const handleInputChange = (e: any) => {
+        // On charge l'historique indépendamment du WebSocket
+        supabase.from('Message').select('*').eq('communication_id', channelId).order('created_at', { ascending: true })
+            .then(({ data }: any) => { if (data && isMounted) setMessages(data) });
+
+        // 🟢 LE NETTOYAGE SÉCURISÉ
+        return () => {
+            isMounted = false;
+            clearTimeout(initDelay); // Si React démonte vite, on annule la connexion !
+            if (room) {
+                console.log(`🛑 Fermeture de ${roomName}`);
+                setIsConnected(false);
+                supabase.removeChannel(room);
+            }
+        };
+    }, [channelId, myId]);
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
+    const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewMessage(e.target.value);
-        if (activeChannelRef.current && status === 'SUBSCRIBED') {
-            activeChannelRef.current.send({ type: 'broadcast', event: 'typing', payload: { userId: profileId } });
+        const now = Date.now();
+        // N'envoie le signal que si connecté et pas plus d'1 fois toutes les 2 secondes
+        if (isConnected && now - lastTypingTime.current > 2000) {
+            lastTypingTime.current = now;
+            channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { sender_id: myId } }).catch(() => { });
         }
     };
 
-    const sendMessage = async (e: any) => {
+    const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() || !channelId) return;
         const content = newMessage.trim();
         setNewMessage('');
-        await supabase.from(TABLE).insert({ content, [COL_SENDER]: profileId, [COL_CHANNEL]: channelId });
+
+        const newMsgPayload = { id: crypto.randomUUID(), communication_id: channelId, sender_id: myId, content: content };
+        setMessages(prev => [...prev, newMsgPayload]); // Optimistic UI
+        await supabase.from('Message').insert([newMsgPayload]);
     };
 
-    return (
-        <div className="flex flex-col h-full bg-[#050505] border-l border-slate-800 shadow-2xl overflow-hidden">
-            <div className={`p-4 pt-[env(safe-area-inset-top,1rem)] text-[10px] font-mono border-b border-slate-900 flex items-center gap-2 ${status === 'SUBSCRIBED' ? 'text-cyan-400' : 'text-red-400'}`}>
-                <div className={`w-2 h-2 rounded-full ${status === 'SUBSCRIBED' ? 'bg-cyan-500 animate-pulse shadow-[0_0_8px_cyan]' : 'bg-red-500'}`} />
-                {status === 'SUBSCRIBED' ? 'LIAISON CRYPTÉE ACTIVE' : 'RECONNEXION...'}
-            </div>
+    if (!channelId) return null;
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg[COL_SENDER] === profileId ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all duration-500 shadow-lg ${msg[COL_SENDER] === profileId
-                            ? 'bg-cyan-900/40 border border-cyan-800/30 text-cyan-50 rounded-tr-none'
-                            : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
-                            } ${msg.isNew ? 'ring-2 ring-cyan-500 animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.5)]' : ''}`}>
-                            {msg.content}
+    return (
+        <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in-95">
+            <div className="p-4 bg-[#0f1618] border-b border-slate-900 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-emerald-500/50 flex items-center justify-center">
+                        <Lock size={18} className="text-emerald-400" />
+                    </div>
+                    <div>
+                        <h3 className="font-mono text-emerald-400 font-semibold uppercase text-sm">Agent: {partnerId.slice(0, 8)}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <ShieldCheck size={12} className="text-emerald-500" />
+                            <span>Liaison Chiffrée</span>
                         </div>
                     </div>
-                ))}
+                </div>
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"><X size={20} /></button>
+            </div>
 
-                {/* INDICATEUR DE FRAPPE : POINTS BLANCS SUR FOND CYAN */}
-                {isPartnerTyping && (
-                    <div className="flex gap-1.5 ml-2 p-3 bg-cyan-900/20 rounded-2xl rounded-tl-none border border-cyan-800/30 w-fit">
-                        <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                        <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                        <span className="w-2 h-2 bg-white rounded-full animate-bounce" />
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-950">
+                {isLoading ? (
+                    <div className="flex h-full items-center justify-center text-slate-500 font-mono text-xs animate-pulse">DÉCRYPTAGE DE L'HISTORIQUE...</div>
+                ) : (
+                    messages.map((msg) => {
+                        const isMe = msg.sender_id === myId;
+                        return (
+                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all shadow-lg ${isMe ? 'bg-emerald-900/40 border border-emerald-800/30 text-emerald-50 rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'}`}>
+                                    <p className="whitespace-pre-wrap font-mono">{msg.content}</p>
+                                    <span className="text-[9px] opacity-50 block mt-1 text-right font-mono">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+
+                {isTyping && (
+                    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
                     </div>
                 )}
                 <div ref={scrollRef} />
             </div>
 
-            <form onSubmit={sendMessage} className="p-4 bg-black border-t border-slate-900 flex gap-2">
+            <form onSubmit={sendMessage} className="p-3 bg-[#0f1618] border-t border-slate-900 flex gap-2">
                 <input
-                    type="text" value={newMessage}
-                    onChange={handleInputChange}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-base md:text-sm outline-none text-white focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20"
-                    placeholder="Échange sécurisé..."
+                    type="text"
+                    value={newMessage}
+                    onChange={handleTyping}
+                    placeholder="Entrez votre transmission..."
+                    className="flex-1 bg-black border border-slate-800 rounded-lg px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
-                <button className="px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl transition-all active:scale-90 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                    <Send size={18} />
-                </button>
+                <button type="submit" disabled={!newMessage.trim()} className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center w-12"><Send size={18} /></button>
             </form>
-            {/* Safe area spacer for mobile keyboards */}
-            <div className="h-[env(safe-area-inset-bottom,1rem)] bg-black" />
         </div>
     );
 }
+
 
 --- components\shadow-globe.tsx ---
 'use client';
@@ -9069,31 +10306,46 @@ export const SFX = {
 
 
 --- lib\supabase\client.ts ---
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let supabaseInstance: any = null;
 
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-    },
-    realtime: {
-        params: {
-            eventsPerSecond: 10,
-        },
-    },
-});
+export const createClient = () => {
+    if (supabaseInstance) return supabaseInstance;
+
+    supabaseInstance = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    return supabaseInstance;
+}
 
 --- lib\supabaseBrowser.ts ---
 import { createBrowserClient } from '@supabase/ssr'
 
-export const createClient = () => {
-    return createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+// Variable pour stocker l'instance unique (Singleton Pattern)
+let supabaseBrowserClient: ReturnType<typeof createBrowserClient> | undefined
+
+export function createClient() {
+    // 1. Si nous ne sommes pas dans un navigateur (SSR), on crée un client standard
+    //    (pas de singleton côté serveur, chaque requête est indépendante)
+    if (typeof window === 'undefined') {
+        return createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+    }
+
+    // 2. Côté navigateur : on ne crée l'instance qu'une seule fois
+    if (!supabaseBrowserClient) {
+        supabaseBrowserClient = createBrowserClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+    }
+
+    // 3. On retourne toujours la même instance
+    return supabaseBrowserClient
 }
 
 
@@ -9462,7 +10714,7 @@ export interface VectorStore {
 --- next-env.d.ts ---
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-import "./.next/types/routes.d.ts";
+import "./.next/dev/types/routes.d.ts";
 
 // NOTE: This file should not be edited
 // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
@@ -9535,6 +10787,7 @@ export default nextConfig;
     "framer-motion": "^12.34.1",
     "llamaindex": "^0.12.1",
     "lucide-react": "^0.563.0",
+    "mammoth": "^1.11.0",
     "next": "16.1.6",
     "pdf2json": "^4.0.2",
     "prisma": "^5.22.0",
@@ -9703,6 +10956,56 @@ USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
 
 COMMENT ON FUNCTION match_memories IS 'Performs semantic search on memories using Mistral Embed (1024-dim) with pgvector cosine similarity, strictly filtered by profile ID for Zero-Knowledge isolation';
+
+
+--- prisma\migrations\003_fix_access_request_columns.sql ---
+-- Migration : Alignement table AccessRequest avec le schéma Prisma
+-- À exécuter dans : Supabase > SQL Editor
+
+-- 1. Renommer les anciennes colonnes si elles existent sous les mauvais noms
+DO $$
+BEGIN
+  -- sender_id → requester_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'AccessRequest' AND column_name = 'sender_id'
+  ) THEN
+    ALTER TABLE "AccessRequest" RENAME COLUMN sender_id TO requester_id;
+  END IF;
+
+  -- receiver_id → provider_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'AccessRequest' AND column_name = 'receiver_id'
+  ) THEN
+    ALTER TABLE "AccessRequest" RENAME COLUMN receiver_id TO provider_id;
+  END IF;
+
+  -- senderId → requester_id (camelCase)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'AccessRequest' AND column_name = 'senderId'
+  ) THEN
+    ALTER TABLE "AccessRequest" RENAME COLUMN "senderId" TO requester_id;
+  END IF;
+
+  -- receiverId → provider_id (camelCase)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'AccessRequest' AND column_name = 'receiverId'
+  ) THEN
+    ALTER TABLE "AccessRequest" RENAME COLUMN "receiverId" TO provider_id;
+  END IF;
+END $$;
+
+-- 2. Ajouter la colonne topic si elle n'existe pas
+ALTER TABLE "AccessRequest" ADD COLUMN IF NOT EXISTS topic TEXT;
+
+-- 3. S'assurer que created_at existe
+ALTER TABLE "AccessRequest" ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+-- 4. Forcer le rechargement du cache schema PostgREST
+NOTIFY pgrst, 'reload schema';
 
 
 --- prisma\schema.prisma ---
@@ -9898,6 +11201,51 @@ model NetworkEntity {
   status      String?  @default("DETECTED")
   profileId   String
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+
+--- proxy.ts ---
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function proxy(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return request.cookies.get(name)?.value
+                },
+                set(name: string, value: string, options: CookieOptions) {
+                    request.cookies.set({ name, value, ...options })
+                    response.cookies.set({ name, value, ...options })
+                },
+                remove(name: string, options: CookieOptions) {
+                    request.cookies.set({ name, value: '', ...options })
+                    response.cookies.set({ name, value: '', ...options })
+                },
+            },
+        }
+    )
+
+    // Rafraîchissement de la session côté serveur
+    await supabase.auth.getUser()
+
+    return response
+}
+
+// Applique le proxy à toutes les routes sauf assets statiques
+export const config = {
+    matcher: [
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    ],
 }
 
 

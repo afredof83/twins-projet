@@ -1,15 +1,13 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-// Référence mémoire vide au départ
-let supabaseBrowserClient: ReturnType<typeof createBrowserClient> | undefined
+let supabaseInstance: any = null;
 
-// On exporte uniquement une FONCTION — plus de variable globale `supabase`
-export function createClient() {
-    if (!supabaseBrowserClient) {
-        supabaseBrowserClient = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-    }
-    return supabaseBrowserClient
+export const createClient = () => {
+    if (supabaseInstance) return supabaseInstance;
+
+    supabaseInstance = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    return supabaseInstance;
 }

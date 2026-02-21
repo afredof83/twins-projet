@@ -1,4 +1,4 @@
-export default function MatchOverlay({ data, onAudit, onCancel }: any) {
+﻿export default function MatchOverlay({ data, onAudit, onCancel }: any) {
     return (
         <div className="bg-slate-900/90 border border-cyan-500/50 rounded-2xl p-6 backdrop-blur-xl animate-slide-up">
             <div className="flex items-center gap-4 mb-4">
@@ -8,7 +8,7 @@ export default function MatchOverlay({ data, onAudit, onCancel }: any) {
                 </div>
                 <div>
                     <h2 className="text-white text-xl font-bold">{data.name}</h2>
-                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÉ: {data.score}%</p>
+                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÃ‰: {data.score}%</p>
                 </div>
             </div>
 

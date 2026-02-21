@@ -1,6 +1,6 @@
-/**
- * Shadow Feed API Route - Autonomous Clone Network Activity
- * Simulates the clone's interactions in a parallel network
+﻿/**
+ * Shadow Feed API Route - Autonomous Agent IA Network Activity
+ * Simulates the Agent IA's interactions in a parallel network
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -98,16 +98,16 @@ export async function POST(request: NextRequest) {
 function generateMockInteractions(profileId: string) {
     const now = new Date();
     const actions = [
-        { action: 'SCAN_INIT', message: 'Initialisation du scan réseau...', score: null, status: null },
-        { action: 'PROFILE_FOUND', message: 'Profil détecté: ID #8821', score: 0.87, status: 'ESCALATED' },
+        { action: 'SCAN_INIT', message: 'Initialisation du scan rÃ©seau...', score: null, status: null },
+        { action: 'PROFILE_FOUND', message: 'Profil dÃ©tectÃ©: ID #8821', score: 0.87, status: 'ESCALATED' },
         { action: 'ANALYSIS', message: 'Analyse vectorielle en cours...', score: null, status: null },
-        { action: 'PROFILE_FOUND', message: 'Profil détecté: ID #9923', score: 0.34, status: 'IGNORED' },
-        { action: 'PROFILE_FOUND', message: 'Profil détecté: ID #7654', score: 0.92, status: 'MATCHED' },
-        { action: 'SCAN_COMPLETE', message: 'Scan terminé. 3 profils analysés.', score: null, status: null },
-        { action: 'PROFILE_FOUND', message: 'Profil détecté: ID #5432', score: 0.45, status: 'IGNORED' },
-        { action: 'COMPATIBILITY_CHECK', message: 'Vérification de compatibilité...', score: null, status: null },
-        { action: 'PROFILE_FOUND', message: 'Profil détecté: ID #3210', score: 0.78, status: 'ESCALATED' },
-        { action: 'NETWORK_IDLE', message: 'Réseau en veille. Prochaine analyse dans 5min.', score: null, status: null },
+        { action: 'PROFILE_FOUND', message: 'Profil dÃ©tectÃ©: ID #9923', score: 0.34, status: 'IGNORED' },
+        { action: 'PROFILE_FOUND', message: 'Profil dÃ©tectÃ©: ID #7654', score: 0.92, status: 'MATCHED' },
+        { action: 'SCAN_COMPLETE', message: 'Scan terminÃ©. 3 profils analysÃ©s.', score: null, status: null },
+        { action: 'PROFILE_FOUND', message: 'Profil dÃ©tectÃ©: ID #5432', score: 0.45, status: 'IGNORED' },
+        { action: 'COMPATIBILITY_CHECK', message: 'VÃ©rification de compatibilitÃ©...', score: null, status: null },
+        { action: 'PROFILE_FOUND', message: 'Profil dÃ©tectÃ©: ID #3210', score: 0.78, status: 'ESCALATED' },
+        { action: 'NETWORK_IDLE', message: 'RÃ©seau en veille. Prochaine analyse dans 5min.', score: null, status: null },
     ];
 
     return actions.map((action, index) => {

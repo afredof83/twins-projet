@@ -1,15 +1,15 @@
-import { createClient } from '@/lib/supabaseServer';
+﻿import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     const body = await req.json();
-    console.log("📦 DEBUG PING REÇU:", body); // <--- DEBUG LOG
+    console.log("ðŸ“¦ DEBUG PING REÃ‡U:", body); // <--- DEBUG LOG
 
     const { requesterId, providerId, topic } = body;
 
     if (!providerId) {
-        console.error("❌ ERREUR CRITIQUE : providerId (Destinataire) est manquant !");
+        console.error("âŒ ERREUR CRITIQUE : providerId (Destinataire) est manquant !");
         return NextResponse.json({ error: "Missing providerId" }, { status: 400 });
     }
 
@@ -37,9 +37,9 @@ export async function POST(req: Request) {
         const rawScore = bestMatch ? (bestMatch.similarity || 0) : 0;
         const matchPercentage = Math.round(rawScore * 100);
 
-        console.log(`📊 PING SCORE: ${matchPercentage}% pour le sujet "${topic}"`);
+        console.log(`ðŸ“Š PING SCORE: ${matchPercentage}% pour le sujet "${topic}"`);
 
-        // 3. Insérer la demande dans la table "AccessRequest"
+        // 3. InsÃ©rer la demande dans la table "AccessRequest"
         const { data, error } = await supabase
             .from('AccessRequest')
             .insert([{
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
             .single();
 
         if (error) {
-            console.error("❌ Erreur SQL Ping:", error);
+            console.error("âŒ Erreur SQL Ping:", error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 

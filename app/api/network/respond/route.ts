@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        if (!authHeader) return NextResponse.json({ error: "Non autorisÃ©" }, { status: 401 });
 
         const { requestId, requesterId, action } = await req.json();
 
-        // Client utilisateur pour identifier le répondant (via RLS)
+        // Client utilisateur pour identifier le rÃ©pondant (via RLS)
         const supabaseUser = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -16,17 +16,17 @@ export async function POST(req: Request) {
         );
 
         const { data: { user } } = await supabaseUser.auth.getUser();
-        if (!user) return NextResponse.json({ error: "Non identifié" }, { status: 403 });
+        if (!user) return NextResponse.json({ error: "Non identifiÃ©" }, { status: 403 });
 
-        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
+        // ðŸ›¡ï¸ SÃ‰CURITÃ‰ & DEBUG AVANCÃ‰
         const currentUserId = user?.id ? String(user.id).trim() : "";
         const targetReqId = requesterId ? String(requesterId).trim() : "";
 
         console.log(`[DEBUG RESPOND] Verif Boucle: Moi('${currentUserId}') vs Requester('${targetReqId}')`);
 
         if (currentUserId === targetReqId) {
-            console.error("[SECURITY BLOCK] 🛑 BOUCLE TEMPORELLE INTERCEPTÉE !");
-            return NextResponse.json({ error: "Boucle temporelle détectée : Vous ne pouvez pas vous lier à vous-même." }, { status: 400 });
+            console.error("[SECURITY BLOCK] ðŸ›‘ BOUCLE TEMPORELLE INTERCEPTÃ‰E !");
+            return NextResponse.json({ error: "Boucle temporelle dÃ©tectÃ©e : Vous ne pouvez pas vous lier Ã  vous-mÃªme." }, { status: 400 });
         }
 
         // Client service role pour les mutations (contourne RLS sur AccessRequest + Channel)
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         );
 
         if (action === 'accept') {
-            // 1. Créer le canal avec les noms de colonnes réels
+            // 1. CrÃ©er le canal avec les noms de colonnes rÃ©els
             const { error: chanError } = await supabase.from('Channel').insert({
                 id: crypto.randomUUID(),
                 topic: `Liaison Directe : ${user?.id.slice(0, 4)} x ${requesterId.slice(0, 4)}`,
@@ -48,25 +48,25 @@ export async function POST(req: Request) {
             if (chanError) {
                 console.error("[ERROR BDD Channel]", chanError);
             } else {
-                // 2. Supprimer la requête UNIQUEMENT si le canal est créé
+                // 2. Supprimer la requÃªte UNIQUEMENT si le canal est crÃ©Ã©
                 await supabase.from('AccessRequest').delete().eq('id', requestId);
-                console.log(`[RESPOND] ✅ Liaison acceptée et requête nettoyée : ${user?.id} ↔ ${requesterId}`);
+                console.log(`[RESPOND] âœ… Liaison acceptÃ©e et requÃªte nettoyÃ©e : ${user?.id} â†” ${requesterId}`);
             }
 
         } else if (action === 'block') {
-            // 1. Inscrire dans BlockList (colonnes camelCase selon le schéma)
+            // 1. Inscrire dans BlockList (colonnes camelCase selon le schÃ©ma)
             await supabase.from('BlockList').insert({
                 blockerId: user.id,
                 blockedId: requesterId,
             });
-            // 2. Supprimer la requête
+            // 2. Supprimer la requÃªte
             await supabase.from('AccessRequest').delete().eq('id', requestId);
-            console.log(`[RESPOND] 🚫 Entité bloquée : ${requesterId}`);
+            console.log(`[RESPOND] ðŸš« EntitÃ© bloquÃ©e : ${requesterId}`);
 
         } else {
             // Refus simple : on efface la trace
             await supabase.from('AccessRequest').delete().eq('id', requestId);
-            console.log(`[RESPOND] ✕ Requête refusée : ${requestId}`);
+            console.log(`[RESPOND] âœ• RequÃªte refusÃ©e : ${requestId}`);
         }
 
         return NextResponse.json({ success: true });

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Identifiants manquants' }, { status: 400 });
         }
 
-        // 1. On récupère le vrai mot de passe (hash) stocké
+        // 1. On rÃ©cupÃ¨re le vrai mot de passe (hash) stockÃ©
         const { data: profile, error } = await supabase
             .from('Profile')
             .select('passwordHash')  // In a real app, this might be 'password_hash' or similar, keeping user's instruction 'passwordHash' for now but worth checking schema if failed.
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 });
         }
 
-        // 3. Succès
+        // 3. SuccÃ¨s
         return NextResponse.json({ success: true });
 
     } catch (e) {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: NextRequest) {
@@ -7,12 +7,12 @@ export async function POST(req: NextRequest) {
         const { communicationId, status } = await req.json();
 
         if (!communicationId || !['ACCEPTED', 'REJECTED'].includes(status)) {
-            return NextResponse.json({ error: "Données invalides" }, { status: 400 });
+            return NextResponse.json({ error: "DonnÃ©es invalides" }, { status: 400 });
         }
 
         console.log(`Traitement du message ${communicationId} -> ${status}`);
 
-        // Mise à jour du statut dans Supabase
+        // Mise Ã  jour du statut dans Supabase
         const { data, error } = await supabase
             .from('communications')
             .update({ status: status })
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: `Statut mis à jour : ${status}`,
+            message: `Statut mis Ã  jour : ${status}`,
             data
         });
 

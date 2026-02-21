@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                 body: JSON.stringify({
                     url,
                     profileId,
-                    category: 'STRATÉGIE'
+                    category: 'STRATÃ‰GIE'
                 })
             });
 
@@ -87,7 +87,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                         {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> :
                             status === 'success' ? <CheckCircle size={16} /> :
                                 <Link2 size={16} />}
-                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÉMORISÉ' : 'INGÉRER'}
+                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÃ‰MORISÃ‰' : 'INGÃ‰RER'}
                     </button>
                 </div>
             </div>

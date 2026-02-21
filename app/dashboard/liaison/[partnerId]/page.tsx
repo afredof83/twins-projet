@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft, MessageCircle, ShieldCheck, FileText } from 'lucide-react';
+import SecureChat from '@/components/SecureChat';
 
 export default function LiaisonPage() {
     const params = useParams();
@@ -15,6 +16,7 @@ export default function LiaisonPage() {
 
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     useEffect(() => {
         if (!profileId || !partnerId) return;
@@ -98,7 +100,7 @@ export default function LiaisonPage() {
 
                     <div className="flex flex-col gap-4">
                         <button
-                            onClick={handleContact}
+                            onClick={() => setIsChatOpen(true)}
                             className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all"
                         >
                             <MessageCircle size={18} /> Contacter l'Humain
@@ -111,22 +113,32 @@ export default function LiaisonPage() {
                 </div>
 
                 {/* LE RAPPORT (PAGE PLEINE) */}
-                <div className="lg:col-span-3">
-                    <div className="bg-slate-900/20 border border-slate-800 rounded-3xl p-10 relative overflow-hidden">
-                        <div className="flex items-center gap-4 mb-8 text-cyan-400 border-b border-slate-800 pb-6">
-                            <FileText size={28} />
-                            <h2 className="text-xl font-black uppercase tracking-widest">Rapport d'Audit Technique</h2>
-                        </div>
+                <div className="lg:col-span-3 h-full mb-[500px]">
+                    {!isChatOpen ? (
+                        <div className="bg-slate-900/20 border border-slate-800 rounded-3xl p-10 relative overflow-hidden">
+                            <div className="flex items-center gap-4 mb-8 text-cyan-400 border-b border-slate-800 pb-6">
+                                <FileText size={28} />
+                                <h2 className="text-xl font-black uppercase tracking-widest">Rapport d'Audit Technique</h2>
+                            </div>
 
-                        <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-100 font-mono italic bg-black/40 p-8 rounded-2xl border border-white/5">
-                            {report?.summary || "Aucun rapport d'audit archivé pour cette liaison."}
-                        </div>
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-100 font-mono italic bg-black/40 p-8 rounded-2xl border border-white/5">
+                                {report?.summary || "Aucun rapport d'audit archivé pour cette liaison."}
+                            </div>
 
-                        <div className="mt-12 flex justify-between items-center opacity-20 text-[10px]">
-                            <span>SYSTÈME : CORTEX_V2</span>
-                            <span>{new Date(report?.createdAt || Date.now()).toLocaleString()}</span>
+                            <div className="mt-12 flex justify-between items-center opacity-20 text-[10px]">
+                                <span>SYSTÈME : CORTEX_V2</span>
+                                <span>{new Date(report?.createdAt || Date.now()).toLocaleString()}</span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="h-[600px]">
+                            <SecureChat
+                                partnerId={partnerId as string}
+                                myId={profileId || ''}
+                                onClose={() => setIsChatOpen(false)}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

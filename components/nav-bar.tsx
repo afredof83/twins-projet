@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Database, UserCircle, Radar } from 'lucide-react';
@@ -10,13 +10,13 @@ export default function BottomNav() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
             <div className="flex items-center gap-2 px-4 py-2 bg-black/90 backdrop-blur-2xl border border-green-900/40 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
 
-                {/* CORTEX : Archives de données */}
+                {/* CORTEX : Archives de donnÃ©es */}
                 <Link href="/memories" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/memories' ? 'bg-blue-500/10' : ''}`}>
                     <Database className={`w-5 h-5 ${pathname === '/memories' ? 'text-blue-400' : 'text-blue-900 group-hover:text-blue-400'}`} />
                     <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-blue-900">Cortex</span>
                 </Link>
 
-                {/* SÉPARATEUR */}
+                {/* SÃ‰PARATEUR */}
                 <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
 
                 {/* SCAN : Centre de Commande (Dashboard) */}
@@ -35,13 +35,13 @@ export default function BottomNav() {
                     )}
                 </Link>
 
-                {/* SÉPARATEUR */}
+                {/* SÃ‰PARATEUR */}
                 <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
 
-                {/* IDENTITÉ : Profil Agent */}
+                {/* IDENTITÃ‰ : Profil Agent */}
                 <Link href="/profile" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/profile' ? 'bg-green-500/10' : ''}`}>
                     <UserCircle className={`w-5 h-5 ${pathname === '/profile' ? 'text-green-400' : 'text-green-900 group-hover:text-green-400'}`} />
-                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">Identité</span>
+                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">IdentitÃ©</span>
                 </Link>
 
             </div>

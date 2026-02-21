@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabaseBrowser'
@@ -11,7 +11,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
     const [loading, setLoading] = useState(false)
     const supabase = createClient()
 
-    // Charger les sources au démarrage
+    // Charger les sources au dÃ©marrage
     useEffect(() => {
         if (profileId) fetchSources()
     }, [profileId])
@@ -75,7 +75,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
 
             {/* Liste des sources */}
             <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
-                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisé.</p>}
+                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisÃ©.</p>}
                 {sources.map(s => (
                     <div key={s.id} className="flex justify-between items-center p-2 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-800 hover:border-slate-600 transition group">
                         <div className="overflow-hidden">

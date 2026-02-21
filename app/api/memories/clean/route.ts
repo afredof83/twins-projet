@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const { profileId } = await req.json();
         const now = new Date().toISOString();
 
-        // 1. Suppression des items Expirés (Le Balayeur)
+        // 1. Suppression des items ExpirÃ©s (Le Balayeur)
         const { data: expired, error: expireError } = await supabase
             .from('Memory')
             .delete()
@@ -22,14 +22,14 @@ export async function POST(req: Request) {
         const expiredCount = expired?.length || 0;
         if (expireError) console.error("Erreur expiration:", expireError);
 
-        // 2. Détection des doublons (Méthode JS pour être safe)
+        // 2. DÃ©tection des doublons (MÃ©thode JS pour Ãªtre safe)
         const { data: allMemories } = await supabase
             .from('Memory')
             .select('id, content')
             .eq('profileId', profileId);
 
         if (!allMemories || allMemories.length === 0) {
-            return NextResponse.json({ message: "Mémoire vide.", expiredCount });
+            return NextResponse.json({ message: "MÃ©moire vide.", expiredCount });
         }
 
         const seen = new Set();
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             }
         }
 
-        // 3. Exécution de la purge doublons
+        // 3. ExÃ©cution de la purge doublons
         let duplicateCount = 0;
         if (duplicates.length > 0) {
             const { error: dupError } = await supabase
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
             duplicateCount = duplicates.length;
         }
 
-        console.log(`[NETTOYAGE] ${expiredCount} expirés, ${duplicateCount} doublons supprimés.`);
+        console.log(`[NETTOYAGE] ${expiredCount} expirÃ©s, ${duplicateCount} doublons supprimÃ©s.`);
 
         return NextResponse.json({
             success: true,

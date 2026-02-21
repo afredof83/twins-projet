@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 
-// 1. RÉCUPÉRER L'HISTORIQUE
+// 1. RÃ‰CUPÃ‰RER L'HISTORIQUE
 export async function GET(req: NextRequest) {
     const supabase = await createClient();
     const { searchParams } = new URL(req.url);
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
         .from('messages')
         .select('*')
         .eq('communication_id', commId)
-        .order('created_at', { ascending: true }); // Du plus vieux au plus récent
+        .order('created_at', { ascending: true }); // Du plus vieux au plus rÃ©cent
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ messages: data });

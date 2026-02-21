@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 /**
  * New Profile Creation Page
@@ -36,12 +36,12 @@ export default function NewProfilePage() {
 
         // Validation
         if (formData.name.length < 2) {
-            setError('Le nom doit contenir au moins 2 caractères');
+            setError('Le nom doit contenir au moins 2 caractÃ¨res');
             return;
         }
 
         if (formData.masterPassword.length < 12) {
-            setError('Le mot de passe maître doit contenir au moins 12 caractères');
+            setError('Le mot de passe maÃ®tre doit contenir au moins 12 caractÃ¨res');
             return;
         }
 
@@ -102,7 +102,7 @@ export default function NewProfilePage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Échec de la création du profil');
+                throw new Error(errorData.error || 'Ã‰chec de la crÃ©ation du profil');
             }
 
             const data = await response.json();
@@ -120,12 +120,12 @@ export default function NewProfilePage() {
 
     const handleCopyPhrase = () => {
         navigator.clipboard.writeText(recoveryPhrase);
-        alert('Phrase de récupération copiée dans le presse-papiers');
+        alert('Phrase de rÃ©cupÃ©ration copiÃ©e dans le presse-papiers');
     };
 
     const handleConfirmAndContinue = () => {
         if (!phraseConfirmed) {
-            alert('Veuillez confirmer que vous avez sauvegardé votre phrase de récupération');
+            alert('Veuillez confirmer que vous avez sauvegardÃ© votre phrase de rÃ©cupÃ©ration');
             return;
         }
         router.push(`/profile/unlock?id=${profileId}`);
@@ -141,8 +141,8 @@ export default function NewProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Profil Créé avec Succès !</h1>
-                        <p className="text-purple-200">Votre jumeau numérique est maintenant initialisé</p>
+                        <h1 className="text-3xl font-bold text-white mb-2">Profil CrÃ©Ã© avec SuccÃ¨s !</h1>
+                        <p className="text-purple-200">Votre jumeau numÃ©rique est maintenant initialisÃ©</p>
                     </div>
 
                     <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
@@ -151,10 +151,10 @@ export default function NewProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Sauvegardez Votre Phrase de Récupération</h3>
+                                <h3 className="text-red-200 font-bold mb-2">âš ï¸ CRITIQUE : Sauvegardez Votre Phrase de RÃ©cupÃ©ration</h3>
                                 <p className="text-red-100 text-sm">
-                                    Cette phrase de 12 mots est la SEULE façon de récupérer votre profil si vous oubliez votre mot de passe.
-                                    <strong className="block mt-2">Perte de cette phrase = Perte IRRÉVERSIBLE de toutes vos données.</strong>
+                                    Cette phrase de 12 mots est la SEULE faÃ§on de rÃ©cupÃ©rer votre profil si vous oubliez votre mot de passe.
+                                    <strong className="block mt-2">Perte de cette phrase = Perte IRRÃ‰VERSIBLE de toutes vos donnÃ©es.</strong>
                                 </p>
                             </div>
                         </div>
@@ -162,7 +162,7 @@ export default function NewProfilePage() {
 
                     <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-white font-semibold">Phrase de Récupération BIP39</h3>
+                            <h3 className="text-white font-semibold">Phrase de RÃ©cupÃ©ration BIP39</h3>
                             <button
                                 onClick={handleCopyPhrase}
                                 className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
@@ -192,7 +192,7 @@ export default function NewProfilePage() {
                                 className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
                             />
                             <span className="text-white text-sm">
-                                J'ai sauvegardé ma phrase de récupération en lieu sûr et je comprends qu'elle ne peut pas être récupérée
+                                J'ai sauvegardÃ© ma phrase de rÃ©cupÃ©ration en lieu sÃ»r et je comprends qu'elle ne peut pas Ãªtre rÃ©cupÃ©rÃ©e
                             </span>
                         </label>
                     </div>
@@ -222,8 +222,8 @@ export default function NewProfilePage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Nouveau Jumeau Numérique</h1>
-                    <p className="text-purple-200">Créez votre profil sécurisé avec chiffrement Zero-Knowledge</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Nouveau Jumeau NumÃ©rique</h1>
+                    <p className="text-purple-200">CrÃ©ez votre profil sÃ©curisÃ© avec chiffrement Zero-Knowledge</p>
                 </div>
 
                 {error && (
@@ -249,19 +249,19 @@ export default function NewProfilePage() {
 
                     <div>
                         <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Mot de Passe Maître (min. 12 caractères)
+                            Mot de Passe MaÃ®tre (min. 12 caractÃ¨res)
                         </label>
                         <input
                             type="password"
                             value={formData.masterPassword}
                             onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
                             className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="••••••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             minLength={12}
                             required
                         />
                         <p className="text-purple-300/70 text-xs mt-1">
-                            Ce mot de passe ne sera JAMAIS stocké sur le serveur
+                            Ce mot de passe ne sera JAMAIS stockÃ© sur le serveur
                         </p>
                     </div>
 
@@ -274,19 +274,19 @@ export default function NewProfilePage() {
                             value={formData.confirmPassword}
                             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                             className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="••••••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             minLength={12}
                             required
                         />
                     </div>
 
                     <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                        <h3 className="text-blue-200 font-semibold text-sm mb-2">🔐 Sécurité Zero-Knowledge</h3>
+                        <h3 className="text-blue-200 font-semibold text-sm mb-2">ðŸ” SÃ©curitÃ© Zero-Knowledge</h3>
                         <ul className="text-blue-100 text-xs space-y-1">
-                            <li>✓ Chiffrement AES-256-GCM côté client</li>
-                            <li>✓ Vos clés ne quittent jamais votre appareil</li>
-                            <li>✓ Le serveur ne peut pas lire vos données</li>
-                            <li>✓ Phrase de récupération BIP39 (12 mots)</li>
+                            <li>âœ“ Chiffrement AES-256-GCM cÃ´tÃ© client</li>
+                            <li>âœ“ Vos clÃ©s ne quittent jamais votre appareil</li>
+                            <li>âœ“ Le serveur ne peut pas lire vos donnÃ©es</li>
+                            <li>âœ“ Phrase de rÃ©cupÃ©ration BIP39 (12 mots)</li>
                         </ul>
                     </div>
 
@@ -301,17 +301,17 @@ export default function NewProfilePage() {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                Création en cours...
+                                CrÃ©ation en cours...
                             </>
                         ) : (
-                            'Créer le Profil'
+                            'CrÃ©er le Profil'
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
-                        ← Retour à l'accueil
+                        â† Retour Ã  l'accueil
                     </a>
                 </div>
             </div>

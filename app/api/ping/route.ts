@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -14,13 +14,13 @@ export async function POST(request: Request) {
 
         console.log(`[PING] De ${fromId} vers ${toId}. Raison: ${reason}`);
 
-        // 1. On crée le message de "Demande"
+        // 1. On crÃ©e le message de "Demande"
         const { error } = await supabase
             .from('messages')
             .insert([{
                 sender_id: fromId,
                 // receiver_id: toId, // REMOVED: Not in DB
-                content: reason || "📡 Demande de liaison neuronale.",
+                content: reason || "ðŸ“¡ Demande de liaison neuronale.",
                 // isRead: false // Note: column might be is_read if snake_case, checking usage in notifications
             }]);
 
