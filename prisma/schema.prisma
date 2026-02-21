@@ -16,8 +16,6 @@ model Profile {
   avatarUrl               String?
 
   // --- NOUVEAUX CHAMPS ---
-  age                     Int?
-  gender                  String?
   profession              String?
   hobbies                 String[]
   objectives              String[] // Ex: ["Travail", "Rencontres"]
@@ -25,6 +23,8 @@ model Profile {
   
   // 🟢 NOUVEAUX PARAMÈTRES AGENT IA
   country                 String?  @db.Text
+  age                     Int?      // NOUVEAU : L'âge de l'Agent
+  gender                  String?   @db.Text // NOUVEAU : Le genre de l'Agent
   thematicProfile         Json?
   // -----------------------
   

@@ -15,7 +15,7 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error: any) {
-        console.error("ðŸ”¥ Delete Memory Error:", error);
+        console.error("🔥 Delete Memory Error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

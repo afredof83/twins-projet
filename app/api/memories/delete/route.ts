@@ -8,7 +8,7 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
     try {
-        const { ids } = await req.json(); // On reÃ§oit un tableau d'IDs
+        const { ids } = await req.json(); // On reçoit un tableau d'IDs
 
         if (!ids || ids.length === 0) return NextResponse.json({ error: "Aucun ID" }, { status: 400 });
 

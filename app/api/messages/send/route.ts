@@ -11,12 +11,12 @@ export async function POST(req: Request) {
         const { communicationId, senderId, content } = await req.json();
 
         if (!communicationId || !senderId || !content) {
-            return NextResponse.json({ error: 'DonnÃ©es de transmission incomplÃ¨tes' }, { status: 400 });
+            return NextResponse.json({ error: 'Données de transmission incomplètes' }, { status: 400 });
         }
 
-        // Insertion standardisÃ©e (snake_case)
+        // Insertion standardisée (snake_case)
         const { data, error } = await supabase
-            .from('Message') // Assurez-vous que la majuscule correspond Ã  votre table
+            .from('Message') // Assurez-vous que la majuscule correspond à votre table
             .insert({
                 communication_id: communicationId,
                 sender_id: senderId,

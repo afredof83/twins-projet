@@ -6,20 +6,20 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
     try {
-        // 1. ContrÃ´le d'accÃ¨s strict
+        // 1. Contrôle d'accès strict
         const authHeader = req.headers.get('Authorization');
         if (!authHeader) {
-            return NextResponse.json({ error: "AccÃ¨s refusÃ©. Token manquant." }, { status: 401 });
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
         }
 
         const body = await req.json();
         const { url, profileId } = body;
 
         if (!url || !profileId) {
-            return NextResponse.json({ error: "ParamÃ¨tres manquants (URL ou ProfileID)" }, { status: 400 });
+            return NextResponse.json({ error: "Paramètres manquants (URL ou ProfileID)" }, { status: 400 });
         }
 
-        // 2. Initialisation du client BDD avec l'identitÃ© de l'utilisateur
+        // 2. Initialisation du client BDD avec l'identité de l'utilisateur
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
         const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-        // 3. INFILTRATION DU RÃ‰SEAU (Scraping)
+        // 3. INFILTRATION DU RÉSEAU (Scraping)
         console.log(`[SCRAPER] Infiltration de la cible : ${url}`);
         const response = await fetch(url);
         const html = await response.text();
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
         const textContent = $('body').text().replace(/\s+/g, ' ').trim();
 
         if (!textContent || textContent.length < 10) {
-            return NextResponse.json({ error: "La cible est vide ou protÃ©gÃ©e contre le scraping." }, { status: 400 });
+            return NextResponse.json({ error: "La cible est vide ou protégée contre le scraping." }, { status: 400 });
         }
 
-        // 4. DÃ‰COUPAGE ET VECTORISATION
+        // 4. DÉCOUPAGE ET VECTORISATION
         const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
         let savedCount = 0;
 
-        console.log(`[SCRAPER] ${chunks.length} fragments Ã  vectoriser.`);
+        console.log(`[SCRAPER] ${chunks.length} fragments à vectoriser.`);
 
         for (const chunk of chunks) {
             const embeddingResponse = await mistral.embeddings.create({
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
             const embedding = embeddingResponse.data[0]?.embedding;
             if (!embedding) continue;
 
-            // 5. INSERTION BDD avec UUID forcÃ©
+            // 5. INSERTION BDD avec UUID forcé
             const { error } = await supabase.from('memory').insert({
                 id: crypto.randomUUID(),
                 profile_id: profileId,

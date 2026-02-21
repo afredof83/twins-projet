@@ -18,7 +18,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
 
             <div className="flex justify-between items-start mb-3 relative z-10">
                 <h4 className="font-bold text-blue-400 text-xs uppercase flex items-center gap-2">
-                    <Shield size={14} className="animate-pulse" /> Signal de RÃ©seau
+                    <Shield size={14} className="animate-pulse" /> Signal de Réseau
                 </h4>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded border ${request.match_score > 80 ? 'bg-green-900/50 text-green-300 border-green-500' : 'bg-orange-900/50 text-orange-300 border-orange-500'}`}>
                     MATCH : {request.match_score}%
@@ -26,7 +26,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
             </div>
 
             <p className="text-xs text-slate-300 mb-4 relative z-10">
-                Un Agent IA demande Ã  ouvrir une discussion sur le sujet : <br />
+                Un Agent IA demande à ouvrir une discussion sur le sujet : <br />
                 <span className="font-mono text-white bg-slate-950 px-2 py-1 rounded mt-1 inline-block border border-slate-700">"{request.topic}"</span>
             </p>
 

@@ -9,7 +9,7 @@ export default function CortexInput({ userId }: { userId: string }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
 
-    // --- 1. ENVOI D'UNE PENSÃ‰E MANUELLE (TEXTE) ---
+    // --- 1. ENVOI D'UNE PENSÉE MANUELLE (TEXTE) ---
     const handleSendThought = async () => {
         if (!text.trim() || !userId) return;
         setIsUploading(true);
@@ -26,8 +26,8 @@ export default function CortexInput({ userId }: { userId: string }) {
             ]);
 
             if (error) throw error;
-            setText(''); // On vide le champ si succÃ¨s
-            alert("PensÃ©e encodÃ©e dans le Cortex.");
+            setText(''); // On vide le champ si succès
+            alert("Pensée encodée dans le Cortex.");
         } catch (err: any) {
             console.error("Erreur Encodage Manuel:", err);
             alert("Erreur d'encodage : " + err.message);
@@ -46,13 +46,13 @@ export default function CortexInput({ userId }: { userId: string }) {
 
         // ICI : Ajoutez votre logique existante d'upload de PDF
         // (Upload vers Storage -> Extraction texte -> Insertion dans Memory)
-        // Pour l'instant, on simule la rÃ©ussite
+        // Pour l'instant, on simule la réussite
         // TODO: Connecter avec l'API /api/sensors/upload
 
         // Simulate upload for now as requested
         setTimeout(() => {
             setIsUploading(false);
-            alert(`${file.name} envoyÃ© au radar.`);
+            alert(`${file.name} envoyé au radar.`);
         }, 2000);
     };
 
@@ -65,7 +65,7 @@ export default function CortexInput({ userId }: { userId: string }) {
                     <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Encoder une pensÃ©e manuelle dans le Cortex..."
+                        placeholder="Encoder une pensée manuelle dans le Cortex..."
                         className="w-full bg-slate-800 text-slate-100 p-4 rounded-xl border border-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none min-h-[100px] text-sm"
                     />
 

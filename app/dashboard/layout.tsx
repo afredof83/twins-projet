@@ -1,4 +1,4 @@
-﻿export const dynamic = 'force-dynamic'; // <--- LA CLÃ‰ MAGIQUE
+﻿export const dynamic = 'force-dynamic'; // <--- LA CLÉ MAGIQUE
 
 export default function DashboardLayout({
     children,

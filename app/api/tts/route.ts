@@ -5,9 +5,9 @@ export async function POST(req: Request) {
         const { text } = await req.json();
 
         if (!text) return NextResponse.json({ error: 'Texte manquant' }, { status: 400 });
-        if (!process.env.ELEVENLABS_API_KEY) return NextResponse.json({ error: 'ClÃ© API manquante' }, { status: 500 });
+        if (!process.env.ELEVENLABS_API_KEY) return NextResponse.json({ error: 'Clé API manquante' }, { status: 500 });
 
-        // ID de voix "Rachel" (DÃ©faut ElevenLabs) ou votre ID perso
+        // ID de voix "Rachel" (Défaut ElevenLabs) ou votre ID perso
         const VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
         const response = await fetch(

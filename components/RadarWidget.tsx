@@ -22,7 +22,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
     };
 
     const saveToMemory = async (e: React.MouseEvent, item: any) => {
-        e.preventDefault(); // EmpÃªche l'ouverture du lien
+        e.preventDefault(); // Empêche l'ouverture du lien
         if (!profileId) return;
 
         setSaving(item.link);
@@ -36,7 +36,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                     type: 'news'
                 })
             });
-            alert("News mÃ©morisÃ©e !");
+            alert("News mémorisée !");
         } catch (error) {
             console.error("Erreur sauvegarde", error);
         } finally {
@@ -90,7 +90,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                                 <button
                                     onClick={(e) => saveToMemory(e, item)}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                    title="MÃ©moriser cette news"
+                                    title="Mémoriser cette news"
                                 >
                                     {saving === item.link ? <RefreshCw size={14} className="animate-spin" /> : <ExternalLink size={14} />}
                                 </button>
@@ -100,7 +100,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                 )}
             </div>
 
-            {/* Footer DÃ©coratif */}
+            {/* Footer Décoratif */}
             <div className="h-1 w-full bg-slate-800">
                 <div className="h-full bg-cyan-600 animate-pulse w-1/3"></div>
             </div>

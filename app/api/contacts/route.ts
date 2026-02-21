@@ -7,7 +7,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const profileId = searchParams.get('profileId');
 
-    // RÃ©cupÃ¨re les vrais profils sauf soi-mÃªme
+    // Récupère les vrais profils sauf soi-même
     const { data: profiles } = await supabase
         .from('Profile')
         .select('id, name')
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     let contacts = profiles?.map(p => ({
         id: p.id,
         name: p.name || "Inconnu",
-        lastMessage: "Signal dÃ©tectÃ©..."
+        lastMessage: "Signal détecté..."
     })) || [];
 
     // Ajout factice si vide pour l'effet visuel

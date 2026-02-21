@@ -13,8 +13,8 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Missing IDs" }, { status: 400 });
         }
 
-        // RequÃªte simplifiÃ©e : on cherche une nÃ©gociation entre les deux participants
-        // On sÃ©lectionne summary et verdict. On utilise createdAt pour le tri.
+        // Requête simplifiée : on cherche une négociation entre les deux participants
+        // On sélectionne summary et verdict. On utilise createdAt pour le tri.
         const { data, error } = await supabase
             .from('Negotiation')
             .select('summary, verdict, createdAt')

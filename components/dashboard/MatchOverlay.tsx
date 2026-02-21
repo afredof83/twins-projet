@@ -8,7 +8,7 @@
                 </div>
                 <div>
                     <h2 className="text-white text-xl font-bold">{data.name}</h2>
-                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÃ‰: {data.score}%</p>
+                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÉ: {data.score}%</p>
                 </div>
             </div>
 

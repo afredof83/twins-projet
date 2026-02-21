@@ -1,9 +1,9 @@
 ﻿import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// export const runtime = 'nodejs'; // Node.js par dÃ©faut pour la stabilitÃ©
+// export const runtime = 'nodejs'; // Node.js par défaut pour la stabilité
 
-// On garde Mistral pour l'instant car OpenAI n'est pas forcÃ©ment configurÃ© sur ce projet
+// On garde Mistral pour l'instant car OpenAI n'est pas forcément configuré sur ce projet
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
         if (!profileId) return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
 
-        // 1. RÃ©cupÃ©ration d'un historique large (50 derniers Ã©lÃ©ments)
+        // 1. Récupération d'un historique large (50 derniers éléments)
         const { data: history } = await supabase
             .from('memory')
             .select('content, type, created_at') // â¬…ï¸ snake_case
@@ -23,31 +23,31 @@ export async function POST(req: Request) {
             .limit(50);
 
         if (!history || history.length < 5) {
-            return NextResponse.json({ message: "Pas assez de vÃ©cu pour voir l'ombre." });
+            return NextResponse.json({ message: "Pas assez de vécu pour voir l'ombre." });
         }
 
         const context = history.map(h => `[${h.type}] ${h.content}`).join('\n');
 
         // 2. LE PROMPT DU MIROIR (Dissonance Cognitive)
         const prompt = `
-          Tu es l'Oracle de FrÃ©dÃ©ric Rey (ID: ${profileId}). Ta mission est d'identifier les "Angles Morts".
-          Voici ses souvenirs, actions et intentions rÃ©cents :
+          Tu es l'Oracle de Frédéric Rey (ID: ${profileId}). Ta mission est d'identifier les "Angles Morts".
+          Voici ses souvenirs, actions et intentions récents :
           ---
           ${context}
           ---
           MISSION :
-          Trouve une INCOHÃ‰RENCE flagrante ou subtile. 
+          Trouve une INCOHÉRENCE flagrante ou subtile. 
           Exemple : Il dit vouloir du calme mais accepte des projets stressants. Il parle d'innovation mais reste sur des vieux outils.
           
           CONSIGNES :
-          - Ne le juge pas, mais sois d'une honnÃªtetÃ© brutale (Loi I d'Ã‰panouissement).
+          - Ne le juge pas, mais sois d'une honnêteté brutale (Loi I d'Épanouissement).
           - Utilise le "Je" pour parler de ton observation.
-          - Termine par une question qui pique sa curiositÃ©.
+          - Termine par une question qui pique sa curiosité.
           
           FORMAT : [MIROIR DE L'OMBRE] : "Observation..."
         `;
 
-        // Appel Mistral (on remplace OpenAI par Mistral Large ou Small selon dispo pour cohÃ©rence)
+        // Appel Mistral (on remplace OpenAI par Mistral Large ou Small selon dispo pour cohérence)
         const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -57,10 +57,10 @@ export async function POST(req: Request) {
             body: JSON.stringify({
                 model: "mistral-large-latest",
                 messages: [
-                    { role: "system", content: "Tu es un miroir psychologique de haute prÃ©cision." },
+                    { role: "system", content: "Tu es un miroir psychologique de haute précision." },
                     { role: "user", content: prompt }
                 ],
-                temperature: 0.8 // Un peu plus de "libertÃ©" pour l'intuition
+                temperature: 0.8 // Un peu plus de "liberté" pour l'intuition
             })
         });
 
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         const mistralData = await mistralResponse.json();
         const shadowReflection = mistralData.choices[0].message.content;
 
-        // 3. Sauvegarde en tant que rÃ©flexion spÃ©ciale
+        // 3. Sauvegarde en tant que réflexion spéciale
         await supabase.from('memory').insert([{
             content: shadowReflection,
             profile_id: profileId, // â¬…ï¸ snake_case

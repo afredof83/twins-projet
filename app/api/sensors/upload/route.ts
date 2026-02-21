@@ -22,16 +22,16 @@ export async function POST(req: Request) {
         const authHeader = req.headers.get('Authorization');
 
         if (!authHeader) {
-            return NextResponse.json({ error: "AccÃ¨s refusÃ©. Token manquant." }, { status: 401 });
+            return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
         }
 
-        // 2. Client Supabase blindÃ© : obÃ©it uniquement au Bearer token, sans session propre
+        // 2. Client Supabase blindé : obéit uniquement au Bearer token, sans session propre
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 auth: {
-                    persistSession: false,   // EmpÃªche Supabase d'Ã©craser notre Token
+                    persistSession: false,   // Empêche Supabase d'écraser notre Token
                     autoRefreshToken: false,
                 },
                 global: {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(arrayBuffer);
 
         if (file.type === 'application/pdf') {
-            // DÃ©codage PDF
+            // Décodage PDF
             try {
                 textContent = await parsePDFBuffer(buffer);
             } catch (err: any) {
@@ -66,12 +66,12 @@ export async function POST(req: Request) {
             file.name.toLowerCase().endsWith('.docx') ||
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ) {
-            // DÃ©codage DOCX via Mammoth
+            // Décodage DOCX via Mammoth
             try {
                 const result = await mammoth.extractRawText({ buffer });
                 textContent = result.value;
             } catch (err: any) {
-                return NextResponse.json({ error: 'Ã‰chec de lecture du fichier Word.' }, { status: 500 });
+                return NextResponse.json({ error: 'Échec de lecture du fichier Word.' }, { status: 500 });
             }
         } else {
             // Texte brut : TXT, CSV, MD, JSONâ€¦
@@ -80,18 +80,18 @@ export async function POST(req: Request) {
 
         // Nettoyage des balises PDF + null bytes + espaces superflus
         textContent = textContent.replace(/----------------Page \(\d+\) Break----------------/g, '\n');
-        textContent = textContent.replace(/\0/g, '').replace(/\u0000/g, ''); // SÃ©curitÃ© anti-Null Byte
+        textContent = textContent.replace(/\0/g, '').replace(/\u0000/g, ''); // Sécurité anti-Null Byte
         textContent = textContent.replace(/\s+/g, ' ').trim();
 
         if (!textContent || textContent.length < 5) {
             return NextResponse.json({ error: 'Le fichier est vide ou illisible.' }, { status: 400 });
         }
 
-        // 2. DÃ‰COUPAGE (Fragments de 2000 caractÃ¨res)
+        // 2. DÉCOUPAGE (Fragments de 2000 caractères)
         const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
         let savedCount = 0;
 
-        console.log(`[SENSOR] ${chunks.length} fragment(s) Ã  vectoriser.`);
+        console.log(`[SENSOR] ${chunks.length} fragment(s) à vectoriser.`);
 
         // 3. VECTORISATION + STOCKAGE
         for (const chunk of chunks) {
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             const embedding = embeddingResponse.data[0]?.embedding;
             if (!embedding) continue;
 
-            // GÃ©nÃ©ration d'un UUID natif (disponible nativement dans Next.js / Node.js moderne)
+            // Génération d'un UUID natif (disponible nativement dans Next.js / Node.js moderne)
             const fragmentId = crypto.randomUUID();
 
             // Table 'memory' minuscule + colonnes snake_case

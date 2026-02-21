@@ -25,8 +25,8 @@ export async function POST(request: Request) {
             body: JSON.stringify({
                 model: "mistral-small",
                 messages: [
-                    { role: "system", content: "Analyste TWINS. Traite ce texte brut comme une archive. RÃ©sume et structure les donnÃ©es clÃ©s (Markdown)." },
-                    { role: "user", content: `Titre: ${title || "EntrÃ©e Manuelle"}\n\nContenu: ${text.substring(0, 30000)}` }
+                    { role: "system", content: "Analyste TWINS. Traite ce texte brut comme une archive. Résume et structure les données clés (Markdown)." },
+                    { role: "user", content: `Titre: ${title || "Entrée Manuelle"}\n\nContenu: ${text.substring(0, 30000)}` }
                 ]
             })
         });

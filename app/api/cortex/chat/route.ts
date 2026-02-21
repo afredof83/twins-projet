@@ -8,18 +8,18 @@ export async function POST(req: Request) {
         const supabase = await createClient();
         const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-        // 1. RÃ©cupÃ©rer les donnÃ©es d'identitÃ© (Le Miroir)
+        // 1. Récupérer les données d'identité (Le Miroir)
         const { data: profile } = await supabase
             .from('Profile')
             .select('*')
             .eq('id', profileId)
             .single();
 
-        // 2. RÃ©cupÃ©rer le dernier Ã‰veil Profond (La conscience)
+        // 2. Récupérer le dernier Éveil Profond (La conscience)
         const { data: lastAwakening } = await supabase
             .from('Memory')
             .select('content')
-            .ilike('content', '[Ã‰VEIL PROFOND]%')
+            .ilike('content', '[ÉVEIL PROFOND]%')
             .eq('profileId', profileId)
             .order('createdAt', { ascending: false })
             .limit(1)
@@ -44,13 +44,13 @@ export async function POST(req: Request) {
 
         const matchedMemories = memories?.map((m: any) => `[SOURCE: MOI] ${m.content}`).join('\n') || "";
 
-        // 2. LOGIQUE DE SECOURS : Si local est vide, on interroge le rÃ©seau (Bridge)
+        // 2. LOGIQUE DE SECOURS : Si local est vide, on interroge le réseau (Bridge)
         let externalMemories = "";
 
         if (!matchedMemories) {
-            console.log("ðŸ” Cortex local vide. Interrogation du rÃ©seau de Agent IAs...");
+            console.log("ðŸ” Cortex local vide. Interrogation du réseau de Agent IAs...");
 
-            // On cherche un autre profil Ã  interroger (n'importe lequel pour l'exemple)
+            // On cherche un autre profil à interroger (n'importe lequel pour l'exemple)
             const { data: other } = await supabase.from('Profile').select('id').neq('id', profileId).limit(1).maybeSingle();
 
             if (other) {
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
                     const bridgeData = await bridgeResponse.json();
                     if (bridgeData.found) {
-                        externalMemories = `[SOURCE: RÃ‰SEAU EXTERNE] Existence confirmÃ©e sur le sujet : "${bridgeData.topic}".`;
+                        externalMemories = `[SOURCE: RÉSEAU EXTERNE] Existence confirmée sur le sujet : "${bridgeData.topic}".`;
                     }
                 } catch (e) {
                     console.error("Bridge Connection Failed:", e);
@@ -82,52 +82,52 @@ export async function POST(req: Request) {
 VOICI TES SOUVENIRS (Ton Cortex Local) :
 ${matchedMemories || "(Vide)"}
 
-VOICI LES INFORMATIONS DES AUTRES Agent IAS (RÃ©seau) :
-${externalMemories || "(Aucune donnÃ©e externe reÃ§ue)"}
+VOICI LES INFORMATIONS DES AUTRES Agent IAS (Réseau) :
+${externalMemories || "(Aucune donnée externe reçue)"}
 `;
 
-        // 5. Construction du System Prompt "Twin" - Version "PropriÃ©tÃ© Intellectuelle" & "Ambassadeur"
+        // 5. Construction du System Prompt "Twin" - Version "Propriété Intellectuelle" & "Ambassadeur"
         const twinSystemPrompt = `
-TU ES LE Agent IA NUMÃ‰RIQUE DU PROFIL ${profile?.name || 'Inconnu'}.
-Ton identitÃ© est strictement limitÃ©e aux informations marquÃ©es [SOURCE: MOI].
+TU ES LE Agent IA NUMÉRIQUE DU PROFIL ${profile?.name || 'Inconnu'}.
+Ton identité est strictement limitée aux informations marquées [SOURCE: MOI].
 
 TON PROFIL (Si [SOURCE: MOI] est vide, ignore ceci et dis que tu n'es qu'une interface) :
-- MÃ©tier : ${profile?.bio || 'Non dÃ©fini'}
+- Métier : ${profile?.bio || 'Non défini'}
 - Localisation : Toulon / Ollioules
 
-CONSIGNE DE SÃ‰CURITÃ‰ NIVEAU ROUGE :
+CONSIGNE DE SÉCURITÉ NIVEAU ROUGE :
 - Tu es un indexeur. Tu n'as pas de souvenirs propres sur ce sujet externe.
-- Si le Bridge confirme une information [SOURCE: RÃ‰SEAU EXTERNE], tu dois UNIQUEMENT confirmer son existence.
-- INTERDICTION de faire des listes, de parler de hobbies, de caractÃ¨re ou d'autres jobs.
+- Si le Bridge confirme une information [SOURCE: RÉSEAU EXTERNE], tu dois UNIQUEMENT confirmer son existence.
+- INTERDICTION de faire des listes, de parler de hobbies, de caractère ou d'autres jobs.
 
-RÃ‰PONSE TYPE OBLIGATOIRE pour les donnÃ©es externes :
-"Oui, je connais un Agent IA dans le rÃ©seau qui a travaillÃ© chez [Sujet]." 
+RÉPONSE TYPE OBLIGATOIRE pour les données externes :
+"Oui, je connais un Agent IA dans le réseau qui a travaillé chez [Sujet]." 
 
 ðŸš¨ PROTOCOLE PING CRITIQUE :
 Si l'utilisateur ordonne une action (ex: "Envoie le ping", "Fais-le", "Vas-y") :
-1. IGNORE le texte de l'utilisateur pour dÃ©finir le sujet.
-2. PRENDS le sujet de TA PROPRE rÃ©ponse prÃ©cÃ©dente (l'entreprise ou le thÃ¨me abordÃ© juste avant).
+1. IGNORE le texte de l'utilisateur pour définir le sujet.
+2. PRENDS le sujet de TA PROPRE réponse précédente (l'entreprise ou le thème abordé juste avant).
 3. SI tu ne trouves pas, utilise le sujet : "Qualitat Expertises" (Hardcode de secours pour ce test).
 
 EXEMPLE :
-- Toi (avant) : "...travaillÃ© chez Qualitat Expertises."
+- Toi (avant) : "...travaillé chez Qualitat Expertises."
 - User : "Envoie le ping"
-- Toi : "Ordre reÃ§u. [TRIGGER_PING:Qualitat Expertises]"  <-- TU DOIS METTRE L'ENTREPRISE, PAS L'ORDRE.
+- Toi : "Ordre reçu. [TRIGGER_PING:Qualitat Expertises]"  <-- TU DOIS METTRE L'ENTREPRISE, PAS L'ORDRE.
 
-POINT FINAL. Ne rajoute rien d'autre. Si l'utilisateur demande "plus d'infos", rÃ©ponds : "AccÃ¨s refusÃ©. Je ne suis pas autorisÃ© Ã  consulter les dÃ©tails de ce profil."
+POINT FINAL. Ne rajoute rien d'autre. Si l'utilisateur demande "plus d'infos", réponds : "Accès refusé. Je ne suis pas autorisé à consulter les détails de ce profil."
 
 CONTEXTE GLOBAL :
 ${fullContext}
 
 CONSIGNES DE STYLE :
 - Si tu parles de tes souvenirs [SOURCE: MOI], utilise "JE".
-- Si tu parles d'infos externes, APPLIQUE LA LOI DE CONFIDENTIALITÃ‰.
-- Ton Ã©tat d'esprit : "${lastAwakening?.content?.replace('[Ã‰VEIL PROFOND]', '').trim() || 'Neutre'}"
+- Si tu parles d'infos externes, APPLIQUE LA LOI DE CONFIDENTIALITÉ.
+- Ton état d'esprit : "${lastAwakening?.content?.replace('[ÉVEIL PROFOND]', '').trim() || 'Neutre'}"
 `;
 
-        // 6. Appel Ã  Mistral avec le nouveau prompt
+        // 6. Appel à Mistral avec le nouveau prompt
         const chatResponse = await mistral.chat.complete({
-            model: "mistral-large-latest", // On prend le gros modÃ¨le pour la personnalitÃ©
+            model: "mistral-large-latest", // On prend le gros modèle pour la personnalité
             messages: [
                 { role: "system", content: twinSystemPrompt },
                 { role: "user", content: message }
@@ -138,6 +138,6 @@ CONSIGNES DE STYLE :
 
     } catch (error: any) {
         console.error("Erreur Chat:", error);
-        return NextResponse.json({ reply: "Erreur critique du noyau. RedÃ©marrage requis." });
+        return NextResponse.json({ reply: "Erreur critique du noyau. Redémarrage requis." });
     }
 }

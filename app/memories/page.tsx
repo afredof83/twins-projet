@@ -23,7 +23,7 @@ interface Log { msg: string; level: LogLevel; ts: string }
 
 // â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const typeIcon: Record<string, string> = {
-    document: 'ðŸ“„', knowledge: 'ðŸŒ', THOUGHT: 'ðŸ’­', thought: 'ðŸ’­',
+    document: 'ðŸ“„', knowledge: '🌐', THOUGHT: 'ðŸ’­', thought: 'ðŸ’­',
     secret: 'ðŸ”’', default: 'ðŸ§©',
 };
 const typeColor: Record<string, string> = {
@@ -43,13 +43,13 @@ function CortexManager() {
     const [profileId, setProfileId] = useState<string | null>(null);
     const [memories, setMemories] = useState<Memory[]>([]);
     const [logs, setLogs] = useState<Log[]>([
-        { msg: '[SYSTÃˆME] Cortex en ligne. En attente de donnÃ©es...', level: 'info', ts: now() }
+        { msg: '[SYSTÈME] Cortex en ligne. En attente de données...', level: 'info', ts: now() }
     ]);
     const [isDragging, setIsDragging] = useState(false);
     const [urlInput, setUrlInput] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [isScraping, setIsScraping] = useState(false);
-    // Ã‰tats Ã©diteur de fragments
+    // États éditeur de fragments
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -83,7 +83,7 @@ function CortexManager() {
         setLogs(prev => [...prev.slice(-19), { msg, level, ts: now() }]);
     };
 
-    // â”€â”€ Fetch mÃ©moires rÃ©centes â”€â”€
+    // â”€â”€ Fetch mémoires récentes â”€â”€
     const fetchMemories = async () => {
         if (!profileId) return;
         try {
@@ -100,11 +100,11 @@ function CortexManager() {
         setIsUploading(true);
         addLog(`[SENSOR] Analyse de la cible : ${file.name} (${(file.size / 1024).toFixed(1)} Ko)`, 'info');
 
-        // RÃ©cupÃ©ration de la session complÃ¨te pour extraire le Bearer token
+        // Récupération de la session complète pour extraire le Bearer token
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-            addLog('[CRITIQUE] Utilisateur non authentifiÃ©. Connexion refusÃ©e.', 'error');
+            addLog('[CRITIQUE] Utilisateur non authentifié. Connexion refusée.', 'error');
             setIsUploading(false);
             return;
         }
@@ -116,32 +116,32 @@ function CortexManager() {
         try {
             const res = await fetch('/api/sensors/upload', {
                 method: 'POST',
-                // âœ… Passeport d'identitÃ© transmis Ã  l'API
+                // ✅ Passeport d'identité transmis à l'API
                 headers: { 'Authorization': `Bearer ${session.access_token}` },
                 body: formData,
             });
             const data = await res.json();
 
             if (data.success) {
-                addLog(`[SUCCÃˆS] ${data.fragments} fragment(s) de "${file.name}" gravÃ©s.`, 'success');
+                addLog(`[SUCCÈS] ${data.fragments} fragment(s) de "${file.name}" gravés.`, 'success');
                 await fetchMemories();
 
-                // ðŸŸ¢ NOUVEAU : On rÃ©veille le Gardien silencieusement en arriÃ¨re-plan !
-                // On ne met pas de "await" devant le fetch, pour ne pas geler l'Ã©cran de l'utilisateur.
+                // ðŸŸ¢ NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
+                // On ne met pas de "await" devant le fetch, pour ne pas geler l'écran de l'utilisateur.
                 console.log("ðŸ¦‡ Envoi du signal au Gardien...");
                 fetch('/api/guardian', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         profileId: session.user.id,
-                        newMemoryContent: `Nouveau fichier analysÃ© : ${file.name}. Ce document a Ã©tÃ© ajoutÃ© Ã  sa base de donnÃ©es.` // Vous pourrez remplacer Ã§a par le vrai texte extrait plus tard
+                        newMemoryContent: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.` // Vous pourrez remplacer ça par le vrai texte extrait plus tard
                     })
                 }).catch(err => console.error("Erreur du Gardien :", err));
             } else {
-                addLog(`[ERREUR SENSOR] ${data.error || 'Ã‰chec de l\'ingestion.'}`, 'error');
+                addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la liaison de transfert.', 'error');
+            addLog('[CRITIQUE] Échec de la liaison de transfert.', 'error');
         } finally {
             setIsUploading(false);
         }
@@ -155,12 +155,12 @@ function CortexManager() {
         const targetUrl = urlInput.trim();
         setUrlInput('');
         setIsScraping(true);
-        addLog(`[RÃ‰SEAU] Extraction des donnÃ©es depuis : ${targetUrl}...`, 'info');
+        addLog(`[RÉSEAU] Extraction des données depuis : ${targetUrl}...`, 'info');
 
-        // RÃ©cupÃ©ration du passeport session
+        // Récupération du passeport session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] AccÃ¨s rÃ©seau refusÃ© (Non authentifiÃ©).', 'error');
+            addLog('[CRITIQUE] Accès réseau refusé (Non authentifié).', 'error');
             setIsScraping(false);
             return;
         }
@@ -170,20 +170,20 @@ function CortexManager() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`, // âœ… Passeport transmis
+                    'Authorization': `Bearer ${session.access_token}`, // ✅ Passeport transmis
                 },
                 body: JSON.stringify({ url: targetUrl, profileId: session.user.id }),
             });
             const data = await res.json();
 
             if (data.success) {
-                addLog(`[SUCCÃˆS] ${data.fragments} fragment(s) du site extraits et indexÃ©s.`, 'success');
+                addLog(`[SUCCÈS] ${data.fragments} fragment(s) du site extraits et indexés.`, 'success');
                 await fetchMemories();
             } else {
-                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping Ã©chouÃ©.'}`, 'error');
+                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping échoué.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la connexion au module Scraper.', 'error');
+            addLog('[CRITIQUE] Échec de la connexion au module Scraper.', 'error');
         } finally {
             setIsScraping(false);
         }
@@ -197,18 +197,18 @@ function CortexManager() {
         if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
     };
 
-    // â”€â”€ Delete mÃ©moire (avec Bearer token + confirmation) â”€â”€
+    // â”€â”€ Delete mémoire (avec Bearer token + confirmation) â”€â”€
     const handleDeleteMemory = async (e: React.MouseEvent, memoryId: string) => {
-        e.stopPropagation(); // EmpÃªche d'ouvrir la modale d'Ã©dition
+        e.stopPropagation(); // Empêche d'ouvrir la modale d'édition
 
-        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mÃ©moire ? Cette action est irrÃ©versible.')) return;
+        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mémoire ? Cette action est irréversible.')) return;
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('[CRITIQUE] Session expirÃ©e.', 'error'); return; }
+        if (!session) { addLog('[CRITIQUE] Session expirée.', 'error'); return; }
 
-        // Mise Ã  jour optimiste immÃ©diate
+        // Mise à jour optimiste immédiate
         setMemories(prev => prev.filter(m => m.id !== memoryId));
-        addLog(`[PURGE] IncinÃ©ration du fragment ${memoryId.slice(0, 8)}...`, 'warning');
+        addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
 
         try {
             const res = await fetch('/api/memories', {
@@ -221,19 +221,19 @@ function CortexManager() {
             });
             const data = await res.json();
             if (data.success) {
-                addLog('[SUCCÃˆS] Fragment mÃ©moriel incinÃ©rÃ©.', 'success');
+                addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
             } else {
-                addLog(`[ERREUR] La purge a Ã©chouÃ© : ${data.error}`, 'error');
+                addLog(`[ERREUR] La purge a échoué : ${data.error}`, 'error');
                 // Rollback : on recharge depuis l'API
                 fetchMemories();
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de connexion lors de la purge.', 'error');
+            addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
             fetchMemories();
         }
     };
 
-    // â”€â”€ Sauvegarde Ã©dition avec re-vectorisation â”€â”€
+    // â”€â”€ Sauvegarde édition avec re-vectorisation â”€â”€
     const handleSaveEdit = async () => {
         if (!editingMemory) return;
         setIsUpdating(true);
@@ -241,7 +241,7 @@ function CortexManager() {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] Session expirÃ©e.', 'error');
+            addLog('[CRITIQUE] Session expirée.', 'error');
             setIsUpdating(false);
             return;
         }
@@ -261,14 +261,14 @@ function CortexManager() {
             });
             const data = await res.json();
             if (data.success) {
-                addLog('[SUCCÃˆS] Fragment mis Ã  jour et re-vectorisÃ©.', 'success');
+                addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
                 setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
                 setEditingMemory(null);
             } else {
-                addLog(`[ERREUR] ${data.error || 'Modification Ã©chouÃ©e.'}`, 'error');
+                addLog(`[ERREUR] ${data.error || 'Modification échouée.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la connexion lors de l\'Ã©dition.', 'error');
+            addLog('[CRITIQUE] Échec de la connexion lors de l\'édition.', 'error');
         } finally {
             setIsUpdating(false);
         }
@@ -290,7 +290,7 @@ function CortexManager() {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-300 font-mono p-4 md:p-8 selection:bg-blue-800">
 
-            {/* â”€â”€ SCANLINES overlay (dÃ©coratif) â”€â”€ */}
+            {/* â”€â”€ SCANLINES overlay (décoratif) â”€â”€ */}
             <div
                 className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
                 style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)' }}
@@ -309,7 +309,7 @@ function CortexManager() {
                             &gt; CORTEX_DATA_MANAGER
                         </h1>
                         <p className="text-xs text-slate-500 mt-1">
-                            Interface d'ingestion neuronale â€” Enrichissement de la mÃ©moire vectorielle
+                            Interface d'ingestion neuronale â€” Enrichissement de la mémoire vectorielle
                         </p>
                     </div>
                     <button
@@ -375,7 +375,7 @@ function CortexManager() {
                                         [ INITIALISER TRANSFERT FICHIER ]
                                     </p>
                                     <p className="text-xs text-slate-500 text-center">
-                                        Glissez-dÃ©posez ou cliquez pour sÃ©lectionner<br />
+                                        Glissez-déposez ou cliquez pour sélectionner<br />
                                         <span className="text-slate-600">PDF Â· TXT Â· CSV Â· DOCX Â· MD Â· JSON</span>
                                     </p>
 
@@ -383,7 +383,7 @@ function CortexManager() {
                                         <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
                                             <div className="text-center">
                                                 <p className="text-2xl font-black text-blue-300 animate-pulse tracking-widest">
-                                                    DÃ‰POSER
+                                                    DÉPOSER
                                                 </p>
                                                 <p className="text-xs text-blue-500 mt-1">Ingestion automatique</p>
                                             </div>
@@ -441,7 +441,7 @@ function CortexManager() {
                             <div className="divide-y divide-slate-800/50 max-h-80 overflow-y-auto custom-scrollbar">
                                 {memories.length === 0 ? (
                                     <div className="p-8 text-center text-slate-600 text-xs italic">
-                                        Aucun fragment en mÃ©moire. DÃ©posez un fichier pour commencer.
+                                        Aucun fragment en mémoire. Déposez un fichier pour commencer.
                                     </div>
                                 ) : (
                                     memories.map(m => (
@@ -467,7 +467,7 @@ function CortexManager() {
                                                     {new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                                 </span>
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <span className="text-[9px] text-blue-500 tracking-wider">Ã‰DITER</span>
+                                                    <span className="text-[9px] text-blue-500 tracking-wider">ÉDITER</span>
                                                     <button
                                                         onClick={e => handleDeleteMemory(e, m.id)}
                                                         className="text-slate-700 hover:text-red-500 transition-colors"
@@ -508,7 +508,7 @@ function CortexManager() {
                         <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden">
                             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800 bg-slate-950">
                                 <Terminal size={12} className="text-blue-600" />
-                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÃ‰RATIONS</span>
+                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÉRATIONS</span>
                             </div>
 
                             <div className="p-4 h-72 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
@@ -533,7 +533,7 @@ function CortexManager() {
                             <h3 className="text-[10px] font-black text-slate-500 tracking-widest">PROTOCOLES D'INGESTION</h3>
                             {[
                                 { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX â€” Extraction vectorielle automatique' },
-                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + rÃ©sumÃ© Mistral AI â€” Indexation en mÃ©moire' },
+                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + résumé Mistral AI â€” Indexation en mémoire' },
                             ].map(({ icon, label, desc }) => (
                                 <div key={label} className="flex items-start gap-3">
                                     <div className="w-7 h-7 rounded-lg bg-blue-950/50 border border-blue-900/50 flex items-center justify-center flex-shrink-0 text-blue-500">
@@ -551,21 +551,21 @@ function CortexManager() {
                 </div>
             </div>
 
-            {/* â”€â”€ MODALE D'Ã‰DITION SYNAPTIQUE â”€â”€ */}
+            {/* â”€â”€ MODALE D'ÉDITION SYNAPTIQUE â”€â”€ */}
             {editingMemory && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-slate-900 border border-blue-500/50 rounded-2xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.15)]">
                         {/* Header modale */}
                         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                             <div>
-                                <h2 className="text-sm font-black text-blue-400 tracking-wider">Ã‰DITION DU FRAGMENT NEURONAL</h2>
+                                <h2 className="text-sm font-black text-blue-400 tracking-wider">ÉDITION DU FRAGMENT NEURONAL</h2>
                                 <p className="text-[10px] text-slate-600 mt-0.5">{editingMemory.id}</p>
                             </div>
                             <button
                                 onClick={() => setEditingMemory(null)}
                                 className="text-slate-500 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800"
                             >
-                                âœ•
+                                ❌
                             </button>
                         </div>
 

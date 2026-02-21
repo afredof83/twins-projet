@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     try {
         const { myId, targetId } = await req.json();
 
-        // On vÃ©rifie s'il n'y a pas dÃ©jÃ  une nÃ©gociation active
+        // On vérifie s'il n'y a pas déjà une négociation active
         const { data: existing } = await supabase
             .from('Negotiation')
             .select('id')
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         if (existing) return NextResponse.json({ negotiationId: existing.id });
 
-        // Sinon, on crÃ©e la nouvelle nÃ©gociation
+        // Sinon, on crée la nouvelle négociation
         const { data, error } = await supabase
             .from('Negotiation')
             .insert([{

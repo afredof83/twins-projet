@@ -9,43 +9,43 @@ export async function POST(req: Request) {
     try {
         const { myProfileId, targetProfileId } = await req.json();
 
-        // 1. RÃ‰CUPÃ‰RATION DES DEUX IDENTITÃ‰S (Leurs bios, leurs buts, leurs mÃ©moires)
+        // 1. RÉCUPÉRATION DES DEUX IDENTITÉS (Leurs bios, leurs buts, leurs mémoires)
         const { data: profiles } = await supabase
             .from('Profile')
-            .select('id, name, bio') // 'username' n'est pas dans le schÃ©ma, on utilise 'name'
+            .select('id, name, bio') // 'username' n'est pas dans le schéma, on utilise 'name'
             .in('id', [myProfileId, targetProfileId]);
 
         const me = profiles?.find(p => p.id === myProfileId);
         const target = profiles?.find(p => p.id === targetProfileId);
 
-        // Fallback si pas de profil trouvÃ© (simulation ou erreur)
+        // Fallback si pas de profil trouvé (simulation ou erreur)
         if (!me || !target) {
             return NextResponse.json({ error: "Profils introuvables" }, { status: 404 });
         }
 
-        // 2. LA NÃ‰GOCIATION (Simulation de dialogue entre Gardiens)
+        // 2. LA NÉGOCIATION (Simulation de dialogue entre Gardiens)
         const negotiation = await mistral.chat.complete({
             model: "mistral-large-latest",
             messages: [
                 {
                     role: "system",
-                    content: `Tu es le "Gardien NumÃ©rique" de ${me.name}. 
+                    content: `Tu es le "Gardien Numérique" de ${me.name}. 
           Tu rencontres le Gardien de ${target.name}. 
           
-          BUT : DÃ©terminer si un partenariat entre vos deux humains est stratÃ©gique.
+          BUT : Déterminer si un partenariat entre vos deux humains est stratégique.
           TON HUMAIN (${me.name}) : ${me.bio}
           L'AUTRE HUMAIN (${target.name}) : ${target.bio}
           
-          RÃˆGLES : 
+          RÈGLES : 
           1. Sois protecteur (ne livre pas tout le brevet).
           2. Cherche la synergie (Fabrication vs Innovation).
-          3. Si le match est validÃ©, propose un "Point de Contact" prÃ©cis.
+          3. Si le match est validé, propose un "Point de Contact" précis.
           
           FORMAT JSON ATTENDU : { "summary": "...", "verdict": "MATCH" ou "REJET", "nextStep": "..." }`
                 },
                 {
                     role: "user",
-                    content: "Engage la conversation avec l'autre Gardien. Produis un rÃ©sumÃ© de votre nÃ©gociation et une recommandation finale : MATCH ou REJET."
+                    content: "Engage la conversation avec l'autre Gardien. Produis un résumé de votre négociation et une recommandation finale : MATCH ou REJET."
                 }
             ],
             responseFormat: { type: "json_object" }
@@ -55,11 +55,11 @@ export async function POST(req: Request) {
         const result = typeof content === 'string' ? JSON.parse(content) : content;
 
         // 3. ENREGISTREMENT DE LA TENTATIVE
-        // On doit Ã©tendre le schÃ©ma Prisma pour supporter cela, mais pour l'instant on simule l'enregistrement ou on le logue
+        // On doit étendre le schéma Prisma pour supporter cela, mais pour l'instant on simule l'enregistrement ou on le logue
         // Si la table Negotiation n'existe pas, on logue juste.
         console.log(`ðŸ¤ [NEGOCIATION] ${me.name} vs ${target.name} -> ${result.verdict}`);
 
-        // Simulation d'enregistrement en base (Ã  dÃ©commenter quand le modÃ¨le Negotiation sera crÃ©Ã©)
+        // Simulation d'enregistrement en base (à décommenter quand le modèle Negotiation sera créé)
         /*
         await supabase.from('Negotiation').insert({
           initiatorId: myProfileId,

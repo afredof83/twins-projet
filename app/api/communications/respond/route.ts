@@ -7,12 +7,12 @@ export async function POST(req: NextRequest) {
         const { communicationId, status } = await req.json();
 
         if (!communicationId || !['ACCEPTED', 'REJECTED'].includes(status)) {
-            return NextResponse.json({ error: "DonnÃ©es invalides" }, { status: 400 });
+            return NextResponse.json({ error: "Données invalides" }, { status: 400 });
         }
 
         console.log(`Traitement du message ${communicationId} -> ${status}`);
 
-        // Mise Ã  jour du statut dans Supabase
+        // Mise à jour du statut dans Supabase
         const { data, error } = await supabase
             .from('communications')
             .update({ status: status })
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            message: `Statut mis Ã  jour : ${status}`,
+            message: `Statut mis à jour : ${status}`,
             data
         });
 

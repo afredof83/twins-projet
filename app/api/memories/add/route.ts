@@ -6,13 +6,13 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 // Filtres de pertinence
-const NOISE_KEYWORDS = ["publicitÃ©", "promo", "sponsored", "cookies", "abonnez-vous"];
+const NOISE_KEYWORDS = ["publicité", "promo", "sponsored", "cookies", "abonnez-vous"];
 
 async function shouldMemorize(content: string): Promise<boolean> {
     // 1. Longueur min
     if (content.length < 50) return false;
 
-    // 2. Mots-clÃ©s bruit
+    // 2. Mots-clés bruit
     if (NOISE_KEYWORDS.some(word => content.toLowerCase().includes(word))) return false;
 
     return true;
@@ -44,24 +44,24 @@ export async function POST(req: Request) {
         let contentToEmbed = content;
         let finalContent = content;
 
-        // 2. RÃ©sumÃ© intelligent (si trop long)
+        // 2. Résumé intelligent (si trop long)
         if (content.length > 1500) {
-            console.log("ðŸ“ Contenu long dÃ©tectÃ© -> RÃ©sumÃ© en cours...");
+            console.log("ðŸ“ Contenu long détecté -> Résumé en cours...");
             try {
                 const summaryResponse = await fetchWithRetry(() => mistral.chat.complete({
                     model: "mistral-small-latest",
                     messages: [
-                        { role: "system", content: "Tu es un archiviste expert. RÃ©sume ce texte en un paragraphe dense et factuel de 150 mots maximum. Capture les entitÃ©s nommÃ©es et les idÃ©es clÃ©s." },
+                        { role: "system", content: "Tu es un archiviste expert. Résume ce texte en un paragraphe dense et factuel de 150 mots maximum. Capture les entités nommées et les idées clés." },
                         { role: "user", content: content }
                     ]
                 }));
                 const summary = summaryResponse.choices?.[0]?.message?.content || content.substring(0, 500); // Fallback
-                contentToEmbed = `[RÃ‰SUMÃ‰] ${summary}`;
-                // Optionnel : On peut stocker le rÃ©sumÃ© ou garder le texte complet. 
-                // Ici on garde le texte complet dans 'content' mais on vectorise le rÃ©sumÃ©.
+                contentToEmbed = `[RÉSUMÉ] ${summary}`;
+                // Optionnel : On peut stocker le résumé ou garder le texte complet. 
+                // Ici on garde le texte complet dans 'content' mais on vectorise le résumé.
             } catch (e) {
-                console.error("Erreur rÃ©sumÃ©:", e);
-                // On continue avec le texte complet si le rÃ©sumÃ© Ã©choue
+                console.error("Erreur résumé:", e);
+                // On continue avec le texte complet si le résumé échoue
             }
         }
 
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
             expiresAt = date.toISOString();
         }
 
-        // 5. Stockage Supabase (StandardisÃ© snake_case)
+        // 5. Stockage Supabase (Standardisé snake_case)
         const { error } = await supabase
             .from('memory') // â¬…ï¸ Minuscule
             .insert({
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
                 type: type || 'thought',
                 embedding: embedding,
                 source: 'manual_input',
-                expires_at: expiresAt // â¬…ï¸ snake_case (dÃ©jÃ  correct si la DB a la colonne)
+                expires_at: expiresAt // â¬…ï¸ snake_case (déjà correct si la DB a la colonne)
             });
 
         if (error) throw error;

@@ -18,7 +18,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                 body: JSON.stringify({
                     url,
                     profileId,
-                    category: 'STRATÃ‰GIE'
+                    category: 'STRATÉGIE'
                 })
             });
 
@@ -87,7 +87,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                         {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> :
                             status === 'success' ? <CheckCircle size={16} /> :
                                 <Link2 size={16} />}
-                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÃ‰MORISÃ‰' : 'INGÃ‰RER'}
+                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÉMORISÉ' : 'INGÉRER'}
                     </button>
                 </div>
             </div>

@@ -42,7 +42,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                         <div>
                             <h2 className="text-sm font-bold text-white tracking-widest">GLOBAL_INTEL</h2>
                             <p className="text-[10px] text-gray-400 font-mono">
-                                {report.opportunities.length} VECTEURS IDENTIFIÃ‰S
+                                {report.opportunities.length} VECTEURS IDENTIFIÉS
                             </p>
                         </div>
                     </div>
@@ -62,18 +62,18 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                     </p>
                 </div>
 
-                {/* Liste des OpportunitÃ©s */}
+                {/* Liste des Opportunités */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                     {report.opportunities.length === 0 ? (
                         <div className="text-center py-8 text-gray-500 text-xs italic">
-                            Aucune opportunitÃ© dÃ©tectÃ©e dans le pÃ©rimÃ¨tre actuel.
+                            Aucune opportunité détectée dans le périmètre actuel.
                         </div>
                     ) : (
                         report.opportunities.map((opp: any, idx: number) => {
-                            // Lecture pare-balles : gÃ¨re toutes les orthographes possibles de Mistral
+                            // Lecture pare-balles : gère toutes les orthographes possibles de Mistral
                             const score = opp.matchScore ?? opp.MatchScore ?? opp.score ?? opp["Match Score"] ?? 0;
                             const reason = opp.reason ?? opp.Reason ?? opp.analyse ?? opp.Analyse ?? "Analyse en cours...";
-                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggÃ©rÃ©e"] ?? "Aucune action dÃ©finie.";
+                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggérée"] ?? "Aucune action définie.";
                             const name = opp.targetName ?? opp.TargetName ?? opp.name ?? opp["Nom"] ?? `Cible #${idx + 1}`;
                             const id = opp.targetId ?? opp.id ?? String(idx);
 
@@ -102,7 +102,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
                                         <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
                                             <TrendingUp size={12} />
-                                            <span className="uppercase tracking-wider font-bold">Action RecommandÃ©e</span>
+                                            <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
                                         </div>
                                         <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
                                     </div>

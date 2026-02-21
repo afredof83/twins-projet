@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
         console.log(`[PING] De ${fromId} vers ${toId}. Raison: ${reason}`);
 
-        // 1. On crÃ©e le message de "Demande"
+        // 1. On crée le message de "Demande"
         const { error } = await supabase
             .from('messages')
             .insert([{

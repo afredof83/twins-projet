@@ -17,9 +17,9 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false; // ArrÃªt auto aprÃ¨s la phrase
+                recognitionRef.current.continuous = false; // Arrêt auto après la phrase
                 recognitionRef.current.interimResults = false;
-                recognitionRef.current.lang = 'fr-FR'; // Langue FranÃ§aise
+                recognitionRef.current.lang = 'fr-FR'; // Langue Française
 
                 recognitionRef.current.onresult = (event: any) => {
                     const transcript = event.results[0][0].transcript;
@@ -50,7 +50,7 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
                     recognitionRef.current.start();
                     setIsListening(true);
                 } catch (e) {
-                    console.error("Erreur dÃ©marrage micro", e);
+                    console.error("Erreur démarrage micro", e);
                 }
             } else {
                 alert("Votre navigateur ne supporte pas la reconnaissance vocale.");

@@ -24,31 +24,31 @@ export default function Home() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // SuccÃ¨s -> Dashboard
+        // Succès -> Dashboard
         router.push('/dashboard');
 
       } else {
         // --- INSCRIPTION ---
-        // On crÃ©e juste le compte Auth. 
-        // Le Trigger SQL s'occupe de crÃ©er le profil dans la table "Profile" automatiquement.
+        // On crée juste le compte Auth. 
+        // Le Trigger SQL s'occupe de créer le profil dans la table "Profile" automatiquement.
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            // Important: EmpÃªche l'envoi du mail de confirm si dÃ©sactivÃ© dans Supabase,
-            // mais force la connexion immÃ©diate si possible.
+            // Important: Empêche l'envoi du mail de confirm si désactivé dans Supabase,
+            // mais force la connexion immédiate si possible.
             emailRedirectTo: `${window.location.origin}/dashboard`
           }
         });
 
         if (error) throw error;
 
-        // Si l'utilisateur est crÃ©Ã© mais pas de session immÃ©diate (confirmation email requise)
+        // Si l'utilisateur est créé mais pas de session immédiate (confirmation email requise)
         if (data.user && !data.session) {
-          setError("Compte crÃ©Ã© ! Si demandÃ©, vÃ©rifiez vos emails.");
+          setError("Compte créé ! Si demandé, vérifiez vos emails.");
           setMode('LOGIN');
         }
-        // Si session immÃ©diate (email confirm dÃ©sactivÃ©)
+        // Si session immédiate (email confirm désactivé)
         else if (data.session) {
           router.push('/dashboard');
         }
@@ -70,13 +70,13 @@ export default function Home() {
         <div className="text-center mb-8">
           <Shield className="w-12 h-12 text-cyan-500 mx-auto mb-4 animate-pulse" />
           <h1 className="text-3xl font-bold tracking-widest">TWINS</h1>
-          <p className="text-xs text-cyan-600 uppercase mt-2">AccÃ¨s SÃ©curisÃ© v2.6</p>
+          <p className="text-xs text-cyan-600 uppercase mt-2">Accès Sécurisé v2.6</p>
         </div>
 
         {/* ONGLETS */}
         <div className="flex mb-6 border-b border-slate-700">
           <button onClick={() => { setMode('LOGIN'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'LOGIN' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CONNEXION</button>
-          <button onClick={() => { setMode('SIGNUP'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'SIGNUP' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CRÃ‰ATION</button>
+          <button onClick={() => { setMode('SIGNUP'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'SIGNUP' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CRÉATION</button>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">

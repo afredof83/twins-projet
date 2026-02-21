@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
         if (channelError) throw channelError;
 
-        // 2. Supprimer la NÃ©gociation associÃ©e pour permettre un futur re-scan
+        // 2. Supprimer la Négociation associée pour permettre un futur re-scan
         const { error: negError } = await supabase
             .from('Negotiation')
             .delete()

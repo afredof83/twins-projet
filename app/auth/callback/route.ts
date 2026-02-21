@@ -3,13 +3,13 @@ import { createClient } from '@/lib/supabaseServer'
 
 /**
  * Route de callback OAuth/Magic Link.
- * Supabase redirige ici aprÃ¨s une connexion externe avec un `code` dans l'URL.
- * On l'Ã©change contre une session, qui sera ecrite dans les cookies SSR.
+ * Supabase redirige ici après une connexion externe avec un `code` dans l'URL.
+ * On l'échange contre une session, qui sera ecrite dans les cookies SSR.
  */
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
-    // `next` permet de rediriger vers une page prÃ©cise aprÃ¨s connexion (optionnel)
+    // `next` permet de rediriger vers une page précise après connexion (optionnel)
     const next = searchParams.get('next') ?? '/dashboard'
 
     if (code) {
@@ -17,11 +17,11 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error) {
-            // Redirection vers le dashboard (ou la page demandÃ©e)
+            // Redirection vers le dashboard (ou la page demandée)
             return NextResponse.redirect(`${origin}${next}`)
         }
 
-        console.error('[auth/callback] Erreur Ã©change de code:', error.message)
+        console.error('[auth/callback] Erreur échange de code:', error.message)
     }
 
     // En cas d'erreur ou d'absence de code â†’ page d'erreur ou page de connexion

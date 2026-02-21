@@ -8,7 +8,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
     const launchScan = async () => {
         setIsScanning(true);
-        // On scanne le secteur "Marine Tech & Fishing" par dÃ©faut pour FisherMade
+        // On scanne le secteur "Marine Tech & Fishing" par défaut pour FisherMade
         const res = await fetch('/api/network/detect', {
             method: 'POST',
             body: JSON.stringify({ profileId, sector: "Marine Industry & Tech" }),
@@ -29,11 +29,11 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
             </div>
 
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Target className="text-red-500" /> RADAR D'OPPORTUNITÃ‰S
+                <Target className="text-red-500" /> RADAR D'OPPORTUNITÉS
             </h2>
 
             <p className="text-xs text-slate-400 mb-4">
-                DÃ©tecte les entitÃ©s (concurrents, partenaires, investisseurs) actives dans votre secteur et Ã©value leur compatibilitÃ©.
+                Détecte les entités (concurrents, partenaires, investisseurs) actives dans votre secteur et évalue leur compatibilité.
             </p>
 
             <div className="mb-6">
@@ -66,7 +66,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
                         <div className="text-right flex flex-col items-end">
                             <div className="text-2xl font-bold text-green-400">{agent.matchScore}%</div>
-                            <div className="text-[10px] uppercase text-green-600 font-bold">CompatibilitÃ©</div>
+                            <div className="text-[10px] uppercase text-green-600 font-bold">Compatibilité</div>
                         </div>
                     </div>
                 ))}
@@ -74,7 +74,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
                 {agents.length === 0 && !isScanning && (
                     <div className="text-center py-8 opacity-50">
                         <ShieldAlert className="mx-auto mb-2 text-slate-600" size={32} />
-                        <p className="text-slate-500 text-sm italic">Aucune cible dÃ©tectÃ©e. Lancez le scan pour activer le sonar.</p>
+                        <p className="text-slate-500 text-sm italic">Aucune cible détectée. Lancez le scan pour activer le sonar.</p>
                     </div>
                 )}
             </div>

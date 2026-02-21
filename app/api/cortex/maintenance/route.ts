@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         }
 
         // --- MISSION 1 : NETTOYAGE DES DOUBLONS (RAPIDE) ---
-        // On appelle la fonction RPC SQL qu'on a crÃ©Ã©e plus tÃ´t
+        // On appelle la fonction RPC SQL qu'on a créée plus tôt
         const { data: cleanedCount, error: rpcError } = await supabase
             .rpc('cleanup_duplicates', { target_profile_id: profileId });
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
             report.cleaned = cleanedCount;
         }
 
-        // --- MISSION 2 : VECTORISATION DES OUBLIÃ‰S (BATCH PETIT) ---
+        // --- MISSION 2 : VECTORISATION DES OUBLIÉS (BATCH PETIT) ---
         // On cherche seulement 5 souvenirs sans vecteurs (pour ne pas ralentir le serveur)
         const { data: memories, error: fetchError } = await supabase
             .from('Memory')
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             .limit(5);
 
         if (fetchError) {
-            console.error("Erreur rÃ©cupÃ©ration souvenirs sans vecteurs:", fetchError);
+            console.error("Erreur récupération souvenirs sans vecteurs:", fetchError);
         }
 
         if (memories && memories.length > 0) {
@@ -60,12 +60,12 @@ export async function POST(request: Request) {
             }
         }
 
-        // On renvoie un succÃ¨s discret
+        // On renvoie un succès discret
         return NextResponse.json({ success: true, report });
 
     } catch (error: any) {
-        // En mode silencieux, on log juste l'erreur cÃ´tÃ© serveur
-        console.error("âŒ Ã‰chec Maintenance Autonome:", error);
+        // En mode silencieux, on log juste l'erreur côté serveur
+        console.error("âŒ Échec Maintenance Autonome:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

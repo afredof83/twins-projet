@@ -25,14 +25,14 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                 <div className="flex items-center gap-3 mb-1">
                     <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
                         <Shield size={12} className="text-blue-500 animate-pulse" />
-                        RequÃªte Inter-Agent IAs
+                        Requête Inter-Agent IAs
                     </span>
                     <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${scoreBg} ${scoreColor}`}>
                         [{matchPercentage}% MATCH]
                     </span>
                 </div>
                 <p className="text-slate-200 text-sm leading-tight">
-                    Sujet dÃ©tectÃ© : <span className="font-bold text-white">"{request.topic}"</span>
+                    Sujet détecté : <span className="font-bold text-white">"{request.topic}"</span>
                 </p>
             </div>
 
@@ -47,7 +47,7 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                     onClick={() => onAccept(request)}
                     className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-md hover:shadow-green-500/20 flex items-center gap-2 group animate-pulse"
                 >
-                    âœ… ACCEPTER
+                    ✅ ACCEPTER
                 </button>
             </div>
         </div>

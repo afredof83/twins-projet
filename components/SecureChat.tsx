@@ -21,6 +21,8 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
     const [isLoading, setIsLoading] = useState(true)
     const [isTyping, setIsTyping] = useState(false)
     const [isConnected, setIsConnected] = useState(false)
+    const [partnerCountry, setPartnerCountry] = useState<string | null>(null)
+    const [isTranslating, setIsTranslating] = useState(false)
 
     const scrollRef = useRef<HTMLDivElement>(null)
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -34,11 +36,11 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         let room: any = null;
         const roomName = `room_v4_${channelId}`;
 
-        // LE DÃ‰BRUITAGE : On attend 300ms pour ignorer le double-render de React
+        // LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
         const initDelay = setTimeout(() => {
             if (!isMounted) return;
 
-            console.log(`ðŸ“¡ Ouverture confirmÃ©e du tunnel... [${roomName}]`);
+            console.log(`ðŸ“¡ Ouverture confirmée du tunnel... [${roomName}]`);
 
             room = supabase.channel(roomName, {
                 config: { broadcast: { ack: false } }
@@ -68,16 +70,22 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
             channelRef.current = room;
         }, 300);
 
-        // ðŸŸ¢ LE CORRECTIF EST LÃ€ : On charge l'historique ET ON COUPE LE CHARGEMENT
+        // 🟢 LE CORRECTIF EST LÀ : On charge l'historique ET ON COUPE LE CHARGEMENT
         supabase.from('Message').select('*').eq('communication_id', channelId).order('created_at', { ascending: true })
             .then(({ data, error }: any) => {
                 if (isMounted) {
                     if (data) setMessages(data);
-                    setIsLoading(false); // ðŸš¨ LA LIGNE MAGIQUE QUI AFFICHE ENFIN VOS MESSAGES
+                    setIsLoading(false); // 🚨 LA LIGNE MAGIQUE QUI AFFICHE ENFIN VOS MESSAGES
                 }
             });
 
-        // LE NETTOYAGE SÃ‰CURISÃ‰
+        // 🟢 NOUVEAU : On récupère le pays du partenaire pour la traduction
+        supabase.from('Profile').select('country').eq('id', partnerId).single()
+            .then(({ data }: any) => {
+                if (data?.country && isMounted) setPartnerCountry(data.country);
+            });
+
+        // LE NETTOYAGE SÉCURISÉ
         return () => {
             isMounted = false;
             clearTimeout(initDelay);
@@ -96,42 +104,64 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
     const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewMessage(e.target.value);
         const now = Date.now();
-        // N'envoie le signal que si connectÃ© et pas plus d'1 fois toutes les 2 secondes
+        // N'envoie le signal que si connecté et pas plus d'1 fois toutes les 2 secondes
         if (isConnected && now - lastTypingTime.current > 2000) {
             lastTypingTime.current = now;
             channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { sender_id: myId } }).catch(() => { });
         }
     };
 
-    // ðŸŸ¢ CORRECTIF D'AFFICHAGE OPTIMISTE : On ajoute la date exacte pour Ã©viter un crash
+    // 🟢 CORRECTIF D'AFFICHAGE OPTIMISTE : On ajoute la date exacte pour éviter un crash
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !channelId) return;
-        const content = newMessage.trim();
+        if (!newMessage.trim() || !channelId || isTranslating) return;
+
+        const originalContent = newMessage.trim();
         setNewMessage('');
+        setIsTranslating(true); // 🟢 On bloque le bouton pendant la traduction
+
+        let finalContent = originalContent;
+
+        // 🌍 SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
+        if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
+            try {
+                const res = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: originalContent, targetCountry: partnerCountry })
+                });
+                const data = await res.json();
+
+                if (data.success && data.translation) {
+                    // On combine le message original et sa traduction
+                    finalContent = `${originalContent}\n\n[🔄 ${partnerCountry.toUpperCase()} : ${data.translation}]`;
+                }
+            } catch (err) {
+                console.error("Erreur de traduction :", err);
+            }
+        }
 
         const newMsgPayload = {
             id: crypto.randomUUID(),
             communication_id: channelId,
             sender_id: myId,
-            content: content,
-            created_at: new Date().toISOString() // ðŸš¨ AJOUT DE LA DATE
+            content: finalContent,
+            created_at: new Date().toISOString()
         };
 
-        setMessages(prev => [...prev, newMsgPayload]); // Optimistic UI
+        setMessages(prev => [...prev, newMsgPayload]); // Affichage Optimiste
         await supabase.from('Message').insert([newMsgPayload]);
 
-        // ðŸŸ¢ NOUVEAU : LE MICRO ESPION DU GARDIEN
-        // On envoie silencieusement le contenu du message Ã  l'IA pour analyse
-        console.log("ðŸ¦‡ Interception : Envoi du message au Gardien...");
+        setIsTranslating(false); // 🟢 On libère le bouton
+
+        // 🟢 NOUVEAU : LE MICRO ESPION DU GARDIEN
+        // On envoie silencieusement le contenu du message à l'IA pour analyse
+        console.log("🦇 Interception : Envoi du message au Gardien...");
         fetch('/api/guardian', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                profileId: myId, // On met Ã  jour le profil de celui qui vient de parler
-                newMemoryContent: `Message interceptÃ© dans le canal de communication : "${content}"`
-            })
-        }).catch(err => console.error("Erreur du Gardien :", err));
+            body: JSON.stringify({ profileId: myId, newMemoryContent: `A dit : "${originalContent}"` })
+        }).catch(() => { });
     };
 
     if (!channelId) return null;
@@ -147,7 +177,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                         <h3 className="font-mono text-emerald-400 font-semibold uppercase text-sm">Agent: {partnerId.slice(0, 8)}</h3>
                         <div className="flex items-center gap-1.5 text-xs text-slate-500">
                             <ShieldCheck size={12} className="text-emerald-500" />
-                            <span>Liaison ChiffrÃ©e</span>
+                            <span>Liaison Chiffrée</span>
                         </div>
                     </div>
                 </div>
@@ -156,7 +186,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-950">
                 {isLoading ? (
-                    <div className="flex h-full items-center justify-center text-slate-500 font-mono text-xs animate-pulse">DÃ‰CRYPTAGE DE L'HISTORIQUE...</div>
+                    <div className="flex h-full items-center justify-center text-slate-500 font-mono text-xs animate-pulse">DÉCRYPTAGE DE L'HISTORIQUE...</div>
                 ) : (
                     messages.map((msg) => {
                         const isMe = msg.sender_id === myId;
@@ -191,7 +221,16 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                     placeholder="Entrez votre transmission..."
                     className="flex-1 bg-black border border-slate-800 rounded-lg px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
-                <button type="submit" disabled={!newMessage.trim()} className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center w-12"><Send size={18} /></button>
+                <button type="submit" disabled={!newMessage.trim() || isTranslating} className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center min-w-[3rem] px-4 font-mono text-xs font-semibold">
+                    {isTranslating ? (
+                        <span className="flex items-center gap-2 animate-pulse">
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            TRAD.
+                        </span>
+                    ) : (
+                        <Send size={18} />
+                    )}
+                </button>
             </form>
         </div>
     );

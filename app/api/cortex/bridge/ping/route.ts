@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     const body = await req.json();
-    console.log("ðŸ“¦ DEBUG PING REÃ‡U:", body); // <--- DEBUG LOG
+    console.log("ðŸ“¦ DEBUG PING REÇU:", body); // <--- DEBUG LOG
 
     const { requesterId, providerId, topic } = body;
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
         console.log(`ðŸ“Š PING SCORE: ${matchPercentage}% pour le sujet "${topic}"`);
 
-        // 3. InsÃ©rer la demande dans la table "AccessRequest"
+        // 3. Insérer la demande dans la table "AccessRequest"
         const { data, error } = await supabase
             .from('AccessRequest')
             .insert([{

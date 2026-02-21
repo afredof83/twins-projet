@@ -48,7 +48,7 @@ export default function BlockedPage() {
                         </button>
                     </div>
                 )) : (
-                    <div className="text-slate-600 text-sm italic">Aucun Agent IA bloquÃ©.</div>
+                    <div className="text-slate-600 text-sm italic">Aucun Agent IA bloqué.</div>
                 )}
             </div>
         </main>

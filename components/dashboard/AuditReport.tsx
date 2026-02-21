@@ -5,7 +5,7 @@
 
             <div className="space-y-6 flex-1">
                 <section>
-                    <h3 className="text-white font-bold mb-2">OpportunitÃ©s DÃ©tectÃ©es</h3>
+                    <h3 className="text-white font-bold mb-2">Opportunités Détectées</h3>
                     <ul className="text-sm text-slate-300 list-disc pl-4 space-y-1">
                         {data.opportunities && data.opportunities.map((opp: string, i: number) => (
                             <li key={i}>{opp}</li>
@@ -13,7 +13,7 @@
                         {!data.opportunities && (
                             <>
                                 <li>Potentiel partenaire technique (React/Node)</li>
-                                <li>IntÃ©rÃªt commun: Cyber-sÃ©curitÃ©</li>
+                                <li>Intérêt commun: Cyber-sécurité</li>
                                 <li>Localisation compatible</li>
                             </>
                         )}
@@ -22,7 +22,7 @@
 
                 <section>
                     <h3 className="text-white font-bold mb-2">Risques / Divergences</h3>
-                    <p className="text-sm text-slate-400">Aucune divergence critique dÃ©tectÃ©e. Profil stable.</p>
+                    <p className="text-sm text-slate-400">Aucune divergence critique détectée. Profil stable.</p>
                 </section>
             </div>
 

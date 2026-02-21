@@ -1,7 +1,7 @@
 ﻿'use client';
 import { ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
 
-// L'unique fenÃªtre entre toi et l'autonomie de ton Agent IA
+// L'unique fenêtre entre toi et l'autonomie de ton Agent IA
 export default function GuardianIntervention({ intervention, onDismiss }: { intervention: any, onDismiss: () => void }) {
     if (!intervention) return null;
 

@@ -11,9 +11,9 @@ export async function POST(req: Request) {
     try {
         const { url, profileId, category } = await req.json();
 
-        console.log(`ðŸ§  [CORTEX] Ingestion lancÃ©e pour : ${url}`);
+        console.log(`🧠 [CORTEX] Ingestion lancée pour : ${url}`);
 
-        // Ajout d'une vÃ©rification basique de l'URL
+        // Ajout d'une vérification basique de l'URL
         if (!url) throw new Error("URL manquante");
 
         // 1. SCRAPING (L'Å“il)
@@ -26,18 +26,18 @@ export async function POST(req: Request) {
         $('script, style, nav, footer, iframe, noscript, header').remove();
         let cleanText = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // On garde les 6000 premiers caractÃ¨res pour le rÃ©sumÃ©
+        // On garde les 6000 premiers caractères pour le résumé
         const textToProcess = cleanText.substring(0, 6000);
 
-        // 2. SYNTHÃˆSE (L'Esprit) - On demande Ã  Mistral de structurer la data
+        // 2. SYNTHÈSE (L'Esprit) - On demande à Mistral de structurer la data
         const summaryResponse = await mistral.chat.complete({
             model: "mistral-large-latest",
             messages: [{
                 role: "user",
-                content: `Analyse ce contenu web et extrais les points stratÃ©giques clÃ©s pour FrÃ©dÃ©ric Rey (Projet Twins/FisherMade).
+                content: `Analyse ce contenu web et extrais les points stratégiques clés pour Frédéric Rey (Projet Twins/FisherMade).
         Contenu : ${textToProcess}
         
-        Format attendu : RÃ©sumÃ© dense des faits, chiffres clÃ©s, noms de produits, technologies.`
+        Format attendu : Résumé dense des faits, chiffres clés, noms de produits, technologies.`
             }]
         });
 
@@ -50,11 +50,11 @@ export async function POST(req: Request) {
         });
         const vector = embeddingResponse.data[0].embedding;
 
-        // 4. STOCKAGE (La MÃ©moire)
+        // 4. STOCKAGE (La Mémoire)
         const { error } = await supabase.from('Memory').insert({
             profileId,
-            content: `[INGESTION WEB] Source: ${url}\nCatÃ©gorie: ${category}\n\n${summary}`,
-            type: 'knowledge', // On utilise un type spÃ©cifique
+            content: `[INGESTION WEB] Source: ${url}\nCatégorie: ${category}\n\n${summary}`,
+            type: 'knowledge', // On utilise un type spécifique
             source: 'web_ingest',
             embedding: vector,
             createdAt: new Date().toISOString()

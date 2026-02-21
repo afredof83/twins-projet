@@ -17,7 +17,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "L'identifiant est trop court." }, { status: 400 });
         }
 
-        // 2. VÃ©rification existence
+        // 2. Vérification existence
         const { data: existing } = await supabase
             .from('Profile')
             .select('id')
@@ -25,11 +25,11 @@ export async function POST(request: Request) {
             .single();
 
         if (existing) {
-            return NextResponse.json({ error: 'Ce nom de Agent IA est dÃ©jÃ  pris.' }, { status: 409 });
+            return NextResponse.json({ error: 'Ce nom de Agent IA est déjà pris.' }, { status: 409 });
         }
 
-        // 3. CrÃ©ation du Profil avec TOUS les champs de sÃ©curitÃ© requis
-        // On gÃ©nÃ¨re des valeurs "dummy" pour satisfaire les contraintes NOT NULL de la base
+        // 3. Création du Profil avec TOUS les champs de sécurité requis
+        // On génère des valeurs "dummy" pour satisfaire les contraintes NOT NULL de la base
         const { error: insertError } = await supabase
             .from('Profile')
             .insert([
@@ -40,8 +40,8 @@ export async function POST(request: Request) {
                     vectorNamespace: profileId,
                     createdAt: new Date().toISOString(),
 
-                    // --- CORRECTIF SÃ‰CURITÃ‰ ---
-                    // La base exige ces champs, on met des valeurs par dÃ©faut
+                    // --- CORRECTIF SÉCURITÉ ---
+                    // La base exige ces champs, on met des valeurs par défaut
                     saltBase64: "dummy_salt_v2",
                     verifierBase64: "dummy_verifier_v2",
                     encryptionKeyEncrypted: "dummy_key_v2"
@@ -49,15 +49,15 @@ export async function POST(request: Request) {
             ]);
 
         if (insertError) {
-            console.error("Erreur CrÃ©ation:", insertError);
+            console.error("Erreur Création:", insertError);
             return NextResponse.json({ error: insertError.message || "Erreur technique SQL" }, { status: 500 });
         }
 
-        // 4. Initialisation mÃ©moire
+        // 4. Initialisation mémoire
         await supabase.from('Memory').insert([{
             profileId: profileId,
-            content: "SystÃ¨me initialisÃ©.",
-            encryptedContent: "SystÃ¨me initialisÃ©.",
+            content: "Système initialisé.",
+            encryptedContent: "Système initialisé.",
             type: 'system',
             embedding: Array(1024).fill(0)
         }]);

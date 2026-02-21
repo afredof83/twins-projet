@@ -28,13 +28,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Bridge connection failed" }, { status: 500 });
         }
 
-        // 2. SÃ‰CURITÃ‰ : On ne renvoie PAS le contenu, juste le signal d'existence
+        // 2. SÉCURITÉ : On ne renvoie PAS le contenu, juste le signal d'existence
         if (foreignMemories && foreignMemories.length > 0) {
             const bestMatch = foreignMemories[0];
             const similarity = bestMatch.similarity || 0;
             const percentage = Math.round(similarity * 100);
 
-            // SIMULATION PING : Si le match est fort, on prÃ©vient le Provider
+            // SIMULATION PING : Si le match est fort, on prévient le Provider
             if (percentage > 70) {
                 console.log(`ðŸ“¡ PING SENT to Provider ${toProfileId} for topic "${task}" (Match: ${percentage}%)`);
                 // TODO: Appeler ici /api/cortex/bridge/ping REELLEMENT

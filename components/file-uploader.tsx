@@ -12,10 +12,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
     const handleFile = async (file: File) => {
         if (!file) return;
 
-        // VÃ©rification basique (PDF ou TXT)
+        // Vérification basique (PDF ou TXT)
         if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
             setStatus('error');
-            setMessage('Format non supportÃ©. PDF ou TXT uniquement.');
+            setMessage('Format non supporté. PDF ou TXT uniquement.');
             return;
         }
 
@@ -37,10 +37,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
             if (!res.ok) throw new Error(data.error || "Erreur upload");
 
             setStatus('success');
-            setMessage(`Assimilation terminÃ©e ! ${data.chunks} fragments de mÃ©moire crÃ©Ã©s.`);
+            setMessage(`Assimilation terminée ! ${data.chunks} fragments de mémoire créés.`);
             if (onUploadComplete) onUploadComplete();
 
-            // Reset aprÃ¨s 3 secondes
+            // Reset après 3 secondes
             setTimeout(() => {
                 setStatus('idle');
                 setMessage('');
@@ -111,7 +111,7 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
                     <>
                         <AlertCircle className="text-red-500" size={32} />
                         <p className="text-xs text-red-400 font-bold">{message}</p>
-                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">RÃ©essayer</button>
+                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">Réessayer</button>
                     </>
                 )}
             </div>

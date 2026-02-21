@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     if (!profileId) return NextResponse.json({ notifications: [] });
 
-    // On rÃ©cupÃ¨re les 10 derniers messages reÃ§us
+    // On récupère les 10 derniers messages reçus
     const { data: messages, error } = await supabase
         .from('messages')
         .select('*')
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
 
     if (error) return NextResponse.json({ notifications: [] });
 
-    // On renvoie des objets structurÃ©s
+    // On renvoie des objets structurés
     const notifications = messages.map((msg: any) => ({
         id: msg.id,
-        fromId: msg.sender_id, // CRUCIAL pour rÃ©pondre
+        fromId: msg.sender_id, // CRUCIAL pour répondre
         content: msg.content,
         date: msg.created_at,
         type: 'message'

@@ -19,7 +19,7 @@ export async function GET(req: Request) {
             .from('Message')
             .select('id, communication_id, sender_id, content, created_at')
             .eq('communication_id', communicationId)
-            .order('created_at', { ascending: true }); // Du plus ancien au plus rÃ©cent pour le chat
+            .order('created_at', { ascending: true }); // Du plus ancien au plus récent pour le chat
 
         if (error) throw error;
 

@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     try {
         const { negotiationId } = await req.json();
 
-        // 1. RÃ©cupÃ©rer les participants de l'audit
+        // 1. Récupérer les participants de l'audit
         const { data: neg, error: negError } = await supabase
             .from('Negotiation')
             .select('initiatorId, receiverId')
@@ -16,25 +16,25 @@ export async function POST(req: Request) {
 
         if (negError || !neg) throw new Error("Audit introuvable");
 
-        // 2. CrÃ©er le Canal (Liaison officielle)
+        // 2. Créer le Canal (Liaison officielle)
         // On utilise les colonnes exactes : member_one_id, member_two_id
         const { error: channelError } = await supabase
             .from('Channel')
             .insert([{
                 member_one_id: neg.initiatorId,
                 member_two_id: neg.receiverId,
-                topic: "Liaison Technique ValidÃ©e",
+                topic: "Liaison Technique Validée",
                 last_message_at: new Date().toISOString(),
-                initiatorId: neg.initiatorId, // <--- ON ENREGISTRE QUI A LANCÃ‰ L'AUDIT
+                initiatorId: neg.initiatorId, // <--- ON ENREGISTRE QUI A LANCÉ L'AUDIT
             }]);
 
         if (channelError) {
-            // Si le canal existe dÃ©jÃ  (contrainte unique), on ignore l'erreur
-            // Note: Supabase retournera 23505 si une contrainte unique est violÃ©e
+            // Si le canal existe déjà (contrainte unique), on ignore l'erreur
+            // Note: Supabase retournera 23505 si une contrainte unique est violée
             if (channelError.code !== '23505') {
-                console.warn("Erreur crÃ©ation canal (peut-Ãªtre dÃ©jÃ  existant):", channelError.message);
+                console.warn("Erreur création canal (peut-être déjà existant):", channelError.message);
             } else {
-                console.log("Canal dÃ©jÃ  existant, continuation...");
+                console.log("Canal déjà existant, continuation...");
             }
         }
 

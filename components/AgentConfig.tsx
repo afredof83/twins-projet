@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Briefcase, Heart, Palmtree, Globe, Save } from 'lucide-react'
+import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash } from 'lucide-react'
 
-// Définition de nos questions pour les menus déroulants
 const QUESTIONS = {
     travail: [
         { id: 'secteur', label: 'Secteur d\'activité', options: ['Technologie', 'Commerce', 'Artisanat', 'Santé', 'Autre (préciser)'] },
@@ -20,118 +19,131 @@ const QUESTIONS = {
 };
 
 export default function AgentConfig({ profileId, initialData }: { profileId: string, initialData?: any }) {
-    const [activeTab, setActiveTab] = useState('travail');
+    // ÉTATS MODULE 1 (Général)
+    const [age, setAge] = useState<string | number>(initialData?.age || '');
+    const [gender, setGender] = useState(initialData?.gender || '');
     const [country, setCountry] = useState(initialData?.country || '');
+
+    // ÉTATS MODULE 2 (Thématique)
+    const [activeTab, setActiveTab] = useState('travail');
     const [formData, setFormData] = useState<any>(initialData?.thematicProfile || {});
 
-    // Gère la sélection dans le menu déroulant ET le champ texte manuel
-    const handleChange = (tab: string, questionId: string, value: string) => {
+    const handleThematicChange = (tab: string, questionId: string, value: string) => {
         setFormData((prev: any) => ({
             ...prev,
-            [tab]: {
-                ...prev[tab],
-                [questionId]: value
-            }
+            [tab]: { ...prev[tab], [questionId]: value }
         }));
     };
 
     const handleSave = async () => {
-        console.log("💾 Sauvegarde de la matrice :", { country, thematicProfile: formData });
-
-        // 🟢 NOUVEAU : On envoie les données à l'API !
         try {
             const res = await fetch('/api/agent/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profileId, country, thematicProfile: formData })
+                body: JSON.stringify({ profileId, country, age, gender, thematicProfile: formData })
             });
             const data = await res.json();
-
-            if (data.success) {
-                alert("Agent IA configuré avec succès !"); // Ou une jolie notification
-            } else {
-                alert("Erreur lors de la sauvegarde.");
-            }
+            if (data.success) alert("ADN de l'Agent sauvegardé avec succès !");
+            else alert("Erreur lors de la sauvegarde.");
         } catch (error) {
             console.error(error);
         }
     };
 
     return (
-        <div className="bg-gray-900 text-white p-6 rounded-lg border border-gray-700 max-w-2xl w-full">
-            <div className="flex items-center justify-between mb-6 border-b border-gray-700 pb-4">
-                <h2 className="text-2xl font-bold text-blue-400">CONFIGURATION DE L'AGENT IA</h2>
+        <div className="max-w-3xl w-full mx-auto space-y-6">
 
-                {/* PARAMÈTRE GÉOGRAPHIQUE GLOBAL */}
-                <div className="flex items-center space-x-2 bg-gray-800 p-2 rounded">
-                    <Globe size={18} className="text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Pays de l'Agent..."
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className="bg-transparent text-sm focus:outline-none w-32"
-                    />
+            {/* 🟦 MODULE 1 : IDENTITÉ GÉNÉRALE */}
+            <div className="bg-gray-900 text-white p-6 rounded-lg border border-gray-700 shadow-lg">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
+                    <User className="mr-2 text-blue-400" /> IDENTITÉ GÉNÉRALE
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col space-y-1">
+                        <label className="text-sm font-semibold text-gray-400 flex items-center"><Hash size={14} className="mr-1" /> Âge</label>
+                        <input type="number" min="18" max="120" value={age} onChange={(e) => setAge(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none" placeholder="Ex: 35" />
+                    </div>
+
+                    <div className="flex flex-col space-y-1">
+                        <label className="text-sm font-semibold text-gray-400 flex items-center"><User size={14} className="mr-1" /> Genre</label>
+                        <select value={gender} onChange={(e) => setGender(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none">
+                            <option value="">Sélectionner...</option>
+                            <option value="Homme">Homme</option>
+                            <option value="Femme">Femme</option>
+                            <option value="Non-binaire">Non-binaire</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col space-y-1">
+                        <label className="text-sm font-semibold text-gray-400 flex items-center"><Globe size={14} className="mr-1" /> Pays (Langue)</label>
+                        <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none" placeholder="Ex: France, Japon..." />
+                    </div>
                 </div>
             </div>
 
-            {/* LES ONGLETS (Préparation au Paywall) */}
-            <div className="flex space-x-2 mb-6">
-                <button onClick={() => setActiveTab('travail')} className={`flex items-center px-4 py-2 rounded-t-lg transition ${activeTab === 'travail' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
-                    <Briefcase size={16} className="mr-2" /> Travail
-                </button>
-                <button onClick={() => setActiveTab('rencontre')} className={`flex items-center px-4 py-2 rounded-t-lg transition ${activeTab === 'rencontre' ? 'bg-pink-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
-                    <Heart size={16} className="mr-2" /> Rencontre
-                </button>
-                <button onClick={() => setActiveTab('loisirs')} className={`flex items-center px-4 py-2 rounded-t-lg transition ${activeTab === 'loisirs' ? 'bg-green-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
-                    <Palmtree size={16} className="mr-2" /> Loisirs
-                </button>
+            {/* 🟪 MODULE 2 : MATRICE THÉMATIQUE */}
+            <div className="bg-gray-900 text-white p-6 rounded-lg border border-purple-900/50 shadow-lg relative overflow-hidden">
+                {/* Petit badge "PREMIUM" pour préparer visuellement l'arrivée de Stripe */}
+                <div className="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">MODULE AVANCÉ</div>
+
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
+                    <Briefcase className="mr-2 text-purple-400" /> MATRICE PSYCHOLOGIQUE
+                </h2>
+
+                <div className="flex space-x-2 mb-4 overflow-x-auto">
+                    <button onClick={() => setActiveTab('travail')} className={`flex items-center px-4 py-2 rounded transition whitespace-nowrap ${activeTab === 'travail' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
+                        <Briefcase size={16} className="mr-2" /> Travail
+                    </button>
+                    <button onClick={() => setActiveTab('rencontre')} className={`flex items-center px-4 py-2 rounded transition whitespace-nowrap ${activeTab === 'rencontre' ? 'bg-pink-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
+                        <Heart size={16} className="mr-2" /> Rencontre
+                    </button>
+                    <button onClick={() => setActiveTab('loisirs')} className={`flex items-center px-4 py-2 rounded transition whitespace-nowrap ${activeTab === 'loisirs' ? 'bg-green-600' : 'bg-gray-800 hover:bg-gray-700'}`}>
+                        <Palmtree size={16} className="mr-2" /> Loisirs
+                    </button>
+                </div>
+
+                <div className="space-y-4 bg-gray-800 p-4 rounded border border-gray-700">
+                    {QUESTIONS[activeTab as keyof typeof QUESTIONS].map((q) => {
+                        const currentValue = formData[activeTab]?.[q.id] || '';
+                        const isCustom = currentValue.startsWith('CUSTOM:');
+                        const displayValue = isCustom ? 'Autre (préciser)' : currentValue;
+
+                        return (
+                            <div key={q.id} className="flex flex-col space-y-2">
+                                <label className="text-sm font-semibold text-gray-300">{q.label}</label>
+                                <select
+                                    value={displayValue}
+                                    onChange={(e) => {
+                                        if (e.target.value === 'Autre (préciser)') handleThematicChange(activeTab, q.id, 'CUSTOM:');
+                                        else handleThematicChange(activeTab, q.id, e.target.value);
+                                    }}
+                                    className="bg-gray-900 border border-gray-600 rounded p-2 text-sm focus:border-purple-500 outline-none"
+                                >
+                                    <option value="" disabled>Sélectionner...</option>
+                                    {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                </select>
+
+                                {isCustom && (
+                                    <input
+                                        type="text"
+                                        placeholder="Précisez votre choix..."
+                                        value={currentValue.replace('CUSTOM:', '')}
+                                        onChange={(e) => handleThematicChange(activeTab, q.id, `CUSTOM:${e.target.value}`)}
+                                        className="bg-gray-700 border border-gray-500 rounded p-2 text-sm mt-2 focus:border-purple-500 outline-none"
+                                        autoFocus
+                                    />
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* LE FORMULAIRE DYNAMIQUE DE L'ONGLET ACTIF */}
-            <div className="space-y-4 bg-gray-800 p-4 rounded-b-lg rounded-tr-lg border border-gray-700">
-                {QUESTIONS[activeTab as keyof typeof QUESTIONS].map((q) => {
-                    const currentValue = formData[activeTab]?.[q.id] || '';
-                    const isCustom = currentValue.startsWith('CUSTOM:');
-                    const displayValue = isCustom ? 'Autre (préciser)' : currentValue;
-
-                    return (
-                        <div key={q.id} className="flex flex-col space-y-2">
-                            <label className="text-sm font-semibold text-gray-300">{q.label}</label>
-
-                            <select
-                                value={displayValue}
-                                onChange={(e) => {
-                                    if (e.target.value === 'Autre (préciser)') {
-                                        handleChange(activeTab, q.id, 'CUSTOM:');
-                                    } else {
-                                        handleChange(activeTab, q.id, e.target.value);
-                                    }
-                                }}
-                                className="bg-gray-900 border border-gray-600 rounded p-2 text-sm focus:border-blue-500"
-                            >
-                                <option value="" disabled>Sélectionner...</option>
-                                {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-
-                            {/* LE CHAMP MANUEL SI "AUTRE" EST SÉLECTIONNÉ */}
-                            {isCustom && (
-                                <input
-                                    type="text"
-                                    placeholder="Précisez votre choix..."
-                                    value={currentValue.replace('CUSTOM:', '')}
-                                    onChange={(e) => handleChange(activeTab, q.id, `CUSTOM:${e.target.value}`)}
-                                    className="bg-gray-700 border border-gray-500 rounded p-2 text-sm mt-2 focus:border-blue-500"
-                                    autoFocus
-                                />
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            <button onClick={handleSave} className="mt-6 w-full flex items-center justify-center bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-                <Save className="mr-2" size={20} /> ENREGISTRER L'ADN DE L'AGENT
+            {/* BOUTON GLOBAL DE SAUVEGARDE */}
+            <button onClick={handleSave} className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-500 py-4 rounded-lg font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.4)] text-lg">
+                <Save className="mr-2" size={24} /> SAUVEGARDER L'ADN DE L'AGENT
             </button>
         </div>
     );

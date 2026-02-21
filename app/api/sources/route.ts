@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
                         lastSync: new Date(),
                     },
                 });
-                console.log(`âœ… Data source ${platform} connected`);
+                console.log(`✅ Data source ${platform} connected`);
             } catch (err) {
                 console.error('Error updating source after sync:', err);
             }

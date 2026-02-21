@@ -1,4 +1,4 @@
-﻿import { prisma } from '@/lib/prisma'; // VÃ©rifie que ce chemin est correct vers ton client prisma
+﻿import { prisma } from '@/lib/prisma'; // Vérifie que ce chemin est correct vers ton client prisma
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     if (!pid) return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
 
     try {
-        // Prisma gÃ¨re automatiquement la casse (profileId)
+        // Prisma gère automatiquement la casse (profileId)
         const memories = await prisma.memory.findMany({
             where: {
                 profileId: pid

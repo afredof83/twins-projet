@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     try {
         const { profileId } = await req.json();
 
-        // Le Gardien rÃ©flÃ©chit...
+        // Le Gardien réfléchit...
         const insight = await guardianSelfReflection(profileId);
 
         return NextResponse.json({ insight });

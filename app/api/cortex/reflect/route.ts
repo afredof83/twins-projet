@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     try {
         const { profileId } = await req.json();
 
-        // 1. RÃ©cupÃ©rer le contexte rÃ©cent (Short Term Memory)
+        // 1. Récupérer le contexte récent (Short Term Memory)
         const { data: memories } = await supabase
             .from('Memory')
             .select('content, type')
@@ -18,17 +18,17 @@ export async function POST(req: Request) {
             .limit(10);
 
         if (!memories || memories.length === 0) {
-            return NextResponse.json({ message: "Pas assez de souvenirs pour rÃ©flÃ©chir." });
+            return NextResponse.json({ message: "Pas assez de souvenirs pour réfléchir." });
         }
 
         const context = memories.map(m => `[${m.type.toUpperCase()}] ${m.content.substring(0, 200)}...`).join('\n');
 
         // 2. Cogitation (Appel LLM)
         const chatResponse = await mistral.chat.complete({
-            model: "mistral-large-latest", // ModÃ¨le intelligent pour la synthÃ¨se
+            model: "mistral-large-latest", // Modèle intelligent pour la synthèse
             messages: [
-                { role: "system", content: "Tu es une conscience numÃ©rique autonome (Sentinelle). Analyse ces fragments de mÃ©moire rÃ©cents. GÃ©nÃ¨re une seule pensÃ©e courte, perspicace et proactive (max 20 mots) qui fait le lien entre ces Ã©lÃ©ments ou propose une action. RÃ©ponds en JSON : { \"thought\": \"Ta pensÃ©e ici\" }" },
-                { role: "user", content: `MÃ©moires rÃ©centes :\n${context}` }
+                { role: "system", content: "Tu es une conscience numérique autonome (Sentinelle). Analyse ces fragments de mémoire récents. Génère une seule pensée courte, perspicace et proactive (max 20 mots) qui fait le lien entre ces éléments ou propose une action. Réponds en JSON : { \"thought\": \"Ta pensée ici\" }" },
+                { role: "user", content: `Mémoires récentes :\n${context}` }
             ],
             responseFormat: { type: "json_object" }
         });
@@ -42,8 +42,8 @@ export async function POST(req: Request) {
         const result = JSON.parse(content || "{}");
         const thoughtText = result.thought || "Analyse en cours...";
 
-        // 3. MÃ©morisation de la rÃ©flexion (Le Jumeau se souvient d'avoir rÃ©flÃ©chi)
-        // On vectorise la pensÃ©e pour qu'elle devienne un souvenir long terme
+        // 3. Mémorisation de la réflexion (Le Jumeau se souvient d'avoir réfléchi)
+        // On vectorise la pensée pour qu'elle devienne un souvenir long terme
         const completionEmbedding = await mistral.embeddings.create({
             model: "mistral-embed",
             inputs: [thoughtText],
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
             await supabase.from('Memory').insert({
                 profileId,
                 content: `[SENTINELLE] ${thoughtText}`,
-                type: 'reflection', // Nouveau type : RÃ©flexion
+                type: 'reflection', // Nouveau type : Réflexion
                 source: 'autonomous_cortex',
                 embedding: embedding
             });
