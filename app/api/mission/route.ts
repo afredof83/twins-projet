@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         if (matches && matches.length > 0) {
             return NextResponse.json({
                 message: `Analyse terminÃ©e. ${matches.length} fragments de mÃ©moire correspondants trouvÃ©s dans votre base.`,
-                candidates: matches.map((m: any) => ({ Agent IAId: "SELF_MEMORY", compatibility: Math.round(m.similarity * 100) }))
+                candidates: matches.map((m: any) => ({ agentId: "SELF_MEMORY", compatibility: Math.round(m.similarity * 100) }))
             });
         }
 
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         return NextResponse.json({
             message: "ðŸ“¡ Scan rÃ©seau Ã©tendu... 1 Cible potentielle dÃ©tectÃ©e dans le secteur 9.",
             candidates: [
-                { Agent IAId: "GHOST_UNIT_7", compatibility: 89 }
+                { agentId: "GHOST_UNIT_7", compatibility: 89 }
             ]
         });
 
