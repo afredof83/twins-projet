@@ -14,6 +14,7 @@ import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
 import SecureChat from '@/components/SecureChat';
+import OpportunityRadar from '@/components/OpportunityRadar';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 
@@ -165,7 +166,7 @@ export default function MissionControl() {
                     const req = payload.new;
                     // ðŸŸ¢ FILTRAGE CÔTÉ CLIENT avec la bonne colonne 'provider_id'
                     if (req.provider_id === profileId) {
-                        console.log("âš¡ Nouvelle demande de liaison entrante !");
+                        console.log("⚡ Nouvelle demande de liaison entrante !");
                         fetchAccessRequests(profileId);
                     }
                 }
@@ -648,7 +649,7 @@ export default function MissionControl() {
                         {/* CHARGEMENT AUDIT PROFOND */}
                         {status === 'SCANNING' && basicResult && (
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
-                                <div className="text-4xl animate-spin mb-4">âš™ï¸</div>
+                                <div className="text-4xl animate-spin mb-4">⚙️</div>
                                 <p className="text-amber-400 font-mono text-sm tracking-widest">EXTRACTION PROFONDE...</p>
                             </div>
                         )}
@@ -757,6 +758,9 @@ export default function MissionControl() {
                             </div>
                         )}
                     </div>
+
+                    {/* INTERCEPTIONS RÉSEAU (Opportunity Radar) */}
+                    {profileId && <OpportunityRadar profileId={profileId} />}
 
                     {/* Active Channels List */}
                     <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 min-h-[120px]">

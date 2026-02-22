@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
         if (foundUrls && foundUrls.length > 0) {
             const targetUrl = foundUrls[0];
-            console.log("ðŸ”— Lien détecté, activation du Web Reader sur :", targetUrl);
+            console.log("🔗 Lien détecté, activation du Web Reader sur :", targetUrl);
 
             // Le Agent IA va lire le site
             const siteContent = await readUrlContent(targetUrl);
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
                 const functionName = toolCall.function.name;
                 const functionArgs = JSON.parse(toolCall.function.arguments);
 
-                console.log(`âš—ï¸ [ALCHIMISTE] Activation : ${functionName}`, functionArgs);
+                console.log(`⚗️ [ALCHIMISTE] Activation : ${functionName}`, functionArgs);
 
                 let toolResult = "";
 
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
                     // On s'assure que le résultat est bien une string JSON (Vital pour Mistral)
                     toolResult = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
                 } catch (e: any) {
-                    console.error(`âŒ Erreur outil ${functionName}:`, e);
+                    console.error(`❌ Erreur outil ${functionName}:`, e);
                     toolResult = JSON.stringify({ error: `Echec de l'outil: ${e.message}` });
                 }
 
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
 
             // --- BLINDAGE FINAL ---
             if (!finalData.choices || !finalData.choices.length) {
-                console.error("âŒ ERREUR MISTRAL (2ème passe) :", JSON.stringify(finalData, null, 2));
+                console.error("❌ ERREUR MISTRAL (2ème passe) :", JSON.stringify(finalData, null, 2));
                 finalReply = "L'Oracle a effectué le calcul, mais la vision s'est troublée au moment de la restitution. (Erreur API: Voir logs serveur)";
             } else {
                 finalReply = finalData.choices[0].message.content;

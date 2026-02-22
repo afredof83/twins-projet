@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash } from 'lucide-react'
 
 const QUESTIONS = {
@@ -27,6 +27,30 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
     // ÉTATS MODULE 2 (Thématique)
     const [activeTab, setActiveTab] = useState('travail');
     const [formData, setFormData] = useState<any>(initialData?.thematicProfile || {});
+
+    // 🟢 NOUVEAU : Chargement de la mémoire au démarrage
+    useEffect(() => {
+        const fetchAgentMemory = async () => {
+            if (!profileId) return;
+            try {
+                const res = await fetch(`/api/agent/get?profileId=${profileId}`);
+                const data = await res.json();
+
+                if (data.success && data.profile) {
+                    console.log("📥 [AGENT IA] Mémoire restaurée :", data.profile);
+                    setAge(data.profile.age || '');
+                    setGender(data.profile.gender || '');
+                    setCountry(data.profile.country || '');
+                    setFormData(data.profile.thematicProfile || {});
+                }
+            } catch (err) {
+                console.error("❌ Erreur de restauration de mémoire :", err);
+            }
+        };
+
+        fetchAgentMemory();
+    }, [profileId]); // Se déclenche à chaque fois que le profileId est détecté
+
 
     const handleThematicChange = (tab: string, questionId: string, value: string) => {
         setFormData((prev: any) => ({

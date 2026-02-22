@@ -20,6 +20,7 @@ model Profile {
   hobbies                 String[]
   objectives              String[] // Ex: ["Travail", "Rencontres"]
   unifiedAnalysis         String?  @db.Text
+  opportunities           Opportunity[]
   
   // 🟢 NOUVEAUX PARAMÈTRES AGENT IA
   country                 String?  @db.Text
@@ -194,5 +195,19 @@ model NetworkEntity {
   reasoning   String?
   status      String?  @default("DETECTED")
   profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// 🟢 MODULE ÉCLAIREUR WEB : Le journal des interceptions
+model Opportunity {
+  id          String   @id @default(uuid())
+  profileId   String   // L'ID de l'Agent IA qui a fait la recherche
+  title       String   @db.Text // Le titre de la trouvaille
+  sourceUrl   String   @db.Text // Le lien vers le site web
+  reasoning   String   @db.Text // Pourquoi l'IA pense que c'est pertinent
+  priority    Int      // Score d'importance de 1 à 10
+  createdAt   DateTime @default(now())
+
+  // Relation avec le profil de l'Agent
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

@@ -376,7 +376,7 @@ function CortexManager() {
                                     </p>
                                     <p className="text-xs text-slate-500 text-center">
                                         Glissez-déposez ou cliquez pour sélectionner<br />
-                                        <span className="text-slate-600">PDF Â· TXT Â· CSV Â· DOCX Â· MD Â· JSON</span>
+                                        <span className="text-slate-600">PDF · TXT · CSV · DOCX · MD · JSON</span>
                                     </p>
 
                                     {isDragging && (
