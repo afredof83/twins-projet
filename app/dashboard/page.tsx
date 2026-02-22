@@ -839,30 +839,7 @@ export default function MissionControl() {
                     </form>
 
                 </main>
-
-                {/* Bottom Navigation Dock */}
-                <div className="absolute bottom-6 left-4 right-4 z-50 pb-[env(safe-area-inset-bottom)]">
-                    <div className="glass-panel rounded-2xl p-2 flex items-center justify-between shadow-2xl bg-black/90">
-                        <button onClick={() => setShowBlockPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-1 group active:scale-95">
-                            <div className="w-10 h-10 rounded-xl bg-transparent group-hover:bg-red-500/20 flex items-center justify-center text-gray-400 group-hover:text-red-500 transition-all">
-                                <ShieldX size={20} />
-                            </div>
-                        </button>
-
-                        <button onClick={triggerManualScan} className="flex items-center justify-center -mt-8 mx-2 group" disabled={isAnalyzing}>
-                            <div className="w-16 h-16 rounded-full bg-surface-dark border border-primary/50 shadow-[0_0_20px_rgba(19,200,236,0.3)] flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform">
-                                <Radar className={`relative z-10 ${(status === 'SCANNING' || isAnalyzing) ? 'text-accent-amber' : 'text-primary'}`} size={28} />
-                            </div>
-                        </button>
-
-                        <button onClick={() => setShowCortexPanel(true)} className="flex-1 flex flex-col items-center gap-1 py-1 group active:scale-95">
-                            <div className="w-10 h-10 rounded-xl bg-transparent group-hover:bg-primary/20 flex items-center justify-center text-gray-400 group-hover:text-primary transition-all">
-                                <BrainCircuit size={20} />
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div >
+            </div>
 
             {/* SECURE CHAT OVERLAY */}
             {isChatOpen && chatPartnerId && profileId && activeChannelId && ( // <-- Ajoutez activeChannelId ici
