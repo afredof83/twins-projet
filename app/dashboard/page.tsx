@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2 } from 'lucide-react';
+import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2, Flame } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 // Components
@@ -620,7 +620,7 @@ export default function MissionControl() {
                                             onClick={triggerDeepAudit}
                                             className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 text-sm"
                                         >
-                                            <span>ðŸ‘ï¸</span> AUDIT PROFOND
+                                            <Flame className="mr-2 inline-block" size={20} /> AUDIT PROFOND
                                         </button>
                                         <button
                                             onClick={() => { setStatus('IDLE'); setBasicResult(null); }}

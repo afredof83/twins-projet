@@ -1,7 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import BottomNav from '@/components/nav-bar';
-
+import TopNav from '@/components/TopNav';
 export const runtime = 'nodejs'; // On force la stabilité
 
 export const metadata: Metadata = {
@@ -36,8 +35,8 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>
       <body className="bg-background-dark text-slate-300 antialiased overflow-hidden">
+        <TopNav />
         {children}
-        <BottomNav />
       </body>
     </html>
   );
