@@ -23,9 +23,11 @@ model Profile {
   opportunities           Opportunity[]
   
   // 🟢 NOUVEAUX PARAMÈTRES AGENT IA
-  country                 String?  @db.Text
-  age                     Int?      // NOUVEAU : L'âge de l'Agent
-  gender                  String?   @db.Text // NOUVEAU : Le genre de l'Agent
+  country                 String?   @db.Text
+  dateOfBirth             String?   // NOUVEAU: Remplace "age"
+  postalCode              String?   // NOUVEAU: Radar géographique
+  city                    String?   // NOUVEAU: Radar géographique
+  gender                  String?   @db.Text
   thematicProfile         Json?
   // -----------------------
   

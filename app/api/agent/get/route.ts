@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     try {
         const profile = await prisma.profile.findUnique({
             where: { id: profileId },
-            select: { age: true, gender: true, country: true, thematicProfile: true }
+            select: { dateOfBirth: true, postalCode: true, city: true, gender: true, country: true, thematicProfile: true, unifiedAnalysis: true }
         });
 
         return NextResponse.json({ success: true, profile });

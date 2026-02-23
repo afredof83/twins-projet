@@ -24,12 +24,13 @@ export async function POST(req: Request) {
         if (!profile) throw new Error("Profil introuvable");
 
         // 2. Le Prompt Tactique pour Mistral
-        const systemPrompt = `Tu es le Gardien Autonome d'un système de renseignement. 
-Ton rôle est de lire une NOUVELLE information sur une cible, et de mettre à jour son profil psychologique/tactique.
+        const systemPrompt = `Tu es le Cortex, l'IA d'analyse d'un Jumeau Numérique personnel. 
+Ton rôle est de lire de nouvelles informations (documents, notes, liens) fournies par l'utilisateur pour mettre à jour son profil professionnel, psychologique et ses valeurs (Ikigai).
 Profil actuel de ${profile.name} : ${profile.unifiedAnalysis || "Aucune analyse préalable."}
-Nouvelle information interceptée : "${newMemoryContent}"
+Nouvelle information ajoutée : "${newMemoryContent}"
 
-Génère une NOUVELLE synthèse (max 3 phrases) qui intègre cette nouvelle information au profil existant. Sois froid, analytique et précis.`;
+Génère une NOUVELLE synthèse (max 3 phrases) qui intègre cette information au profil de manière réaliste et pertinente. 
+RÈGLE ABSOLUE : Si la nouvelle information est un simple mot de salutation ("bonjour"), un test, ou un message vide, conserve la synthèse précédente sans la modifier.`;
 
         // 3. Appel à Mistral AI
         const chatResponse = await mistral.chat.complete({
