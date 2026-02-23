@@ -16,6 +16,7 @@ interface TacticalGlobeProps {
 export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobeProps) {
     const globeEl = useRef<any>(null);
     const [mounted, setMounted] = useState(false);
+    const [isGlobeReady, setIsGlobeReady] = useState(false); // 🟢 L'indicateur de chargement 3D
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
     const arcsData = useMemo(() => [
@@ -33,15 +34,17 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // 🟢 Application des ordres UNIQUEMENT quand le globe a confirmé qu'il est prêt
     useEffect(() => {
-        if (!globeEl.current) return;
+        if (!isGlobeReady || !globeEl.current) return;
+
         const controls = globeEl.current.controls();
         if (!controls) return;
 
         controls.enableZoom = false;
         controls.enablePan = false;
 
-        // Mode logic
+        // Logique de rotation propre
         switch (mode) {
             case 'IDLE':
                 controls.autoRotate = true;
@@ -49,7 +52,7 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
                 break;
             case 'SCANNING':
                 controls.autoRotate = true;
-                controls.autoRotateSpeed = 5.0; // Fast rotation
+                controls.autoRotateSpeed = 5.0; // Rotation rapide
                 break;
             case 'LOCKED':
             case 'AUDIT':
@@ -59,7 +62,7 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
                 }
                 break;
         }
-    }, [mode, targetCoordinates, mounted]);
+    }, [mode, targetCoordinates, isGlobeReady]); // 🟢 React relance l'ordre dès que isGlobeReady passe à true
 
     if (!mounted) return null;
 
@@ -67,6 +70,7 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
         <div className="w-full h-full absolute inset-0 brightness-150 md:brightness-100">
             <Globe
                 ref={globeEl}
+                onGlobeReady={() => setIsGlobeReady(true)} // 🟢 Le signal d'allumage !
                 backgroundColor="rgba(0,0,0,0)"
                 globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
                 bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
