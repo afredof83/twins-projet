@@ -64,7 +64,7 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
     if (!mounted) return null;
 
     return (
-        <div className="w-full h-full absolute inset-0">
+        <div className="w-full h-full absolute inset-0 brightness-150 md:brightness-100">
             <Globe
                 ref={globeEl}
                 backgroundColor="rgba(0,0,0,0)"
@@ -82,7 +82,7 @@ export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobe
                 width={dimensions.width}
                 height={dimensions.height}
             />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-transparent to-black/40"></div>
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/50 md:from-black via-transparent to-black/40 md:to-black/40"></div>
         </div>
     );
 }
