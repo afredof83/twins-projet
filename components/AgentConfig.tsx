@@ -160,7 +160,24 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <User className="mr-2 text-blue-400" /> IDENTITÉ GÉNÉRALE
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* PAYS */}
+                    <div className="flex flex-col space-y-1">
+                        <label className="text-sm font-semibold text-gray-400 flex items-center"><Globe size={14} className="mr-1" /> Pays</label>
+                        <select
+                            value={country || ""}
+                            onChange={(e) => setCountry(e.target.value)}
+                            className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                        >
+                            <option value="">Sélectionner...</option>
+                            <option value="France">France</option>
+                            <option value="Suisse">Suisse</option>
+                            <option value="Belgique">Belgique</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Luxembourg">Luxembourg</option>
+                        </select>
+                    </div>
+
                     {/* NAISSANCE */}
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><Calendar size={14} className="mr-1" /> Naissance</label>

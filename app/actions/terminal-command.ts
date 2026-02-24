@@ -7,7 +7,7 @@ import { createServerClient } from '@supabase/ssr';
 
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-export async function executeTerminalCommand(userId: string, prompt: string) {
+export async function executeTerminalCommand(userId: string, prompt: string): Promise<{ success: boolean; answer?: string; targets?: any[]; error?: string }> {
     if (!prompt) throw new Error("Ordre vide.");
 
     const cookieStore = await cookies();
@@ -82,6 +82,7 @@ export async function executeTerminalCommand(userId: string, prompt: string) {
     - S'il y a des matchs internes, mets-les en priorité absolue.
     - S'il y a des profils externes intéressants, résume-les et donne les liens (URL).
     - Ne génère pas de JSON, réponds en texte formaté clair (Markdown autorisé).
+    IMPORTANT : En plus de ta réponse texte, si tu as trouvé des cibles physiques (internes ou web), retourne un tableau JSON strict contenant leurs coordonnées approximatives à la toute fin de ton message sous le format exact suivant : [TARGETS: [{"name": "Nom", "lat": 34.05, "lng": -118.24}]]. Si aucune cible, ne met pas ce tag.
     `;
 
         const response = await mistral.chat.complete({
@@ -89,7 +90,24 @@ export async function executeTerminalCommand(userId: string, prompt: string) {
             messages: [{ role: "system", content: aiPrompt }]
         });
 
-        return { success: true, answer: response.choices?.[0].message.content };
+        const rawContent = (response.choices?.[0].message.content as string) || "";
+
+        // Extraction balistique du JSON caché
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let extractedTargets: any[] = [];
+        const targetMatch = rawContent.match(/\[TARGETS:\s*(\[.*?\])\]/);
+        if (targetMatch && targetMatch[1]) {
+            try {
+                extractedTargets = JSON.parse(targetMatch[1]);
+            } catch (e) {
+                console.error("Erreur de décodage des coordonnées");
+            }
+        }
+
+        // On nettoie le message pour ne pas afficher le tag [TARGETS: ...] à l'utilisateur
+        const cleanAnswer = rawContent.replace(/\[TARGETS:.*?\]/g, '').trim();
+
+        return { success: true, answer: cleanAnswer, targets: extractedTargets };
 
     } catch (error: any) {
         console.error("[TERMINAL ERROR]", error);

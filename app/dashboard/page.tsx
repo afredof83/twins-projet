@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
 import Scanner from '@/components/dashboard/Scanner';
-import TacticalGlobe from '@/components/Globe';
+import BackgroundGlobe, { TargetNode } from '@/components/Globe';
 import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
@@ -89,6 +89,9 @@ export default function MissionControl() {
     // États scan 2 phases
     const [basicResult, setBasicResult] = useState<any>(null);
     const [deepResult, setDeepResult] = useState<any>(null);
+
+    // Palantir State
+    const [activeTargets, setActiveTargets] = useState<TargetNode[]>([]);
 
     // États Ingestion
     const [isDragging, setIsDragging] = useState(false);
@@ -475,9 +478,8 @@ export default function MissionControl() {
         >
             {/* Background Elements (TACTICAL GLOBE) */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <TacticalGlobe
-                    mode={status === 'LIST' ? 'LOCKED' : status}
-                    targetCoordinates={(status === 'LOCKED' || status === 'LIST') ? [48.8566, 2.3522] : null}
+                <BackgroundGlobe
+                    targets={(status === 'LOCKED' || status === 'LIST') ? [{ lat: 48.8566, lng: 2.3522, name: 'Cible' }] : []}
                 />
             </div>
 
@@ -799,8 +801,24 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* TERMINAL DE COMMANDEMENT UNIFIÉ */}
-                    {profileId && <CommandTerminal userId={profileId} />}
+                    {/* SYSTÈME PALANTIR */}
+                    {profileId && (
+                        <div className="mt-8 space-y-4 relative z-10">
+                            <h2 className="text-sm font-bold text-cyan-500 tracking-widest border-b border-cyan-800/50 pb-2 flex items-center gap-2 uppercase">
+                                <span className="animate-pulse">☄️</span> SYSTÈME PALANTIR
+                            </h2>
+
+                            {/* Nouveau layout : Centré, sans le globe local */}
+                            <div className="flex flex-col items-center w-full max-w-3xl mx-auto gap-4 mt-6">
+
+                                {/* Le Terminal sans surcouche, la transparence sera gérée à l'intérieur */}
+                                <div className="w-full flex flex-col border border-white/10 bg-black/40 backdrop-blur-md rounded-xl h-[500px] font-mono text-sm shadow-[0_0_30px_rgba(0,255,255,0.05)]">
+                                    <CommandTerminal userId={profileId} onTargetsFound={setActiveTargets} />
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
 
                 </main>
             </div>

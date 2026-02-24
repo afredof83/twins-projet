@@ -1,92 +1,94 @@
-﻿'use client';
+﻿'use client'
 
-import { useEffect, useState, useRef, useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
+import createGlobe from 'cobe';
 
-const Globe = dynamic(() => import('react-globe.gl'), {
-    ssr: false,
-    loading: () => <div className="flex items-center justify-center h-full text-cyan-900 animate-pulse text-[10px]">INITIALISATION HOLOGRAMME...</div>
-});
-
-interface TacticalGlobeProps {
-    mode: 'IDLE' | 'SCANNING' | 'LOCKED' | 'AUDIT';
-    targetCoordinates?: [number, number] | null;
+// L'interface pour recevoir les coordonnées de l'IA
+export interface TargetNode {
+    name: string;
+    lat: number;
+    lng: number;
 }
 
-export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobeProps) {
-    const globeEl = useRef<any>(null);
-    const [mounted, setMounted] = useState(false);
-    const [isGlobeReady, setIsGlobeReady] = useState(false); // 🟢 L'indicateur de chargement 3D
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+export default function BackgroundGlobe({ targets = [] }: { targets?: TargetNode[] }) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const arcsData = useMemo(() => [
-        { startLat: 48.8566, startLng: 2.3522, endLat: 40.7128, endLng: -74.0060, color: '#06b6d4' },
-        { startLat: 48.8566, startLng: 2.3522, endLat: 35.6762, endLng: 139.6503, color: '#a855f7' },
-        { startLat: 40.7128, startLng: -74.0060, endLat: 34.0522, endLng: -118.2437, color: '#10b981' }
-    ], []);
+    // Mémoire de la position gyroscopique actuelle
+    const currentPhi = useRef(0);
+    const currentTheta = useRef(0);
 
     useEffect(() => {
-        setMounted(true);
-        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+        if (!canvasRef.current) return;
 
-        const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+        // 1. Calcul de la destination
+        // 1. Calcul de la destination
+        let targetPhi = 0;
+        let targetTheta = 0;
+        let markers: any[] = [];
 
-    // 🟢 Application des ordres UNIQUEMENT quand le globe a confirmé qu'il est prêt
-    useEffect(() => {
-        if (!isGlobeReady || !globeEl.current) return;
+        if (targets.length > 0) {
+            const t = targets[0];
 
-        const controls = globeEl.current.controls();
-        if (!controls) return;
+            // NOUVELLE FORMULE BALISTIQUE : 
+            // Math.PI - (...) permet de centrer parfaitement n'importe quelle coordonnée (Est ou Ouest)
+            targetPhi = Math.PI - (t.lng * Math.PI) / 180;
+            targetTheta = (t.lat * Math.PI) / 180;
 
-        controls.enableZoom = false;
-        controls.enablePan = false;
-
-        // Logique de rotation propre
-        switch (mode) {
-            case 'IDLE':
-                controls.autoRotate = true;
-                controls.autoRotateSpeed = 0.5;
-                break;
-            case 'SCANNING':
-                controls.autoRotate = true;
-                controls.autoRotateSpeed = 5.0; // Rotation rapide
-                break;
-            case 'LOCKED':
-            case 'AUDIT':
-                controls.autoRotate = false;
-                if (targetCoordinates) {
-                    globeEl.current.pointOfView({ lat: targetCoordinates[0], lng: targetCoordinates[1], altitude: 1.5 }, 1000);
-                }
-                break;
+            // TAILLE RÉDUITE (0.05) : Un point précis et chirurgical, parfait pour Toulon
+            markers = [{ location: [t.lat, t.lng], size: 0.05 }];
+        } else {
+            // Si aucune cible, rotation lente sur l'Europe par défaut
+            targetPhi = 4.5;
+            targetTheta = 0.5;
         }
-    }, [mode, targetCoordinates, isGlobeReady]); // 🟢 React relance l'ordre dès que isGlobeReady passe à true
 
-    if (!mounted) return null;
+        // 2. Initialisation de ton design Cobe
+        const globe = createGlobe(canvasRef.current, {
+            devicePixelRatio: 2,
+            width: 920 * 2,  // +15% de résolution
+            height: 920 * 2, // +15% de résolution
+            phi: 0,
+            theta: 0,
+            dark: 1, // Garde tes réglages de couleur ici
+            diffuse: 1.2,
+            mapSamples: 16000,
+            mapBrightness: 6,
+            baseColor: [0.3, 0.3, 0.3],
+            markerColor: [0, 1, 1], // Point de frappe Cyan
+            glowColor: [0.05, 0.05, 0.05],
+            markers: markers,
+
+            // 3. Le Moteur Gyroscopique
+            onRender: (state) => {
+                // Interpolation fluide (Smooth Lerp) : Le globe tourne doucement vers la cible
+                currentPhi.current += (targetPhi - currentPhi.current) * 0.05;
+                currentTheta.current += (targetTheta - currentTheta.current) * 0.05;
+
+                // Si aucune cible, on ajoute une micro-rotation automatique pour qu'il vive
+                if (targets.length === 0) {
+                    targetPhi += 0.002;
+                }
+
+                state.phi = currentPhi.current;
+                state.theta = currentTheta.current;
+            },
+        });
+
+        return () => globe.destroy();
+    }, [targets]);
 
     return (
-        <div className="w-full h-full absolute inset-0 brightness-150 md:brightness-100">
-            <Globe
-                ref={globeEl}
-                onGlobeReady={() => setIsGlobeReady(true)} // 🟢 Le signal d'allumage !
-                backgroundColor="rgba(0,0,0,0)"
-                globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-                atmosphereColor="#22d3ee"
-                atmosphereAltitude={0.25}
-                arcsData={arcsData}
-                arcColor="color"
-                arcDashLength={0.5}
-                arcDashGap={1}
-                arcDashAnimateTime={2000}
-                arcStroke={0.5}
-                width={dimensions.width}
-                height={dimensions.height}
+        // Les classes `flex items-center justify-center` garantissent le centrage absolu
+        <div className="fixed inset-0 w-screen h-screen -z-10 bg-black overflow-hidden flex items-center justify-center pointer-events-none opacity-50">
+            <canvas
+                ref={canvasRef}
+                style={{
+                    width: 920,  // +15% de taille physique
+                    height: 920, // +15% de taille physique
+                    maxWidth: "100%",
+                    aspectRatio: "1/1",
+                }}
             />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/50 md:from-black via-transparent to-black/40 md:to-black/40"></div>
         </div>
     );
 }
