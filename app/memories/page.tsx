@@ -9,6 +9,8 @@ import {
     CheckCircle2, AlertTriangle, Wifi
 } from 'lucide-react';
 
+import { autoIngestProfile } from '@/app/actions/auto-ingest-profile';
+
 // â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Memory {
     id: string;
@@ -53,6 +55,14 @@ function CortexManager() {
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // Nouveaux States pour l'Assimilation Rapide (Profil)
+    const [profileRawData, setProfileRawData] = useState('');
+    const [isAssimilating, setIsAssimilating] = useState(false);
+
+    // Nouveaux States pour la Pensée Rapide (Mémoire)
+    const [quickThought, setQuickThought] = useState('');
+    const [isSavingThought, setIsSavingThought] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
@@ -275,6 +285,67 @@ function CortexManager() {
     };
 
     // â”€â”€ Loading state â”€â”€
+    // --- Fonction 1 : Assimilation de l'Identité ---
+    const handleProfileAssimilation = async () => {
+        if (!profileId || !profileRawData.trim()) return;
+        setIsAssimilating(true);
+        addLog('[MATRICE] Injection des données brutes en cours...', 'info');
+        try {
+            const result = await autoIngestProfile(profileId, profileRawData);
+            if (result?.success) {
+                addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
+                setProfileRawData('');
+            } else {
+                addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
+            }
+        } catch (e: any) {
+            addLog("[CRITIQUE] Impossible de contacter le centre d'assimilation.", 'error');
+        } finally {
+            setIsAssimilating(false);
+        }
+    };
+
+    // --- Fonction 2 : Pensée Rapide (Ex-Dashboard) ---
+    const handleQuickThought = async () => {
+        if (!quickThought.trim() || !profileId) return;
+        setIsSavingThought(true);
+
+        // ✅ Filtre anti-corruption : suppression des null bytes
+        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
+        addLog('[CORTEX] Archivage de la pensée rapide...', 'info');
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                addLog('[CRITIQUE] Session expirée.', 'error');
+                return;
+            }
+
+            const res = await fetch('/api/memories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    content: cleanThought,
+                    profileId: session.user.id,
+                    type: 'thought',
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            setQuickThought('');
+            addLog('[SUCCÈS] Pensée enregistrée dans le Cortex.', 'success');
+            fetchMemories();
+        } catch (err: any) {
+            addLog(`[CRITIQUE] ${err.message || 'Échec de transmission.'}`, 'error');
+        } finally {
+            setIsSavingThought(false);
+        }
+    };
+
     if (!profileId) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -320,10 +391,60 @@ function CortexManager() {
                     </button>
                 </header>
 
-                {/* â”€â”€ GRID PRINCIPALE â”€â”€ */}
+                {/* ── NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+
+                    {/* --- SECTEUR 1 : MATRICE (Identité) --- */}
+                    <div className="border border-cyan-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(0,255,255,0.1)] flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 flex items-center text-cyan-400">
+                            <span className="text-2xl mr-2">🧬</span> 1. RECALIBRAGE DE LA MATRICE
+                        </h2>
+                        <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
+                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA écrasera et mettra à jour votre ADN professionnel et psychologique.
+                        </p>
+                        <textarea
+                            className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-cyan-500 focus:outline-none placeholder:text-slate-600"
+                            placeholder="DONNÉES BRUTES (Ex: Copier-coller LinkedIn)..."
+                            value={profileRawData}
+                            onChange={(e) => setProfileRawData(e.target.value)}
+                        />
+                        <button
+                            onClick={handleProfileAssimilation}
+                            disabled={isAssimilating || profileRawData.length < 50}
+                            className="mt-4 w-full bg-cyan-700 hover:bg-cyan-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
+                        >
+                            {isAssimilating ? 'ASSIMILATION NEURALE...' : 'INJECTER DANS LA MATRICE'}
+                        </button>
+                    </div>
+
+                    {/* --- SECTEUR 2 : CORTEX (Mémoire) --- */}
+                    <div className="border border-emerald-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 text-emerald-400 flex items-center">
+                            <span className="text-2xl mr-2">🧠</span> 2. INGESTION MÉMOIRE RAPIDE
+                        </h2>
+                        <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
+                            Ajoutez une note tactique, une idée ou une information isolée que l'Agent doit retenir pour ses futurs scans.
+                        </p>
+                        <textarea
+                            className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-emerald-500 focus:outline-none placeholder:text-slate-600"
+                            placeholder="NOUVELLE PENSÉE / MÉMOIRE..."
+                            value={quickThought}
+                            onChange={(e) => setQuickThought(e.target.value)}
+                        />
+                        <button
+                            onClick={handleQuickThought}
+                            disabled={isSavingThought || quickThought.length < 5}
+                            className="mt-4 w-full bg-emerald-700 hover:bg-emerald-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
+                        >
+                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÉE'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* â”€â”€ COL GAUCHE : ZONE D'INGESTION â”€â”€ */}
+                    {/* ── COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES ── */}
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* DROPZONE */}

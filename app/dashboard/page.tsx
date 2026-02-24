@@ -17,6 +17,8 @@ import SecureChat from '@/components/SecureChat';
 import OpportunityRadar from '@/components/OpportunityRadar';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
+import { TacticalOpenerModule } from '@/components/TacticalOpenerModule';
+import { CommandTerminal } from '@/components/CommandTerminal';
 
 // --- LOGIQUE METIER (INCHANGÉE) ---
 const calculateSynergy = (target: any, memories: any[]) => {
@@ -89,7 +91,6 @@ export default function MissionControl() {
     const [deepResult, setDeepResult] = useState<any>(null);
 
     // États Ingestion
-    const [quickThought, setQuickThought] = useState("");
     const [isDragging, setIsDragging] = useState(false);
 
     const [unreadIds, setUnreadIds] = useState<string[]>([]);
@@ -272,40 +273,7 @@ export default function MissionControl() {
         } catch (err) { addLog(`CRITIQUE: Erreur upload.`); }
     };
 
-    const handleQuickThoughtSubmit = async (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!quickThought.trim() || !profileId) return;
 
-        // ✅ Filtre anti-corruption : suppression des null bytes
-        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
-        setQuickThought('');
-        addLog('MEMOIRE: Archivage...');
-
-        // Récupération du passeport session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('CRITIQUE: Session expirée.'); return; }
-
-        try {
-            const res = await fetch('/api/memories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    content: cleanThought,
-                    profileId: session.user.id,
-                    type: 'thought',
-                }),
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            addLog('SUCCÈS: Pensée synchronisée dans le Cortex.');
-            loadMemories(profileId);
-        } catch (err: any) {
-            addLog(`CRITIQUE: ${err.message || 'Échec de transmission.'}`);
-        }
-    };
     const triggerManualScan = async () => {
         if (!profileId) return;
         setStatus('SCANNING');
@@ -705,14 +673,21 @@ export default function MissionControl() {
                                         </p>
                                     </div>
 
-                                    {/* Commandes Phase 2 */}
-                                    <div className="grid grid-cols-3 gap-2 pt-2">
-                                        <button
-                                            onClick={handleContactTarget}
-                                            className="bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all uppercase tracking-wider text-[11px]"
-                                        >
-                                            💬 Contacter
-                                        </button>
+                                    {/* Apport de l'Opener Tactique (Remplace l'ancien bouton Contacter basique) */}
+                                    <TacticalOpenerModule
+                                        userId={profileId!}
+                                        targetId={deepResult?.targetId || deepResult?.id || deepResult?.profile_id}
+                                        targetClassification={deepResult.targetClassification}
+                                        onSuccess={() => {
+                                            addLog('SUCCÈS: Demande tactique transmise avec succès. En attente de réponse.');
+                                            setStatus('IDLE');
+                                            setBasicResult(null);
+                                            setDeepResult(null);
+                                        }}
+                                    />
+
+                                    {/* Commandes Phase 2 Pures */}
+                                    <div className="grid grid-cols-2 gap-2 pt-2">
                                         <button
                                             onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
                                             className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
@@ -824,19 +799,8 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* Input Pensée Rapide */}
-                    <form onSubmit={handleQuickThoughtSubmit} className="glass-panel rounded-full p-1 flex items-center gap-2 pl-4">
-                        <input
-                            type="text"
-                            value={quickThought}
-                            onChange={e => setQuickThought(e.target.value)}
-                            placeholder="Saisir pensée rapide..."
-                            className="bg-transparent border-none text-base md:text-xs text-white focus:ring-0 flex-1 placeholder:text-gray-600"
-                        />
-                        <button type="submit" className="p-2 bg-primary/20 rounded-full text-primary hover:bg-primary hover:text-black transition-colors active:scale-90">
-                            <Send size={14} />
-                        </button>
-                    </form>
+                    {/* TERMINAL DE COMMANDEMENT UNIFIÉ */}
+                    {profileId && <CommandTerminal userId={profileId} />}
 
                 </main>
             </div>

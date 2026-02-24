@@ -1,13 +1,14 @@
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { myProfileId, targetProfileId } = await req.json();
+
+        const supabase = await createClient();
 
         // 1. RÉCUPÉRATION DES DEUX IDENTITÉS (Leurs bios, leurs buts, leurs mémoires)
         const { data: profiles } = await supabase

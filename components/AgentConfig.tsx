@@ -5,34 +5,21 @@ import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, 
 
 const QUESTIONS = {
     travail: [
-        { id: 'secteur', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
-        { id: 'statut', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
-        { id: 'experience', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
-        { id: 'objectif', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
-        { id: 'environnement', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
+        { id: 'industry', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
+        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
+        { id: 'seniority', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
+        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
+        { id: 'environment', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
     ],
-    rencontre: [
-        { id: 'objectif_rencontre', label: 'Type de relation recherchée', options: ['Relation sérieuse & durable', 'Rencontres amicales / Sorties', 'Aventure / Sans prise de tête', 'Élargir mon cercle professionnel/social', 'Je laisse faire le hasard'] },
-        { id: 'personnalite', label: 'Votre trait de caractère principal', options: ['Extraverti(e) & Sociable', 'Calme & Réfléchi(e)', 'Créatif(ve) & Rêveur(se)', 'Épicurien(ne) & Bon vivant'] },
-        { id: 'style_vie', label: 'Votre rythme de vie', options: ['Très actif / Sportif', 'Casanier / Soirées tranquilles', 'Oiseau de nuit / Sorties régulières', 'Équilibré / Un peu des deux'] },
-        { id: 'criteres_recherche', label: 'Ce qui vous attire le plus', options: ['L\'humour et la complicité', 'L\'ambition et le charisme', 'La douceur et l\'écoute', 'Le partage de passions communes'] },
-        { id: 'first_date', label: 'Premier rendez-vous idéal', options: ['Un verre ou un café en terrasse', 'Une activité insolite / sportive', 'Un dîner romantique', 'Une simple balade en nature'] }
-    ],
-    loisirs: [
-        { id: 'passion_principale', label: 'Centre d\'intérêt majeur', options: ['Sport & Activité physique', 'Art, Culture & Créativité', 'Tech, Gaming & Sciences', 'Nature & Plein air', 'Gastronomie & Épicurisme', 'Autre'] },
-        { id: 'dynamique', label: 'Dynamique sociale préférée', options: ['En solitaire / Bulle personnelle', 'En petit comité (Amis proches)', 'En grand groupe / Événements publics', 'En ligne / Communautés virtuelles'] },
-        { id: 'objectif_loisir', label: 'Objectif de vos activités', options: ['Détente absolue & Déconnexion', 'Apprentissage & Développement personnel', 'Dépassement de soi / Adrénaline', 'Création & Expression artistique'] },
-        { id: 'frequence', label: 'Rythme de pratique', options: ['Quotidiennement (Routine intégrée)', 'Principalement le week-end', 'Quelques fois par mois', 'Par périodes / De manière saisonnière'] },
-        { id: 'weekend_ideal', label: 'Le week-end parfait', options: ['Escapade nature & Randonnée', 'Marathon culturel (Expos, Spectacles)', 'Festif & Gastronomie (Restos, Sorties)', 'Cocooning à la maison (Jeux, Séries, Lecture)'] }
-    ],
+
 
     // 🟢 NOUVEAU BLOC : LA BOUSSOLE MORALE
     ikigai: [
-        { id: 'mission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
-        { id: 'valeurs', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
-        { id: 'lignes_rouges', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
+        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
+        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
+        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
         { id: 'superpouvoir', label: 'Votre "Zone de Génie"', options: ['Vision stratégique & Anticipation', 'Exécution & Résolution de problèmes complexes', 'Communication & Fédérer les humains', 'Analyse & Compréhension technique profonde'] },
-        { id: 'posture_agent', label: 'Ton de votre Jumeau Numérique', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
+        { id: 'socialStyle', label: 'Ton de votre Jumeau Numérique', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
     ]
 };
 
@@ -102,7 +89,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         const fetchAgentMemory = async () => {
             if (!profileId) return;
             try {
-                const res = await fetch(`/api/agent/get?profileId=${profileId}`);
+                const res = await fetch(`/api/agent/get?profileId=${profileId}`, { cache: 'no-store' });
                 const data = await res.json();
 
                 if (data.success && data.profile) {
@@ -111,7 +98,28 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setCity(data.profile.city || '');
                     setGender(data.profile.gender || '');
                     setCountry(data.profile.country || 'France');
-                    setFormData(data.profile.thematicProfile || {});
+
+                    // ✅ Mappage des top-level fields combinés avec ThematicProfile
+                    setFormData({
+                        ...data.profile.thematicProfile,
+                        travail: {
+                            ...data.profile.thematicProfile?.travail,
+                            industry: data.profile.industry || data.profile.thematicProfile?.travail?.industry || '',
+                            seniority: data.profile.seniority || data.profile.thematicProfile?.travail?.seniority || '',
+                            professionalStatus: data.profile.professionalStatus || data.profile.thematicProfile?.travail?.professionalStatus || '',
+                            environment: data.profile.environment || data.profile.thematicProfile?.travail?.environment || '',
+                            objectives: data.profile.objectives?.[0] || data.profile.thematicProfile?.travail?.objectives || '',
+                            precisionsLibres: data.profile.workNuances || data.profile.thematicProfile?.travail?.precisionsLibres || ''
+                        },
+                        ikigai: {
+                            ...data.profile.thematicProfile?.ikigai,
+                            ikigaiMission: data.profile.ikigaiMission || data.profile.thematicProfile?.ikigai?.ikigaiMission || '',
+                            ikigaiValues: data.profile.ikigaiValues?.[0] || data.profile.thematicProfile?.ikigai?.ikigaiValues || '',
+                            dealbreakers: data.profile.dealbreakers?.[0] || data.profile.thematicProfile?.ikigai?.dealbreakers || '',
+                            socialStyle: data.profile.socialStyle || data.profile.thematicProfile?.ikigai?.socialStyle || ''
+                        }
+                    });
+
                     setSynthesis(data.profile.unifiedAnalysis || '');
                 }
             } catch (err) {
@@ -224,12 +232,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <button onClick={() => setActiveTab('travail')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'travail' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Briefcase size={16} className="mr-2" /> Travail
                     </button>
-                    <button onClick={() => setActiveTab('rencontre')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'rencontre' ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-                        <Heart size={16} className="mr-2" /> Rencontre
-                    </button>
-                    <button onClick={() => setActiveTab('loisirs')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'loisirs' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-                        <Palmtree size={16} className="mr-2" /> Loisirs
-                    </button>
+
                     {/* 🟢 NOUVEAU BOUTON IKIGAI */}
                     <button onClick={() => setActiveTab('ikigai')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'ikigai' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Target size={16} className="mr-2" /> Ikigai & Morale

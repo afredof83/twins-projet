@@ -1,12 +1,6 @@
-﻿import { createClient } from '@supabase/supabase-js';
+﻿import { createClient } from '@/lib/supabaseServer';
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
-
-// Client service-role pour les lectures (GET) â€” bypasse RLS
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -14,7 +8,9 @@ export async function GET(req: Request) {
 
     if (!pid) return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
 
-    console.log(`ðŸ” Lecture Memory pour ${pid}`);
+    const supabase = await createClient();
+
+    console.log(`🔍 Lecture Memory pour ${pid}`);
 
     const { data, error } = await supabase
         .from('memory')
@@ -32,6 +28,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient();
         const body = await req.json();
         const { content, profileId, type } = body;
 
@@ -88,18 +85,11 @@ export async function PATCH(req: Request) {
         });
         const newEmbedding = embeddingResponse.data[0]?.embedding;
 
-        // 2. Client BDD blindé avec l'identité de l'utilisateur
-        const supabaseAuth = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: { persistSession: false, autoRefreshToken: false },
-                global: { headers: { Authorization: authHeader } }
-            }
-        );
+        // 2. Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
         // 3. Mise à jour du fragment (contenu + nouveau vecteur)
-        const { error } = await supabaseAuth
+        const { error } = await supabase
             .from('memory')
             .update({ content, embedding: newEmbedding })
             .eq('id', id)
@@ -129,18 +119,11 @@ export async function DELETE(req: Request) {
             return Response.json({ error: "Paramètres invalides (id et profileId requis)." }, { status: 400 });
         }
 
-        // Client BDD blindé avec l'identité de l'utilisateur (RLS actif)
-        const supabaseAuth = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: { persistSession: false, autoRefreshToken: false },
-                global: { headers: { Authorization: authHeader } }
-            }
-        );
+        // Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
         // Ordre de destruction (double sécurité : id ET profile_id)
-        const { data, error } = await supabaseAuth
+        const { data, error } = await supabase
             .from('memory')
             .delete()
             .eq('id', id)

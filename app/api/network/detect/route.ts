@@ -1,16 +1,17 @@
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 import { scanNetworkForAgents } from '@/lib/tools/network-scanner';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { profileId, sector } = await req.json();
 
-        console.log(`ðŸ“¡ [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
+        const supabase = await createClient();
+
+        console.log(`📡 [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
 
         // 1. SCAN INTERNE (Ta Base de Données)
         // On cherche tous les profils SAUF toi-même

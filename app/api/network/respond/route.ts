@@ -1,44 +1,37 @@
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
     try {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-
         const { requestId, requesterId, action } = await req.json();
 
-        // Client utilisateur pour identifier le répondant (via RLS)
-        const supabaseUser = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { global: { headers: { Authorization: authHeader } } }
-        );
+        // Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
-        const { data: { user } } = await supabaseUser.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Non identifié" }, { status: 403 });
 
-        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
+        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
         const currentUserId = user?.id ? String(user.id).trim() : "";
         const targetReqId = requesterId ? String(requesterId).trim() : "";
 
         console.log(`[DEBUG RESPOND] Verif Boucle: Moi('${currentUserId}') vs Requester('${targetReqId}')`);
 
         if (currentUserId === targetReqId) {
-            console.error("[SECURITY BLOCK] ðŸ›‘ BOUCLE TEMPORELLE INTERCEPTÉE !");
+            console.error("[SECURITY BLOCK] 🛑 BOUCLE TEMPORELLE INTERCEPTÉE !");
             return NextResponse.json({ error: "Boucle temporelle détectée : Vous ne pouvez pas vous lier à vous-même." }, { status: 400 });
         }
 
-        // Client service role pour les mutations (contourne RLS sur AccessRequest + Channel)
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-
         if (action === 'accept') {
+            // 0. Récupérer la requête pour lire l'ogive (fullMessage) avant suppression
+            const { data: requestData } = await supabase.from('AccessRequest').select('fullMessage').eq('id', requestId).single();
+            const fullMessage = requestData?.fullMessage;
+
+            const channelId = crypto.randomUUID();
+
             // 1. Créer le canal avec les noms de colonnes réels
             const { error: chanError } = await supabase.from('Channel').insert({
-                id: crypto.randomUUID(),
+                id: channelId,
                 topic: `Liaison Directe : ${user?.id.slice(0, 4)} x ${requesterId.slice(0, 4)}`,
                 member_one_id: user?.id,     // Toi
                 member_two_id: requesterId,  // Lui
@@ -48,8 +41,23 @@ export async function POST(req: Request) {
             if (chanError) {
                 console.error("[ERROR BDD Channel]", chanError);
             } else {
+                // 1.5 Libérer l'ogive (Créer le premier message tactique)
+                if (fullMessage) {
+                    await supabase.from('Message').insert({
+                        id: crypto.randomUUID(),
+                        content: fullMessage,
+                        sender_id: requesterId, // L'initiateur de la requête est l'auteur du message
+                        communication_id: channelId
+                    });
+                    console.log(`[RESPOND] 🎯 Icebreaker déployé dans le canal !`);
+                }
                 // 2. Supprimer la requête UNIQUEMENT si le canal est créé
-                await supabase.from('AccessRequest').delete().eq('id', requestId);
+                const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+                if (delError) {
+                    console.error("[ERROR BDD AccessRequest]", delError);
+                    return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+                }
                 console.log(`[RESPOND] ✅ Liaison acceptée et requête nettoyée : ${user?.id} â†” ${requesterId}`);
             }
 
@@ -60,12 +68,22 @@ export async function POST(req: Request) {
                 blockedId: requesterId,
             });
             // 2. Supprimer la requête
-            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+            if (delError) {
+                console.error("[ERROR BDD AccessRequest]", delError);
+                return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+            }
             console.log(`[RESPOND] 🚫 Entité bloquée : ${requesterId}`);
 
         } else {
             // Refus simple : on efface la trace
-            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+            if (delError) {
+                console.error("[ERROR BDD AccessRequest]", delError);
+                return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+            }
             console.log(`[RESPOND] ❌ Requête refusée : ${requestId}`);
         }
 

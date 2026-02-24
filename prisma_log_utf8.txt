@@ -1,0 +1,41 @@
+﻿node.exe : 
+[1m[31mError: 
+[39m[22m
+Au caractère Ligne:1 
+: 1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ([1m[31mE   
+ rror: [39m[22m:    
+String) [], Remot    
+eException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+EPERM: operation not 
+permitted, rename 'C:\
+Users\Fr├®d├®ric\.gemi
+ni\antigravity\scratch
+\digital-twin-profile\
+node_modules\.prisma\c
+lient\query_engine-win
+dows.dll.node.tmp28572
+' -> 'C:\Users\Fr├®d├®
+ric\.gemini\antigravit
+y\scratch\digital-twin
+-profile\node_modules\
+.prisma\client\query_e
+ngine-windows.dll.node
+'
+
+
