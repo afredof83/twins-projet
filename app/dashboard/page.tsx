@@ -9,7 +9,6 @@ import { createClient } from '@/lib/supabase/client';
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
 import Scanner from '@/components/dashboard/Scanner';
-import BackgroundGlobe, { TargetNode } from '@/components/Globe';
 import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
@@ -90,8 +89,22 @@ export default function MissionControl() {
     const [basicResult, setBasicResult] = useState<any>(null);
     const [deepResult, setDeepResult] = useState<any>(null);
 
-    // Palantir State
-    const [activeTargets, setActiveTargets] = useState<TargetNode[]>([]);
+    // 🎮 Agent Progression
+    const [agentStats, setAgentStats] = useState<{ syncLevel: number; credits: number; stats: any }>({
+        syncLevel: 1, credits: 100, stats: { messages: 0, memories: 0, scans: 0 }
+    });
+    const [statsFlash, setStatsFlash] = useState(false);
+    const statsInitRef = useRef(false);
+    const initGuardRef = useRef(false);
+
+    useEffect(() => {
+        if (!statsInitRef.current) { statsInitRef.current = true; return; }
+        setStatsFlash(true);
+        const t = setTimeout(() => setStatsFlash(false), 600);
+        return () => clearTimeout(t);
+    }, [agentStats]);
+
+
 
     // États Ingestion
     const [isDragging, setIsDragging] = useState(false);
@@ -103,6 +116,11 @@ export default function MissionControl() {
     const addLog = (message: string) => setLogs(prev => [`> ${new Date().toLocaleTimeString().slice(0, 5)} ${message}`, ...prev].slice(0, 10));
 
     useEffect(() => {
+        if (initGuardRef.current) return;
+        initGuardRef.current = true;
+
+        let profileSub: any = null;
+
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { router.push('/'); return; }
@@ -112,8 +130,53 @@ export default function MissionControl() {
             fetchBlockList(user.id);
             loadMemories(user.id);
             fetchAccessRequests(user.id);
+
+            // 🎮 Charger les stats de progression
+            const { data: profile } = await supabase
+                .from('Profile')
+                .select('syncLevel, credits, stats')
+                .eq('id', user.id)
+                .single();
+            if (profile) {
+                console.log('[DEBUG] Stats Agent:', profile.stats, '| Credits:', profile.credits, '| Level:', profile.syncLevel);
+                setAgentStats({
+                    syncLevel: profile.syncLevel ?? 1,
+                    credits: profile.credits ?? 100,
+                    stats: profile.stats ?? { messages: 0, memories: 0, scans: 0 }
+                });
+            }
+
+            // ⚡ LIAISON TEMPS RÉEL : Écoute les mutations sur le profil
+            profileSub = supabase
+                .channel('profile-realtime')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'Profile',
+                        filter: `id=eq.${user.id}`
+                    },
+                    (payload: any) => {
+                        console.log('[REALTIME] Update reçu:', payload.new);
+                        const p = payload.new;
+                        setAgentStats(current => ({
+                            ...current,
+                            syncLevel: p.syncLevel ?? current.syncLevel,
+                            credits: p.credits ?? current.credits,
+                            stats: p.stats // Force la priorité sur les stats venant de la DB
+                        }));
+                        // Sync les memories du dashboard aussi
+                        if (user.id) loadMemories(user.id);
+                    }
+                )
+                .subscribe();
         };
         init();
+
+        return () => {
+            if (profileSub) supabase.removeChannel(profileSub);
+        };
     }, []);
 
     const fetchAccessRequests = async (id: string) => {
@@ -290,9 +353,6 @@ export default function MissionControl() {
             const report = await scanGlobalNetwork(profileId, 'basic');
             console.log('ðŸ“¡ BASIC SCAN:', report);
             setBasicResult(report);
-            if (report.targets && report.targets.length > 0) {
-                setActiveTargets(report.targets);
-            }
             setStatus('LIST');
             addLog(`RADAR: Analyse de surface terminée â€” statut ${report.globalStatus}.`);
         } catch (e) {
@@ -314,9 +374,6 @@ export default function MissionControl() {
             console.log('🔥 DEEP AUDIT:', report);
             setDeepResult(report);
             setStrategicReport(report);
-            if (report.targets && report.targets.length > 0) {
-                setActiveTargets(report.targets);
-            }
             setStatus('LIST');
             addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
         } catch (e) {
@@ -482,10 +539,7 @@ export default function MissionControl() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            {/* 1. LE GLOBE : Isolé au niveau racine, derrière tout le reste */}
-            <BackgroundGlobe
-                targets={activeTargets}
-            />
+            {/* Le globe a été déplacé dans le Scanner UI */}
 
             {/* 2. TON UI : Le reste par-dessus */}
             <div className="relative z-10 flex flex-col h-full w-full max-w-md mx-auto bg-black/20 border-x border-white/5 shadow-2xl">
@@ -512,19 +566,28 @@ export default function MissionControl() {
                 {/* Main Dashboard Area */}
                 <main className="flex-1 flex flex-col px-4 gap-4 overflow-y-auto no-scrollbar pb-32">
 
-                    {/* Quick Stats */}
+                    {/* Agent Progression Stats */}
                     <div className="grid grid-cols-3 gap-3">
                         <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-primary/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">CPU</span>
-                            <span className="text-lg font-bold font-mono text-white">34%</span>
+                            <span className="text-[8px] text-gray-400 tracking-wider">FRAGS</span>
+                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-cyan-300 scale-125 drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]' : 'text-white scale-100'}`}>{agentStats.stats?.memories ?? 0}</span>
+                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
+                                <div className="bg-primary h-1 rounded-full transition-all" style={{ width: `${((agentStats.stats?.memories ?? 0) % 10) * 10}%` }} />
+                            </div>
                         </div>
                         <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-accent-amber/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">MEM</span>
-                            <span className="text-lg font-bold font-mono text-accent-amber text-glow-amber">89%</span>
+                            <span className="text-[8px] text-gray-400 tracking-wider">CREDITS</span>
+                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-amber-300 scale-125 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'text-accent-amber text-glow-amber scale-100'}`}>{agentStats.credits}</span>
+                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
+                                <div className="bg-amber-500 h-1 rounded-full transition-all" style={{ width: `${Math.min((agentStats.credits / 1000) * 100, 100)}%` }} />
+                            </div>
                         </div>
                         <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-primary/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">NET</span>
-                            <span className="text-lg font-bold font-mono text-white">4TB</span>
+                            <span className="text-[8px] text-gray-400 tracking-wider">LEVEL</span>
+                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-cyan-300 scale-125 drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]' : 'text-white scale-100'}`}>{agentStats.syncLevel}</span>
+                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
+                                <div className="bg-primary h-1 rounded-full transition-all" style={{ width: `${Math.min((agentStats.syncLevel / 20) * 100, 100)}%` }} />
+                            </div>
                         </div>
                     </div>
 
@@ -818,7 +881,7 @@ export default function MissionControl() {
 
                                 {/* Le Terminal sans surcouche, la transparence sera gérée à l'intérieur */}
                                 <div className="w-full flex flex-col border border-white/10 bg-black/40 backdrop-blur-md rounded-xl h-[500px] font-mono text-sm shadow-[0_0_30px_rgba(0,255,255,0.05)]">
-                                    <CommandTerminal userId={profileId} onTargetsFound={setActiveTargets} />
+                                    <CommandTerminal userId={profileId} onStatsUpdate={(newStats) => setAgentStats(prev => ({ ...prev, ...newStats }))} />
                                 </div>
 
                             </div>

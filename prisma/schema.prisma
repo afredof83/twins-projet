@@ -80,6 +80,11 @@ model Profile {
   directMessagesSent      DirectMessage[]     @relation("DMSent")
   directMessagesReceived  DirectMessage[]     @relation("DMReceived")
   notifications           Notification[]
+
+  // 🎮 SYSTÈME DE PROGRESSION AGENT
+  syncLevel    Int      @default(1)
+  credits      Int      @default(100)
+  stats        Json?    @default("{\"messages\": 0, \"memories\": 0, \"scans\": 0}")
 }
 
 

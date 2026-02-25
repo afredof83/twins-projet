@@ -1,10 +1,10 @@
+import { mistralClient } from "@/lib/mistral";
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
 import PDFParser from 'pdf2json';
 import mammoth from 'mammoth';
 
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 // Fonction utilitaire pour lire le PDF en texte brut
 function parsePDFBuffer(buffer: Buffer): Promise<string> {

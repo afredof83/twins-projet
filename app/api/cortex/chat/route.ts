@@ -1,12 +1,11 @@
+import { mistralClient } from "@/lib/mistral";
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
-import { Mistral } from '@mistralai/mistralai';
-
 export async function POST(req: Request) {
     try {
         const { message, profileId } = await req.json();
         const supabase = await createClient();
-        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const mistral = mistralClient;
 
         // 1. Récupérer les données d'identité (Le Miroir)
         const { data: profile } = await supabase

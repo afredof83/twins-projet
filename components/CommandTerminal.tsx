@@ -1,18 +1,65 @@
 'use client'
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { executeTerminalCommand } from '@/app/actions/terminal-command';
-import { TargetNode } from '@/components/TacticalGlobe';
+import { syncWebDataToCortex } from '@/app/actions/sync-to-cortex';
 
-export function CommandTerminal({ userId, onTargetsFound }: { userId: string, onTargetsFound?: (targets: TargetNode[]) => void }) {
+interface WebResult {
+    title: string;
+    url: string;
+    content: string;
+}
+
+interface HistoryEntry {
+    role: 'user' | 'agent';
+    text: string;
+    webResults?: WebResult[];
+}
+
+function SyncButton({ result, onStatsUpdate }: { result: WebResult; onStatsUpdate?: (stats: any) => void }) {
+    const router = useRouter();
+    const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'synced'>('idle');
+
+    const handleSync = async () => {
+        setSyncState('syncing');
+        try {
+            const res = await syncWebDataToCortex(result.title, result.url, result.content);
+            if (res.success) {
+                setSyncState('synced');
+                if (res.newStats && onStatsUpdate) {
+                    onStatsUpdate(res.newStats);
+                }
+                router.refresh();
+            } else {
+                setSyncState('idle');
+            }
+        } catch {
+            setSyncState('idle');
+        }
+    };
+
+    return (
+        <button
+            onClick={handleSync}
+            disabled={syncState !== 'idle'}
+            className="text-[10px] bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 px-2 py-1 rounded hover:bg-cyan-500/20 transition-all uppercase tracking-wider mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            {syncState === 'idle' && '⚡ Sync Cortex'}
+            {syncState === 'syncing' && 'VECTORISATION...'}
+            {syncState === 'synced' && '✓ SYNCHRONISÉ'}
+        </button>
+    );
+}
+
+export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onStatsUpdate?: (stats: any) => void }) {
     const [command, setCommand] = useState('');
-    const [history, setHistory] = useState<{ role: 'user' | 'agent', text: string }[]>([]);
+    const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleCommand = async () => {
         if (!command.trim()) return;
 
-        // Afficher la commande de l'utilisateur
         const currentCmd = command;
         setHistory(prev => [...prev, { role: 'user', text: currentCmd }]);
         setCommand('');
@@ -22,12 +69,11 @@ export function CommandTerminal({ userId, onTargetsFound }: { userId: string, on
             const result = await executeTerminalCommand(userId, currentCmd);
             if (result.success && result.answer) {
                 const textAnswer = typeof result.answer === 'string' ? result.answer : JSON.stringify(result.answer);
-                setHistory(prev => [...prev, { role: 'agent', text: textAnswer }]);
-
-                // NOUVEAU: On passe les cibles trouvées au parent (le Dashboard)
-                if (result.targets && onTargetsFound) {
-                    onTargetsFound(result.targets);
-                }
+                setHistory(prev => [...prev, {
+                    role: 'agent',
+                    text: textAnswer,
+                    webResults: result.webResults || []
+                }]);
             } else {
                 setHistory(prev => [...prev, { role: 'agent', text: "[ERREUR] Liaison IA perdue." }]);
             }
@@ -37,10 +83,9 @@ export function CommandTerminal({ userId, onTargetsFound }: { userId: string, on
     };
 
     return (
-        // Utilisation de TA classe glass-panel pour une transparence unifiée
         <div className="glass-panel rounded-xl flex flex-col h-[500px] font-mono text-sm overflow-hidden shadow-2xl">
 
-            {/* HEADER TERMINAL - Aligné sur le style de tes Channels */}
+            {/* HEADER TERMINAL */}
             <div className="flex items-center justify-between border-b border-white/10 p-4 mx-2">
                 <h3 className="text-xs text-cyan-500 font-bold tracking-widest flex items-center gap-2">
                     <span className="animate-pulse">☄️</span> TWINS_OS // TERMINAL
@@ -52,7 +97,7 @@ export function CommandTerminal({ userId, onTargetsFound }: { userId: string, on
 
             {/* ZONE DE CHAT / LOGS */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-gray-300 custom-scrollbar">
-                <div className="text-cyan-600/50 text-xs italic">Système initialisé. En attente d'ordres tactiques...</div>
+                <div className="text-cyan-600/50 text-xs italic">Système initialisé. En attente d&apos;ordres tactiques...</div>
 
                 {history.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -60,10 +105,27 @@ export function CommandTerminal({ userId, onTargetsFound }: { userId: string, on
                             {msg.role === 'user' ? 'VOUS' : 'CORTEX'}
                         </span>
                         <div className={`p-3 rounded-xl max-w-[85%] text-sm ${msg.role === 'user'
-                            ? 'bg-black/40 border border-white/5 text-gray-200' // Message user discret
-                            : 'bg-cyan-900/10 border border-cyan-500/20 text-cyan-100 whitespace-pre-wrap backdrop-blur-sm' // Message IA vitré
+                            ? 'bg-black/40 border border-white/5 text-gray-200'
+                            : 'bg-cyan-900/10 border border-cyan-500/20 text-cyan-100 whitespace-pre-wrap backdrop-blur-sm'
                             }`}>
                             {msg.text}
+
+                            {/* Résultats Web avec bouton Sync Cortex */}
+                            {msg.webResults && msg.webResults.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-cyan-500/10 space-y-3">
+                                    <div className="text-[9px] text-cyan-500/60 uppercase tracking-widest">Capteurs Externes</div>
+                                    {msg.webResults.map((wr, j) => (
+                                        <div key={j} className="bg-black/30 rounded-lg p-2 border border-white/5">
+                                            <a href={wr.url} target="_blank" rel="noopener noreferrer"
+                                                className="text-[11px] text-cyan-400 hover:underline font-semibold">
+                                                {wr.title}
+                                            </a>
+                                            <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">{wr.content}</p>
+                                            <SyncButton result={wr} onStatsUpdate={onStatsUpdate} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}

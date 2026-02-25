@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { autoIngestProfile } from '@/app/actions/auto-ingest-profile';
+import CortexGrid from '@/components/cortex/CortexGrid';
 
 // â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Memory {
@@ -339,6 +340,7 @@ function CortexManager() {
             setQuickThought('');
             addLog('[SUCCÈS] Pensée enregistrée dans le Cortex.', 'success');
             fetchMemories();
+            router.refresh();
         } catch (err: any) {
             addLog(`[CRITIQUE] ${err.message || 'Échec de transmission.'}`, 'error');
         } finally {
@@ -559,47 +561,17 @@ function CortexManager() {
                                 </button>
                             </div>
 
-                            <div className="divide-y divide-slate-800/50 max-h-80 overflow-y-auto custom-scrollbar">
+                            <div className="p-4 bg-black/20">
                                 {memories.length === 0 ? (
                                     <div className="p-8 text-center text-slate-600 text-xs italic">
                                         Aucun fragment en mémoire. Déposez un fichier pour commencer.
                                     </div>
                                 ) : (
-                                    memories.map(m => (
-                                        <div
-                                            key={m.id}
-                                            onClick={() => { setEditingMemory(m); setEditContent(m.content); }}
-                                            className="flex items-start gap-3 px-5 py-3 hover:bg-blue-950/20 hover:border-l-2 hover:border-l-blue-600 transition-all cursor-pointer group"
-                                        >
-                                            {/* Badge type */}
-                                            <span className={`mt-0.5 flex-shrink-0 text-[10px] px-2 py-0.5 rounded border font-bold tracking-wider ${typeColor[m.type] || typeColor.default}`}>
-                                                {typeIcon[m.type] || typeIcon.default}&nbsp;
-                                                {m.type?.toUpperCase().slice(0, 4)}
-                                            </span>
-
-                                            {/* Contenu */}
-                                            <p className="flex-1 text-xs text-slate-400 line-clamp-2 leading-relaxed group-hover:text-slate-300">
-                                                {m.content}
-                                            </p>
-
-                                            {/* Date + actions */}
-                                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                                <span className="text-[9px] text-slate-600">
-                                                    {new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                                                </span>
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <span className="text-[9px] text-blue-500 tracking-wider">ÉDITER</span>
-                                                    <button
-                                                        onClick={e => handleDeleteMemory(e, m.id)}
-                                                        className="text-slate-700 hover:text-red-500 transition-colors"
-                                                        title="Purger ce fragment"
-                                                    >
-                                                        <Trash2 size={11} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
+                                    <CortexGrid userId={profileId ?? undefined} initialFragments={memories.map(m => ({
+                                        id: m.id,
+                                        content: m.content,
+                                        createdAt: m.created_at
+                                    }))} />
                                 )}
                             </div>
                         </div>

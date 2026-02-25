@@ -1,0 +1,1167 @@
+﻿
+> digital-twin-profile@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+node.exe : 
+Au caractère Ligne:1 
+: 1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : 
+NotSpecifi    ed: 
+(:String) [],     
+RemoteException
+    + 
+FullyQualifiedEr    
+rorId : NativeComm    
+andError
+ 
+> Build error occurred
+Error: Turbopack 
+build failed with 12 
+errors:
+./app/actions/auto-ing
+est-profile.ts:2:1
+Ecmascript file had 
+an error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+mistralClient } 
+[36mfrom[39m [32m"@
+/lib/mistral"[39m[33
+m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[32m'use server'[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+revalidatePath } 
+[36mfrom[39m [32m"n
+ext/cache"[39m[33m;
+[39m[0m
+
+The "use server" 
+directive must be at 
+the top of the file.
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/auto
+-ingest-profile.ts 
+[Client Component 
+Browser]
+    ./app/memories/pag
+e.tsx [Client 
+Component Browser]
+    ./app/memories/pag
+e.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/auto
+-ingest-profile.ts 
+[Client Component SSR]
+    ./app/memories/pag
+e.tsx [Client 
+Component SSR]
+    ./app/memories/pag
+e.tsx [Server 
+Component]
+
+
+./app/actions/auto-ing
+est-profile.ts:5:10
+Ecmascript file had 
+an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+[31m[1m>[22m[39m[
+90m 5 |[39m 
+[36mimport[39m { 
+revalidatePath } 
+[36mfrom[39m [32m"n
+ext/cache"[39m[33m;
+[39m
+ [90m   |[39m       
+   [31m[1m^[22m[39
+m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m
+[31m[1m^[22m[39m
+ [90m 6 |[39m
+ [90m 7 |[39m 
+[36mconst[39m 
+client [33m=[39m mis
+tralClient[33m;[39m
+ [90m 8 |[39m[0m
+
+You're importing a 
+component that needs 
+"revalidatePath". 
+That only works in a 
+Server Component but 
+one of its parents is 
+marked with "use 
+client", so it's a 
+Client Component.
+Learn more: https://ne
+xtjs.org/docs/app/buil
+ding-your-application/
+rendering
+
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/auto
+-ingest-profile.ts 
+[Client Component 
+Browser]
+    ./app/memories/pag
+e.tsx [Client 
+Component Browser]
+    ./app/memories/pag
+e.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/auto
+-ingest-profile.ts 
+[Client Component SSR]
+    ./app/memories/pag
+e.tsx [Client 
+Component SSR]
+    ./app/memories/pag
+e.tsx [Server 
+Component]
+
+
+./app/actions/generate
+-audit.ts:2:4
+Ecmascript file had 
+an error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+mistralClient } 
+[36mfrom[39m [32m"@
+/lib/mistral"[39m[33
+m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+´╗┐[32m'use 
+server'[39m
+ [90m   |[39m    [3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+ [90m 5 |[39m[0m
+
+The "use server" 
+directive must be at 
+the top of the file.
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/gene
+rate-audit.ts [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/gene
+rate-audit.ts [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/actions/generate
+-opener.ts:2:1
+Ecmascript file had 
+an error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+mistralClient } 
+[36mfrom[39m [32m"@
+/lib/mistral"[39m[33
+m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[32m'use server'[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+ [90m 5 |[39m[0m
+
+The "use server" 
+directive must be at 
+the top of the file.
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/gene
+rate-opener.ts 
+[Client Component 
+Browser]
+    ./components/Tacti
+calOpenerModule.tsx 
+[Client Component 
+Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/gene
+rate-opener.ts 
+[Client Component SSR]
+    ./components/Tacti
+calOpenerModule.tsx 
+[Client Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/actions/scan-glo
+bal-network.ts:2:4
+Ecmascript file had 
+an error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+mistralClient } 
+[36mfrom[39m [32m"@
+/lib/mistral"[39m[33
+m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+´╗┐[32m'use 
+server'[39m
+ [90m   |[39m    [3
+1m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[3
+1m[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+cookies } 
+[36mfrom[39m [32m'n
+ext/headers'[39m[33m
+;[39m[0m
+
+The "use server" 
+directive must be at 
+the top of the file.
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/scan
+-global-network.ts 
+[Client Component 
+Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/scan
+-global-network.ts 
+[Client Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/actions/scan-glo
+bal-network.ts:5:1
+Ecmascript file had 
+an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+[31m[1m>[22m[39m[
+90m 5 |[39m 
+[36mimport[39m { 
+cookies } 
+[36mfrom[39m [32m'n
+ext/headers'[39m[33m
+;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+createServerClient } 
+[36mfrom[39m [32m'@
+supabase/ssr'[39m[33
+m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m 
+[36mconst[39m 
+client [33m=[39m mis
+tralClient[33m;[39m
+[0m
+
+You're importing a 
+component that needs 
+"next/headers". That 
+only works in a 
+Server Component but 
+one of its parents is 
+marked with "use 
+client", so it's a 
+Client Component.
+Learn more: https://ne
+xtjs.org/docs/app/buil
+ding-your-application/
+rendering
+
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/scan
+-global-network.ts 
+[Client Component 
+Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/scan
+-global-network.ts 
+[Client Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/actions/terminal
+-command.ts:2:1
+Ecmascript file had 
+an error
+[0m [90m 1 |[39m 
+[36mimport[39m { 
+mistralClient } 
+[36mfrom[39m [32m"@
+/lib/mistral"[39m[33
+m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[32m'use server'[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m
+ [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+ [90m 5 |[39m 
+[36mimport[39m { 
+cookies } 
+[36mfrom[39m [32m'n
+ext/headers'[39m[33m
+;[39m[0m
+
+The "use server" 
+directive must be at 
+the top of the file.
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/term
+inal-command.ts 
+[Client Component 
+Browser]
+    ./components/Comma
+ndTerminal.tsx 
+[Client Component 
+Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/term
+inal-command.ts 
+[Client Component SSR]
+    ./components/Comma
+ndTerminal.tsx 
+[Client Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/actions/terminal
+-command.ts:5:1
+Ecmascript file had 
+an error
+[0m [90m 3 |[39m
+ [90m 4 |[39m 
+[36mimport[39m { 
+prisma } 
+[36mfrom[39m [32m"@
+/lib/prisma"[39m[33m
+;[39m
+[31m[1m>[22m[39m[
+90m 5 |[39m 
+[36mimport[39m { 
+cookies } 
+[36mfrom[39m [32m'n
+ext/headers'[39m[33m
+;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 6 |[39m 
+[36mimport[39m { 
+createServerClient } 
+[36mfrom[39m [32m'@
+supabase/ssr'[39m[33
+m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m 
+[36mconst[39m 
+mistral [33m=[39m mi
+stralClient[33m;[39m
+[0m
+
+You're importing a 
+component that needs 
+"next/headers". That 
+only works in a 
+Server Component but 
+one of its parents is 
+marked with "use 
+client", so it's a 
+Client Component.
+Learn more: https://ne
+xtjs.org/docs/app/buil
+ding-your-application/
+rendering
+
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./app/actions/term
+inal-command.ts 
+[Client Component 
+Browser]
+    ./components/Comma
+ndTerminal.tsx 
+[Client Component 
+Browser]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component Browser]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+  Client Component 
+SSR:
+    ./app/actions/term
+inal-command.ts 
+[Client Component SSR]
+    ./components/Comma
+ndTerminal.tsx 
+[Client Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Client 
+Component SSR]
+    ./app/dashboard/pa
+ge.tsx [Server 
+Component]
+
+
+./app/api/admin/reinde
+x/route.ts:2:53
+Export 
+getMistralEmbedding 
+doesn't exist in 
+target module
+[0m [90m 1 |[39m 
+´╗┐[36mimport[39m { 
+[33mNextResponse[39m
+ } [36mfrom[39m [32
+m'next/server'[39m[3
+3m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[36mimport[39m { 
+createClient } 
+[36mfrom[39m [32m'@
+supabase/supabase-js'
+[39m[33m;[39m
+ [90m   |[39m       
+                      
+                      
+  [31m[1m^[22m[39m
+[31m[1m>[22m[39m[
+90m 3 |[39m 
+[36mimport[39m { 
+getMistralEmbedding } 
+[36mfrom[39m [32m'@
+/lib/mistral'[39m[33
+m;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 4 |[39m
+ [90m 5 |[39m 
+[90m// 
+Initialisation 
+Supabase[39m
+ [90m 6 |[39m 
+[36mconst[39m 
+supabase [33m=[39m 
+createClient([0m
+
+The export 
+getMistralEmbedding 
+was not found in 
+module [project]/lib/m
+istral.ts [app-route] 
+(ecmascript).
+Did you mean to 
+import mistralClient?
+All exports of the 
+module are statically 
+known (It doesn't 
+have dynamic 
+exports). So it's 
+known statically that 
+the requested export 
+doesn't exist.
+
+
+./app/api/cortex/maint
+enance/route.ts:2:53
+Export 
+getMistralEmbedding 
+doesn't exist in 
+target module
+[0m [90m 1 |[39m 
+´╗┐[36mimport[39m { 
+[33mNextResponse[39m
+ } [36mfrom[39m [32
+m'next/server'[39m[3
+3m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[36mimport[39m { 
+createClient } 
+[36mfrom[39m [32m'@
+supabase/supabase-js'
+[39m[33m;[39m
+ [90m   |[39m       
+                      
+                      
+  [31m[1m^[22m[39m
+[31m[1m>[22m[39m[
+90m 3 |[39m 
+[36mimport[39m { 
+getMistralEmbedding } 
+[36mfrom[39m [32m'@
+/lib/mistral'[39m[33
+m;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 4 |[39m
+ [90m 5 |[39m 
+[36mconst[39m 
+supabase [33m=[39m 
+createClient(
+ [90m 6 |[39m     pr
+ocess[33m.[39menv[3
+3m.[39m[33mNEXT_PUBL
+IC_SUPABASE_URL[39m[
+33m![39m[33m,[39m[
+0m
+
+The export 
+getMistralEmbedding 
+was not found in 
+module [project]/lib/m
+istral.ts [app-route] 
+(ecmascript).
+Did you mean to 
+import mistralClient?
+All exports of the 
+module are statically 
+known (It doesn't 
+have dynamic 
+exports). So it's 
+known statically that 
+the requested export 
+doesn't exist.
+
+
+./app/api/sensors/manu
+al/route.ts:2:53
+Export 
+getMistralEmbedding 
+doesn't exist in 
+target module
+[0m [90m 1 |[39m 
+´╗┐[36mimport[39m { 
+[33mNextResponse[39m
+ } [36mfrom[39m [32
+m'next/server'[39m[3
+3m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[36mimport[39m { 
+createClient } 
+[36mfrom[39m [32m'@
+supabase/supabase-js'
+[39m[33m;[39m
+ [90m   |[39m       
+                      
+                      
+  [31m[1m^[22m[39m
+[31m[1m>[22m[39m[
+90m 3 |[39m 
+[36mimport[39m { 
+getMistralEmbedding } 
+[36mfrom[39m [32m'@
+/lib/mistral'[39m[33
+m;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 4 |[39m
+ [90m 5 |[39m 
+[36mconst[39m 
+supabase [33m=[39m 
+createClient(
+ [90m 6 |[39m     pr
+ocess[33m.[39menv[3
+3m.[39m[33mNEXT_PUBL
+IC_SUPABASE_URL[39m[
+33m![39m[33m,[39m[
+0m
+
+The export 
+getMistralEmbedding 
+was not found in 
+module [project]/lib/m
+istral.ts [app-route] 
+(ecmascript).
+Did you mean to 
+import mistralClient?
+All exports of the 
+module are statically 
+known (It doesn't 
+have dynamic 
+exports). So it's 
+known statically that 
+the requested export 
+doesn't exist.
+
+
+./app/api/sensors/yout
+ube/route.ts:2:53
+Export 
+getMistralEmbedding 
+doesn't exist in 
+target module
+[0m [90m 1 |[39m 
+´╗┐[36mimport[39m { 
+[33mNextResponse[39m
+ } [36mfrom[39m [32
+m'next/server'[39m[3
+3m;[39m
+[31m[1m>[22m[39m[
+90m 2 |[39m 
+[36mimport[39m { 
+createClient } 
+[36mfrom[39m [32m'@
+supabase/supabase-js'
+[39m[33m;[39m
+ [90m   |[39m       
+                      
+                      
+  [31m[1m^[22m[39m
+[31m[1m>[22m[39m[
+90m 3 |[39m 
+[36mimport[39m { 
+getMistralEmbedding } 
+[36mfrom[39m [32m'@
+/lib/mistral'[39m[33
+m;[39m
+ [90m   |[39m [31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m
+[39m
+ [90m 4 |[39m
+ [90m 5 |[39m 
+[36mconst[39m 
+supabase [33m=[39m 
+createClient(
+ [90m 6 |[39m     pr
+ocess[33m.[39menv[3
+3m.[39m[33mNEXT_PUBL
+IC_SUPABASE_URL[39m[
+33m![39m[33m,[39m[
+0m
+
+The export 
+getMistralEmbedding 
+was not found in 
+module [project]/lib/m
+istral.ts [app-route] 
+(ecmascript).
+Did you mean to 
+import mistralClient?
+All exports of the 
+module are statically 
+known (It doesn't 
+have dynamic 
+exports). So it's 
+known statically that 
+the requested export 
+doesn't exist.
+
+
+    at <unknown> (./ap
+p/actions/auto-ingest-
+profile.ts:2:1)
+    at <unknown> (./ap
+p/actions/auto-ingest-
+profile.ts:5:10)
+    at <unknown> (./ap
+p/actions/generate-aud
+it.ts:2:4)
+    at <unknown> (./ap
+p/actions/generate-ope
+ner.ts:2:1)
+    at <unknown> (./ap
+p/actions/scan-global-
+network.ts:2:4)
+    at <unknown> (./ap
+p/actions/scan-global-
+network.ts:5:1)
+    at <unknown> (./ap
+p/actions/terminal-com
+mand.ts:2:1)
+    at <unknown> (./ap
+p/actions/terminal-com
+mand.ts:5:1)
+    at <unknown> (./ap
+p/api/admin/reindex/ro
+ute.ts:2:53)
+    at <unknown> (./ap
+p/api/cortex/maintenan
+ce/route.ts:2:53)
+    at <unknown> (./ap
+p/api/sensors/manual/r
+oute.ts:2:53)
+    at <unknown> (./ap
+p/api/sensors/youtube/
+route.ts:2:53)

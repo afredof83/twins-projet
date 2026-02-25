@@ -1,14 +1,15 @@
-﻿'use server'
+'use server'
+import { mistralClient } from "@/lib/mistral";
 
-import { Mistral } from '@mistralai/mistralai';
 import { prisma } from "@/lib/prisma";
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { trackAgentActivity } from '@/app/actions/missions';
 
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = mistralClient;
 
 export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
-  // 1. Initialiser le client Supabase sécurisé (Phase 2)
+  // 1. Initialiser le client Supabase sécurisé
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,121 +31,107 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
   const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
 
   // 3. Transformation en vecteur mathématique (Embeddings)
-  const embRes = await client.embeddings.create({
+  const embeddingResponse = await client.embeddings.create({
     model: "mistral-embed",
-    inputs: [searchIntent]
+    inputs: [searchIntent],
   });
-  const queryEmbedding = embRes.data[0].embedding;
+  const queryVector = embeddingResponse.data[0].embedding;
 
-  // 4. PRE-FILTRAGE RAG : Le Sonar Vectoriel !
-  const { data: matchedMemories, error: rpcError } = await supabase.rpc('match_network_memories', {
-    query_embedding: queryEmbedding,
-    match_threshold: 0.0, // <--- METS 0.0 POUR LE TEST
-    match_count: 5,        // On ne prend que le Top 5 absolu du réseau
-    exclude_profile_id: userId
-  });
-
-  if (rpcError) {
-    console.error("Erreur RPC:", rpcError);
-    throw new Error("Erreur de recherche vectorielle.");
-  }
-
-  // 5. Analyse des résultats
-  if (!matchedMemories || matchedMemories.length === 0) {
-    return {
-      globalStatus: "SILENT",
-      analysisSummary: "Le réseau est silencieux. Aucune synergie forte détectée.",
-      targetId: null,
-      overallMatchScore: 0,
-      targetClassification: "Aucune cible",
-      unifiedAnalysis: "Pas assez de données convergentes sur le réseau actuel.",
-      strategicAlignment: "Poursuivre l'ingestion de données."
-    };
-  }
-
-  // On extrait les IDs des profils uniques qui possèdent ces mémoires pertinentes
-  const matchedProfileIds: string[] = Array.from(new Set(matchedMemories.map((m: any) => String(m.profile_id))));
-
-  // On récupère uniquement ces quelques profils depuis la base de données
-  const networkNodes = await prisma.profile.findMany({
-    where: { id: { in: matchedProfileIds } },
-    select: { id: true, profession: true, objectives: true }
+  // 4. Recherche RAG dans la mémoire vectorielle
+  const { data: ragResults } = await supabase.rpc('match_memories', {
+    query_embedding: queryVector,
+    match_threshold: 0.75,
+    match_count: 10,
+    filter_profile_id: userId,
   });
 
-  // Assemblage du contexte strict pour Mistral (Plus de saturation mémoire !)
-  const contexteMemoire = matchedMemories.map((m: any) => `[ID: ${m.profile_id}] ${m.content}`).join('\n');
-  const identityContext = `Profession: ${agent.profession}. Objectifs: ${agent.objectives?.join(', ')}`;
+  const contextBlock = ragResults && ragResults.length > 0
+    ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
+    : 'Aucune mémoire pertinente trouvée dans la base vectorielle.';
 
-  const promptContent = `
-Tu es l'IA Tactique MISTRAL-TWIN. 
-CONTEXTE DE MON AGENT : ${identityContext}
+  // 5. Construction du prompt selon le mode
+  const promptContent = mode === 'deep'
+    ? `Tu es TWINS_INTEL, un moteur d'analyse stratégique avancé.
+Analyse ce profil et ses données mémoire en profondeur pour identifier des opportunités de connexion et de collaboration.
 
-CIBLES DU RÉSEAU (Pré-filtrées mathématiquement) : 
-${JSON.stringify(networkNodes)}
+AGENT:
+- Nom: ${agent.name || 'Agent'}
+- Profession: ${agent.profession || 'Non spécifiée'}
+- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
+- Bio: ${agent.bio || 'Aucune'}
+- Analyse unifiée: ${agent.unifiedAnalysis || 'Aucune'}
 
-🧠 MÉMOIRES INTERCEPTÉES SUR CES CIBLES :
-"""
-${contexteMemoire}
-"""
+DONNÉES MÉMOIRE PERTINENTES:
+${contextBlock}
 
-⚠️ RÈGLES DE CENSURE :
-- Ne JAMAIS inclure de nom propre (utilise des rôles).
-- Réponds UNIQUEMENT en JSON valide.
-
-MISSION : Analyse ces données ciblées. Identifie la cible la plus pertinente et rédige un rapport.
-
-FORMAT DE RÉPONSE OBLIGATOIRE :
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
 {
-  "globalStatus": "DETECTED", 
-  "analysisSummary": "Une phrase d'accroche courte style radar (ex: 'Écho radar puissant : Profil ingénieur détecté.')",
-  "targetId": "l'UUID exact copié depuis CIBLES DU RÉSEAU",
-  "overallMatchScore": 95,
-  "targetClassification": "Description (ex: Fabricant de matériaux)",
-  "unifiedAnalysis": "Pourquoi ça match avec l'Agent (2 phrases max).",
-  "strategicAlignment": "Bénéfice tactique."
-}
+  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
+  "analysisSummary": "Résumé de l'analyse en 2-3 phrases.",
+  "overallMatchScore": 0-100,
+  "targetClassification": "Classification du profil cible",
+  "unifiedAnalysis": "Analyse détaillée du potentiel de l'agent.",
+  "strategicAlignment": "Comment l'agent peut capitaliser sur ses forces.",
+  "targetId": "${userId}",
+  "targets": [
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+  ],
+  "opportunities": [
+    {"title": "Titre opportunité", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
+  ]
+}`
+    : `Tu es TWINS_INTEL, un radar de surface rapide.
+Fais une analyse de surface du profil suivant pour identifier le statut général et les directions stratégiques.
 
-À la fin de ton analyse textuelle, tu DOIS inclure ce tag exact contenant les coordonnées GPS de la cible identifiée :
-[TARGETS: [{"name": "Nom Réel de la Cible", "lat": 48.6493, "lng": -2.0257}]]
-`;
+AGENT:
+- Nom: ${agent.name || 'Agent'}
+- Profession: ${agent.profession || 'Non spécifiée'}
+- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
 
-  // 6. SYNTHÈSE IA (Sur une donnée restreinte et maîtrisée)
+DONNÉES MÉMOIRE:
+${contextBlock}
+
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
+{
+  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
+  "analysisSummary": "Résumé bref en 1-2 phrases.",
+  "targetId": "${userId}",
+  "targets": [
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+  ]
+}`;
+
+  // 6. Appel Mistral avec format JSON forcé
   const response = await client.chat.complete({
     model: "mistral-large-latest",
-    messages: [{ role: "system", content: promptContent }]
+    messages: [{ role: "system", content: promptContent }],
+    responseFormat: { type: "json_object" }
   });
 
-  const rawContent = (response.choices?.[0].message.content as string) || "";
-  if (!rawContent) throw new Error("Réponse vide de Mistral");
-  console.log("[MISTRAL RAW OUTPUT] :", rawContent);
+  const rawContent = response.choices?.[0]?.message?.content;
 
-  // Copie EXACTEMENT cette logique de parsing que nous avons validée
-  const targetMatch = rawContent.match(/\[TARGETS:\s*(\[[\s\S]*\])\]/);
+  // 7. DÉCLARATION EN DEHORS DU TRY/CATCH
+  let aiAnalysis: any = {};
   let targets: any[] = [];
 
-  if (targetMatch && targetMatch[1]) {
-    try {
-      const jsonString = targetMatch[1].trim();
-      targets = JSON.parse(jsonString);
-      console.log("[RESEAU - SUCCES] Coordonnées décodées :", targets);
-    } catch (error) {
-      console.error("[RESEAU - CRITIQUE] JSON.parse a échoué :", targetMatch[1]);
-    }
+  // 8. PARSING SÉCURISÉ
+  try {
+    const cleanJsonContent = (rawContent as string).replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
+    const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
+    const parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(cleanJsonContent);
+    aiAnalysis = parsedData;
+    targets = parsedData.targets || [];
+  } catch (e) {
+    console.error("[RESEAU - CRITIQUE] JSON.parse a échoué pour l'analyse IA :", rawContent);
+    throw new Error("Erreur de parsing JSON de la réponse Mistral.");
   }
 
-  // Nettoyage pour récupérer l'analyse JSON originelle
-  const cleanJsonContent = rawContent.replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
-  const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
-  const aiAnalysis = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(cleanJsonContent);
-
-  // Blindage UUID
-  const validatedTargetId = networkNodes.some(n => n.id === aiAnalysis.targetId)
-    ? aiAnalysis.targetId
-    : networkNodes[0]?.id;
+  // 9. LE RETURN SÉCURISÉ
+  await trackAgentActivity(userId, 'scan');
 
   return {
     ...aiAnalysis,
-    targetId: validatedTargetId,
+    targetId: userId,
     targets
   };
 }

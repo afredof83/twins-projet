@@ -1,6 +1,6 @@
+import { mistralClient } from "@/lib/mistral";
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
             }
         );
 
-        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const mistral = mistralClient;
 
         // 3. INFILTRATION DU RÉSEAU (Scraping)
         console.log(`[SCRAPER] Infiltration de la cible : ${url}`);

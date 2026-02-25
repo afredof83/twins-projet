@@ -1,9 +1,9 @@
+import { mistralClient } from "@/lib/mistral";
 import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
 import { guardianSelfReflection } from '@/lib/guardian/brain';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 // Simulation simplifiée des fonctions internes pour l'instant
 async function scanOtherClones(profileId: string) {

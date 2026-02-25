@@ -1,7 +1,6 @@
+import { mistralClient } from "@/lib/mistral";
 import { NextResponse } from 'next/server';
-import { Mistral } from '@mistralai/mistralai';
-
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 export async function POST(req: Request) {
     try {

@@ -1,9 +1,9 @@
-﻿'use server'
+'use server'
+import { mistralClient } from "@/lib/mistral";
 
-import { Mistral } from '@mistralai/mistralai';
 import { prisma } from "@/lib/prisma";
 
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = mistralClient;
 
 // Vérificateur d'UUID
 const isUUID = (str: string) => {
@@ -26,7 +26,7 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
       if (input && isUUID(input)) {
         p = await prisma.profile.findUnique({
           where: { id: input },
-          select: { id: true, name: true, unifiedAnalysis: true, age: true, gender: true, thematicProfile: true }
+          select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true }
         });
       }
 
@@ -36,17 +36,17 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         // Recherche insensible à la casse (si supporté) ou exacte
         p = await prisma.profile.findFirst({
           where: { name: input }, // Cherche le profil qui s'appelle exactement comme ça
-          select: { id: true, name: true, unifiedAnalysis: true, age: true, gender: true, thematicProfile: true }
+          select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true }
         });
       }
 
       // C. Fallback (Dernier recours : Premier profil dispo)
       if (!p) {
         console.warn(`⚠️ ${label} introuvable ("${input}"). Utilisation d'un profil par défaut.`);
-        p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, age: true, gender: true, thematicProfile: true } });
+        p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true } });
       }
 
-      return p || { id: "ghost", name: "Entité Inconnue", age: null, gender: null, thematicProfile: null, unifiedAnalysis: null };
+      return p || { id: "ghost", name: "Entité Inconnue", dateOfBirth: null, gender: null, thematicProfile: null, unifiedAnalysis: null };
     };
 
     const agentProfile = await findProfileSmart(userInput, "AGENT");
@@ -113,7 +113,7 @@ RÈGLES :
     const userPrompt = `
 === 🟦 ADN DE NOTRE AGENT IA ===
 - Nom de code : ${agentProfile.name}
-- Âge/Genre : ${agentProfile.age || 'X'} ans, ${agentProfile.gender || 'Non spécifié'}
+- Âge/Genre : ${agentProfile.dateOfBirth || 'X'} ans, ${agentProfile.gender || 'Non spécifié'}
 - Profil Pro : ${JSON.stringify(agentMatrice?.travail || 'Inconnu')}
 - Profil Relationnel : ${JSON.stringify(agentMatrice?.rencontre || 'Inconnu')}
 - Profil Loisirs : ${JSON.stringify(agentMatrice?.loisirs || 'Inconnu')}

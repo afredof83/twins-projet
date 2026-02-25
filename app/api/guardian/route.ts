@@ -1,15 +1,37 @@
-﻿import { NextResponse } from 'next/server';
-import { Mistral } from '@mistralai/mistralai';
+import { mistralClient } from "@/lib/mistral";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { prisma } from "@/lib/prisma";
 
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { profileId, newMemoryContent } = body;
+        const { newMemoryContent } = body;
 
-        if (!profileId || !newMemoryContent) {
+        // 1. Authentifier l'utilisateur
+        const cookieStore = await cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) { return cookieStore.get(name)?.value; }
+                }
+            }
+        );
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const profileId = user.id;
+
+        if (!newMemoryContent) {
             return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 });
         }
 
@@ -60,7 +82,7 @@ RÈGLE ABSOLUE : Si la nouvelle information est un simple mot de salutation ("bo
         return NextResponse.json({ success: true, newAnalysis });
 
     } catch (error: any) {
-        console.error("âŒ [GARDIEN ERROR]", error.message);
+        console.error("❌ [GARDIEN ERROR]", error.message);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,7 +1,7 @@
-﻿import { createClient } from '@/lib/supabaseServer';
+import { mistralClient } from "@/lib/mistral";
+import { createClient } from '@/lib/supabaseServer';
 import { NextResponse } from 'next/server';
-import { Mistral } from '@mistralai/mistralai';
-
+import { trackAgentActivity } from '@/app/actions/missions';
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const pid = searchParams.get('profileId');
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
         }
 
         console.log("✅ Sauvegarde réussie, ID:", data?.id);
+        await trackAgentActivity(profileId, 'memory');
         return NextResponse.json(data);
 
     } catch (error: any) {
@@ -78,7 +79,7 @@ export async function PATCH(req: Request) {
         }
 
         // 1. Re-vectorisation via Mistral (le vecteur doit refléter le nouveau texte)
-        const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const mistral = mistralClient;
         const embeddingResponse = await mistral.embeddings.create({
             model: "mistral-embed",
             inputs: [content],
@@ -141,6 +142,7 @@ export async function DELETE(req: Request) {
         }
 
         console.log(`ðŸ—‘ï¸ Fragment ${id} purgé.`);
+        await trackAgentActivity(profileId, 'memory_delete');
         return Response.json({ success: true });
 
     } catch (error: any) {

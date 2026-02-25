@@ -1,22 +1,42 @@
-﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
+import { mistralClient } from "@/lib/mistral";
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import * as cheerio from 'cheerio';
 
 // Initialisation
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 export async function POST(req: Request) {
     try {
-        const { url, profileId, category } = await req.json();
+        const { url, category } = await req.json();
 
-        console.log(`🧠 [CORTEX] Ingestion lancée pour : ${url}`);
+        // 1. Authentifier l'utilisateur
+        const cookieStore = await cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    get(name: string) { return cookieStore.get(name)?.value; }
+                }
+            }
+        );
+
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const profileId = user.id;
+
+        console.log(`🧠 [CORTEX] Ingestion lancée pour : ${url} (User: ${profileId})`);
 
         // Ajout d'une vérification basique de l'URL
         if (!url) throw new Error("URL manquante");
 
-        // 1. SCRAPING (L'Å“il)
+        // 1. SCRAPING (L'Œil)
         const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CortexBot/1.0)' } });
         if (!response.ok) throw new Error(`Site inaccessible: ${response.status}`);
         const html = await response.text();
@@ -66,7 +86,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, summary: summaryText.substring(0, 100) + "..." });
 
     } catch (error: any) {
-        console.error("âŒ Erreur Ingestion:", error);
+        console.error("❌ Erreur Ingestion:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

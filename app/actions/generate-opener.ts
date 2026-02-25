@@ -1,9 +1,9 @@
 'use server'
+import { mistralClient } from "@/lib/mistral";
 
-import { Mistral } from '@mistralai/mistralai';
 import { prisma } from "@/lib/prisma";
 
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = mistralClient;
 
 export async function generateTacticalOpener(userId: string, targetId: string) {
     if (!userId || !targetId) throw new Error("Coordonnées de frappe manquantes.");

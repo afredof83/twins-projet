@@ -1,11 +1,10 @@
 'use server'
+import { mistralClient } from "@/lib/mistral";
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-import { Mistral } from '@mistralai/mistralai';
-
-const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const client = mistralClient;
 
 export async function autoIngestProfile(userId: string, rawData: string) {
     try {

@@ -1,12 +1,11 @@
+import { mistralClient } from "@/lib/mistral";
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
-
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+const mistral = mistralClient;
 
 export async function POST(req: Request) {
     try {
