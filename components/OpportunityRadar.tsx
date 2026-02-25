@@ -83,9 +83,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                     disabled={isScanning}
                     className={`flex items-center px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider transition uppercase ${isScanning ? 'bg-green-900/10 text-green-500/50 border border-green-500/10 cursor-not-allowed' : 'bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(22,163,74,0.2)]'}`}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
-                    </svg>
+                    <Zap size={12} className="mr-1.5" />
                     {isScanning ? 'SCAN EN COURS...' : 'DÉPLOYER L\'ÉCLAIREUR'}
                 </button>
             </div>

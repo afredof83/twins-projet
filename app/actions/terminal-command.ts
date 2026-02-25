@@ -8,6 +8,11 @@ import { createServerClient } from '@supabase/ssr';
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function executeTerminalCommand(userId: string, prompt: string): Promise<{ success: boolean; answer?: string; targets?: any[]; error?: string }> {
+    console.log("=========================================");
+    console.log("[ALERTE] LA BONNE FONCTION EST EXÉCUTÉE !");
+    console.log("Requête de l'utilisateur :", prompt);
+    console.log("=========================================");
+
     if (!prompt) throw new Error("Ordre vide.");
 
     const cookieStore = await cookies();
@@ -67,7 +72,8 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
 
         // --- 4. SYNTHÈSE MISTRAL (L'Agent te parle) ---
         const aiPrompt = `
-    Tu es MISTRAL-TWIN, le Jumeau Numérique et Agent Tactique.
+    Tu es l'unité de ciblage d'un système radar Deep Tech. 
+    Ta mission est d'analyser les résultats de la base de données (RAG) et d'extraire la cible la plus pertinente.
     Ton utilisateur t'a donné cet ordre : "${prompt}"
 
     RAPPORT DES CAPTEURS INTERNES (Base de données Twins) :
@@ -76,26 +82,32 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
     RAPPORT DES CAPTEURS EXTERNES (Web / Tavily) :
     """${externalContext}"""
 
-    MISSION :
-    Réponds directement à l'utilisateur de manière ultra-concise, froide et professionnelle.
-    - Analyse les résultats.
-    - S'il y a des matchs internes, mets-les en priorité absolue.
-    - S'il y a des profils externes intéressants, résume-les et donne les liens (URL).
-    - Ne génère pas de JSON, réponds en texte formaté clair (Markdown autorisé).
-    IMPORTANT : En plus de ta réponse texte, si tu as trouvé des cibles physiques (internes ou web), retourne un tableau JSON strict contenant leurs coordonnées approximatives à la toute fin de ton message sous le format exact suivant : [TARGETS: [{"name": "Nom", "lat": 34.05, "lng": -118.24}]]. Si aucune cible, ne met pas ce tag.
+    RÈGLES DE CIBLAGE GÉOSPATIAL (CRITIQUE) :
+    1. Identifie la localisation EXACTE de la cible dans les données (Ville ou Pays).
+    2. Convertis cette localisation en coordonnées GPS réelles (Latitude et Longitude). 
+    3. INTERDICTION FORMELLE d'utiliser Paris (48.85, 2.35) par défaut. Si la cible est à Saint-Malo, donne les coordonnées de Saint-Malo. Si c'est le Canada, donne les coordonnées du centre du Canada.
+    4. INTERDICTION d'utiliser le mot "Cible" pour le nom. Utilise le VRAI nom du profil trouvé.
+
+    FORMAT DE RÉPONSE OBLIGATOIRE :
+    À la fin de ton analyse textuelle, tu DOIS inclure ce tag exact, sans aucun autre formatage autour :
+    [TARGETS: [{"name": "Nom Réel de la Cible", "lat": 48.6493, "lng": -2.0257}]]
     `;
 
+        console.log("[ETAPE 1] Envoi de la requête à Mistral...");
         const response = await mistral.chat.complete({
             model: "mistral-large-latest",
             messages: [{ role: "system", content: aiPrompt }]
         });
+        console.log("[ETAPE 2] Réponse reçue de Mistral.");
 
         const rawContent = (response.choices?.[0].message.content as string) || "";
+        console.log("[MISTRAL RAW OUTPUT] :", rawContent);
 
         // Extraction balistique du JSON caché
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let extractedTargets: any[] = [];
-        const targetMatch = rawContent.match(/\[TARGETS:\s*(\[.*?\])\]/);
+        // Accepte les sauts de ligne si Mistral formate mal sa réponse
+        const targetMatch = rawContent.match(/\[TARGETS:\s*([\s\S]*?)\]/);
         if (targetMatch && targetMatch[1]) {
             try {
                 extractedTargets = JSON.parse(targetMatch[1]);
@@ -110,7 +122,7 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
         return { success: true, answer: cleanAnswer, targets: extractedTargets };
 
     } catch (error: any) {
-        console.error("[TERMINAL ERROR]", error);
+        console.error("[CRASH BACKEND CRITIQUE] :", error);
         return { success: false, error: "Échec critique du terminal tactique." };
     }
 }

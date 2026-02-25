@@ -1,4 +1,95 @@
 
+--- app\actions\auto-ingest-profile.ts ---
+'use server'
+
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+import { Mistral } from '@mistralai/mistralai';
+
+const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+export async function autoIngestProfile(userId: string, rawData: string) {
+    try {
+        console.log(`[AUTO INGEST] User: ${userId}, Data Length: ${rawData.length}`);
+
+        const prompt = `
+Tu es MISTRAL-TWIN, une IA de profilage psychologique et professionnel de niveau militaire.
+Ta mission : Analyser les données brutes d'un individu et reconstruire sa Matrice d'Identité.
+
+DONNÉES BRUTES FOURNIES PAR LA CIBLE :
+"""
+${rawData}
+"""
+
+INSTRUCTIONS D'ANALYSE STRICTES :
+1. Tu dois déduire le profil de la cible.
+2. Pour les champs à choix multiples, tu DOIS utiliser EXACTEMENT l'une des valeurs autorisées ci-dessous. AUCUNE AUTRE VALEUR n'est acceptée.
+3. Si une information manque, déduis la plus probable.
+
+VALEURS AUTORISÉES POUR LES CHAMPS :
+- "industry" : Choisir parmi ["Tech & Data", "Commerce & Vente", "Marketing & Design", "Finance & Crypto", "Santé & Bien-être", "Artisanat & BTP", "Autre (préciser)"]
+- "seniority" : Choisir parmi ["Junior (0-2 ans)", "Confirmé (3-5 ans)", "Senior (6-10 ans)", "Expert (+10 ans)"]
+- "objectives" : Choisir 1 ou plusieurs parmi ["Acquisition de clients (B2B/B2C)", "Nouvelle opportunité de poste", "Recherche de partenaires/fonds", "Veille technologique/marché", "Reconversion professionnelle"]
+- "environment" : Choisir parmi ["Start-up / Scale-up", "Grand Groupe Entreprise", "PME / TPE", "100% Télétravail / Nomad"]
+- "professionalStatus" : Choisir parmi ["Salarié", "Freelance / Indépendant", "Entrepreneur / CEO", "En transition / Recherche", "Étudiant"]
+
+FORMAT JSON ATTENDU STRICT :
+{
+  "profession": "Titre du poste ou métier principal (Texte libre)",
+  "industry": "VALEUR EXACTE PARMI LES CHOIX",
+  "seniority": "VALEUR EXACTE PARMI LES CHOIX",
+  "professionalStatus": "VALEUR EXACTE PARMI LES CHOIX",
+  "environment": "VALEUR EXACTE PARMI LES CHOIX",
+  "objectives": ["VALEUR EXACTE 1", "VALEUR EXACTE 2"],
+  "workNuances": "Résumé des nuances libres pour la section travail (Texte libre)",
+  "ikigaiMission": "Sa mission de vie ou professionnelle déduite (1 phrase)",
+  "ikigaiValues": ["Valeur 1", "Valeur 2"],
+  "dealbreakers": ["Ce qu'il refuse absolument"],
+  "socialStyle": "Introverti, Extraverti, Analytique, etc."
+}
+`;
+
+        console.log("📡 Envoi des données à Mistral pour assimilation...");
+        const chatResponse = await client.chat.complete({
+            model: 'mistral-large-latest',
+            messages: [{ role: 'user', content: prompt }],
+            responseFormat: { type: 'json_object' },
+            temperature: 0.2, // Profilage strict
+        });
+
+        const rawContent = chatResponse.choices?.[0].message.content;
+        if (!rawContent) throw new Error("Réponse vide de Mistral");
+
+        const profileData = JSON.parse(rawContent as string);
+        console.log("✅ Matrice générée :", profileData);
+
+        await prisma.profile.update({
+            where: { id: userId },
+            data: {
+                profession: profileData.profession,
+                industry: profileData.industry,
+                seniority: profileData.seniority,
+                professionalStatus: profileData.professionalStatus,
+                environment: profileData.environment,
+                objectives: profileData.objectives,
+                workNuances: profileData.workNuances,
+                ikigaiMission: profileData.ikigaiMission,
+                ikigaiValues: profileData.ikigaiValues,
+                dealbreakers: profileData.dealbreakers,
+                socialStyle: profileData.socialStyle,
+            }
+        });
+
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error) {
+        console.error("Erreur autoIngestProfile:", error);
+        return { success: false, error: "Erreur lors de l'assimilation" };
+    }
+}
+
+
 --- app\actions\generate-audit.ts ---
 ﻿'use server'
 
@@ -194,6 +285,70 @@ ${formatData(targetMemories)}
 }
 
 
+--- app\actions\generate-opener.ts ---
+'use server'
+
+import { Mistral } from '@mistralai/mistralai';
+import { prisma } from "@/lib/prisma";
+
+const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+export async function generateTacticalOpener(userId: string, targetId: string) {
+    if (!userId || !targetId) throw new Error("Coordonnées de frappe manquantes.");
+
+    // 1. Récupération des deux profils (Les deux ADN)
+    const user = await prisma.profile.findUnique({
+        where: { id: userId },
+        select: { profession: true, industry: true, objectives: true, thematicProfile: true }
+    });
+
+    const target = await prisma.profile.findUnique({
+        where: { id: targetId },
+        select: { profession: true, industry: true, objectives: true, thematicProfile: true }
+    });
+
+    if (!user || !target) throw new Error("Cible ou Expéditeur introuvable.");
+
+    // 2. Le Prompt d'Ingénierie Sociale
+    const prompt = `
+Tu es MISTRAL-TWIN, un proxy tactique d'ingénierie sociale.
+Ta mission : Rédiger l'approche PARFAITE.
+
+ADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${user.industry || 'Non spécifié'}
+ADN CIBLE : ${target.profession || 'Non spécifié'} - ${target.industry || 'Non spécifié'}
+
+RÈGLES D'ENGAGEMENT :
+Tu dois générer DEUX éléments distincts.
+1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots. (Ex: "Synergie : Logistique & Impression 3D").
+2. "message" : Le message complet de 3 phrases maximum. Direct, froid, professionnel. Pas de formules de politesse inutiles.
+
+FORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :
+{
+  "hook": "Ton accroche ici",
+  "message": "Ton message complet ici"
+}
+`;
+
+    try {
+        const response = await client.chat.complete({
+            model: "mistral-large-latest",
+            messages: [{ role: "user", content: prompt }],
+            responseFormat: { type: "json_object" }
+        });
+
+        const rawContent = response.choices?.[0].message.content;
+        if (!rawContent) throw new Error("Silence radio de l'IA.");
+
+        const openerData = JSON.parse(rawContent as string);
+        return { success: true, hook: openerData.hook, message: openerData.message };
+
+    } catch (error: any) {
+        console.error("[OPENER ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+
 --- app\actions\profile.ts ---
 ﻿'use server'
 import { prisma } from "@/lib/prisma";
@@ -225,91 +380,110 @@ export async function updateProfile(userId: string, formData: any) {
 
 import { Mistral } from '@mistralai/mistralai';
 import { prisma } from "@/lib/prisma";
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
-  // 1. Récupération du profil agent
+  // 1. Initialiser le client Supabase sécurisé (Phase 2)
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value; }
+      }
+    }
+  );
+
+  // 2. Récupération du profil agent pour définir l'intention de recherche
   const agent: any = await prisma.profile.findUnique({
     where: { id: userId }
   });
-
   if (!agent) throw new Error("Agent introuvable.");
 
-  // 2. Récupération du réseau
-  const networkNodes: any[] = await prisma.profile.findMany({
-    where: { id: { not: userId } },
-    include: { memories: { take: 5, orderBy: { createdAt: 'desc' } } }
+  // Ce que notre Agent cherche activement :
+  const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
+
+  // 3. Transformation en vecteur mathématique (Embeddings)
+  const embRes = await client.embeddings.create({
+    model: "mistral-embed",
+    inputs: [searchIntent]
+  });
+  const queryEmbedding = embRes.data[0].embedding;
+
+  // 4. PRE-FILTRAGE RAG : Le Sonar Vectoriel !
+  const { data: matchedMemories, error: rpcError } = await supabase.rpc('match_network_memories', {
+    query_embedding: queryEmbedding,
+    match_threshold: 0.0, // <--- METS 0.0 POUR LE TEST
+    match_count: 5,        // On ne prend que le Top 5 absolu du réseau
+    exclude_profile_id: userId
   });
 
-  const identityContext = `
-        AGENT PRINCIPAL:
-        - Profession: ${agent.profession || 'Inconnue'}
-        - Âge: ${agent.age || 'Inconnu'}
-        - Objectifs: ${agent.objectives?.join(', ') || 'Scan Global'}
-        - Hobbies: ${agent.hobbies?.join(', ') || 'N/A'}
-    `;
-
-  // â”€â”€ PROMPT BASIC : léger, rapide, économie de tokens â”€â”€
-  const basicPrompt = `
-        Tu es l'IA Tactique MISTRAL-TWIN. Tu dois répondre UNIQUEMENT en JSON valide, sans aucun texte avant ou après.
-
-        CONTEXTE DE L'AGENT : ${identityContext}
-        RÉSEAU (${networkNodes.length} nÅ“ud(s)) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, name: n.name, profession: n.profession })))}
-
-        MISSION : Évalue la situation globale du réseau en 2 phrases maximum.
-
-        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (sans clé "opportunities") :
-        {
-          "globalStatus": "GREEN",
-          "analysisSummary": "Résumé de la situation du réseau en 1-2 phrases."
-        }
-    `;
-
-  // â”€â”€ PRÉPARATION DES MÉMOIRES â”€â”€
-  const contexteMemoire = networkNodes
-    .flatMap(node => node.memories.map((m: any) => `[ID: ${node.id}] ${m.content}`))
-    .join('\n');
-
-  // â”€â”€ PROMPT DEEP : analyse consolidée, bloc unique, censure PII â”€â”€
-  const deepPrompt = `
-        Tu es une IA d'analyse tactique. Tu dois analyser les profils ci-dessous et générer une réponse STRICTEMENT au format JSON valide, sans aucun texte avant ou après.
-        
-        CONTEXTE DE L'AGENT : ${identityContext}
-        RÉSEAU DISPONIBLE (IDs et rôles uniquement) : ${JSON.stringify(networkNodes.map(n => ({ id: n.id, profession: n.profession, hobbies: n.hobbies, objectives: n.objectives })))}
-
-        🧠 ARCHIVES ET MÉMOIRES INTERCEPTÉES (TRÈS IMPORTANT POUR L'ANALYSE) :
-        """
-        ${contexteMemoire || "Aucune archive disponible."}
-        """
-
-        ⚠️ RÈGLES DE CENSURE ABSOLUES (NIVEAU OMEGA) :
-        - NE JAMAIS inclure de nom propre, de nom de famille ou de prénom.
-        - NE JAMAIS inclure d'adresse email.
-        - NE JAMAIS inclure de numéro de téléphone ou d'adresse physique.
-        - Désigne toujours la cible par son rôle générique (ex: "Le Fabricant", "L'Expert en PI", "Le Développeur Senior").
-
-        MISSION : Identifie le MEILLEUR profil du réseau pour l'Agent en te basant sur les ARCHIVES INTERCEPTÉES, puis génère une analyse consolidée.
-
-        RÈGLE ABSOLUE : Réponds UNIQUEMENT avec ce JSON exact (camelCase strict) :
-        {
-          "targetId": "l'UUID exact de la cible choisie, copié depuis la liste RÉSEAU ci-dessus",
-          "overallMatchScore": 95,
-          "targetClassification": "Description générique du profil (ex: Détenteur de brevet en ingénierie mécanique)",
-          "unifiedAnalysis": "Une analyse profonde, globale et unique des synergies possibles entre l'Agent et la cible. Min 2 phrases.",
-          "strategicAlignment": "Le bénéfice tactique final et concret de cette connexion pour l'Agent."
-        }
-    `;
-
-  const promptContent = mode === 'basic' ? basicPrompt : deepPrompt;
-
-  // ðŸš¨ LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
-  console.log("🧠 PROMPT ENVOYÉ À MISTRAL (Global Scan) :", promptContent);
-
-  if (!promptContent || promptContent.trim() === "") {
-    console.warn("⚠️ ALERTE : Prompt vide pour le scan global !");
+  if (rpcError) {
+    console.error("Erreur RPC:", rpcError);
+    throw new Error("Erreur de recherche vectorielle.");
   }
 
+  // 5. Analyse des résultats
+  if (!matchedMemories || matchedMemories.length === 0) {
+    return {
+      globalStatus: "SILENT",
+      analysisSummary: "Le réseau est silencieux. Aucune synergie forte détectée.",
+      targetId: null,
+      overallMatchScore: 0,
+      targetClassification: "Aucune cible",
+      unifiedAnalysis: "Pas assez de données convergentes sur le réseau actuel.",
+      strategicAlignment: "Poursuivre l'ingestion de données."
+    };
+  }
+
+  // On extrait les IDs des profils uniques qui possèdent ces mémoires pertinentes
+  const matchedProfileIds: string[] = Array.from(new Set(matchedMemories.map((m: any) => String(m.profile_id))));
+
+  // On récupère uniquement ces quelques profils depuis la base de données
+  const networkNodes = await prisma.profile.findMany({
+    where: { id: { in: matchedProfileIds } },
+    select: { id: true, profession: true, objectives: true }
+  });
+
+  // Assemblage du contexte strict pour Mistral (Plus de saturation mémoire !)
+  const contexteMemoire = matchedMemories.map((m: any) => `[ID: ${m.profile_id}] ${m.content}`).join('\n');
+  const identityContext = `Profession: ${agent.profession}. Objectifs: ${agent.objectives?.join(', ')}`;
+
+  const promptContent = `
+Tu es l'IA Tactique MISTRAL-TWIN. 
+CONTEXTE DE MON AGENT : ${identityContext}
+
+CIBLES DU RÉSEAU (Pré-filtrées mathématiquement) : 
+${JSON.stringify(networkNodes)}
+
+🧠 MÉMOIRES INTERCEPTÉES SUR CES CIBLES :
+"""
+${contexteMemoire}
+"""
+
+⚠️ RÈGLES DE CENSURE :
+- Ne JAMAIS inclure de nom propre (utilise des rôles).
+- Réponds UNIQUEMENT en JSON valide.
+
+MISSION : Analyse ces données ciblées. Identifie la cible la plus pertinente et rédige un rapport.
+
+FORMAT DE RÉPONSE OBLIGATOIRE :
+{
+  "globalStatus": "DETECTED", 
+  "analysisSummary": "Une phrase d'accroche courte style radar (ex: 'Écho radar puissant : Profil ingénieur détecté.')",
+  "targetId": "l'UUID exact copié depuis CIBLES DU RÉSEAU",
+  "overallMatchScore": 95,
+  "targetClassification": "Description (ex: Fabricant de matériaux)",
+  "unifiedAnalysis": "Pourquoi ça match avec l'Agent (2 phrases max).",
+  "strategicAlignment": "Bénéfice tactique."
+}
+`;
+
+  // 6. SYNTHÈSE IA (Sur une donnée restreinte et maîtrisée)
   const response = await client.chat.complete({
     model: "mistral-large-latest",
     messages: [{ role: "system", content: promptContent }],
@@ -321,20 +495,133 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
 
   const aiAnalysis = JSON.parse(rawContent as string);
 
-  // â”€â”€ FUSION TACTIQUE : injection blindée du targetId â”€â”€
-  // Mistral peut oublier ou halluciner l'UUID. On valide qu'il correspond
-  // à un nÅ“ud réel du réseau. Si invalide, on prend le premier nÅ“ud comme fallback.
-  const knownIds = new Set(networkNodes.map(n => n.id));
-  const validatedTargetId = knownIds.has(aiAnalysis.targetId)
+  // Blindage UUID
+  const validatedTargetId = networkNodes.some(n => n.id === aiAnalysis.targetId)
     ? aiAnalysis.targetId
-    : (networkNodes[0]?.id ?? null);
-
-  console.log(`[SCAN-DEEP] targetId Mistral: ${aiAnalysis.targetId} â†’ validé: ${validatedTargetId}`);
+    : networkNodes[0]?.id;
 
   return {
     ...aiAnalysis,
-    targetId: validatedTargetId, // Toujours présent, toujours fiable
+    targetId: validatedTargetId
   };
+}
+
+--- app\actions\terminal-command.ts ---
+'use server'
+
+import { Mistral } from '@mistralai/mistralai';
+import { prisma } from "@/lib/prisma";
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+export async function executeTerminalCommand(userId: string, prompt: string): Promise<{ success: boolean; answer?: string; targets?: any[]; error?: string }> {
+    if (!prompt) throw new Error("Ordre vide.");
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
+    );
+
+    try {
+        // --- 1. CONVERSION DE L'ORDRE EN VECTEUR ---
+        const embRes = await mistral.embeddings.create({
+            model: "mistral-embed",
+            inputs: [prompt]
+        });
+        const queryEmbedding = embRes.data[0].embedding;
+
+        // --- 2. DOUBLE FRAPPE PARALLÈLE (Interne + Externe) ---
+
+        // Frappe A : Recherche Interne (Le Sonar Vectoriel qu'on a créé)
+        const internalSearch = supabase.rpc('match_network_memories', {
+            query_embedding: queryEmbedding,
+            match_threshold: 0.50, // On ratisse large pour le terminal
+            match_count: 3,
+            exclude_profile_id: userId
+        });
+
+        // Frappe B : Recherche Externe (Tavily Web Scout)
+        // We only execute external search if TAVILY_API_KEY is available.
+        let externalSearch: Promise<any> = Promise.resolve({ results: [] });
+        if (process.env.TAVILY_API_KEY) {
+            externalSearch = fetch('https://api.tavily.com/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: process.env.TAVILY_API_KEY,
+                    query: `${prompt} profil professionnel OR LinkedIn`,
+                    search_depth: "basic",
+                    max_results: 3
+                })
+            }).then(res => res.json()).catch(() => ({ results: [] }));
+        }
+
+        // On exécute les deux en même temps pour diviser le temps d'attente par 2
+        const [internalRes, externalData] = await Promise.all([internalSearch, externalSearch]);
+
+        // --- 3. FORMATAGE DES DONNÉES POUR L'IA ---
+        let internalContext = "Aucune donnée interne trouvée.";
+        if (internalRes.data && internalRes.data.length > 0) {
+            internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - Mémoire: ${m.content}`).join('\n');
+        }
+
+        let externalContext = "Aucune donnée externe trouvée.";
+        if (externalData.results && externalData.results.length > 0) {
+            externalContext = externalData.results.map((r: any) => `[Web] ${r.title}\nURL: ${r.url}\nExtrait: ${r.content}`).join('\n\n');
+        }
+
+        // --- 4. SYNTHÈSE MISTRAL (L'Agent te parle) ---
+        const aiPrompt = `
+    Tu es MISTRAL-TWIN, le Jumeau Numérique et Agent Tactique.
+    Ton utilisateur t'a donné cet ordre : "${prompt}"
+
+    RAPPORT DES CAPTEURS INTERNES (Base de données Twins) :
+    """${internalContext}"""
+
+    RAPPORT DES CAPTEURS EXTERNES (Web / Tavily) :
+    """${externalContext}"""
+
+    MISSION :
+    Réponds directement à l'utilisateur de manière ultra-concise, froide et professionnelle.
+    - Analyse les résultats.
+    - S'il y a des matchs internes, mets-les en priorité absolue.
+    - S'il y a des profils externes intéressants, résume-les et donne les liens (URL).
+    - Ne génère pas de JSON, réponds en texte formaté clair (Markdown autorisé).
+    IMPORTANT : En plus de ta réponse texte, si tu as trouvé des cibles physiques (internes ou web), retourne un tableau JSON strict contenant leurs coordonnées approximatives à la toute fin de ton message sous le format exact suivant : [TARGETS: [{"name": "Nom", "lat": 34.05, "lng": -118.24}]]. Si aucune cible, ne met pas ce tag.
+    `;
+
+        const response = await mistral.chat.complete({
+            model: "mistral-large-latest",
+            messages: [{ role: "system", content: aiPrompt }]
+        });
+
+        const rawContent = (response.choices?.[0].message.content as string) || "";
+
+        // Extraction balistique du JSON caché
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let extractedTargets: any[] = [];
+        const targetMatch = rawContent.match(/\[TARGETS:\s*(\[.*?\])\]/);
+        if (targetMatch && targetMatch[1]) {
+            try {
+                extractedTargets = JSON.parse(targetMatch[1]);
+            } catch (e) {
+                console.error("Erreur de décodage des coordonnées");
+            }
+        }
+
+        // On nettoie le message pour ne pas afficher le tag [TARGETS: ...] à l'utilisateur
+        const cleanAnswer = rawContent.replace(/\[TARGETS:.*?\]/g, '').trim();
+
+        return { success: true, answer: cleanAnswer, targets: extractedTargets };
+
+    } catch (error: any) {
+        console.error("[TERMINAL ERROR]", error);
+        return { success: false, error: "Échec critique du terminal tactique." };
+    }
 }
 
 
@@ -474,7 +761,30 @@ export async function GET(req: Request) {
     try {
         const profile = await prisma.profile.findUnique({
             where: { id: profileId },
-            select: { dateOfBirth: true, postalCode: true, city: true, gender: true, country: true, thematicProfile: true, unifiedAnalysis: true }
+            select: {
+                id: true,
+                name: true,
+                bio: true,
+                avatarUrl: true,
+                dateOfBirth: true,
+                postalCode: true,
+                city: true,
+                gender: true,
+                country: true,
+                thematicProfile: true,
+                unifiedAnalysis: true,
+                profession: true,
+                industry: true,
+                seniority: true,
+                professionalStatus: true,
+                environment: true,
+                objectives: true,
+                workNuances: true,
+                ikigaiMission: true,
+                ikigaiValues: true,
+                dealbreakers: true,
+                socialStyle: true
+            }
         });
 
         return NextResponse.json({ success: true, profile });
@@ -589,7 +899,18 @@ export async function POST(req: Request) {
                 postalCode: postalCode,
                 city: city,
                 gender: gender,
-                thematicProfile: thematicProfile
+                thematicProfile: thematicProfile,
+                // MAP NESTED FORMDATA TO TOP-LEVEL COLUMNS
+                industry: thematicProfile?.travail?.industry || null,
+                seniority: thematicProfile?.travail?.seniority || null,
+                professionalStatus: thematicProfile?.travail?.professionalStatus || null,
+                environment: thematicProfile?.travail?.environment || null,
+                objectives: thematicProfile?.travail?.objectives ? [thematicProfile.travail.objectives] : [],
+                workNuances: thematicProfile?.travail?.precisionsLibres || null,
+                ikigaiMission: thematicProfile?.ikigai?.ikigaiMission || null,
+                ikigaiValues: thematicProfile?.ikigai?.ikigaiValues ? [thematicProfile.ikigai.ikigaiValues] : [],
+                dealbreakers: thematicProfile?.ikigai?.dealbreakers ? [thematicProfile.ikigai.dealbreakers] : [],
+                socialStyle: thematicProfile?.ikigai?.socialStyle || null,
             }
         });
 
@@ -1496,6 +1817,96 @@ export async function POST() {
 }
 
 
+--- app\api\cron\radar-furtif\route.ts ---
+import { NextResponse } from 'next/server';
+import { prisma } from "@/lib/prisma";
+import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
+
+// ⚠️ EXCEPTION STRATÉGIQUE : Mode "Dieu" autorisé UNIQUEMENT pour les tâches de fond (Cron)
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+export async function GET(request: Request) {
+    // 1. SÉCURITÉ : Vérifier que c'est bien Vercel (ou toi) qui lance le Cron
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return NextResponse.json({ error: 'Accès tactique refusé.' }, { status: 401 });
+    }
+
+    console.log("🦇 [RADAR FURTIF] Déploiement de l'escadron nocturne...");
+
+    try {
+        // 2. Récupérer tous les profils actifs qui cherchent des opportunités
+        const activeAgents = await prisma.profile.findMany({
+            where: { objectives: { isEmpty: false } },
+            select: { id: true, profession: true, objectives: true }
+        });
+
+        for (const agent of activeAgents) {
+            if (!agent.profession || agent.objectives.length === 0) continue;
+
+            // 3. Convertir l'objectif de l'agent en Vecteur
+            const searchIntent = `Profession: ${agent.profession}. Objectifs: ${agent.objectives.join(', ')}`;
+            const embRes = await mistral.embeddings.create({
+                model: "mistral-embed",
+                inputs: [searchIntent]
+            });
+            const queryEmbedding = embRes.data[0].embedding;
+
+            // 4. Scanner la base vectorielle globalement (bypass RLS grâce au client Admin)
+            const { data: matchedMemories, error } = await supabaseAdmin.rpc('match_network_memories', {
+                query_embedding: queryEmbedding,
+                match_threshold: 0.85, // Seuil TRÈS élevé : On ne veut réveiller l'utilisateur que pour un sniper shot
+                match_count: 1,
+                exclude_profile_id: agent.id
+            });
+
+            if (error) {
+                console.error(`[CRON] Erreur RPC pour l'agent ${agent.id}`, error);
+                continue;
+            }
+
+            if (matchedMemories && matchedMemories.length > 0) {
+                const targetId = matchedMemories[0].profile_id;
+
+                // 5. Générer une notification silencieuse dans la base de données
+                // Vérifier d'abord si on n'a pas déjà notifié cette cible récemment
+                const existingAlert = await prisma.notification.findFirst({
+                    where: { userId: agent.id, targetId: targetId }
+                });
+
+                if (!existingAlert) {
+                    // Créer l'alerte
+                    await prisma.notification.create({
+                        data: {
+                            userId: agent.id,
+                            type: 'RADAR_MATCH',
+                            title: 'Cible Haute Valeur Détectée',
+                            content: `Le Radar Furtif a trouvé une cible avec un alignement stratégique massif pendant la nuit.`,
+                            targetId: targetId,
+                            isRead: false
+                        }
+                    });
+
+                    console.log(`[SUCCÈS] Alerte générée pour l'Agent ${agent.id} vers la cible ${targetId}`);
+                }
+            }
+        }
+
+        return NextResponse.json({ success: true, message: "Ronde nocturne terminée." });
+
+    } catch (error: any) {
+        console.error("[CRON ERROR]", error);
+        return NextResponse.json({ error: "Échec du radar furtif" }, { status: 500 });
+    }
+}
+
+
 --- app\api\guardian\intervene\route.ts ---
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -2196,15 +2607,9 @@ export async function POST(req: Request) {
 
 
 --- app\api\memories\route.ts ---
-﻿import { createClient } from '@supabase/supabase-js';
+﻿import { createClient } from '@/lib/supabaseServer';
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
-
-// Client service-role pour les lectures (GET) â€” bypasse RLS
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -2212,7 +2617,9 @@ export async function GET(req: Request) {
 
     if (!pid) return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
 
-    console.log(`ðŸ” Lecture Memory pour ${pid}`);
+    const supabase = await createClient();
+
+    console.log(`🔍 Lecture Memory pour ${pid}`);
 
     const { data, error } = await supabase
         .from('memory')
@@ -2230,6 +2637,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient();
         const body = await req.json();
         const { content, profileId, type } = body;
 
@@ -2286,18 +2694,11 @@ export async function PATCH(req: Request) {
         });
         const newEmbedding = embeddingResponse.data[0]?.embedding;
 
-        // 2. Client BDD blindé avec l'identité de l'utilisateur
-        const supabaseAuth = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: { persistSession: false, autoRefreshToken: false },
-                global: { headers: { Authorization: authHeader } }
-            }
-        );
+        // 2. Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
         // 3. Mise à jour du fragment (contenu + nouveau vecteur)
-        const { error } = await supabaseAuth
+        const { error } = await supabase
             .from('memory')
             .update({ content, embedding: newEmbedding })
             .eq('id', id)
@@ -2327,18 +2728,11 @@ export async function DELETE(req: Request) {
             return Response.json({ error: "Paramètres invalides (id et profileId requis)." }, { status: 400 });
         }
 
-        // Client BDD blindé avec l'identité de l'utilisateur (RLS actif)
-        const supabaseAuth = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                auth: { persistSession: false, autoRefreshToken: false },
-                global: { headers: { Authorization: authHeader } }
-            }
-        );
+        // Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
         // Ordre de destruction (double sécurité : id ET profile_id)
-        const { data, error } = await supabaseAuth
+        const { data, error } = await supabase
             .from('memory')
             .delete()
             .eq('id', id)
@@ -2409,13 +2803,8 @@ export async function POST(request: Request) {
 
 
 --- app\api\memories\[id]\route.ts ---
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { NextResponse } from 'next/server';
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function DELETE(
     request: Request,
@@ -2425,6 +2814,8 @@ export async function DELETE(
         const id = (await params).id;
 
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+
+        const supabase = await createClient();
 
         console.log(`🗑️ Suppression mémoire ${id}`);
 
@@ -2815,18 +3206,19 @@ export async function POST(req: Request) {
 
 --- app\api\network\detect\route.ts ---
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 import { scanNetworkForAgents } from '@/lib/tools/network-scanner';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { profileId, sector } = await req.json();
 
-        console.log(`ðŸ“¡ [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
+        const supabase = await createClient();
+
+        console.log(`📡 [SONAR] Scan hybride (Interne/Externe) pour : ${profileId}`);
 
         // 1. SCAN INTERNE (Ta Base de Données)
         // On cherche tous les profils SAUF toi-même
@@ -2933,15 +3325,16 @@ export async function POST(req: Request) {
 
 --- app\api\network\negotiate\route.ts ---
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 import { Mistral } from '@mistralai/mistralai';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 export async function POST(req: Request) {
     try {
         const { myProfileId, targetProfileId } = await req.json();
+
+        const supabase = await createClient();
 
         // 1. RÉCUPÉRATION DES DEUX IDENTITÉS (Leurs bios, leurs buts, leurs mémoires)
         const { data: profiles } = await supabase
@@ -3015,42 +3408,26 @@ export async function POST(req: Request) {
 
 --- app\api\network\request\route.ts ---
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
     try {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader) {
-            console.error("[ERROR] Authorization header missing");
-            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-        }
-
-        const { targetId } = await req.json();
+        const { targetId, senderClassification, initialMessage, fullMessage } = await req.json();
         console.log(`[NETWORK] Tentative d'envoi de requête vers : ${targetId}`);
 
         if (!targetId) {
             return NextResponse.json({ error: "targetId manquant" }, { status: 400 });
         }
 
-        // Client anon pour vérifier l'identité (token utilisateur)
-        const supabaseAuth = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { global: { headers: { Authorization: authHeader } } }
-        );
+        // Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
         // Récupération de l'expéditeur via le token (source de vérité)
-        const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
             console.error("[ERROR] Auth user fail:", authError);
             return NextResponse.json({ error: "Utilisateur non identifié" }, { status: 403 });
         }
-
-        // Client service role pour l'insertion (bypass RLS côté serveur)
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
 
         // Colonnes réelles du schéma Prisma : requester_id + provider_id + topic
         const { error: insertError } = await supabase.from('AccessRequest').insert({
@@ -3058,7 +3435,8 @@ export async function POST(req: Request) {
             requester_id: user.id,   // Schéma Prisma : requester_id
             provider_id: targetId,   // Schéma Prisma : provider_id
             status: 'pending',
-            topic: `Demande de liaison`,
+            topic: initialMessage || `Demande de liaison (${senderClassification || 'entité inconnue'})`,
+            fullMessage: fullMessage || null,
             created_at: new Date().toISOString(),
         });
 
@@ -3079,46 +3457,39 @@ export async function POST(req: Request) {
 
 --- app\api\network\respond\route.ts ---
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseServer';
 
 export async function POST(req: Request) {
     try {
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-
         const { requestId, requesterId, action } = await req.json();
 
-        // Client utilisateur pour identifier le répondant (via RLS)
-        const supabaseUser = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { global: { headers: { Authorization: authHeader } } }
-        );
+        // Client utilisateur authentifié (utilise les cookies Next.js)
+        const supabase = await createClient();
 
-        const { data: { user } } = await supabaseUser.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) return NextResponse.json({ error: "Non identifié" }, { status: 403 });
 
-        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
+        // 🛡️ SÉCURITÉ & DEBUG AVANCÉ
         const currentUserId = user?.id ? String(user.id).trim() : "";
         const targetReqId = requesterId ? String(requesterId).trim() : "";
 
         console.log(`[DEBUG RESPOND] Verif Boucle: Moi('${currentUserId}') vs Requester('${targetReqId}')`);
 
         if (currentUserId === targetReqId) {
-            console.error("[SECURITY BLOCK] ðŸ›‘ BOUCLE TEMPORELLE INTERCEPTÉE !");
+            console.error("[SECURITY BLOCK] 🛑 BOUCLE TEMPORELLE INTERCEPTÉE !");
             return NextResponse.json({ error: "Boucle temporelle détectée : Vous ne pouvez pas vous lier à vous-même." }, { status: 400 });
         }
 
-        // Client service role pour les mutations (contourne RLS sur AccessRequest + Channel)
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-
         if (action === 'accept') {
+            // 0. Récupérer la requête pour lire l'ogive (fullMessage) avant suppression
+            const { data: requestData } = await supabase.from('AccessRequest').select('fullMessage').eq('id', requestId).single();
+            const fullMessage = requestData?.fullMessage;
+
+            const channelId = crypto.randomUUID();
+
             // 1. Créer le canal avec les noms de colonnes réels
             const { error: chanError } = await supabase.from('Channel').insert({
-                id: crypto.randomUUID(),
+                id: channelId,
                 topic: `Liaison Directe : ${user?.id.slice(0, 4)} x ${requesterId.slice(0, 4)}`,
                 member_one_id: user?.id,     // Toi
                 member_two_id: requesterId,  // Lui
@@ -3128,8 +3499,23 @@ export async function POST(req: Request) {
             if (chanError) {
                 console.error("[ERROR BDD Channel]", chanError);
             } else {
+                // 1.5 Libérer l'ogive (Créer le premier message tactique)
+                if (fullMessage) {
+                    await supabase.from('Message').insert({
+                        id: crypto.randomUUID(),
+                        content: fullMessage,
+                        sender_id: requesterId, // L'initiateur de la requête est l'auteur du message
+                        communication_id: channelId
+                    });
+                    console.log(`[RESPOND] 🎯 Icebreaker déployé dans le canal !`);
+                }
                 // 2. Supprimer la requête UNIQUEMENT si le canal est créé
-                await supabase.from('AccessRequest').delete().eq('id', requestId);
+                const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+                if (delError) {
+                    console.error("[ERROR BDD AccessRequest]", delError);
+                    return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+                }
                 console.log(`[RESPOND] ✅ Liaison acceptée et requête nettoyée : ${user?.id} â†” ${requesterId}`);
             }
 
@@ -3140,12 +3526,22 @@ export async function POST(req: Request) {
                 blockedId: requesterId,
             });
             // 2. Supprimer la requête
-            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+            if (delError) {
+                console.error("[ERROR BDD AccessRequest]", delError);
+                return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+            }
             console.log(`[RESPOND] 🚫 Entité bloquée : ${requesterId}`);
 
         } else {
             // Refus simple : on efface la trace
-            await supabase.from('AccessRequest').delete().eq('id', requestId);
+            const { error: delError } = await supabase.from('AccessRequest').delete().eq('id', requestId);
+
+            if (delError) {
+                console.error("[ERROR BDD AccessRequest]", delError);
+                return NextResponse.json({ error: "Action réussie mais impossible de nettoyer la notification." }, { status: 500 });
+            }
             console.log(`[RESPOND] ❌ Requête refusée : ${requestId}`);
         }
 
@@ -4946,7 +5342,7 @@ import { createClient } from '@/lib/supabase/client';
 import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
 import { NeuralLink } from '@/components/NeuralLink';
 import Scanner from '@/components/dashboard/Scanner';
-import TacticalGlobe from '@/components/Globe';
+import BackgroundGlobe, { TargetNode } from '@/components/Globe';
 import MatchOverlay from '@/components/dashboard/MatchOverlay';
 import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
 import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
@@ -4954,6 +5350,8 @@ import SecureChat from '@/components/SecureChat';
 import OpportunityRadar from '@/components/OpportunityRadar';
 import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
+import { TacticalOpenerModule } from '@/components/TacticalOpenerModule';
+import { CommandTerminal } from '@/components/CommandTerminal';
 
 // --- LOGIQUE METIER (INCHANGÉE) ---
 const calculateSynergy = (target: any, memories: any[]) => {
@@ -5025,8 +5423,10 @@ export default function MissionControl() {
     const [basicResult, setBasicResult] = useState<any>(null);
     const [deepResult, setDeepResult] = useState<any>(null);
 
+    // Palantir State
+    const [activeTargets, setActiveTargets] = useState<TargetNode[]>([]);
+
     // États Ingestion
-    const [quickThought, setQuickThought] = useState("");
     const [isDragging, setIsDragging] = useState(false);
 
     const [unreadIds, setUnreadIds] = useState<string[]>([]);
@@ -5209,40 +5609,7 @@ export default function MissionControl() {
         } catch (err) { addLog(`CRITIQUE: Erreur upload.`); }
     };
 
-    const handleQuickThoughtSubmit = async (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!quickThought.trim() || !profileId) return;
 
-        // ✅ Filtre anti-corruption : suppression des null bytes
-        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
-        setQuickThought('');
-        addLog('MEMOIRE: Archivage...');
-
-        // Récupération du passeport session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('CRITIQUE: Session expirée.'); return; }
-
-        try {
-            const res = await fetch('/api/memories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    content: cleanThought,
-                    profileId: session.user.id,
-                    type: 'thought',
-                }),
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            addLog('SUCCÈS: Pensée synchronisée dans le Cortex.');
-            loadMemories(profileId);
-        } catch (err: any) {
-            addLog(`CRITIQUE: ${err.message || 'Échec de transmission.'}`);
-        }
-    };
     const triggerManualScan = async () => {
         if (!profileId) return;
         setStatus('SCANNING');
@@ -5444,9 +5811,8 @@ export default function MissionControl() {
         >
             {/* Background Elements (TACTICAL GLOBE) */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <TacticalGlobe
-                    mode={status === 'LIST' ? 'LOCKED' : status}
-                    targetCoordinates={(status === 'LOCKED' || status === 'LIST') ? [48.8566, 2.3522] : null}
+                <BackgroundGlobe
+                    targets={(status === 'LOCKED' || status === 'LIST') ? [{ lat: 48.8566, lng: 2.3522, name: 'Cible' }] : []}
                 />
             </div>
 
@@ -5642,14 +6008,21 @@ export default function MissionControl() {
                                         </p>
                                     </div>
 
-                                    {/* Commandes Phase 2 */}
-                                    <div className="grid grid-cols-3 gap-2 pt-2">
-                                        <button
-                                            onClick={handleContactTarget}
-                                            className="bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all uppercase tracking-wider text-[11px]"
-                                        >
-                                            💬 Contacter
-                                        </button>
+                                    {/* Apport de l'Opener Tactique (Remplace l'ancien bouton Contacter basique) */}
+                                    <TacticalOpenerModule
+                                        userId={profileId!}
+                                        targetId={deepResult?.targetId || deepResult?.id || deepResult?.profile_id}
+                                        targetClassification={deepResult.targetClassification}
+                                        onSuccess={() => {
+                                            addLog('SUCCÈS: Demande tactique transmise avec succès. En attente de réponse.');
+                                            setStatus('IDLE');
+                                            setBasicResult(null);
+                                            setDeepResult(null);
+                                        }}
+                                    />
+
+                                    {/* Commandes Phase 2 Pures */}
+                                    <div className="grid grid-cols-2 gap-2 pt-2">
                                         <button
                                             onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
                                             className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
@@ -5761,19 +6134,24 @@ export default function MissionControl() {
                         </div>
                     </div>
 
-                    {/* Input Pensée Rapide */}
-                    <form onSubmit={handleQuickThoughtSubmit} className="glass-panel rounded-full p-1 flex items-center gap-2 pl-4">
-                        <input
-                            type="text"
-                            value={quickThought}
-                            onChange={e => setQuickThought(e.target.value)}
-                            placeholder="Saisir pensée rapide..."
-                            className="bg-transparent border-none text-base md:text-xs text-white focus:ring-0 flex-1 placeholder:text-gray-600"
-                        />
-                        <button type="submit" className="p-2 bg-primary/20 rounded-full text-primary hover:bg-primary hover:text-black transition-colors active:scale-90">
-                            <Send size={14} />
-                        </button>
-                    </form>
+                    {/* SYSTÈME PALANTIR */}
+                    {profileId && (
+                        <div className="mt-8 space-y-4 relative z-10">
+                            <h2 className="text-sm font-bold text-cyan-500 tracking-widest border-b border-cyan-800/50 pb-2 flex items-center gap-2 uppercase">
+                                <span className="animate-pulse">☄️</span> SYSTÈME PALANTIR
+                            </h2>
+
+                            {/* Nouveau layout : Centré, sans le globe local */}
+                            <div className="flex flex-col items-center w-full max-w-3xl mx-auto gap-4 mt-6">
+
+                                {/* Le Terminal sans surcouche, la transparence sera gérée à l'intérieur */}
+                                <div className="w-full flex flex-col border border-white/10 bg-black/40 backdrop-blur-md rounded-xl h-[500px] font-mono text-sm shadow-[0_0_30px_rgba(0,255,255,0.05)]">
+                                    <CommandTerminal userId={profileId} onTargetsFound={setActiveTargets} />
+                                </div>
+
+                            </div>
+                        </div>
+                    )}
 
                 </main>
             </div>
@@ -6133,6 +6511,8 @@ import {
     CheckCircle2, AlertTriangle, Wifi
 } from 'lucide-react';
 
+import { autoIngestProfile } from '@/app/actions/auto-ingest-profile';
+
 // â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Memory {
     id: string;
@@ -6177,6 +6557,14 @@ function CortexManager() {
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // Nouveaux States pour l'Assimilation Rapide (Profil)
+    const [profileRawData, setProfileRawData] = useState('');
+    const [isAssimilating, setIsAssimilating] = useState(false);
+
+    // Nouveaux States pour la Pensée Rapide (Mémoire)
+    const [quickThought, setQuickThought] = useState('');
+    const [isSavingThought, setIsSavingThought] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
@@ -6399,6 +6787,67 @@ function CortexManager() {
     };
 
     // â”€â”€ Loading state â”€â”€
+    // --- Fonction 1 : Assimilation de l'Identité ---
+    const handleProfileAssimilation = async () => {
+        if (!profileId || !profileRawData.trim()) return;
+        setIsAssimilating(true);
+        addLog('[MATRICE] Injection des données brutes en cours...', 'info');
+        try {
+            const result = await autoIngestProfile(profileId, profileRawData);
+            if (result?.success) {
+                addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
+                setProfileRawData('');
+            } else {
+                addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
+            }
+        } catch (e: any) {
+            addLog("[CRITIQUE] Impossible de contacter le centre d'assimilation.", 'error');
+        } finally {
+            setIsAssimilating(false);
+        }
+    };
+
+    // --- Fonction 2 : Pensée Rapide (Ex-Dashboard) ---
+    const handleQuickThought = async () => {
+        if (!quickThought.trim() || !profileId) return;
+        setIsSavingThought(true);
+
+        // ✅ Filtre anti-corruption : suppression des null bytes
+        const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
+        addLog('[CORTEX] Archivage de la pensée rapide...', 'info');
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                addLog('[CRITIQUE] Session expirée.', 'error');
+                return;
+            }
+
+            const res = await fetch('/api/memories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    content: cleanThought,
+                    profileId: session.user.id,
+                    type: 'thought',
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+
+            setQuickThought('');
+            addLog('[SUCCÈS] Pensée enregistrée dans le Cortex.', 'success');
+            fetchMemories();
+        } catch (err: any) {
+            addLog(`[CRITIQUE] ${err.message || 'Échec de transmission.'}`, 'error');
+        } finally {
+            setIsSavingThought(false);
+        }
+    };
+
     if (!profileId) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -6444,10 +6893,60 @@ function CortexManager() {
                     </button>
                 </header>
 
-                {/* â”€â”€ GRID PRINCIPALE â”€â”€ */}
+                {/* ── NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX ── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+
+                    {/* --- SECTEUR 1 : MATRICE (Identité) --- */}
+                    <div className="border border-cyan-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(0,255,255,0.1)] flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 flex items-center text-cyan-400">
+                            <span className="text-2xl mr-2">🧬</span> 1. RECALIBRAGE DE LA MATRICE
+                        </h2>
+                        <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
+                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA écrasera et mettra à jour votre ADN professionnel et psychologique.
+                        </p>
+                        <textarea
+                            className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-cyan-500 focus:outline-none placeholder:text-slate-600"
+                            placeholder="DONNÉES BRUTES (Ex: Copier-coller LinkedIn)..."
+                            value={profileRawData}
+                            onChange={(e) => setProfileRawData(e.target.value)}
+                        />
+                        <button
+                            onClick={handleProfileAssimilation}
+                            disabled={isAssimilating || profileRawData.length < 50}
+                            className="mt-4 w-full bg-cyan-700 hover:bg-cyan-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
+                        >
+                            {isAssimilating ? 'ASSIMILATION NEURALE...' : 'INJECTER DANS LA MATRICE'}
+                        </button>
+                    </div>
+
+                    {/* --- SECTEUR 2 : CORTEX (Mémoire) --- */}
+                    <div className="border border-emerald-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col">
+                        <h2 className="text-xl font-bold mb-2 text-emerald-400 flex items-center">
+                            <span className="text-2xl mr-2">🧠</span> 2. INGESTION MÉMOIRE RAPIDE
+                        </h2>
+                        <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
+                            Ajoutez une note tactique, une idée ou une information isolée que l'Agent doit retenir pour ses futurs scans.
+                        </p>
+                        <textarea
+                            className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-emerald-500 focus:outline-none placeholder:text-slate-600"
+                            placeholder="NOUVELLE PENSÉE / MÉMOIRE..."
+                            value={quickThought}
+                            onChange={(e) => setQuickThought(e.target.value)}
+                        />
+                        <button
+                            onClick={handleQuickThought}
+                            disabled={isSavingThought || quickThought.length < 5}
+                            className="mt-4 w-full bg-emerald-700 hover:bg-emerald-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
+                        >
+                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÉE'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* â”€â”€ COL GAUCHE : ZONE D'INGESTION â”€â”€ */}
+                    {/* ── COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES ── */}
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* DROPZONE */}
@@ -7387,34 +7886,21 @@ import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, 
 
 const QUESTIONS = {
     travail: [
-        { id: 'secteur', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
-        { id: 'statut', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
-        { id: 'experience', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
-        { id: 'objectif', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
-        { id: 'environnement', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
+        { id: 'industry', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
+        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
+        { id: 'seniority', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
+        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
+        { id: 'environment', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
     ],
-    rencontre: [
-        { id: 'objectif_rencontre', label: 'Type de relation recherchée', options: ['Relation sérieuse & durable', 'Rencontres amicales / Sorties', 'Aventure / Sans prise de tête', 'Élargir mon cercle professionnel/social', 'Je laisse faire le hasard'] },
-        { id: 'personnalite', label: 'Votre trait de caractère principal', options: ['Extraverti(e) & Sociable', 'Calme & Réfléchi(e)', 'Créatif(ve) & Rêveur(se)', 'Épicurien(ne) & Bon vivant'] },
-        { id: 'style_vie', label: 'Votre rythme de vie', options: ['Très actif / Sportif', 'Casanier / Soirées tranquilles', 'Oiseau de nuit / Sorties régulières', 'Équilibré / Un peu des deux'] },
-        { id: 'criteres_recherche', label: 'Ce qui vous attire le plus', options: ['L\'humour et la complicité', 'L\'ambition et le charisme', 'La douceur et l\'écoute', 'Le partage de passions communes'] },
-        { id: 'first_date', label: 'Premier rendez-vous idéal', options: ['Un verre ou un café en terrasse', 'Une activité insolite / sportive', 'Un dîner romantique', 'Une simple balade en nature'] }
-    ],
-    loisirs: [
-        { id: 'passion_principale', label: 'Centre d\'intérêt majeur', options: ['Sport & Activité physique', 'Art, Culture & Créativité', 'Tech, Gaming & Sciences', 'Nature & Plein air', 'Gastronomie & Épicurisme', 'Autre'] },
-        { id: 'dynamique', label: 'Dynamique sociale préférée', options: ['En solitaire / Bulle personnelle', 'En petit comité (Amis proches)', 'En grand groupe / Événements publics', 'En ligne / Communautés virtuelles'] },
-        { id: 'objectif_loisir', label: 'Objectif de vos activités', options: ['Détente absolue & Déconnexion', 'Apprentissage & Développement personnel', 'Dépassement de soi / Adrénaline', 'Création & Expression artistique'] },
-        { id: 'frequence', label: 'Rythme de pratique', options: ['Quotidiennement (Routine intégrée)', 'Principalement le week-end', 'Quelques fois par mois', 'Par périodes / De manière saisonnière'] },
-        { id: 'weekend_ideal', label: 'Le week-end parfait', options: ['Escapade nature & Randonnée', 'Marathon culturel (Expos, Spectacles)', 'Festif & Gastronomie (Restos, Sorties)', 'Cocooning à la maison (Jeux, Séries, Lecture)'] }
-    ],
+
 
     // 🟢 NOUVEAU BLOC : LA BOUSSOLE MORALE
     ikigai: [
-        { id: 'mission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
-        { id: 'valeurs', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
-        { id: 'lignes_rouges', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
+        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
+        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
+        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
         { id: 'superpouvoir', label: 'Votre "Zone de Génie"', options: ['Vision stratégique & Anticipation', 'Exécution & Résolution de problèmes complexes', 'Communication & Fédérer les humains', 'Analyse & Compréhension technique profonde'] },
-        { id: 'posture_agent', label: 'Ton de votre Jumeau Numérique', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
+        { id: 'socialStyle', label: 'Ton de votre Jumeau Numérique', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
     ]
 };
 
@@ -7484,7 +7970,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         const fetchAgentMemory = async () => {
             if (!profileId) return;
             try {
-                const res = await fetch(`/api/agent/get?profileId=${profileId}`);
+                const res = await fetch(`/api/agent/get?profileId=${profileId}`, { cache: 'no-store' });
                 const data = await res.json();
 
                 if (data.success && data.profile) {
@@ -7493,7 +7979,28 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setCity(data.profile.city || '');
                     setGender(data.profile.gender || '');
                     setCountry(data.profile.country || 'France');
-                    setFormData(data.profile.thematicProfile || {});
+
+                    // ✅ Mappage des top-level fields combinés avec ThematicProfile
+                    setFormData({
+                        ...data.profile.thematicProfile,
+                        travail: {
+                            ...data.profile.thematicProfile?.travail,
+                            industry: data.profile.industry || data.profile.thematicProfile?.travail?.industry || '',
+                            seniority: data.profile.seniority || data.profile.thematicProfile?.travail?.seniority || '',
+                            professionalStatus: data.profile.professionalStatus || data.profile.thematicProfile?.travail?.professionalStatus || '',
+                            environment: data.profile.environment || data.profile.thematicProfile?.travail?.environment || '',
+                            objectives: data.profile.objectives?.[0] || data.profile.thematicProfile?.travail?.objectives || '',
+                            precisionsLibres: data.profile.workNuances || data.profile.thematicProfile?.travail?.precisionsLibres || ''
+                        },
+                        ikigai: {
+                            ...data.profile.thematicProfile?.ikigai,
+                            ikigaiMission: data.profile.ikigaiMission || data.profile.thematicProfile?.ikigai?.ikigaiMission || '',
+                            ikigaiValues: data.profile.ikigaiValues?.[0] || data.profile.thematicProfile?.ikigai?.ikigaiValues || '',
+                            dealbreakers: data.profile.dealbreakers?.[0] || data.profile.thematicProfile?.ikigai?.dealbreakers || '',
+                            socialStyle: data.profile.socialStyle || data.profile.thematicProfile?.ikigai?.socialStyle || ''
+                        }
+                    });
+
                     setSynthesis(data.profile.unifiedAnalysis || '');
                 }
             } catch (err) {
@@ -7534,7 +8041,24 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <User className="mr-2 text-blue-400" /> IDENTITÉ GÉNÉRALE
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* PAYS */}
+                    <div className="flex flex-col space-y-1">
+                        <label className="text-sm font-semibold text-gray-400 flex items-center"><Globe size={14} className="mr-1" /> Pays</label>
+                        <select
+                            value={country || ""}
+                            onChange={(e) => setCountry(e.target.value)}
+                            className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                        >
+                            <option value="">Sélectionner...</option>
+                            <option value="France">France</option>
+                            <option value="Suisse">Suisse</option>
+                            <option value="Belgique">Belgique</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Luxembourg">Luxembourg</option>
+                        </select>
+                    </div>
+
                     {/* NAISSANCE */}
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><Calendar size={14} className="mr-1" /> Naissance</label>
@@ -7606,12 +8130,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <button onClick={() => setActiveTab('travail')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'travail' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Briefcase size={16} className="mr-2" /> Travail
                     </button>
-                    <button onClick={() => setActiveTab('rencontre')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'rencontre' ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-                        <Heart size={16} className="mr-2" /> Rencontre
-                    </button>
-                    <button onClick={() => setActiveTab('loisirs')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'loisirs' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-                        <Palmtree size={16} className="mr-2" /> Loisirs
-                    </button>
+
                     {/* 🟢 NOUVEAU BOUTON IKIGAI */}
                     <button onClick={() => setActiveTab('ikigai')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'ikigai' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Target size={16} className="mr-2" /> Ikigai & Morale
@@ -7760,6 +8279,99 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
                 <Mic size={18} />
             )}
         </button>
+    );
+}
+
+
+--- components\CommandTerminal.tsx ---
+'use client'
+
+import { useState } from 'react';
+import { executeTerminalCommand } from '@/app/actions/terminal-command';
+import { TargetNode } from '@/components/TacticalGlobe';
+
+export function CommandTerminal({ userId, onTargetsFound }: { userId: string, onTargetsFound?: (targets: TargetNode[]) => void }) {
+    const [command, setCommand] = useState('');
+    const [history, setHistory] = useState<{ role: 'user' | 'agent', text: string }[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleCommand = async () => {
+        if (!command.trim()) return;
+
+        // Afficher la commande de l'utilisateur
+        const currentCmd = command;
+        setHistory(prev => [...prev, { role: 'user', text: currentCmd }]);
+        setCommand('');
+        setIsProcessing(true);
+
+        try {
+            const result = await executeTerminalCommand(userId, currentCmd);
+            if (result.success && result.answer) {
+                const textAnswer = typeof result.answer === 'string' ? result.answer : JSON.stringify(result.answer);
+                setHistory(prev => [...prev, { role: 'agent', text: textAnswer }]);
+
+                // NOUVEAU: On passe les cibles trouvées au parent (le Dashboard)
+                if (result.targets && onTargetsFound) {
+                    onTargetsFound(result.targets);
+                }
+            } else {
+                setHistory(prev => [...prev, { role: 'agent', text: "[ERREUR] Liaison IA perdue." }]);
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    return (
+        // Utilisation de TA classe glass-panel pour une transparence unifiée
+        <div className="glass-panel rounded-xl flex flex-col h-[500px] font-mono text-sm overflow-hidden shadow-2xl">
+
+            {/* HEADER TERMINAL - Aligné sur le style de tes Channels */}
+            <div className="flex items-center justify-between border-b border-white/10 p-4 mx-2">
+                <h3 className="text-xs text-cyan-500 font-bold tracking-widest flex items-center gap-2">
+                    <span className="animate-pulse">☄️</span> TWINS_OS // TERMINAL
+                </h3>
+                <span className="text-[10px] flex items-center gap-2 text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RADAR EN LIGNE
+                </span>
+            </div>
+
+            {/* ZONE DE CHAT / LOGS */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 text-gray-300 custom-scrollbar">
+                <div className="text-cyan-600/50 text-xs italic">Système initialisé. En attente d'ordres tactiques...</div>
+
+                {history.map((msg, i) => (
+                    <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        <span className={`text-[9px] tracking-wider mb-1 uppercase ${msg.role === 'user' ? 'text-gray-500' : 'text-cyan-500'}`}>
+                            {msg.role === 'user' ? 'VOUS' : 'CORTEX'}
+                        </span>
+                        <div className={`p-3 rounded-xl max-w-[85%] text-sm ${msg.role === 'user'
+                            ? 'bg-black/40 border border-white/5 text-gray-200' // Message user discret
+                            : 'bg-cyan-900/10 border border-cyan-500/20 text-cyan-100 whitespace-pre-wrap backdrop-blur-sm' // Message IA vitré
+                            }`}>
+                            {msg.text}
+                        </div>
+                    </div>
+                ))}
+                {isProcessing && (
+                    <div className="text-cyan-500 text-xs animate-pulse">&gt; Scan réseau et Web en cours...</div>
+                )}
+            </div>
+
+            {/* ZONE DE SAISIE */}
+            <div className="p-3 mx-4 mb-2 border-t border-white/10 bg-transparent flex gap-3 items-center">
+                <span className="text-cyan-500 font-bold">&gt;</span>
+                <input
+                    type="text"
+                    className="flex-1 bg-transparent border-none text-cyan-400 focus:outline-none focus:ring-0 placeholder-cyan-900/50 text-sm"
+                    placeholder="Ex: Cherche un CTO expert en cybersécurité..."
+                    value={command}
+                    onChange={(e) => setCommand(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCommand()}
+                    disabled={isProcessing}
+                />
+            </div>
+        </div>
     );
 }
 
@@ -8548,49 +9160,27 @@ export default function DeepAuditReport({ data, onAction }: { data: any, onActio
 
 export default function Scanner({ onScanStart }: { onScanStart: () => void }) {
     return (
-        <div className="relative w-full h-auto min-h-[220px] flex flex-col items-center justify-center py-6 rounded-xl border border-cyan-900/30 bg-black/40 backdrop-blur-md overflow-visible">
+        <div className="glass-panel rounded-xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px] shadow-2xl mt-4">
+            <div className="relative w-full h-auto min-h-[220px] flex flex-col items-center justify-center py-6 rounded-lg border border-white/5 bg-black/20 overflow-visible">
 
-            {/* Coins tactiques (Décoration) */}
-            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-500 rounded-tl-lg" />
-            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-500 rounded-tr-lg" />
-            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-500 rounded-bl-lg" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-500 rounded-br-lg" />
+                {/* Les cercles du radar (intacts car très esthétiques) */}
+                <div className="relative w-32 h-32 mb-6 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border border-cyan-500/30 scale-[1.13] animate-pulse"></div>
+                    <div className="w-full h-full border-t-2 border-cyan-400 rounded-full opacity-80 shadow-[0_0_15px_rgba(34,211,238,0.5)] animate-[spin_3s_linear_infinite]"></div>
+                    <button
+                        onClick={onScanStart}
+                        className="absolute z-20 w-16 h-16 bg-cyan-950/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-cyan-400/50 hover:bg-cyan-900 transition-colors active:scale-95"
+                    >
+                        <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.2-2.858.59-4.18"></path>
+                        </svg>
+                    </button>
+                </div>
 
-            {/* Animation Radar Centrale */}
-            <div className="relative w-32 h-32 mb-6 flex items-center justify-center">
-                {/* Cercles concentriques animés */}
-                <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute inset-0 rounded-full border border-cyan-500/30"
-                />
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="w-full h-full border-t-2 border-cyan-400 rounded-full opacity-80 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
-                />
-
-                {/* Bouton d'action au centre */}
-                <button
-                    onClick={onScanStart}
-                    className="absolute z-20 w-16 h-16 bg-cyan-950/80 rounded-full flex items-center justify-center border border-cyan-400/50 hover:bg-cyan-900 transition-colors active:scale-95"
-                >
-                    <span className="sr-only">Lancer le Scan</span>
-                    {/* Icône Radar SVG */}
-                    <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.2-2.858.59-4.18" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Texte Signal Détecté (Maintenant sécurisé) */}
-            <div className="flex flex-col items-center z-10 space-y-2">
-                <p className="text-cyan-400 font-mono text-xs tracking-[0.2em] uppercase">
-                    SYSTÈME PRÊT
-                </p>
-                <h3 className="text-white font-bold text-xl tracking-wider drop-shadow-lg">
-                    ANALYSER LE RÉSEAU
-                </h3>
+                <div className="flex flex-col items-center z-10 space-y-2">
+                    <p className="text-cyan-400 font-mono text-[10px] tracking-[0.2em] uppercase">SYSTÈME PRÊT</p>
+                    <h3 className="text-white font-bold text-lg tracking-widest drop-shadow-lg uppercase">Analyser le Réseau</h3>
+                </div>
             </div>
         </div>
     );
@@ -8852,95 +9442,97 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
 
 
 --- components\Globe.tsx ---
-﻿'use client';
+﻿'use client'
 
-import { useEffect, useState, useRef, useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useRef } from 'react';
+import createGlobe from 'cobe';
 
-const Globe = dynamic(() => import('react-globe.gl'), {
-    ssr: false,
-    loading: () => <div className="flex items-center justify-center h-full text-cyan-900 animate-pulse text-[10px]">INITIALISATION HOLOGRAMME...</div>
-});
-
-interface TacticalGlobeProps {
-    mode: 'IDLE' | 'SCANNING' | 'LOCKED' | 'AUDIT';
-    targetCoordinates?: [number, number] | null;
+// L'interface pour recevoir les coordonnées de l'IA
+export interface TargetNode {
+    name: string;
+    lat: number;
+    lng: number;
 }
 
-export default function TacticalGlobe({ mode, targetCoordinates }: TacticalGlobeProps) {
-    const globeEl = useRef<any>(null);
-    const [mounted, setMounted] = useState(false);
-    const [isGlobeReady, setIsGlobeReady] = useState(false); // 🟢 L'indicateur de chargement 3D
-    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+export default function BackgroundGlobe({ targets = [] }: { targets?: TargetNode[] }) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const arcsData = useMemo(() => [
-        { startLat: 48.8566, startLng: 2.3522, endLat: 40.7128, endLng: -74.0060, color: '#06b6d4' },
-        { startLat: 48.8566, startLng: 2.3522, endLat: 35.6762, endLng: 139.6503, color: '#a855f7' },
-        { startLat: 40.7128, startLng: -74.0060, endLat: 34.0522, endLng: -118.2437, color: '#10b981' }
-    ], []);
+    // Mémoire de la position gyroscopique actuelle
+    const currentPhi = useRef(0);
+    const currentTheta = useRef(0);
 
     useEffect(() => {
-        setMounted(true);
-        setDimensions({ width: window.innerWidth, height: window.innerHeight });
+        if (!canvasRef.current) return;
 
-        const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+        // 1. Calcul de la destination
+        // 1. Calcul de la destination
+        let targetPhi = 0;
+        let targetTheta = 0;
+        let markers: any[] = [];
 
-    // 🟢 Application des ordres UNIQUEMENT quand le globe a confirmé qu'il est prêt
-    useEffect(() => {
-        if (!isGlobeReady || !globeEl.current) return;
+        if (targets.length > 0) {
+            const t = targets[0];
 
-        const controls = globeEl.current.controls();
-        if (!controls) return;
+            // NOUVELLE FORMULE BALISTIQUE : 
+            // Math.PI - (...) permet de centrer parfaitement n'importe quelle coordonnée (Est ou Ouest)
+            targetPhi = Math.PI - (t.lng * Math.PI) / 180;
+            targetTheta = (t.lat * Math.PI) / 180;
 
-        controls.enableZoom = false;
-        controls.enablePan = false;
-
-        // Logique de rotation propre
-        switch (mode) {
-            case 'IDLE':
-                controls.autoRotate = true;
-                controls.autoRotateSpeed = 0.5;
-                break;
-            case 'SCANNING':
-                controls.autoRotate = true;
-                controls.autoRotateSpeed = 5.0; // Rotation rapide
-                break;
-            case 'LOCKED':
-            case 'AUDIT':
-                controls.autoRotate = false;
-                if (targetCoordinates) {
-                    globeEl.current.pointOfView({ lat: targetCoordinates[0], lng: targetCoordinates[1], altitude: 1.5 }, 1000);
-                }
-                break;
+            // TAILLE RÉDUITE (0.05) : Un point précis et chirurgical, parfait pour Toulon
+            markers = [{ location: [t.lat, t.lng], size: 0.05 }];
+        } else {
+            // Si aucune cible, rotation lente sur l'Europe par défaut
+            targetPhi = 4.5;
+            targetTheta = 0.5;
         }
-    }, [mode, targetCoordinates, isGlobeReady]); // 🟢 React relance l'ordre dès que isGlobeReady passe à true
 
-    if (!mounted) return null;
+        // 2. Initialisation de ton design Cobe
+        const globe = createGlobe(canvasRef.current, {
+            devicePixelRatio: 2,
+            width: 920 * 2,  // +15% de résolution
+            height: 920 * 2, // +15% de résolution
+            phi: 0,
+            theta: 0,
+            dark: 1, // Garde tes réglages de couleur ici
+            diffuse: 1.2,
+            mapSamples: 16000,
+            mapBrightness: 6,
+            baseColor: [0.3, 0.3, 0.3],
+            markerColor: [0, 1, 1], // Point de frappe Cyan
+            glowColor: [0.05, 0.05, 0.05],
+            markers: markers,
+
+            // 3. Le Moteur Gyroscopique
+            onRender: (state) => {
+                // Interpolation fluide (Smooth Lerp) : Le globe tourne doucement vers la cible
+                currentPhi.current += (targetPhi - currentPhi.current) * 0.05;
+                currentTheta.current += (targetTheta - currentTheta.current) * 0.05;
+
+                // Si aucune cible, on ajoute une micro-rotation automatique pour qu'il vive
+                if (targets.length === 0) {
+                    targetPhi += 0.002;
+                }
+
+                state.phi = currentPhi.current;
+                state.theta = currentTheta.current;
+            },
+        });
+
+        return () => globe.destroy();
+    }, [targets]);
 
     return (
-        <div className="w-full h-full absolute inset-0 brightness-150 md:brightness-100">
-            <Globe
-                ref={globeEl}
-                onGlobeReady={() => setIsGlobeReady(true)} // 🟢 Le signal d'allumage !
-                backgroundColor="rgba(0,0,0,0)"
-                globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-                atmosphereColor="#22d3ee"
-                atmosphereAltitude={0.25}
-                arcsData={arcsData}
-                arcColor="color"
-                arcDashLength={0.5}
-                arcDashGap={1}
-                arcDashAnimateTime={2000}
-                arcStroke={0.5}
-                width={dimensions.width}
-                height={dimensions.height}
+        // Les classes `flex items-center justify-center` garantissent le centrage absolu
+        <div className="fixed inset-0 w-screen h-screen -z-10 bg-black overflow-hidden flex items-center justify-center pointer-events-none opacity-50">
+            <canvas
+                ref={canvasRef}
+                style={{
+                    width: 920,  // +15% de taille physique
+                    height: 920, // +15% de taille physique
+                    maxWidth: "100%",
+                    aspectRatio: "1/1",
+                }}
             />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/50 md:from-black via-transparent to-black/40 md:to-black/40"></div>
         </div>
     );
 }
@@ -9261,56 +9853,73 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
     };
 
     return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 shadow-lg mt-6">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                    <Radar className="mr-2 text-green-500" /> INTERCEPTIONS RÉSEAU
+        <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 mt-6 shadow-2xl">
+
+            {/* HEADER UNIFIÉ */}
+            <div className="flex justify-between items-center border-b border-white/10 pb-2 mx-2">
+                <h2 className="text-xs text-green-500 font-bold tracking-widest flex items-center gap-2 uppercase">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-radar animate-pulse">
+                        <path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"></path>
+                        <path d="M4 6h.01"></path>
+                        <path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"></path>
+                        <path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"></path>
+                        <path d="M12 18h.01"></path>
+                        <path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"></path>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <path d="m13.41 10.59 5.66-5.66"></path>
+                    </svg>
+                    INTERCEPTIONS RÉSEAU
                 </h2>
 
-                {/* LE BOUTON DE DÉPLOIEMENT TACTIQUE */}
+                {/* Bouton style "Glass" */}
                 <button
                     onClick={launchScout}
                     disabled={isScanning}
-                    className={`flex items-center px-4 py-2 rounded font-bold text-sm transition ${isScanning ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-white shadow-[0_0_10px_rgba(22,163,74,0.4)]'}`}
+                    className={`flex items-center px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider transition uppercase ${isScanning ? 'bg-green-900/10 text-green-500/50 border border-green-500/10 cursor-not-allowed' : 'bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(22,163,74,0.2)]'}`}
                 >
-                    <Zap className="mr-2" size={16} />
-                    {isScanning ? 'SCAN DU WEB EN COURS...' : 'DÉPLOYER L\'ÉCLAIREUR'}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+                    </svg>
+                    {isScanning ? 'SCAN EN COURS...' : 'DÉPLOYER L\'ÉCLAIREUR'}
                 </button>
             </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+            {/* CONTENU UNIFIÉ */}
+            <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar p-2">
                 {opportunities.length === 0 ? (
-                    <p className="text-gray-500 italic text-sm text-center py-4">Le radar est vide. Déployez l'Éclaireur pour scanner le web mondial.</p>
+                    <p className="text-gray-500 italic text-[10px] tracking-wider text-center py-4 font-mono">
+                        Le radar est vide. Déployez l'Éclaireur pour scanner le web mondial.
+                    </p>
                 ) : (
                     opportunities.map((opp) => (
-                        <div key={opp.id} className="bg-gray-800 p-4 rounded border border-gray-600 hover:border-green-500 transition flex flex-col">
+                        <div key={opp.id} className="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-green-500/50 hover:bg-black/60 transition flex flex-col backdrop-blur-sm">
 
                             {/* EN-TÊTE DE LA CARTE : Titre à gauche, Actions à droite */}
                             <div className="flex justify-between items-start mb-2">
-                                <h3 className="text-lg font-bold text-blue-400 pr-4">{opp.title}</h3>
+                                <h3 className="text-sm font-bold text-green-400 pr-4 drop-shadow-[0_0_8px_rgba(74,222,128,0.2)]">{opp.title}</h3>
 
-                                {/* BLOC ACTIONS : Corbeille + Niveau (Ne se chevaucheront jamais) */}
+                                {/* BLOC ACTIONS : Corbeille + Niveau */}
                                 <div className="flex items-center space-x-3 shrink-0">
                                     <button
                                         onClick={() => deleteOpportunity(opp.id)}
                                         className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
                                         title="Détruire le rapport"
                                     >
-                                        <Trash2 size={18} />
+                                        <Trash2 size={16} />
                                     </button>
-                                    <div className="bg-gray-900 border border-gray-600 text-xs px-2 py-1 rounded text-gray-300 font-mono">
+                                    <div className="bg-green-900/20 border border-green-500/30 text-[10px] px-2 py-1 rounded text-green-300 font-mono">
                                         LVL: {opp.priority}/10
                                     </div>
                                 </div>
                             </div>
 
                             {/* CORPS DE LA CARTE */}
-                            <p className="text-sm text-gray-300 leading-relaxed">{opp.reasoning}</p>
+                            <p className="text-xs text-gray-300 leading-relaxed mb-4">{opp.reasoning}</p>
 
                             {/* LIEN D'INFILTRATION */}
-                            <div className="mt-4">
-                                <a href={opp.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-semibold text-green-400 hover:text-green-300">
-                                    S'infiltrer (Voir la source) <ExternalLink size={14} className="ml-1" />
+                            <div className="mt-auto">
+                                <a href={opp.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-[10px] font-bold text-green-500 hover:text-green-300 uppercase tracking-widest border-b border-green-500/30 pb-0.5">
+                                    S'infiltrer (Source) <ExternalLink size={12} className="ml-1" />
                                 </a>
                             </div>
                         </div>
@@ -9886,6 +10495,232 @@ export default function SocialBridge({ profileId, onSyncComplete }: any) {
             <button onClick={handleSync} disabled={loading} className={`p-2 rounded-lg border transition-all ${loading ? 'bg-cyan-900 text-white animate-spin' : 'bg-slate-800 text-cyan-500 border-slate-600 hover:border-cyan-400'}`}>
                 <Zap size={18} />
             </button>
+        </div>
+    );
+}
+
+
+--- components\TacticalGlobe.tsx ---
+'use client'
+
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// Import dynamique sécurisé pour Next.js
+const Globe = dynamic(() => import('react-globe.gl'), { ssr: false });
+
+export interface TargetNode {
+    name: string;
+    lat: number;
+    lng: number;
+}
+
+export default function TacticalGlobe({ targets }: { targets: TargetNode[] }) {
+    const globeRef = useRef<any>(null);
+    const [isReady, setIsReady] = useState(false);
+
+    // Ta base de tir (Toulon)
+    const baseLocation = { lat: 43.12, lng: 5.93, name: "BASE CORTEX" };
+
+    // 1. Le Moteur de Ciblage (Caméra)
+    useEffect(() => {
+        if (!globeRef.current || !isReady) return;
+
+        if (targets.length > 0) {
+            console.log("🚀 [RADAR] Verrouillage balistique sur :", targets[0].name);
+
+            // On laisse 100ms au moteur 3D pour dessiner le laser AVANT de bouger la caméra
+            setTimeout(() => {
+                globeRef.current.pointOfView({
+                    lat: targets[0].lat,
+                    lng: targets[0].lng,
+                    altitude: 1.5
+                }, 2000);
+            }, 100);
+
+        } else {
+            setTimeout(() => {
+                globeRef.current.pointOfView({ lat: baseLocation.lat, lng: baseLocation.lng, altitude: 2 }, 2000);
+            }, 100);
+        }
+    }, [targets, isReady]);
+
+    // 2. Préparation des munitions (Arcs et Anneaux)
+    const arcsData = targets.map(target => ({
+        startLat: baseLocation.lat,
+        startLng: baseLocation.lng,
+        endLat: target.lat,
+        endLng: target.lng,
+        color: ['#00ffff', '#ff0044'] // Tir de Cyan vers Rouge
+    }));
+
+    const ringsData = targets.map(target => ({
+        lat: target.lat,
+        lng: target.lng,
+        maxR: 5,
+        propagationSpeed: 2,
+        repeatPeriod: 1000
+    }));
+
+    const labelsData = [baseLocation, ...targets];
+
+    return (
+        <div className="w-full h-[500px] border border-cyan-800 rounded overflow-hidden relative bg-[#050505]">
+
+            {/* Interface HUD tactique */}
+            <div className="absolute top-2 left-2 z-10 text-cyan-500 font-mono text-xs">
+                <span className="animate-pulse">&gt; CORTEX GEOLOCATION ACTIVE</span>
+                <br />
+                &gt; CIBLES VÉROUILLÉES : {targets ? targets.length : 0}
+            </div>
+
+            <Globe
+                ref={globeRef}
+                globeImageUrl="https://unpkg.com/three-globe/example/img/earth-dark.jpg"
+
+                onGlobeReady={() => {
+                    console.log("✅ [RADAR] Moteur 3D En Ligne");
+                    setIsReady(true);
+                }}
+
+                // --- ARMEMENT LASER (Arcs) ---
+                // Force un trait plein, sans trous, sans clignotement, épaisseur maximum
+                arcsData={arcsData}
+                arcColor={(d: any) => d.color}
+                arcDashLength={1}
+                arcDashGap={0}
+                arcDashAnimateTime={0}
+                arcStroke={1}
+
+                // --- ONDES DE CHOC (Rings) ---
+                ringsData={ringsData}
+                ringColor={() => '#ff0044'}
+                ringMaxRadius={(d: any) => d.maxR}
+                ringPropagationSpeed={(d: any) => d.propagationSpeed}
+                ringRepeatPeriod={(d: any) => d.repeatPeriod} // LE CORRECTIF EST ICI
+
+                // --- ÉTIQUETTES (Labels) ---
+                labelsData={labelsData}
+                labelLat={(d: any) => d.lat}
+                labelLng={(d: any) => d.lng}
+                labelText={(d: any) => d.name}
+                labelSize={1.5}
+                labelDotRadius={0.5}
+                labelColor={(d: any) => d.name === "BASE CORTEX" ? '#00ffff' : '#ff0044'}
+                labelResolution={2}
+
+                backgroundColor="rgba(0,0,0,0)"
+            />
+        </div>
+    );
+}
+
+--- components\TacticalOpenerModule.tsx ---
+'use client'
+
+import { useState } from 'react';
+import { generateTacticalOpener } from '@/app/actions/generate-opener';
+import { createClient } from '@/lib/supabase/client';
+
+export function TacticalOpenerModule({
+    userId,
+    targetId,
+    targetClassification,
+    onSuccess
+}: {
+    userId: string,
+    targetId: string,
+    targetClassification?: string,
+    onSuccess: () => void
+}) {
+    const [hook, setHook] = useState('');
+    const [message, setMessage] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleGenerate = async () => {
+        setIsGenerating(true);
+        try {
+            const result = await generateTacticalOpener(userId, targetId);
+            if (result.success) {
+                setHook(result.hook || '');
+                setMessage(result.message || '');
+            } else {
+                console.error(result.error);
+                alert("Échec de la génération tactique.");
+            }
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleSendRequest = async () => {
+        try {
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) { alert('Session expirée.'); return; }
+
+            const res = await fetch('/api/network/request', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    targetId,
+                    senderClassification: targetClassification ?? 'entité inconnue',
+                    initialMessage: hook,
+                    fullMessage: message
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                onSuccess();
+            } else {
+                alert(`[ERREUR] ${data.error || 'Demande échouée.'}`);
+            }
+        } catch (err: any) {
+            alert(`[CRITIQUE] Échec de connexion : ${err.message}`);
+        }
+    };
+
+    return (
+        <div className="mt-4 border border-cyan-800 bg-black p-4 rounded col-span-full">
+            <h3 className="text-cyan-400 font-bold mb-2 flex items-center">
+                <span>🎯 PROTOCOLE D'ENGAGEMENT</span>
+            </h3>
+
+            <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="mb-3 text-xs bg-cyan-900/50 hover:bg-cyan-700 text-cyan-200 py-1 px-3 rounded border border-cyan-700 transition-colors"
+            >
+                {isGenerating ? 'Calcul de la trajectoire...' : 'Générer une approche IA (Opener)'}
+            </button>
+
+            <input
+                type="text"
+                className="w-full bg-gray-900 border border-gray-700 p-2 text-white rounded mb-2 text-sm font-bold text-cyan-400 focus:border-cyan-500"
+                placeholder="Objet de l'approche..."
+                value={hook}
+                onChange={(e) => setHook(e.target.value)}
+            />
+
+            <textarea
+                className="w-full bg-gray-900 border border-gray-700 p-2 text-white rounded min-h-[80px] text-sm focus:border-cyan-500 mb-3"
+                placeholder="Tapez votre message ou laissez l'Agent le générer..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+            />
+
+            <div className="flex gap-2">
+                <button
+                    onClick={handleSendRequest}
+                    disabled={!message.trim()}
+                    className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 rounded disabled:opacity-50 transition-all uppercase tracking-wider text-[11px]"
+                >
+                    OUVRIR LE CANAL SÉCURISÉ
+                </button>
+            </div>
         </div>
     );
 }
@@ -12004,12 +12839,14 @@ NOTIFY pgrst, 'reload schema';
 --- prisma\schema.prisma ---
 generator client {
   provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
 }
 
 model Profile {
@@ -12033,6 +12870,17 @@ model Profile {
   city                    String?   // NOUVEAU: Radar géographique
   gender                  String?   @db.Text
   thematicProfile         Json?
+
+  // 🟢 NOUVEAUX PARAMÈTRES IA (Profil 2.0)
+  industry                String?
+  seniority               String?
+  professionalStatus      String?
+  environment             String?
+  workNuances             String?   @db.Text
+  ikigaiMission           String?   @db.Text
+  ikigaiValues            String[]
+  dealbreakers            String[]
+  socialStyle             String?
   // -----------------------
   
   // IA Tags (générés automatiquement plus tard)
@@ -12070,6 +12918,7 @@ model Profile {
   accessRequestsReceived  AccessRequest[]     @relation("Provider")
   directMessagesSent      DirectMessage[]     @relation("DMSent")
   directMessagesReceived  DirectMessage[]     @relation("DMReceived")
+  notifications           Notification[]
 }
 
 
@@ -12089,7 +12938,7 @@ model Memory {
   encryptedContent  String?
   type              String   @default("thought")
   source            String?
-  embedding         Json?    
+  embedding         Unsupported("vector(1024)")?    
   tags              Json?    // Utilisé dans embedding-service
   expires_at        DateTime?
   createdAt         DateTime @default(now()) @map("created_at")
@@ -12173,6 +13022,7 @@ model Negotiation {
 model AccessRequest {
   id             String   @id @default(uuid())
   topic          String?
+  fullMessage    String?  @db.Text
   match_score    Int?
   status         String   @default("pending")
   created_at     DateTime @default(now())
@@ -12216,6 +13066,19 @@ model Opportunity {
 
   // Relation avec le profil de l'Agent
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  content   String   @db.Text
+  targetId  String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 
@@ -13025,3 +13888,13 @@ const handleFileUpload = async (file: File) => {
   "exclude": ["node_modules"]
 }
 
+
+--- vercel.json ---
+{
+    "crons": [
+        {
+            "path": "/api/cron/radar-furtif",
+            "schedule": "0 3 * * *"
+        }
+    ]
+}

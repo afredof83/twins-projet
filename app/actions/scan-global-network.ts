@@ -103,19 +103,39 @@ FORMAT DE RÉPONSE OBLIGATOIRE :
   "unifiedAnalysis": "Pourquoi ça match avec l'Agent (2 phrases max).",
   "strategicAlignment": "Bénéfice tactique."
 }
+
+À la fin de ton analyse textuelle, tu DOIS inclure ce tag exact contenant les coordonnées GPS de la cible identifiée :
+[TARGETS: [{"name": "Nom Réel de la Cible", "lat": 48.6493, "lng": -2.0257}]]
 `;
 
   // 6. SYNTHÈSE IA (Sur une donnée restreinte et maîtrisée)
   const response = await client.chat.complete({
     model: "mistral-large-latest",
-    messages: [{ role: "system", content: promptContent }],
-    responseFormat: { type: "json_object" }
+    messages: [{ role: "system", content: promptContent }]
   });
 
-  const rawContent = response.choices?.[0].message.content;
+  const rawContent = (response.choices?.[0].message.content as string) || "";
   if (!rawContent) throw new Error("Réponse vide de Mistral");
+  console.log("[MISTRAL RAW OUTPUT] :", rawContent);
 
-  const aiAnalysis = JSON.parse(rawContent as string);
+  // Copie EXACTEMENT cette logique de parsing que nous avons validée
+  const targetMatch = rawContent.match(/\[TARGETS:\s*(\[[\s\S]*\])\]/);
+  let targets: any[] = [];
+
+  if (targetMatch && targetMatch[1]) {
+    try {
+      const jsonString = targetMatch[1].trim();
+      targets = JSON.parse(jsonString);
+      console.log("[RESEAU - SUCCES] Coordonnées décodées :", targets);
+    } catch (error) {
+      console.error("[RESEAU - CRITIQUE] JSON.parse a échoué :", targetMatch[1]);
+    }
+  }
+
+  // Nettoyage pour récupérer l'analyse JSON originelle
+  const cleanJsonContent = rawContent.replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
+  const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
+  const aiAnalysis = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(cleanJsonContent);
 
   // Blindage UUID
   const validatedTargetId = networkNodes.some(n => n.id === aiAnalysis.targetId)
@@ -124,6 +144,7 @@ FORMAT DE RÉPONSE OBLIGATOIRE :
 
   return {
     ...aiAnalysis,
-    targetId: validatedTargetId
+    targetId: validatedTargetId,
+    targets
   };
 }

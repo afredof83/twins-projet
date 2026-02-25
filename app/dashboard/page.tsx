@@ -290,6 +290,9 @@ export default function MissionControl() {
             const report = await scanGlobalNetwork(profileId, 'basic');
             console.log('ðŸ“¡ BASIC SCAN:', report);
             setBasicResult(report);
+            if (report.targets && report.targets.length > 0) {
+                setActiveTargets(report.targets);
+            }
             setStatus('LIST');
             addLog(`RADAR: Analyse de surface terminée â€” statut ${report.globalStatus}.`);
         } catch (e) {
@@ -311,6 +314,9 @@ export default function MissionControl() {
             console.log('🔥 DEEP AUDIT:', report);
             setDeepResult(report);
             setStrategicReport(report);
+            if (report.targets && report.targets.length > 0) {
+                setActiveTargets(report.targets);
+            }
             setStatus('LIST');
             addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
         } catch (e) {
@@ -470,19 +476,18 @@ export default function MissionControl() {
     if (!isInitialized) return <div className="h-screen bg-black flex items-center justify-center text-primary"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div
-            className="bg-background-dark text-slate-300 font-display h-[100dvh] w-full overflow-hidden flex flex-col relative touch-none"
+        <main
+            className="bg-background-dark text-slate-300 font-display min-h-screen w-full overflow-hidden flex flex-col relative touch-none"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            {/* Background Elements (TACTICAL GLOBE) */}
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <BackgroundGlobe
-                    targets={(status === 'LOCKED' || status === 'LIST') ? [{ lat: 48.8566, lng: 2.3522, name: 'Cible' }] : []}
-                />
-            </div>
+            {/* 1. LE GLOBE : Isolé au niveau racine, derrière tout le reste */}
+            <BackgroundGlobe
+                targets={activeTargets}
+            />
 
+            {/* 2. TON UI : Le reste par-dessus */}
             <div className="relative z-10 flex flex-col h-full w-full max-w-md mx-auto bg-black/20 border-x border-white/5 shadow-2xl">
                 {/* Header */}
                 <header className="flex items-center justify-between px-5 pt-[env(safe-area-inset-top,1.5rem)] pb-4">
@@ -874,7 +879,7 @@ export default function MissionControl() {
             }
 
 
-        </div >
+        </main>
     );
 }
 
