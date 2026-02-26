@@ -7,10 +7,14 @@ export async function GET(request: Request) {
 
     if (!userId) return NextResponse.json({ error: 'UserId requis' }, { status: 400 });
 
-    const results = await prisma.opportunity.findMany({
-        where: { profileId: userId },
+    const results = await prisma.radarResult.findMany({
+        where: {
+            radar: {
+                profileId: userId // On utilise la colonne profileId de la table Radar
+            }
+        },
         orderBy: { createdAt: 'desc' },
-        take: 20 // On prend les 20 dernières
+        take: 20
     });
 
     return NextResponse.json(results);

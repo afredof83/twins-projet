@@ -6,9 +6,9 @@ import { ExternalLink, Radar, TrendingUp, Zap } from 'lucide-react';
 interface RadarResult {
   id: string;
   title: string;
-  reasoning: string;
-  sourceUrl: string;
-  priority: number;
+  description: string;
+  url: string;
+  score: number;
   createdAt: string;
 }
 
@@ -70,10 +70,10 @@ export default function Dashboard() {
           results.map((item) => (
             <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 transition-transform active:scale-95">
               <div className="flex justify-between items-start mb-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${item.priority >= 9 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${item.score >= 9 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
                   }`}>
                   <Zap className="w-3 h-3" />
-                  Score {item.priority}/10
+                  Score {item.score}/10
                 </span>
                 <span className="text-[10px] text-slate-500">
                   {new Date(item.createdAt).toLocaleDateString('fr-FR')}
@@ -85,11 +85,11 @@ export default function Dashboard() {
               </h2>
 
               <p className="text-slate-400 text-sm mb-4 line-clamp-3">
-                {item.reasoning}
+                {item.description}
               </p>
 
               <a
-                href={item.sourceUrl}
+                href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"

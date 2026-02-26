@@ -250,12 +250,24 @@ model Notification {
 
 // Ajoute ce NOUVEAU modèle tout en bas de ton fichier
 model Radar {
-  id           String   @id @default(uuid())
+  id           String        @id @default(uuid())
   profileId    String
-  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
   theme        String // Ex: "BUSINESS", "DATING", "OSINT_TECH", "FISHING"
   customPrompt String? // Ex: "Uniquement des CTO de startups IA à Paris"
   frequency    Int // Fréquence d'exécution en HEURES
-  lastRunAt    DateTime @default(now())
-  isActive     Boolean  @default(true)
+  lastRunAt    DateTime      @default(now())
+  isActive     Boolean       @default(true)
+  results      RadarResult[]
+}
+
+model RadarResult {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  url         String
+  score       Int      @default(0)
+  createdAt   DateTime @default(now())
+  radarId     String
+  radar       Radar    @relation(fields: [radarId], references: [id], onDelete: Cascade)
 }
