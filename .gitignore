@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Fichiers de configuration Mobile
+google-services.json
+GoogleService-Info.plist
