@@ -18,6 +18,7 @@ import { generateTacticalAudit } from '@/app/actions/generate-audit';
 import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
 import { TacticalOpenerModule } from '@/components/TacticalOpenerModule';
 import { CommandTerminal } from '@/components/CommandTerminal';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // --- LOGIQUE METIER (INCHANGÉE) ---
 const calculateSynergy = (target: any, memories: any[]) => {
@@ -67,6 +68,9 @@ export default function MissionControl() {
     const router = useRouter();
     const [supabase] = useState(() => createClient());
     const [profileId, setProfileId] = useState<string | null>(null);
+
+    // Initialisation des notifications Push
+    usePushNotifications(profileId);
     const [isInitialized, setIsInitialized] = useState(false);
     const [memories, setMemories] = useState<any[]>([]);
     const [logs, setLogs] = useState<string[]>([]);

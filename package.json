@@ -15,6 +15,10 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "@capacitor/push-notifications": "^8.0.1",
     "@mistralai/mistralai": "^1.14.0",
     "@noble/hashes": "^2.0.1",
     "@prisma/client": "^5.22.0",
@@ -25,6 +29,7 @@
     "cheerio": "^1.2.0",
     "cobe": "^0.6.5",
     "dotenv": "^17.2.4",
+    "firebase-admin": "^13.6.1",
     "framer-motion": "^12.34.1",
     "llamaindex": "^0.12.1",
     "lucide-react": "^0.563.0",
@@ -40,6 +45,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.1.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",

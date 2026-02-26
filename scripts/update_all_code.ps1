@@ -12,7 +12,7 @@ function Add-ProjectFile {
     Write-Host "Processing: $Path"
     "--- FILE: $Path ---" | Out-File -FilePath $targetFile -Append -Encoding UTF8
     "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
-    Get-Content -Path $Path -Raw | Out-File -FilePath $targetFile -Append -Encoding UTF8
+    Get-Content -LiteralPath $Path | Out-File -FilePath $targetFile -Append -Encoding UTF8
     "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
     "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
 }
