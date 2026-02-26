@@ -1,8 +1,8 @@
 {
     "crons": [
         {
-            "path": "/api/cron/radar-furtif",
-            "schedule": "0 3 * * *"
+            "path": "/api/cron/radar-worker",
+            "schedule": "0 8 * * *"
         }
     ]
 }

@@ -88,6 +88,7 @@ model Profile {
 
   pushToken String? // Pour Firebase Cloud Messaging
   radars    Radar[] // La relation vers le nouveau système
+  notes     CortexNote[] // NOUVEAU: Le Cortex
 }
 
 model RecoveryPhrase {
@@ -270,4 +271,14 @@ model RadarResult {
   createdAt   DateTime @default(now())
   radarId     String
   radar       Radar    @relation(fields: [radarId], references: [id], onDelete: Cascade)
+}
+
+model CortexNote {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  type      String   @default("text") // Peut être "text", "link", "idea"
+  createdAt DateTime @default(now())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

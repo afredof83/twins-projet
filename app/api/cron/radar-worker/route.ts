@@ -11,6 +11,11 @@ const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 const CONCURRENCY_LIMIT = 5;
 
 export async function GET(request: Request) {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
+        return new Response('Non autorisé', { status: 401 });
+    }
+
     try {
         // 1. DÉTECTION : Trouver tous les radars qui doivent tourner
         // Logique : lastRunAt + (frequency en heures) <= NOW()
