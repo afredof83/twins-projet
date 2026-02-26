@@ -133,6 +133,17 @@ export async function GET(request: Request) {
                             const opportunite = JSON.parse(cleanJsonString);
                             console.log(`✅ [SUCCÈS IA] Opportunité trouvée : ${opportunite.titre} (Score: ${opportunite.score})`);
 
+                            // On sécurise les données envoyées par l'IA avant de les sauvegarder
+                            await prisma.radarResult.create({
+                                data: {
+                                    title: opportunite.titre || opportunite.title || 'Nouvelle opportunité',
+                                    description: opportunite.action || opportunite.description || 'Action à définir',
+                                    url: opportunite.url || "https://www.google.com", // 👈 URL de secours si l'IA l'oublie
+                                    score: Number(opportunite.score) || 8, // 👈 Force la conversion en VRAI chiffre
+                                    radarId: radar.id
+                                }
+                            });
+
                             if (radar.profile.pushToken) {
                                 console.log(`🚀 [PUSH] Préparation de l'envoi mobile pour ${radar.profileId}`);
                                 await sendPushNotification(radar.profile.pushToken, "🎯 Opportunité Détectée", opportunite.titre);
