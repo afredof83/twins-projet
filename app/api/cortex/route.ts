@@ -21,11 +21,13 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
 
+        const noteContent = body.title
+            ? `${body.title}\n\n${body.content}`
+            : body.content;
+
         const newNote = await prisma.cortexNote.create({
             data: {
-                title: body.title,
-                content: body.content,
-                type: body.type || 'text',
+                content: noteContent,
                 profileId: USER_ID
             }
         });

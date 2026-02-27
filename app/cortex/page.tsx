@@ -1,107 +1,139 @@
-"use client";
+// app/cortex/page.tsx
+import { Trash2 } from 'lucide-react'
+import { deleteMemory, deleteNote } from '@/app/actions/cortex'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { PrismaClient } from '@prisma/client'
+import Link from 'next/link'
+import CortexUploader from '@/app/components/CortexUploader'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+const prisma = new PrismaClient()
 
-export default function CortexPage() {
-    const [notes, setNotes] = useState<any[]>([]);
-    const [newNote, setNewNote] = useState({ title: '', content: '' });
-    const [isSaving, setIsSaving] = useState(false);
+export default async function CortexPage() {
+    const cookieStore = await cookies()
 
-    // Charger les notes
-    const fetchNotes = () => {
-        fetch('/api/cortex')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setNotes(data);
-            });
-    };
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll() } } }
+    )
 
-    useEffect(() => {
-        fetchNotes();
-    }, []);
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-    // Sauvegarder une note
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newNote.title) return;
-
-        setIsSaving(true);
-        const response = await fetch('/api/cortex', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newNote)
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            setNewNote({ title: '', content: '' }); // On vide le formulaire
-            fetchNotes(); // On rafraîchit la liste
+    const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        include: {
+            files: { orderBy: { createdAt: 'desc' } },
+            notes: { orderBy: { createdAt: 'desc' } } // On ajoute la récupération des notes IA
         }
-        setIsSaving(false);
-    };
+    })
+
+    if (!profile) redirect('/login')
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
-            <div className="max-w-md mx-auto">
+        <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-8">
 
-                {/* Navigation retour */}
-                <div className="mb-6">
-                    <Link href="/" className="text-gray-400 hover:text-white transition">
-                        ← Retour au Dashboard
-                    </Link>
+                {/* En-tête avec bouton retour */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <Link href="/dashboard" className="text-blue-400 hover:text-blue-300 text-sm mb-2 inline-flex items-center gap-2">
+                            ← Retour au Commandement
+                        </Link>
+                        <h1 className="text-3xl font-bold tracking-tight text-purple-400">Le Cortex</h1>
+                        <p className="text-gray-400 mt-1">Ingestion et gestion de la mémoire de l'Agent</p>
+                    </div>
+                </header>
+
+                {/* Le module d'Upload */}
+                <div className="py-4">
+                    <CortexUploader />
                 </div>
 
-                <h1 className="text-3xl font-bold mb-2">🧠 Mon Cortex</h1>
-                <p className="text-gray-400 mb-8">Dépose ici tes idées, liens et réflexions pour ton Agent.</p>
+                {/* Historique des fichiers (Préparation pour la suite) */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+                    <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-4">Mémoires enregistrées ({profile.files.length})</h2>
 
-                {/* Formulaire d'ajout rapide */}
-                <form onSubmit={handleSave} className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-8 space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Titre de la note ou idée..."
-                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
-                        value={newNote.title}
-                        onChange={e => setNewNote({ ...newNote, title: e.target.value })}
-                        required
-                    />
-                    <textarea
-                        placeholder="Détails, lien URL, contexte..."
-                        rows={3}
-                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
-                        value={newNote.content}
-                        onChange={e => setNewNote({ ...newNote, content: e.target.value })}
-                    />
-                    <button
-                        type="submit"
-                        disabled={isSaving}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors"
-                    >
-                        {isSaving ? 'Enregistrement...' : '+ Ajouter à la mémoire'}
-                    </button>
-                </form>
-
-                {/* Liste des notes existantes */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-bold mb-4">Mémoire à long terme</h2>
-                    {notes.length > 0 ? (
-                        notes.map((note) => (
-                            <div key={note.id} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
-                                <h3 className="font-bold text-lg mb-1">{note.title}</h3>
-                                {note.content && <p className="text-gray-400 text-sm whitespace-pre-wrap">{note.content}</p>}
-                                <p className="text-xs text-gray-500 mt-3">
-                                    Enregistré le {new Date(note.createdAt).toLocaleDateString('fr-FR')}
-                                </p>
-                            </div>
-                        ))
+                    {profile.files.length === 0 ? (
+                        <p className="text-gray-500 text-sm">Aucun document n'a encore été ingéré.</p>
                     ) : (
-                        <div className="text-center p-6 text-gray-500 border border-dashed border-gray-700 rounded-xl">
-                            Le Cortex est vide. Ajoute ta première pensée !
+                        <ul className="space-y-3">
+                            {profile.files.map((file) => (
+                                <li key={file.id} className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5 group hover:bg-white/5 transition-colors">
+
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm font-medium">{file.fileName}</span>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${file.isAnalyzed ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                            {file.isAnalyzed ? 'Analysé par Mistral' : 'En attente'}
+                                        </span>
+                                    </div>
+
+                                    {/* Le Formulaire caché qui déclenche la Server Action */}
+                                    <form action={deleteMemory}>
+                                        <input type="hidden" name="fileId" value={file.id} />
+                                        <input type="hidden" name="fileUrl" value={file.fileUrl} />
+                                        <button
+                                            type="submit"
+                                            className="p-2 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                                            title="Purger cette mémoire"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </form>
+
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                {/* Le Cerveau : Synthèses de Mistral AI */}
+                <div className="mt-12">
+                    <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6">
+                        Connaissances extraites par l'Agent
+                    </h2>
+
+                    {(!profile.notes || profile.notes.length === 0) ? (
+                        <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-center">
+                            <p className="text-gray-400">Le cerveau de votre Jumeau est encore vide. Uploadez un document pour l'entraîner.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {profile.notes.map((note) => (
+                                <div key={note.id} className="relative p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-white/10 backdrop-blur-md hover:border-purple-500/30 transition-all group">
+
+                                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-purple-400">Synthèse IA</span>
+
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs text-gray-500">{new Date(note.createdAt).toLocaleDateString('fr-FR')}</span>
+
+                                            {/* Bouton de suppression de la note */}
+                                            <form action={deleteNote}>
+                                                <input type="hidden" name="noteId" value={note.id} />
+                                                <button
+                                                    type="submit"
+                                                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                    title="Effacer cette mémoire"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                        {note.content}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
 
             </div>
         </div>
-    );
+    )
 }

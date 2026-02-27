@@ -11,95 +11,109 @@ datasource db {
 }
 
 model Profile {
-  id        String  @id @default(uuid())
+  id        String  @id // DOIT être le UUID généré par auth.users de Supabase
+  email     String  @unique
   name      String?
-  email     String? @unique
-  bio       String?
   avatarUrl String?
 
-  // --- NOUVEAUX CHAMPS ---
+  // Champs d'Identité
+  role          String?   // Le rôle principal (ex: Développeur, Designer...)
+  customRole    String?   // Si le rôle est "Autre", on stocke la valeur ici
+  tjm           Int?      // Taux Journalier Moyen
+  availability  String?   // Immédiate, Dans 1 mois, etc.
+  bio           String?   // Objectifs et contexte libre
+
+  // Identité & Cortex de l'Agent
   profession      String?
-  hobbies         String[]
-  objectives      String[] // Ex: ["Travail", "Rencontres"]
-  unifiedAnalysis String?       @db.Text
-  opportunities   Opportunity[]
+  thematicProfile Json? // Ce que l'agent sait de toi
+  unifiedAnalysis String? @db.Text
 
-  // 🟢 NOUVEAUX PARAMÈTRES AGENT IA
-  country         String? @db.Text
-  dateOfBirth     String? // NOUVEAU: Remplace "age"
-  postalCode      String? // NOUVEAU: Radar géographique
-  city            String? // NOUVEAU: Radar géographique
-  gender          String? @db.Text
-  thematicProfile Json?
+  // Propriété des données (Isolation)
+  memories Memory[]
+  notes    CortexNote[]
+  radars   RadarResult[]
+  files    FileArchive[]
 
-  // 🟢 NOUVEAUX PARAMÈTRES IA (Profil 2.0)
-  industry           String?
-  seniority          String?
-  professionalStatus String?
-  environment        String?
-  workNuances        String?  @db.Text
-  ikigaiMission      String?  @db.Text
-  ikigaiValues       String[]
-  dealbreakers       String[]
-  socialStyle        String?
-  // -----------------------
-
-  // IA Tags (générés automatiquement plus tard)
-  tags String[]
-
-  // Auth & Sécurité Zero-Knowledge
-  passwordHash           String?
-  saltBase64             String?
-  verifierBase64         String?
-  encryptionKeyEncrypted String?
-  encryptedMetadata      String?
-  encryptedPhrase        String?
-  subscription           Json? // Pour les notifications Push
-
-  // IA & Monitoring
-  vectorNamespace String?
-  lastAccessedAt  DateTime? @default(now()) // LE CHAMP QUI BLOQUAIT LE BUILD
+  // Réseau (Agent-to-Agent & Humain-to-Humain)
+  matchesInitiated Match[]   @relation("UserA")
+  matchesReceived  Match[]   @relation("UserB")
+  messagesSent     Message[] @relation("Sender")
+  messagesReceived Message[] @relation("Receiver")
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  // Relations
-  recoveryPhrase         RecoveryPhrase?
-  memories               Memory[]
-  dataSources            DataSource[]
-  shadowInteractions     ShadowInteraction[] @relation("SourceProfile")
-  receivedInteractions   ShadowInteraction[] @relation("TargetProfile")
-  channels               Channel[]           @relation("MemberProfile")
-  initiatedNegotiations  Negotiation[]       @relation("Initiator")
-  receivedNegotiations   Negotiation[]       @relation("Receiver")
-  blocking               BlockList[]         @relation("Blocker")
-  blockedBy              BlockList[]         @relation("Blocked")
-  networkEntities        NetworkEntity[]
-  accessRequestsSent     AccessRequest[]     @relation("Requester")
-  accessRequestsReceived AccessRequest[]     @relation("Provider")
-  directMessagesSent     DirectMessage[]     @relation("DMSent")
-  directMessagesReceived DirectMessage[]     @relation("DMReceived")
-  notifications          Notification[]
-
-  // 🎮 SYSTÈME DE PROGRESSION AGENT
-  syncLevel Int   @default(1)
-  credits   Int   @default(100)
-  stats     Json? @default("{\"messages\": 0, \"memories\": 0, \"scans\": 0}")
-
-  pushToken String? // Pour Firebase Cloud Messaging
-  radars    Radar[] // La relation vers le nouveau système
-  notes     CortexNote[] // NOUVEAU: Le Cortex
+  updatedAt DateTime @updatedAt
 }
 
-model RecoveryPhrase {
-  id              String   @id @default(uuid())
-  encryptedPhrase String
-  phraseHash      String?
-  createdAt       DateTime @default(now())
-  profileId       String   @unique
-  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+model FileArchive {
+  id         String   @id @default(uuid())
+  profileId  String
+  fileName   String
+  fileUrl    String // Chemin Supabase Storage
+  mimeType   String
+  isAnalyzed Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
+model CortexNote {
+  id        String                       @id @default(uuid())
+  profileId String
+  content   String                       @db.Text
+  embedding Unsupported("vector(1024)")? // Assure-toi que pgvector est activé
+  createdAt DateTime                     @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model RadarResult {
+  id          String   @id @default(uuid())
+  profileId   String
+  opportunity String   @db.Text
+  sourceUrl   String?
+  score       Float
+  isHidden    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+// --- NOUVEAUX MODULES : MATCHING & MESSAGERIE ---
+
+model Match {
+  id         String      @id @default(uuid())
+  userAId    String
+  userBId    String
+  matchScore Float // % de synergie calculé par les Agents
+  statusA    MatchStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  statusB    MatchStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+
+  userA Profile @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB Profile @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId]) // Empêche les doublons de match
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender   Profile @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Profile @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// Garde ton modèle Memory existant, ajoute juste la relation `profileId String`
 model Memory {
   id               String                       @id @default(uuid())
   content          String
@@ -115,170 +129,4 @@ model Memory {
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("memory")
-}
-
-model DataSource {
-  id          String   @id @default(uuid())
-  platform    String
-  isConnected Boolean  @default(true)
-  syncStatus  String   @default("IDLE")
-  lastSync    DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  profileId   String
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  @@unique([profileId, platform])
-}
-
-model ShadowInteraction {
-  id                 String   @id @default(uuid())
-  timestamp          DateTime @default(now())
-  type               String?
-  status             String?
-  compatibilityScore Float?
-  metadata           Json?
-  profileId          String
-  profile            Profile  @relation("SourceProfile", fields: [profileId], references: [id], onDelete: Cascade)
-  targetProfileId    String?
-  targetProfile      Profile? @relation("TargetProfile", fields: [targetProfileId], references: [id])
-}
-
-model Channel {
-  id              String    @id @default(uuid())
-  topic           String?   @default("LIAISON SÉCURISÉE")
-  member_one_id   String
-  member_two_id   String
-  last_message_at DateTime  @default(now())
-  initiatorId     String?
-  profile         Profile?  @relation("MemberProfile", fields: [member_one_id], references: [id])
-  messages        Message[]
-}
-
-model Message {
-  id               String   @id @default(uuid())
-  content          String
-  sender_id        String
-  communication_id String
-  created_at       DateTime @default(now())
-  channel          Channel  @relation(fields: [communication_id], references: [id], onDelete: Cascade)
-}
-
-model DirectMessage {
-  id          String   @id @default(uuid())
-  content     String
-  created_at  DateTime @default(now())
-  sender_id   String
-  sender      Profile  @relation("DMSent", fields: [sender_id], references: [id])
-  receiver_id String
-  receiver    Profile  @relation("DMReceived", fields: [receiver_id], references: [id])
-}
-
-model Negotiation {
-  id          String   @id @default(uuid())
-  status      String   @default("ACTIVE")
-  summary     String?
-  verdict     String?  @default("ANALYSE EN COURS")
-  nextStep    String?
-  createdAt   DateTime @default(now())
-  initiatorId String
-  initiator   Profile  @relation("Initiator", fields: [initiatorId], references: [id])
-  receiverId  String
-  receiver    Profile  @relation("Receiver", fields: [receiverId], references: [id])
-}
-
-model AccessRequest {
-  id           String   @id @default(uuid())
-  topic        String?
-  fullMessage  String?  @db.Text
-  match_score  Int?
-  status       String   @default("pending")
-  created_at   DateTime @default(now())
-  requester_id String
-  requester    Profile  @relation("Requester", fields: [requester_id], references: [id])
-  provider_id  String
-  provider     Profile  @relation("Provider", fields: [provider_id], references: [id])
-}
-
-model BlockList {
-  id        String  @id @default(uuid())
-  blockerId String
-  blockedId String
-  blocker   Profile @relation("Blocker", fields: [blockerId], references: [id])
-  blocked   Profile @relation("Blocked", fields: [blockedId], references: [id])
-
-  @@unique([blockerId, blockedId])
-}
-
-model NetworkEntity {
-  id         String  @id @default(uuid())
-  name       String?
-  type       String?
-  sector     String?
-  matchScore Int?
-  reasoning  String?
-  status     String? @default("DETECTED")
-  profileId  String
-  profile    Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-}
-
-// 🟢 MODULE ÉCLAIREUR WEB : Le journal des interceptions
-model Opportunity {
-  id        String   @id @default(uuid())
-  profileId String // L'ID de l'Agent IA qui a fait la recherche
-  title     String   @db.Text // Le titre de la trouvaille
-  sourceUrl String   @db.Text // Le lien vers le site web
-  reasoning String   @db.Text // Pourquoi l'IA pense que c'est pertinent
-  priority  Int // Score d'importance de 1 à 10
-  createdAt DateTime @default(now())
-
-  // Relation avec le profil de l'Agent
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  type      String
-  title     String
-  content   String   @db.Text
-  targetId  String?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// Ajoute ce NOUVEAU modèle tout en bas de ton fichier
-model Radar {
-  id           String        @id @default(uuid())
-  profileId    String
-  profile      Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  theme        String // Ex: "BUSINESS", "DATING", "OSINT_TECH", "FISHING"
-  customPrompt String? // Ex: "Uniquement des CTO de startups IA à Paris"
-  frequency    Int // Fréquence d'exécution en HEURES
-  lastRunAt    DateTime      @default(now())
-  isActive     Boolean       @default(true)
-  results      RadarResult[]
-}
-
-model RadarResult {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  url         String
-  score       Int      @default(0)
-  createdAt   DateTime @default(now())
-  radarId     String
-  radar       Radar    @relation(fields: [radarId], references: [id], onDelete: Cascade)
-}
-
-model CortexNote {
-  id        String   @id @default(uuid())
-  title     String
-  content   String?
-  type      String   @default("text") // Peut être "text", "link", "idea"
-  createdAt DateTime @default(now())
-  profileId String
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }

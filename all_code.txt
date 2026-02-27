@@ -17,6 +17,10 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@capacitor/ios": "^8.1.0",
+    "@capacitor/push-notifications": "^8.0.1",
     "@mistralai/mistralai": "^1.14.0",
     "@noble/hashes": "^2.0.1",
     "@prisma/client": "^5.22.0",
@@ -27,6 +31,7 @@
     "cheerio": "^1.2.0",
     "cobe": "^0.6.5",
     "dotenv": "^17.2.4",
+    "firebase-admin": "^13.6.1",
     "framer-motion": "^12.34.1",
     "llamaindex": "^0.12.1",
     "lucide-react": "^0.563.0",
@@ -42,6 +47,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.1.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",
@@ -556,6 +562,7 @@ main {
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\layout.tsx ---
 
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import "./globals.css";
 import TopNav from '@/components/TopNav';
 export const runtime = 'nodejs'; // On force la stabilité
@@ -591,9 +598,34 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>
-      <body className="bg-background-dark text-slate-300 antialiased overflow-hidden">
-        <TopNav />
+      <body className="bg-background-dark text-slate-300 antialiased pb-20">
+        {/* Le 'pb-20' ci-dessus laisse de la place pour la barre en bas */}
+
         {children}
+
+        {/* --- BOTTOM NAVIGATION BAR --- */}
+        <nav className="fixed bottom-0 left-0 w-full bg-gray-800 border-t border-gray-700 pb-safe z-50">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+
+            <Link href="/" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-400 transition">
+              <span className="text-xl mb-1">📊</span>
+              <span className="text-xs font-medium">Radar</span>
+            </Link>
+
+            <Link href="/cortex" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-purple-400 transition">
+              <span className="text-xl mb-1">🧠</span>
+              <span className="text-xs font-medium">Cortex</span>
+            </Link>
+
+            <Link href="/profile" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-green-400 transition">
+              <span className="text-xl mb-1">👤</span>
+              <span className="text-xs font-medium">Identité</span>
+            </Link>
+
+          </div>
+        </nav>
+        {/* ----------------------------- */}
+
       </body>
     </html>
   );
@@ -602,103 +634,104 @@ export default function RootLayout({
 
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\page.tsx ---
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabaseBrowser';
-import { Shield, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-export default function Home() {
-  const router = useRouter();
-  const [supabase] = useState(() => createClient());
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
+export default function Dashboard() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); setError('');
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(res => res.json())
+      .then(result => {
+        setData(result);
+        setLoading(false);
+      });
+  }, []);
 
-    try {
-      if (mode === 'LOGIN') {
-        // --- CONNEXION ---
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        // Succès -> Dashboard
-        router.push('/dashboard');
-
-      } else {
-        // --- INSCRIPTION ---
-        // On crée juste le compte Auth. 
-        // Le Trigger SQL s'occupe de créer le profil dans la table "Profile" automatiquement.
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            // Important: Empêche l'envoi du mail de confirm si désactivé dans Supabase,
-            // mais force la connexion immédiate si possible.
-            emailRedirectTo: `${window.location.origin}/dashboard`
-          }
-        });
-
-        if (error) throw error;
-
-        // Si l'utilisateur est créé mais pas de session immédiate (confirmation email requise)
-        if (data.user && !data.session) {
-          setError("Compte créé ! Si demandé, vérifiez vos emails.");
-          setMode('LOGIN');
-        }
-        // Si session immédiate (email confirm désactivé)
-        else if (data.session) {
-          router.push('/dashboard');
-        }
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Erreur inconnue");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) {
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Chargement du Centre de Commandes...</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-4">
-      <div className="bg-slate-900/50 p-8 rounded-2xl border border-cyan-900/50 shadow-2xl w-full max-w-md backdrop-blur relative">
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="max-w-md mx-auto space-y-8">
 
-        <button onClick={() => window.location.reload()} className="absolute top-4 right-4 text-slate-600 hover:text-white" title="Recharger"><RefreshCw size={14} /></button>
+        {/* En-tête / Bienvenue */}
+        <header className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Bonjour, {data.profile?.name || 'Agent'} 👋</h1>
+            <p className="text-gray-400">Prêt pour de nouvelles opportunités ?</p>
+          </div>
+          {/* Un petit bouton pour aller modifier son profil */}
+          <Link href="/profile" className="bg-gray-800 p-3 rounded-full hover:bg-gray-700 transition">
+            ⚙️
+          </Link>
+        </header>
 
-        <div className="text-center mb-8">
-          <Shield className="w-12 h-12 text-cyan-500 mx-auto mb-4 animate-pulse" />
-          <h1 className="text-3xl font-bold tracking-widest">TWINS</h1>
-          <p className="text-xs text-cyan-600 uppercase mt-2">Accès Sécurisé v2.6</p>
+        {/* Statistiques (Les Widgets) */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-blue-900/30 border border-blue-800 rounded-xl p-5">
+            <h3 className="text-gray-400 text-sm font-medium mb-1">Pépites trouvées</h3>
+            <p className="text-4xl font-bold text-blue-400">{data.totalResults}</p>
+          </div>
+          <div className="bg-green-900/30 border border-green-800 rounded-xl p-5">
+            <h3 className="text-gray-400 text-sm font-medium mb-1">Statut IA</h3>
+            <p className="text-xl font-bold text-green-400 mt-2 flex items-center gap-2">
+              <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+              En veille
+            </p>
+          </div>
         </div>
 
-        {/* ONGLETS */}
-        <div className="flex mb-6 border-b border-slate-700">
-          <button onClick={() => { setMode('LOGIN'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'LOGIN' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CONNEXION</button>
-          <button onClick={() => { setMode('SIGNUP'); setError('') }} className={`flex-1 pb-2 text-xs font-bold transition-colors ${mode === 'SIGNUP' ? 'text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-500'}`}>CRÉATION</button>
+        {/* Liste des dernières pépites */}
+        <div>
+          <div className="flex justify-between items-end mb-4">
+            <h2 className="text-xl font-bold">Dernières découvertes</h2>
+            <span className="text-sm text-gray-500">Les 3 plus récentes</span>
+          </div>
+
+          <div className="space-y-4">
+            {data.recentResults && data.recentResults.length > 0 ? (
+              data.recentResults.map((pepite: any) => (
+                <a
+                  key={pepite.id}
+                  href={pepite.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-blue-500 transition-colors"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg leading-tight pr-4">{pepite.title}</h3>
+                    <span className="bg-green-900 text-green-400 text-xs font-bold px-2 py-1 rounded">
+                      {pepite.score}/10
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400 line-clamp-2">{pepite.description}</p>
+                </a>
+              ))
+            ) : (
+              <div className="text-center bg-gray-800 border border-gray-700 rounded-xl p-8 text-gray-400">
+                Aucune pépite pour le moment. L'Agent fouille le web...
+              </div>
+            )}
+          </div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div>
-            <label className="text-xs text-slate-500 font-mono ml-1">EMAIL</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="pilote@twins.com" autoComplete="username" required />
-          </div>
-          <div>
-            <label className="text-xs text-slate-500 font-mono ml-1">MOT DE PASSE</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-cyan-100 outline-none focus:border-cyan-500 transition-colors" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autoComplete={mode === 'LOGIN' ? 'current-password' : 'new-password'} required />
-          </div>
+        {/* Bouton pour forcer un scan MANUEL (Optionnel mais pratique !) */}
+        <button
+          onClick={() => {
+            alert("Ordre envoyé à l'IA ! Vérifie dans 30 secondes.");
+            fetch('/api/cron/radar-worker');
+          }}
+          className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-4 px-4 rounded-xl border border-gray-700 transition flex items-center justify-center gap-2 mt-8"
+        >
+          <span>🚀</span> Forcer une recherche IA maintenant
+        </button>
 
-          {error && <div className={`text-xs p-3 rounded border ${error.includes('!') ? 'bg-green-900/30 text-green-400 border-green-900' : 'bg-red-900/30 text-red-400 border-red-900'}`}>{error}</div>}
-
-          <button type="submit" disabled={loading} className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded text-sm font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-cyan-900/20">
-            {loading ? <Loader2 className="animate-spin" size={18} /> : (mode === 'LOGIN' ? <>ENTRER <ArrowRight size={18} /></> : <>INITIALISER LE JUMEAU <Shield size={18} /></>)}
-          </button>
-        </form>
       </div>
     </div>
   );
@@ -2056,6 +2089,47 @@ export async function GET(req: Request) {
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+const USER_ID = "28de7876-17a4-4648-8f78-544dcea980f1"; // Toujours ton ID
+
+// 1. LIRE les notes du Cortex
+export async function GET() {
+    try {
+        const notes = await prisma.cortexNote.findMany({
+            where: { profileId: USER_ID },
+            orderBy: { createdAt: 'desc' }
+        });
+        return NextResponse.json(notes);
+    } catch (error) {
+        return NextResponse.json({ error: "Erreur de lecture" }, { status: 500 });
+    }
+}
+
+// 2. AJOUTER une note au Cortex
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+
+        const newNote = await prisma.cortexNote.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                type: body.type || 'text',
+                profileId: USER_ID
+            }
+        });
+
+        return NextResponse.json({ success: true, note: newNote });
+    } catch (error) {
+        return NextResponse.json({ error: "Erreur de sauvegarde" }, { status: 500 });
+    }
+}
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cortex\bridge\route.ts ---
 
 import { mistralClient } from "@/lib/mistral";
@@ -2804,6 +2878,231 @@ export async function GET(request: Request) {
     } catch (error: any) {
         console.error("[CRON ERROR]", error);
         return NextResponse.json({ error: "Ã‰chec du radar furtif" }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\cron\radar-worker\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { Mistral } from '@mistralai/mistralai';
+import { sendPushNotification } from '@/lib/firebase-admin';
+// Importe ton SDK Tavily et Firebase ici plus tard
+
+const prisma = new PrismaClient();
+const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+
+// Limite de requÃªtes simultanÃ©es pour ne pas exploser les API (Rate Limiting)
+const CONCURRENCY_LIMIT = 5;
+
+export async function GET(request: Request) {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
+        return new Response('Non autorisÃ©', { status: 401 });
+    }
+
+    try {
+        // 1. DÃ‰TECTION : Trouver tous les radars qui doivent tourner
+        // Logique : lastRunAt + (frequency en heures) <= NOW()
+        const activeRadars = await prisma.radar.findMany({
+            where: { isActive: true },
+            include: {
+                profile: {
+                    select: { id: true, pushToken: true } // On a besoin du token pour la notif
+                }
+            }
+        });
+
+        // --- FILTRE TEMPOREL STRICT (MODE SAAS PRODUCTION) ---
+        const now = new Date();
+        const radarsToRun = activeRadars.filter(radar => {
+            const nextRun = new Date(radar.lastRunAt);
+            // On ajoute la frÃ©quence (en heures) Ã  la date de derniÃ¨re exÃ©cution
+            nextRun.setHours(nextRun.getHours() + radar.frequency);
+
+            // Le radar ne s'exÃ©cute QUE si le cycle de temps est rÃ©volu
+            return nextRun <= now;
+        });
+        // -----------------------------------------------------
+
+        if (radarsToRun.length === 0) {
+            return NextResponse.json({ message: "Aucun radar n'est arrivÃ© Ã  son heure d'exÃ©cution." });
+        }
+
+        console.log(`âš¡ DÃ©marrage du Manager Loop : ${radarsToRun.length} radars ciblÃ©s.`);
+
+        // 2. BATCHING : ExÃ©cution asynchrone contrÃ´lÃ©e (Par paquets de 5)
+        for (let i = 0; i < radarsToRun.length; i += CONCURRENCY_LIMIT) {
+            const batch = radarsToRun.slice(i, i + CONCURRENCY_LIMIT);
+
+            await Promise.allSettled(batch.map(async (radar) => {
+                try {
+                    // A. EXTRACTION DU CONTEXTE (Memories)
+                    // Tu devras adapter cette requÃªte selon comment tes memories sont structurÃ©es
+                    const memories = await prisma.memory.findMany({
+                        where: { profileId: radar.profileId },
+                        orderBy: { createdAt: 'desc' },
+                        take: 10
+                    });
+                    const context = memories.map(m => m.content).join(' | ');
+
+                    // B. RECHERCHE OSINT (Tavily)
+                    const searchQuery = `${radar.theme} ${radar.customPrompt || ''}`;
+                    console.log(`ðŸ” [OSINT] Recherche pour ${radar.profileId} : ${searchQuery}`);
+
+                    // Appel direct Ã  l'API REST de Tavily (plus lÃ©ger que d'installer un SDK complet)
+                    const tavilyReq = await fetch('https://api.tavily.com/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            api_key: process.env.TAVILY_API_KEY,
+                            query: searchQuery,
+                            search_depth: "advanced", // 'basic' pour aller plus vite, 'advanced' pour la qualitÃ©
+                            include_raw_content: false,
+                            max_results: 5 // On limite pour ne pas exploser la fenÃªtre de contexte de Mistral
+                        })
+                    });
+
+                    if (!tavilyReq.ok) {
+                        throw new Error(`Erreur Tavily: ${tavilyReq.statusText}`);
+                    }
+
+                    const tavilyRes = await tavilyReq.json();
+
+                    // Formatage strict pour le prompt Mistral
+                    const osintData = tavilyRes.results
+                        .map((r: any) => `Source: ${r.url}\nTitre: ${r.title}\nContenu: ${r.content}`)
+                        .join('\n\n');
+
+                    if (!osintData) {
+                        console.log(`âš ï¸ [OSINT] Aucun rÃ©sultat pertinent trouvÃ© pour ${searchQuery}.`);
+                        return; // return au lieu de continue dans un inner map avec Promise.allSettled
+                    }
+
+                    // C. SCORING INTRAITABLE (Mistral)
+                    const prompt = `
+            Tu es un manager d'Ã©lite.
+            ThÃ¨me de recherche : ${radar.theme}.
+            Contexte client : ${context}.
+            DonnÃ©es web trouvÃ©es : ${osintData}.
+            
+            Analyse ces donnÃ©es. Note la meilleure opportunitÃ© de 1 Ã  10.
+            Si la note est infÃ©rieure Ã  8, rÃ©ponds EXACTEMENT : "REJET".
+            Si la note est >= 8, rÃ©ponds EXACTEMENT avec un objet JSON pur. N'ajoute AUCUN texte avant ou aprÃ¨s, pas de bloc Markdown, pas de backticks. Uniquement l'objet JSON : {"score": 8, "titre": "...", "action": "..."}
+          `;
+
+                    const chatResponse = await mistral.chat.complete({
+                        model: 'mistral-small-latest', // Utilise le small pour le tri de masse (moins cher/plus rapide)
+                        messages: [{ role: 'user', content: prompt }],
+                    });
+
+                    const rawContent = chatResponse.choices?.[0]?.message?.content;
+                    let iaDecision = "REJET";
+
+                    // Fix TypeScript : VÃ©rification stricte au runtime
+                    if (typeof rawContent === 'string') {
+                        iaDecision = rawContent;
+                    } else if (Array.isArray(rawContent)) {
+                        // Fallback si l'API renvoie des chunks (sÃ©curitÃ© future)
+                        const textChunk = rawContent.find(chunk => chunk.type === 'text');
+                        if (textChunk && 'text' in textChunk) {
+                            iaDecision = textChunk.text || "REJET";
+                        }
+                    }
+
+                    // D. NOTIFICATION TACTIQUE (Firebase)
+                    if (iaDecision !== "REJET" && iaDecision.includes("{")) {
+                        try {
+                            // 1. Nettoyage brutal (Sanitisation) : on arrache le Markdown
+                            const cleanJsonString = iaDecision
+                                .replace(/```json/g, '')
+                                .replace(/```/g, '')
+                                .trim();
+
+                            // 2. Parsing sÃ©curisÃ©
+                            const opportunite = JSON.parse(cleanJsonString);
+                            console.log(`âœ… [SUCCÃˆS IA] OpportunitÃ© trouvÃ©e : ${opportunite.titre} (Score: ${opportunite.score})`);
+
+                            // On sÃ©curise les donnÃ©es envoyÃ©es par l'IA avant de les sauvegarder
+                            await prisma.radarResult.create({
+                                data: {
+                                    title: opportunite.titre || opportunite.title || 'Nouvelle opportunitÃ©',
+                                    description: opportunite.action || opportunite.description || 'Action Ã  dÃ©finir',
+                                    url: opportunite.url || "https://www.google.com", // ðŸ‘ˆ URL de secours si l'IA l'oublie
+                                    score: Number(opportunite.score) || 8, // ðŸ‘ˆ Force la conversion en VRAI chiffre
+                                    radarId: radar.id
+                                }
+                            });
+
+                            if (radar.profile.pushToken) {
+                                console.log(`ðŸš€ [PUSH] PrÃ©paration de l'envoi mobile pour ${radar.profileId}`);
+                                await sendPushNotification(radar.profile.pushToken, "ðŸŽ¯ OpportunitÃ© DÃ©tectÃ©e", opportunite.titre);
+                            } else {
+                                console.log(`âš ï¸ [PUSH] Profil ${radar.profileId} sans pushToken. Notification ignorÃ©e.`);
+                            }
+                        } catch (parseError) {
+                            console.error(`âŒ [ERREUR PARSING] Mistral a renvoyÃ© un format illisible :`, iaDecision);
+                        }
+                    }
+
+                    // E. MISE Ã€ JOUR DU RADAR
+                    await prisma.radar.update({
+                        where: { id: radar.id },
+                        data: { lastRunAt: new Date() }
+                    });
+
+                } catch (error) {
+                    console.error(`âŒ Erreur sur le radar ${radar.id}:`, error);
+                }
+            }));
+        }
+
+        return NextResponse.json({ success: true, executed: radarsToRun.length });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\dashboard\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma'; // Adapte le chemin si besoin
+
+export const dynamic = 'force-dynamic'; // ðŸ‘ˆ TrÃ¨s important pour Ã©viter que Vercel mette en cache !
+
+const USER_ID = "28de7876-17a4-4648-8f78-544dcea980f1"; // Ton ID fixe
+
+export async function GET() {
+    try {
+        // 1. On rÃ©cupÃ¨re ton profil pour te dire "Bonjour"
+        const profile = await prisma.profile.findUnique({
+            where: { id: USER_ID }
+        });
+
+        // 2. On compte TOUTES les pÃ©pites trouvÃ©es pour toi
+        const totalResults = await prisma.radarResult.count({
+            where: { radar: { profileId: USER_ID } }
+        });
+
+        // 3. On rÃ©cupÃ¨re les 3 derniÃ¨res pÃ©pites pour l'aperÃ§u
+        const recentResults = await prisma.radarResult.findMany({
+            where: { radar: { profileId: USER_ID } },
+            orderBy: { createdAt: 'desc' },
+            take: 3
+        });
+
+        return NextResponse.json({
+            profile,
+            totalResults,
+            recentResults
+        });
+
+    } catch (error) {
+        console.error("Erreur Dashboard:", error);
+        return NextResponse.json({ error: "Erreur lors du chargement des donnÃ©es" }, { status: 500 });
     }
 }
 
@@ -4713,6 +5012,48 @@ export async function POST(request: Request) {
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma'; // Assure-toi que ce chemin correspond Ã  ton projet
+
+// Ton ID unique (on le garde en dur tant qu'on n'a pas de systÃ¨me de connexion complet)
+const USER_ID = "28de7876-17a4-4648-8f78-544dcea980f1";
+
+// 1. LIRE les infos actuelles (GET)
+export async function GET() {
+    try {
+        const profile = await prisma.profile.findUnique({
+            where: { id: USER_ID }
+        });
+        return NextResponse.json(profile);
+    } catch (error) {
+        return NextResponse.json({ error: "Erreur de lecture" }, { status: 500 });
+    }
+}
+
+// 2. METTRE Ã€ JOUR les infos (POST)
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+
+        const updatedProfile = await prisma.profile.update({
+            where: { id: USER_ID },
+            data: {
+                // AdaptÃ© selon ton schema.prisma actuel
+                name: body.name,
+                city: body.city,
+                industry: body.industry
+            }
+        });
+
+        return NextResponse.json({ success: true, profile: updatedProfile });
+    } catch (error) {
+        return NextResponse.json({ error: "Erreur de sauvegarde" }, { status: 500 });
+    }
+}
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\avatar\route.ts ---
 
 import { NextResponse } from 'next/server';
@@ -4830,6 +5171,39 @@ export async function POST(request: Request) {
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\push-token\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const { profileId, token } = body;
+
+        if (!profileId || !token) {
+            return NextResponse.json({ error: "profileId et token sont requis." }, { status: 400 });
+        }
+
+        // Mise Ã  jour stricte du profil utilisateur
+        await prisma.profile.update({
+            where: { id: profileId },
+            data: { pushToken: token }
+        });
+
+        console.log(`ðŸ’¾ [DB] PushToken mis Ã  jour pour le profil: ${profileId}`);
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error("âŒ [DB] Erreur lors de la sauvegarde du token:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\profile\[id]\route.ts ---
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -4863,6 +5237,33 @@ export async function GET(
     } catch (error) {
         return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
     }
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\radar\results\route.ts ---
+
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) return NextResponse.json({ error: 'UserId requis' }, { status: 400 });
+
+    const results = await prisma.radarResult.findMany({
+        where: {
+            radar: {
+                profileId: userId // On utilise la colonne profileId de la table Radar
+            }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 20
+    });
+
+    return NextResponse.json(results);
 }
 
 
@@ -6078,6 +6479,117 @@ export default function NeuralLinkPage() {
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\cortex\page.tsx ---
+
+"use client";
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+export default function CortexPage() {
+    const [notes, setNotes] = useState<any[]>([]);
+    const [newNote, setNewNote] = useState({ title: '', content: '' });
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Charger les notes
+    const fetchNotes = () => {
+        fetch('/api/cortex')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setNotes(data);
+            });
+    };
+
+    useEffect(() => {
+        fetchNotes();
+    }, []);
+
+    // Sauvegarder une note
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newNote.title) return;
+
+        setIsSaving(true);
+        const response = await fetch('/api/cortex', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newNote)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            setNewNote({ title: '', content: '' }); // On vide le formulaire
+            fetchNotes(); // On rafraÃ®chit la liste
+        }
+        setIsSaving(false);
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-900 text-white p-6">
+            <div className="max-w-md mx-auto">
+
+                {/* Navigation retour */}
+                <div className="mb-6">
+                    <Link href="/" className="text-gray-400 hover:text-white transition">
+                        â† Retour au Dashboard
+                    </Link>
+                </div>
+
+                <h1 className="text-3xl font-bold mb-2">ðŸ§  Mon Cortex</h1>
+                <p className="text-gray-400 mb-8">DÃ©pose ici tes idÃ©es, liens et rÃ©flexions pour ton Agent.</p>
+
+                {/* Formulaire d'ajout rapide */}
+                <form onSubmit={handleSave} className="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-8 space-y-4">
+                    <input
+                        type="text"
+                        placeholder="Titre de la note ou idÃ©e..."
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                        value={newNote.title}
+                        onChange={e => setNewNote({ ...newNote, title: e.target.value })}
+                        required
+                    />
+                    <textarea
+                        placeholder="DÃ©tails, lien URL, contexte..."
+                        rows={3}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-purple-500 outline-none resize-none"
+                        value={newNote.content}
+                        onChange={e => setNewNote({ ...newNote, content: e.target.value })}
+                    />
+                    <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors"
+                    >
+                        {isSaving ? 'Enregistrement...' : '+ Ajouter Ã  la mÃ©moire'}
+                    </button>
+                </form>
+
+                {/* Liste des notes existantes */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold mb-4">MÃ©moire Ã  long terme</h2>
+                    {notes.length > 0 ? (
+                        notes.map((note) => (
+                            <div key={note.id} className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+                                <h3 className="font-bold text-lg mb-1">{note.title}</h3>
+                                {note.content && <p className="text-gray-400 text-sm whitespace-pre-wrap">{note.content}</p>}
+                                <p className="text-xs text-gray-500 mt-3">
+                                    EnregistrÃ© le {new Date(note.createdAt).toLocaleDateString('fr-FR')}
+                                </p>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center p-6 text-gray-500 border border-dashed border-gray-700 rounded-xl">
+                            Le Cortex est vide. Ajoute ta premiÃ¨re pensÃ©e !
+                        </div>
+                    )}
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\layout.tsx ---
 
 export const dynamic = 'force-dynamic'; // <--- LA CLÉ MAGIQUE
@@ -6097,970 +6609,107 @@ export default function DashboardLayout({
 
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\page.tsx ---
 
-'use client';
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { PrismaClient } from '@prisma/client'
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Radar, Loader2, BrainCircuit, X, ShieldAlert, ShieldX, Radio, Send, Upload, ChevronRight, Trash2, Flame } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+const prisma = new PrismaClient()
 
-// Components
-import KnowledgeIngester from '@/components/cortex/KnowledgeIngester';
-import { NeuralLink } from '@/components/NeuralLink';
-import Scanner from '@/components/dashboard/Scanner';
-import MatchOverlay from '@/components/dashboard/MatchOverlay';
-import DeepAuditReport from '@/components/dashboard/DeepAuditReport';
-import StrategicListOverlay from '@/components/dashboard/StrategicListOverlay';
-import SecureChat from '@/components/SecureChat';
-import OpportunityRadar from '@/components/OpportunityRadar';
-import { generateTacticalAudit } from '@/app/actions/generate-audit';
-import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
-import { TacticalOpenerModule } from '@/components/TacticalOpenerModule';
-import { CommandTerminal } from '@/components/CommandTerminal';
+export default async function DashboardPage() {
+    const cookieStore = await cookies()
 
-// --- LOGIQUE METIER (INCHANGÉE) ---
-const calculateSynergy = (target: any, memories: any[]) => {
-    let score = 45;
-    if (target.bio && target.bio.length > 20) score += 15;
-    if (memories.length > 0) score += 10;
-    if (memories.some(m => m.type === 'knowledge')) score += 15;
-    score += Math.floor(Math.random() * 15) - 5;
-    score = Math.min(98, Math.max(12, score));
-    const opportunities = [];
-    const fullText = (target.bio + " " + memories.map(m => m.content).join(" ")).toLowerCase();
-    if (fullText.includes("recherche") || fullText.includes("besoin")) opportunities.push("Demande active.");
-    if (fullText.includes("expert") || fullText.includes("senior")) opportunities.push("Expertise technique.");
-    if (opportunities.length === 0) opportunities.push("Exploration requise.");
-    return { score, opportunities };
-};
-
-const mockDeepAudit = {
-    identity: {
-        name: "Cible Alpha",
-        role: "Full Stack Architect",
-        clearance: "LEVEL 4",
-        lastActive: "14min ago",
-    },
-    scores: {
-        match: 89,
-        reliability: 94,
-        influence: 72,
-    },
-    psyche: [
-        { trait: "Openness", value: 90, label: "Visionary" },
-        { trait: "Conscientiousness", value: 85, label: "Disciplined" },
-        { trait: "Neuroticism", value: 12, label: "Stable" },
-    ],
-    network: [
-        "Connecté au Cluster 'React Core'",
-        "Accès confirmé : 3 investisseurs",
-        "Pont potentiel vers 'Silicon Valley Node'",
-    ],
-    risks: [
-        "Divergence politique mineure (2%)",
-        "Localisation instable (Nomade)",
-    ]
-};
-
-export default function MissionControl() {
-    const router = useRouter();
-    const [supabase] = useState(() => createClient());
-    const [profileId, setProfileId] = useState<string | null>(null);
-    const [isInitialized, setIsInitialized] = useState(false);
-    const [memories, setMemories] = useState<any[]>([]);
-    const [logs, setLogs] = useState<string[]>([]);
-
-    // New Tactical States
-    const [status, setStatus] = useState<'IDLE' | 'SCANNING' | 'LOCKED' | 'AUDIT' | 'LIST'>('IDLE');
-    const [matchData, setMatchData] = useState<any>(null);
-    const [strategicReport, setStrategicReport] = useState<any>(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-    // États UI
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
-    const [channels, setChannels] = useState<any[]>([]);
-    const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
-    const [showCortexPanel, setShowCortexPanel] = useState(false);
-    const [showBlockPanel, setShowBlockPanel] = useState(false);
-
-    // États scan 2 phases
-    const [basicResult, setBasicResult] = useState<any>(null);
-    const [deepResult, setDeepResult] = useState<any>(null);
-
-    // 🎮 Agent Progression
-    const [agentStats, setAgentStats] = useState<{ syncLevel: number; credits: number; stats: any }>({
-        syncLevel: 1, credits: 100, stats: { messages: 0, memories: 0, scans: 0 }
-    });
-    const [statsFlash, setStatsFlash] = useState(false);
-    const statsInitRef = useRef(false);
-    const initGuardRef = useRef(false);
-
-    useEffect(() => {
-        if (!statsInitRef.current) { statsInitRef.current = true; return; }
-        setStatsFlash(true);
-        const t = setTimeout(() => setStatsFlash(false), 600);
-        return () => clearTimeout(t);
-    }, [agentStats]);
-
-
-
-    // États Ingestion
-    const [isDragging, setIsDragging] = useState(false);
-
-    const [unreadIds, setUnreadIds] = useState<string[]>([]);
-    const [blockedIds, setBlockedIds] = useState<string[]>([]);
-    const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
-
-    const addLog = (message: string) => setLogs(prev => [`> ${new Date().toLocaleTimeString().slice(0, 5)} ${message}`, ...prev].slice(0, 10));
-
-    useEffect(() => {
-        if (initGuardRef.current) return;
-        initGuardRef.current = true;
-
-        let profileSub: any = null;
-
-        const init = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { router.push('/'); return; }
-            setProfileId(user.id);
-            setIsInitialized(true);
-            fetchChannels();
-            fetchBlockList(user.id);
-            loadMemories(user.id);
-            fetchAccessRequests(user.id);
-
-            // 🎮 Charger les stats de progression
-            const { data: profile } = await supabase
-                .from('Profile')
-                .select('syncLevel, credits, stats')
-                .eq('id', user.id)
-                .single();
-            if (profile) {
-                console.log('[DEBUG] Stats Agent:', profile.stats, '| Credits:', profile.credits, '| Level:', profile.syncLevel);
-                setAgentStats({
-                    syncLevel: profile.syncLevel ?? 1,
-                    credits: profile.credits ?? 100,
-                    stats: profile.stats ?? { messages: 0, memories: 0, scans: 0 }
-                });
-            }
-
-            // ⚡ LIAISON TEMPS RÉEL : Écoute les mutations sur le profil
-            profileSub = supabase
-                .channel('profile-realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'Profile',
-                        filter: `id=eq.${user.id}`
-                    },
-                    (payload: any) => {
-                        console.log('[REALTIME] Update reçu:', payload.new);
-                        const p = payload.new;
-                        setAgentStats(current => ({
-                            ...current,
-                            syncLevel: p.syncLevel ?? current.syncLevel,
-                            credits: p.credits ?? current.credits,
-                            stats: p.stats // Force la priorité sur les stats venant de la DB
-                        }));
-                        // Sync les memories du dashboard aussi
-                        if (user.id) loadMemories(user.id);
-                    }
-                )
-                .subscribe();
-        };
-        init();
-
-        return () => {
-            if (profileSub) supabase.removeChannel(profileSub);
-        };
-    }, []);
-
-    const fetchAccessRequests = async (id: string) => {
-        const { data } = await supabase
-            .from('AccessRequest')
-            .select('*')
-            .eq('provider_id', id)
-            .eq('status', 'pending');
-        if (data) setIncomingRequests(data);
-    };
-
-    // -------------------------------------------------------------
-    // 1. ÉCOUTEUR GLOBAL : Nouveaux Canaux (Channel)
-    // -------------------------------------------------------------
-    useEffect(() => {
-        if (!profileId) return;
-
-        let isMounted = true;
-        let channelRadar: any = null;
-
-        const initDelay = setTimeout(() => {
-            if (!isMounted) return;
-
-            channelRadar = supabase.channel('radar_channels_v4')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Channel' }, () => {
-                    fetchChannels();
-                })
-                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'Channel' }, () => {
-                    fetchChannels();
-                    setIsChatOpen(false);
-                })
-                .subscribe();
-        }, 300);
-
-        return () => {
-            isMounted = false;
-            clearTimeout(initDelay);
-            if (channelRadar) supabase.removeChannel(channelRadar);
-        };
-    }, [profileId]);
-
-    // -------------------------------------------------------------
-    // 1b. ÉCOUTEUR GLOBAL : Demandes de Liaison (AccessRequest)
-    // -------------------------------------------------------------
-    useEffect(() => {
-        if (!profileId) return;
-
-        const requestRadar = supabase.channel('radar_requests')
-            .on(
-                'postgres_changes',
-                // ðŸŸ¢ SUPPRESSION DU FILTRE SERVEUR QUI CAUSAIT LE "MISMATCH"
-                { event: 'INSERT', schema: 'public', table: 'AccessRequest' },
-                (payload: any) => {
-                    const req = payload.new;
-                    // ðŸŸ¢ FILTRAGE CÔTÉ CLIENT avec la bonne colonne 'provider_id'
-                    if (req.provider_id === profileId) {
-                        console.log("⚡ Nouvelle demande de liaison entrante !");
-                        fetchAccessRequests(profileId);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                // ðŸŸ¢ SUPPRESSION DU FILTRE SERVEUR ÉGALEMENT POUR LE DELETE
-                { event: 'DELETE', schema: 'public', table: 'AccessRequest' },
-                () => {
-                    // Refresh la liste quand une demande est supprimée (ex: annulée, refusée)
-                    fetchAccessRequests(profileId);
-                }
-            )
-            .subscribe();
-
-        return () => { supabase.removeChannel(requestRadar); };
-    }, [profileId]);
-
-
-    // -------------------------------------------------------------
-    // 2. ÉCOUTEUR GLOBAL : Messages non lus (La pastille rouge)
-    // -------------------------------------------------------------
-    useEffect(() => {
-        if (!profileId) return;
-        const supabase = createClient();
-
-        const radar = supabase.channel('global_radar')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
-                const newMsg = payload.new;
-                // Si le message est pour moi (pas de moi)
-                if (newMsg.sender_id !== profileId) {
-                    setUnreadIds(prev => {
-                        // Si on n'est pas déjà dans ce chat, on ajoute à la liste des non-lus
-                        if (activeChannelId !== newMsg.communication_id) {
-                            return [...new Set([...prev, newMsg.communication_id])];
-                        }
-                        return prev;
-                    });
-                }
-            })
-            .subscribe();
-
-        return () => { supabase.removeChannel(radar); };
-    }, [profileId, activeChannelId]); // Très important d'avoir activeChannelId ici
-
-    const fetchChannels = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const { data: chans } = await supabase
-            .from('Channel')
-            .select('*')
-            .or(`member_one_id.eq.${session.user.id},member_two_id.eq.${session.user.id}`)
-            .order('last_message_at', { ascending: false });
-
-        setChannels(chans || []);
-    };
-
-    const fetchBlockList = async (pid: string) => {
-        const { data } = await supabase.from('BlockList').select('blockedId').eq('blockerId', pid);
-        if (data) setBlockedIds(data.map((b: { blockedId: string }) => b.blockedId));
-    };
-
-    const loadMemories = async (pid: string) => {
-        const res = await fetch(`/api/memories?profileId=${pid}`);
-        const data = await res.json();
-        if (data.memories) setMemories(data.memories);
-    };
-
-    const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
-    const handleDragLeave = () => setIsDragging(false);
-    const handleDrop = async (e: React.DragEvent) => {
-        e.preventDefault(); setIsDragging(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) await handleFileUpload(e.dataTransfer.files[0]);
-    };
-
-    const handleFileUpload = async (file: File) => {
-        if (!profileId) return;
-        addLog(`ANALYSE: ${file.name}`);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('profileId', profileId);
-        try {
-            const res = await fetch('/api/sensors/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.success) {
-                addLog(`SUCCÈS: Données ingérées.`);
-                loadMemories(profileId);
-
-                // ðŸŸ¢ NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
-                // On ne met pas de "await" devant le fetch, pour ne pas geler l'écran de l'utilisateur.
-                console.log("ðŸ¦‡ Envoi du signal au Gardien...");
-                fetch('/api/guardian', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        profileId: profileId,
-                        newMemoryContent: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.`
-                    })
-                }).catch(err => console.error("Erreur du Gardien :", err));
-            }
-            else { addLog(`ERREUR: Échec lecture.`); }
-        } catch (err) { addLog(`CRITIQUE: Erreur upload.`); }
-    };
-
-
-    const triggerManualScan = async () => {
-        if (!profileId) return;
-        setStatus('SCANNING');
-        setBasicResult(null);
-        setDeepResult(null);
-        setMatchData(null);
-        setStrategicReport(null);
-        addLog('RADAR: Scan de surface initié...');
-
-        try {
-            const report = await scanGlobalNetwork(profileId, 'basic');
-            console.log('ðŸ“¡ BASIC SCAN:', report);
-            setBasicResult(report);
-            setStatus('LIST');
-            addLog(`RADAR: Analyse de surface terminée â€” statut ${report.globalStatus}.`);
-        } catch (e) {
-            console.error(e);
-            setStatus('IDLE');
-            addLog('ERREUR: Scan de surface échoué.');
-        }
-    };
-
-    // â”€â”€ PHASE 2 : Audit profond (opportunités complètes) â”€â”€
-    const triggerDeepAudit = async () => {
-        if (!profileId) return;
-        setStatus('SCANNING');
-        setDeepResult(null);
-        addLog('CORTEX: Extraction profonde en cours...');
-
-        try {
-            const report = await scanGlobalNetwork(profileId, 'deep');
-            console.log('🔥 DEEP AUDIT:', report);
-            setDeepResult(report);
-            setStrategicReport(report);
-            setStatus('LIST');
-            addLog(`CONTACT: ${report.opportunities?.length ?? 0} vecteur(s) identifié(s).`);
-        } catch (e) {
-            console.error(e);
-            // On revient au résultat basic si on en avait un
-            setStatus('LIST');
-            addLog('ERREUR: Audit profond échoué.');
-        }
-    };
-
-    // â”€â”€ CONTACT : Initier une demande de liaison après audit profond â”€â”€
-    const handleContactTarget = async () => {
-        // ðŸ” VÉRIFICATION NÂ°1 : Est-ce qu'on a bien l'ID de l'autre Agent IA ?
-        console.log("ðŸ” DONNÉES DE L'AUDIT :", deepResult);
-
-        const targetId = deepResult?.targetId || deepResult?.id || deepResult?.profile_id;
-
-        console.log("🎯 ID DE LA CIBLE À CONTACTER :", targetId);
-
-        if (!targetId) {
-            alert("[ERREUR CRITIQUE] Impossible d'engager : l'ID de la cible est introuvable. Le radar n'a pas transmis les coordonnées.");
-            return;
-        }
-
-        if (!profileId) return;
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('[CRITIQUE] Session expirée.'); return; }
-
-        addLog('LIAISON: Envoi de la demande de contact...');
-
-        try {
-            const res = await fetch('/api/network/request', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll()
                 },
-                body: JSON.stringify({
-                    targetId,
-                    senderClassification: deepResult?.targetClassification ?? 'entité inconnue',
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                addLog('SUCCÈS: Demande de contact transmise. En attente de réponse.');
-                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
-            } else {
-                addLog(`[ERREUR] ${data.error || 'Demande échouée.'}`);
-            }
-        } catch (err: any) {
-            addLog(`[CRITIQUE] Échec de connexion : ${err.message}`);
+            },
         }
-    };
+    )
 
-    // â”€â”€ Réponse aux demandes de liaison (accepter / refuser / bloquer) â”€â”€
-    const handleResponse = async (req: any, action: 'accept' | 'refuse' | 'block') => {
-        console.log("ðŸ–±ï¸ [DEBUG CLICK] handleResponse déclenché pour:", req.id, "Action:", action);
-        // TRAP : Si cette ligne s'affiche au chargement sans clic, c'est le bug !
+    // 1. Vérification stricte de l'identité
+    const { data: { user } } = await supabase.auth.getUser()
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-        try {
-            const res = await fetch('/api/network/respond', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({ requestId: req.id, requesterId: req.requester_id, action }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                setIncomingRequests(prev => prev.filter(r => r.id !== req.id));
-                if (action === 'accept') addLog('LIAISON: Canal sécurisé établi.');
-                else if (action === 'block') addLog('SÉCURITÉ: Entité bloquée.');
-                else addLog('LIAISON: Requête refusée.');
-            }
-        } catch (err: any) {
-            addLog(`[CRITIQUE] Réponse échouée : ${err.message}`);
+    if (!user) {
+        redirect('/login')
+    }
+
+    // 2. Récupération des données de l'Agent via Prisma
+    const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        include: {
+            radars: true, // On récupère les opportunités débusquées
+            files: true   // On récupère les fichiers du Cortex
         }
-    };
+    })
 
-    const handleSelectOpportunity = async (opp: any) => {
-        if (!profileId) return;
-        setIsAnalyzing(true);
-        addLog(`CORTEX: Analyse tactique de ${opp.targetName}...`);
-
-        try {
-            const aiAudit = await generateTacticalAudit(opp.targetId, profileId);
-            setMatchData({
-                ...aiAudit,
-                targetId: opp.targetId,
-                name: opp.targetName,
-                identity: { ...aiAudit.identity, name: opp.targetName }
-            });
-            setStatus('AUDIT');
-        } catch (e) {
-            addLog("ERREUR: Analyse détaillée échouée.");
-        } finally {
-            setIsAnalyzing(false);
-        }
-    };
-
-    const handleAction = async (action: 'LINK' | 'BLOCK' | 'CANCEL') => {
-        if (!matchData) return;
-
-        if (action === 'LINK') {
-            await supabase.from('Channel').insert({ member_one_id: profileId, member_two_id: matchData.targetId, topic: "LIAISON SÉCURISÉE", last_message_at: new Date().toISOString(), initiatorId: profileId });
-            addLog("LIAISON: Établie.");
-        } else if (action === 'BLOCK') {
-            await supabase.from('BlockList').insert({ blockerId: profileId, blockedId: matchData.targetId });
-            setBlockedIds(prev => [...prev, matchData.targetId]);
-            addLog("SÉCURITÉ: Cible bannie.");
-        }
-
-        setStatus('IDLE');
-        setMatchData(null);
-    };
-    const toggleChannelChat = (id: string) => { setActiveChannelId(id); setIsChatOpen(true); setUnreadIds(prev => prev.filter(uid => uid !== id)); };
-
-    const handleDeleteChannel = async (channelId: string, e: React.MouseEvent) => {
-        e.stopPropagation(); // Empêche d'ouvrir le chat quand on clique sur supprimer
-
-        if (!confirm("CONFIRMATION REQUISE : Rompre définitivement cette liaison sécurisée et purger l'historique ?")) return;
-
-        // 1. Mise à jour optimiste de l'interface (immédiat)
-        setChannels(prev => prev.filter(c => c.id !== channelId));
-
-        try {
-            // 2. PURGE : On supprime d'abord tous les messages liés à ce canal
-            const { error: msgError } = await supabase
-                .from('Message') // Attention à la majuscule/minuscule selon votre base !
-                .delete()
-                .eq('communication_id', channelId);
-
-            if (msgError) throw msgError;
-
-            // 3. DESTRUCTION : Maintenant on peut détruire le canal
-            const { error: channelError } = await supabase
-                .from('Channel')
-                .delete()
-                .eq('id', channelId);
-
-            if (channelError) throw channelError;
-
-            addLog(`TERMINATION: Liaison ${channelId.slice(0, 4)} rompue et purgée.`);
-
-        } catch (error: any) {
-            console.error("Erreur de suppression du canal :", error.message);
-            addLog("ERREUR: Le protocole de rupture a échoué (Voir Console).");
-            // Si la DB refuse, on remet le canal dans l'interface pour ne pas mentir à l'Agent
-            fetchChannels();
-        }
-    };
-
-    if (!isInitialized) return <div className="h-screen bg-black flex items-center justify-center text-primary"><Loader2 className="animate-spin" /></div>;
+    if (!profile) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+                Erreur critique : Profil introuvable dans la base. Le trigger SQL a échoué.
+            </div>
+        )
+    }
 
     return (
-        <main
-            className="bg-background-dark text-slate-300 font-display min-h-screen w-full overflow-hidden flex flex-col relative touch-none"
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-        >
-            {/* Le globe a été déplacé dans le Scanner UI */}
+        <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-8">
 
-            {/* 2. TON UI : Le reste par-dessus */}
-            <div className="relative z-10 flex flex-col h-full w-full max-w-md mx-auto bg-black/20 border-x border-white/5 shadow-2xl">
-                {/* Header */}
-                <header className="flex items-center justify-between px-5 pt-[env(safe-area-inset-top,1.5rem)] pb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-primary border border-primary/30 shadow-[0_0_15px_rgba(19,200,236,0.2)]">
-                            <ShieldAlert size={20} />
-                        </div>
-                        <div>
-                            <h1 className="text-sm font-bold tracking-wider text-primary text-glow">COMMAND_NODE</h1>
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-primary breathing-dot"></span>
-                                <span className="text-[10px] text-gray-400 font-mono tracking-widest">ONLINE</span>
-                            </div>
-                        </div>
+                {/* En-tête du Dashboard */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">Espace de Commandement</h1>
+                        <p className="text-gray-400 mt-1">Supervision de votre Agent Digital</p>
                     </div>
-
-                    <div className="glass-panel px-3 py-1 rounded-full flex items-center gap-2">
-                        <span className="text-xs font-mono text-primary animate-pulse">SECURE</span>
+                    <div className="text-sm bg-blue-500/10 text-blue-400 px-4 py-2 rounded-full border border-blue-500/20 font-mono">
+                        {user.email}
                     </div>
                 </header>
 
-                {/* Main Dashboard Area */}
-                <main className="flex-1 flex flex-col px-4 gap-4 overflow-y-auto no-scrollbar pb-32">
+                {/* Modules Principaux */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                    {/* Agent Progression Stats */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-primary/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">FRAGS</span>
-                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-cyan-300 scale-125 drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]' : 'text-white scale-100'}`}>{agentStats.stats?.memories ?? 0}</span>
-                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
-                                <div className="bg-primary h-1 rounded-full transition-all" style={{ width: `${((agentStats.stats?.memories ?? 0) % 10) * 10}%` }} />
-                            </div>
+                    {/* Module : Radar / Opportunités */}
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 backdrop-blur-md hover:border-white/20 transition-all">
+                        <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                            <span className="text-blue-400">📡</span> Le Radar
+                        </h2>
+                        <p className="text-gray-400 text-sm mb-4">Opportunités détectées par l'agent</p>
+                        <div className="text-4xl font-bold text-white mb-2">
+                            {profile.radars.length}
                         </div>
-                        <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-accent-amber/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">CREDITS</span>
-                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-amber-300 scale-125 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]' : 'text-accent-amber text-glow-amber scale-100'}`}>{agentStats.credits}</span>
-                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
-                                <div className="bg-amber-500 h-1 rounded-full transition-all" style={{ width: `${Math.min((agentStats.credits / 1000) * 100, 100)}%` }} />
-                            </div>
-                        </div>
-                        <div className="glass-panel rounded-xl p-2 flex flex-col items-center justify-center border-t-2 border-t-primary/50">
-                            <span className="text-[8px] text-gray-400 tracking-wider">LEVEL</span>
-                            <span className={`text-lg font-bold font-mono transition-all duration-300 ${statsFlash ? 'text-cyan-300 scale-125 drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]' : 'text-white scale-100'}`}>{agentStats.syncLevel}</span>
-                            <div className="w-full bg-gray-800 rounded-full h-1 mt-1">
-                                <div className="bg-primary h-1 rounded-full transition-all" style={{ width: `${Math.min((agentStats.syncLevel / 20) * 100, 100)}%` }} />
-                            </div>
-                        </div>
+                        <p className="text-xs text-gray-500">En attente de traitement</p>
                     </div>
 
-                    {/* ALERTES : Requêtes de liaison entrantes */}
-                    {incomingRequests.length > 0 && (
-                        <div className="mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                            <h3 className="text-orange-500 font-bold text-[10px] mb-2 tracking-widest uppercase flex items-center gap-1">
-                                <span className="animate-pulse">⚠️</span> {incomingRequests.length} requête(s) de liaison
-                            </h3>
-                            <div className="space-y-2">
-                                {incomingRequests.map((req) => (
-                                    <div key={req.id} className="bg-slate-900/90 border-l-4 border-orange-500 p-3 rounded-r-xl flex justify-between items-center shadow-lg gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-slate-200 text-xs font-mono truncate">{req.topic || 'Demande de liaison'}</p>
-                                            <span className="text-[9px] text-slate-500 uppercase tracking-tighter">Source: {req.requester_id?.slice(0, 8)}...</span>
-                                        </div>
-                                        <div className="flex gap-1 shrink-0">
-                                            <button onClick={() => handleResponse(req, 'accept')} className="bg-green-600/20 text-green-400 border border-green-600/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-green-600 hover:text-white transition-all">✅</button>
-                                            <button onClick={() => handleResponse(req, 'refuse')} className="bg-slate-800 text-slate-400 border border-slate-700 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-slate-700 transition-all">❌</button>
-                                            <button onClick={() => handleResponse(req, 'block')} className="bg-red-900/20 text-red-500 border border-red-900/50 px-2 py-1 rounded text-[9px] font-bold uppercase hover:bg-red-900 hover:text-white transition-all">🚫</button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Module : Cortex / Mémoire */}
+                    <div className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 backdrop-blur-md hover:border-white/20 transition-all">
+                        <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                            <span className="text-purple-400">🧠</span> Le Cortex
+                        </h2>
+                        <p className="text-gray-400 text-sm mb-4">Fichiers ingérés et analysés</p>
+                        <div className="text-4xl font-bold text-white mb-2">
+                            {profile.files.length}
                         </div>
-                    )}
-
-                    {/* CENTRAL NEURAL MAP (Scanner & Overlays) */}
-                    <div className="glass-panel rounded-2xl p-1 relative overflow-visible flex flex-col items-center justify-center group min-h-[250px]">
-
-                        {/* ÉTAT 1 : SCANNER (Visible si IDLE ou SCANNING) */}
-                        {(status === 'IDLE' || status === 'SCANNING') && (
-                            <div className={`transition-all duration-500 w-full ${status === 'SCANNING' ? 'opacity-80 pointer-events-none' : 'opacity-100'}`}>
-                                <Scanner onScanStart={triggerManualScan} />
-                                {status === 'SCANNING' && (
-                                    <p className="text-center text-cyan-400 mt-2 font-mono text-xs">
-                                        TRIANGULATION EN COURS...
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* ÉTAT 2-A : RÉSULTAT SCAN BASIC */}
-                        {status === 'LIST' && basicResult && !deepResult && (
-                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
-                                <button
-                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
-                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
-                                >
-                                    <X size={24} />
-                                </button>
-
-                                <div className="mt-6 space-y-4">
-                                    {/* Statut global */}
-                                    <div className={`p-4 border-l-4 bg-white/5 rounded ${basicResult.globalStatus === 'GREEN' ? 'border-emerald-500' :
-                                        basicResult.globalStatus === 'ORANGE' ? 'border-amber-500' : 'border-red-500'
-                                        }`}>
-                                        <p className="text-[10px] font-mono text-gray-500 mb-1">ANALYSE DE SURFACE</p>
-                                        <h2 className="text-lg font-bold tracking-tighter text-white">
-                                            Statut : <span className={basicResult.globalStatus === 'GREEN' ? 'text-emerald-400' : basicResult.globalStatus === 'ORANGE' ? 'text-amber-400' : 'text-red-400'}>{basicResult.globalStatus}</span>
-                                        </h2>
-                                        <p className="text-gray-400 italic text-sm mt-2">{basicResult.analysisSummary}</p>
-                                    </div>
-
-                                    {/* Commandes Phase 1 */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={triggerDeepAudit}
-                                            className="col-span-2 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-2 text-sm"
-                                        >
-                                            <Flame className="mr-2 inline-block" size={20} /> AUDIT PROFOND
-                                        </button>
-                                        <button
-                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); }}
-                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl transition-all text-sm"
-                                        >
-                                            ANNULER
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (profileId && basicResult?.targetId) {
-                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: basicResult.targetId });
-                                                    setBlockedIds(prev => [...prev, basicResult.targetId]);
-                                                    addLog('SÉCURITÉ: Cible bannie.');
-                                                }
-                                                setStatus('IDLE'); setBasicResult(null);
-                                            }}
-                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900 font-bold py-2 rounded-xl transition-all text-sm"
-                                        >
-                                            BLOQUER
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CHARGEMENT AUDIT PROFOND */}
-                        {status === 'SCANNING' && basicResult && (
-                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl">
-                                <div className="text-4xl animate-spin mb-4">⚙️</div>
-                                <p className="text-amber-400 font-mono text-sm tracking-widest">EXTRACTION PROFONDE...</p>
-                            </div>
-                        )}
-
-                        {/* ÉTAT 2-B : RAPPORT AUDIT PROFOND CONSOLIDÉ */}
-                        {status === 'LIST' && deepResult && (
-                            <div className="absolute inset-0 z-20 flex flex-col p-4 w-full h-full bg-black/95 backdrop-blur-xl overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
-                                <button
-                                    onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
-                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-white"
-                                >
-                                    <X size={24} />
-                                </button>
-
-                                <div className="mt-6 space-y-4 pb-4">
-                                    {/* En-tête + Score unique */}
-                                    <div className="flex justify-between items-center border-b border-orange-900/50 pb-4">
-                                        <h3 className="text-orange-400 font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                                            <span>🔥</span> RAPPORT D'AUDIT PROFOND
-                                        </h3>
-                                        <div className="text-2xl font-mono font-bold text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
-                                            {deepResult.overallMatchScore ?? deepResult.matchScore ?? 0}%
-                                        </div>
-                                    </div>
-
-                                    {/* Classification cible */}
-                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
-                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
-                                            Classification Cible
-                                        </span>
-                                        <p className="text-slate-200 text-sm font-mono">
-                                            {deepResult.targetClassification ?? 'Entité non classifiée'}
-                                        </p>
-                                    </div>
-
-                                    {/* Analyse tactique unifiée */}
-                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
-                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
-                                            Analyse Tactique
-                                        </span>
-                                        <p className="text-slate-300 text-sm leading-relaxed">
-                                            {deepResult.unifiedAnalysis ?? deepResult.analyse ?? deepResult.analysisSummary ?? 'Analyse en cours...'}
-                                        </p>
-                                    </div>
-
-                                    {/* Alignement stratégique */}
-                                    <div className="bg-black/60 p-4 rounded border border-orange-900/30">
-                                        <span className="text-orange-500 font-bold text-[10px] uppercase mb-2 tracking-widest block opacity-80">
-                                            Alignement Stratégique
-                                        </span>
-                                        <p className="text-cyan-400 text-sm leading-relaxed">
-                                            {deepResult.strategicAlignment ?? 'Évaluation des bénéfices en cours...'}
-                                        </p>
-                                    </div>
-
-                                    {/* Apport de l'Opener Tactique (Remplace l'ancien bouton Contacter basique) */}
-                                    <TacticalOpenerModule
-                                        userId={profileId!}
-                                        targetId={deepResult?.targetId || deepResult?.id || deepResult?.profile_id}
-                                        targetClassification={deepResult.targetClassification}
-                                        onSuccess={() => {
-                                            addLog('SUCCÈS: Demande tactique transmise avec succès. En attente de réponse.');
-                                            setStatus('IDLE');
-                                            setBasicResult(null);
-                                            setDeepResult(null);
-                                        }}
-                                    />
-
-                                    {/* Commandes Phase 2 Pures */}
-                                    <div className="grid grid-cols-2 gap-2 pt-2">
-                                        <button
-                                            onClick={() => { setStatus('IDLE'); setBasicResult(null); setDeepResult(null); }}
-                                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
-                                        >
-                                            Annuler
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                if (profileId && deepResult?.targetId) {
-                                                    supabase.from('BlockList').insert({ blockerId: profileId, blockedId: deepResult.targetId });
-                                                    setBlockedIds(prev => [...prev, deepResult.targetId]);
-                                                    addLog('SÉCURITÉ: Cible bannie.');
-                                                }
-                                                setStatus('IDLE'); setBasicResult(null); setDeepResult(null);
-                                            }}
-                                            className="bg-red-900/40 hover:bg-red-800/70 text-red-400 border border-red-900/50 font-bold py-3 rounded-xl transition-all uppercase tracking-wider text-[11px]"
-                                        >
-                                            Bloquer
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* ÉTAT 3 : MATCH LOCKED (Legacy/Single Audit - kept for compatibility if needed, but not reached via scanGlobalNetwork) */}
-                        {status === 'LOCKED' && matchData && (
-                            <div className="absolute inset-0 z-20 flex items-center justify-center p-2">
-                                <MatchOverlay
-                                    data={matchData}
-                                    onAudit={async () => {
-                                        // Legacy path if we ever manually set LOCKED
-                                        if (matchData.targetId) handleSelectOpportunity({ targetId: matchData.targetId, targetName: matchData.name });
-                                    }}
-                                    onCancel={() => { setStatus('IDLE'); setMatchData(null); }}
-                                />
-                            </div>
-                        )}
-
-                        {isDragging && (
-                            <div className="absolute inset-0 bg-primary/20 backdrop-blur-sm z-50 flex flex-col items-center justify-center border-2 border-primary border-dashed m-2 rounded-xl">
-                                <Upload className="text-primary animate-bounce" size={32} />
-                                <p className="text-xs font-bold text-white mt-2">INGESTION DONNÉES</p>
-                            </div>
-                        )}
+                        <p className="text-xs text-gray-500">Documents actifs</p>
                     </div>
 
-                    {/* INTERCEPTIONS RÉSEAU (Opportunity Radar) */}
-                    {profileId && <OpportunityRadar profileId={profileId} />}
-
-                    {/* Active Channels List */}
-                    <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 min-h-[120px]">
-                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                            <h3 className="text-xs text-accent-amber font-bold tracking-widest flex items-center gap-2">
-                                <Radio size={12} /> CHANNELS ({channels.length})
-                            </h3>
-                        </div>
-                        <div className="space-y-2 overflow-y-auto max-h-32 custom-scrollbar">
-                            {channels.filter(c => c.topic && c.topic !== 'LIAISON SÉCURISÉE').map((channel) => { // On filtre les canaux sans sujet ou par défaut
-                                const otherId = channel.member_one_id === profileId ? channel.member_two_id : channel.member_one_id;
-
-                                return (
-                                    <div key={channel.id} className="bg-slate-900 border border-blue-500/30 p-4 rounded-xl mb-3">
-                                        <div className="flex justify-between items-center gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-blue-400 font-bold text-xs uppercase truncate">{channel.topic}</h4>
-                                                <p className="text-[10px] text-slate-500 truncate">PARTENAIRE : {otherId?.slice(0, 8)}...</p>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setChatPartnerId(otherId);
-                                                        setActiveChannelId(channel.id);
-                                                        setIsChatOpen(true);
-                                                        // ðŸŸ¢ On efface la notification quand on ouvre le canal
-                                                        setUnreadIds(prev => prev.filter(id => id !== channel.id));
-                                                    }}
-                                                    className="relative bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap"
-                                                >
-                                                    OUVRIR TCHAT
-                                                    {/* ðŸŸ¢ LA PASTILLE ROUGE DE NOTIFICATION */}
-                                                    {unreadIds.includes(channel.id) && (
-                                                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-black shadow-sm"></span>
-                                                        </span>
-                                                    )}
-                                                </button>
-                                                <button
-                                                    onClick={(e) => handleDeleteChannel(channel.id, e)}
-                                                    className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
-                                                    title="Rompre la liaison"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                            {channels.length === 0 && <p className="text-[10px] text-gray-600 italic text-center py-2">Aucun signal.</p>}
-                        </div>
-                    </div>
-
-                    {/* Terminal Logs */}
-                    <div className="glass-panel rounded-xl p-3 flex flex-col gap-2 h-32">
-                        <h3 className="text-[9px] text-gray-500 font-bold tracking-widest uppercase mb-1">System Log</h3>
-                        <div className="font-mono text-[9px] space-y-1 text-primary/80 overflow-y-auto custom-scrollbar flex-1">
-                            {logs.map((l, i) => <div key={i} className="border-l border-primary/20 pl-2">{l}</div>)}
-                        </div>
-                    </div>
-
-                    {/* SYSTÈME PALANTIR */}
-                    {profileId && (
-                        <div className="mt-8 space-y-4 relative z-10">
-                            <h2 className="text-sm font-bold text-cyan-500 tracking-widest border-b border-cyan-800/50 pb-2 flex items-center gap-2 uppercase">
-                                <span className="animate-pulse">☄️</span> SYSTÈME PALANTIR
-                            </h2>
-
-                            {/* Nouveau layout : Centré, sans le globe local */}
-                            <div className="flex flex-col items-center w-full max-w-3xl mx-auto gap-4 mt-6">
-
-                                {/* Le Terminal sans surcouche, la transparence sera gérée à l'intérieur */}
-                                <div className="w-full flex flex-col border border-white/10 bg-black/40 backdrop-blur-md rounded-xl h-[500px] font-mono text-sm shadow-[0_0_30px_rgba(0,255,255,0.05)]">
-                                    <CommandTerminal userId={profileId} onStatsUpdate={(newStats) => setAgentStats(prev => ({ ...prev, ...newStats }))} />
-                                </div>
-
-                            </div>
-                        </div>
-                    )}
-
-                </main>
-            </div>
-
-            {/* SECURE CHAT OVERLAY */}
-            {isChatOpen && chatPartnerId && profileId && activeChannelId && ( // <-- Ajoutez activeChannelId ici
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-                    <div className="w-full max-w-lg h-[80vh] min-h-[500px]">
-                        <SecureChat
-                            myId={profileId}
-                            partnerId={chatPartnerId}
-                            channelId={activeChannelId} // â¬…ï¸ TRÈS IMPORTANT : Passer l'ID du Canal
-                            onClose={() => setIsChatOpen(false)}
-                        />
-                    </div>
                 </div>
-            )}
 
-            {
-                showCortexPanel && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl p-4 flex flex-col animate-in fade-in">
-                        <button onClick={() => setShowCortexPanel(false)} className="self-end p-2 text-white mb-2"><X /></button>
-                        <div className="flex-1 overflow-hidden rounded-2xl border border-white/10 bg-black">
-                            <KnowledgeIngester profileId={profileId!} memories={memories} onRefresh={() => loadMemories(profileId!)} />
-                        </div>
-                    </div>
-                )
-            }
+                {/* Bouton temporaire de déconnexion pour tester */}
+                <form action="/auth/signout" method="post" className="text-right">
+                    <button className="text-sm text-red-400 hover:text-red-300 transition">
+                        Déconnexion d'urgence
+                    </button>
+                </form>
 
-            {/* BlockListManager - Assuming it's a component that should exist or be imported, checking availability in codebase later if needed but keeping structure valid */}
-            {showBlockPanel && profileId && (
-                <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center">
-                    <div className="bg-slate-900 p-6 rounded-xl border border-red-900/50">
-                        <h3 className="text-red-500 font-bold mb-4">PROTOCOLE D'EXCLUSION</h3>
-                        <p className="text-gray-400 mb-4">Liste des entités bannies:</p>
-                        <ul className="mb-4 space-y-2">
-                            {blockedIds.map(id => <li key={id} className="text-xs font-mono text-red-400">{id}</li>)}
-                            {blockedIds.length === 0 && <li className="text-xs text-gray-600">Aucune menace active.</li>}
-                        </ul>
-                        <button onClick={() => setShowBlockPanel(false)} className="bg-slate-800 text-white px-4 py-2 rounded">Fermer</button>
-                    </div>
-                </div>
-            )}
-
-            {/* ÉTAT 3 : AUDIT COMPLET (FullScreen Overlay) */}
-            {
-                status === 'AUDIT' && matchData && (
-                    <DeepAuditReport
-                        data={matchData}
-                        onAction={handleAction}
-                    />
-                )
-            }
-
-
-        </main>
-    );
-}
-
-
-
-// --- SOUS-COMPOSANTS EXISTANTS ---
-function BlockListManager({ profileId, onClose }: any) {
-    return (
-        <div onClick={onClose} className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center backdrop-blur-sm animate-in fade-in">
-            <div className="bg-[#0f1618] p-6 rounded-2xl border border-red-900/50 w-80 shadow-2xl relative">
-                <h2 className="text-red-500 font-bold mb-4 tracking-widest flex items-center gap-2"><ShieldX size={18} /> BLACKLIST</h2>
-                <p className="text-xs text-slate-500 mb-6 font-mono">Liste de confinement vide.</p>
-                <button className="w-full py-2 bg-red-900/20 text-red-500 border border-red-900/50 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-all" onClick={onClose}>FERMER</button>
             </div>
         </div>
-    );
+    )
 }
-
-// InterceptorInterface removed as it is replaced by Scanner/MatchOverlay/AuditReport logic
 
 
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\dashboard\blocked\page.tsx ---
@@ -7270,6 +6919,97 @@ export default function LiaisonPage() {
             </div>
         </main>
     );
+}
+
+
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\login\page.tsx ---
+
+'use client';
+
+import { useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // Initialisation du client Supabase
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const handleAuth = async (action: 'login' | 'signup') => {
+    setLoading(true);
+    setError(null);
+
+    const { error: authError } = action === 'login'
+      ? await supabase.auth.signInWithPassword({ email, password })
+      : await supabase.auth.signUp({ email, password });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    // Redirection aprÃ¨s succÃ¨s
+    router.push('/dashboard');
+    router.refresh();
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4">
+      {/* UI Glassmorphism de ton Design System */}
+      <div className="w-full max-w-md rounded-2xl bg-white/10 p-8 backdrop-blur-lg border border-white/20 shadow-xl">
+        <h1 className="text-3xl font-bold text-white mb-6 text-center">Twins Agent</h1>
+        
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-500/20 border border-red-500 text-red-200 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          />
+          
+          <div className="flex gap-4 pt-4">
+            <button
+              onClick={() => handleAuth('login')}
+              disabled={loading}
+              className="flex-1 p-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50"
+            >
+              Se connecter
+            </button>
+            <button
+              onClick={() => handleAuth('signup')}
+              disabled={loading}
+              className="flex-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition disabled:opacity-50"
+            >
+              S'inscrire
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 
@@ -7991,33 +7731,114 @@ export default function CortexPage() {
 
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\profile\page.tsx ---
 
-'use client'
+"use client";
 
-import AgentConfig from '@/components/AgentConfig';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useState, useEffect } from 'react';
 
 export default function ProfilePage() {
-    const [profileId, setProfileId] = useState<string | null>(null);
+    const [profile, setProfile] = useState({
+        name: '',
+        city: '',
+        industry: ''
+    });
+    const [isSaving, setIsSaving] = useState(false);
+    const [message, setMessage] = useState('');
 
-    // Récupération de l'ID du profil local
+    // Au chargement, on va chercher tes infos dans la base de données
     useEffect(() => {
-        const fetchUser = async () => {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setProfileId(user.id);
-            }
-        };
-        fetchUser();
+        fetch('/api/profile')
+            .then(res => res.json())
+            .then(data => {
+                if (data && !data.error) {
+                    setProfile({
+                        name: data.name || '',
+                        city: data.city || '',
+                        industry: data.industry || ''
+                    });
+                }
+            });
     }, []);
 
-    if (!profileId) return <div className="text-white text-center mt-20">Chargement de l'Agent...</div>;
+    // Quand on clique sur Sauvegarder
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        setMessage('');
+
+        const response = await fetch('/api/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profile)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            setMessage('✅ Identité mise à jour avec succès !');
+        } else {
+            setMessage('❌ Erreur lors de la sauvegarde.');
+        }
+        setIsSaving(false);
+    };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col items-center pt-10 px-4">
-            {/* L'APPEL AU NOUVEAU COMPOSANT À ONGLETS */}
-            <AgentConfig profileId={profileId} />
+        <div className="min-h-screen bg-gray-900 text-white p-6">
+            <div className="max-w-md mx-auto">
+                <h1 className="text-3xl font-bold mb-2">Mon Identité</h1>
+                <p className="text-gray-400 mb-8">Ce profil sert de boussole à ton Agent IA.</p>
+
+                <form onSubmit={handleSave} className="space-y-6">
+                    {/* Champ Nom */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Nom / Pseudo</label>
+                        <input
+                            type="text"
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={profile.name || ''}
+                            onChange={e => setProfile({ ...profile, name: e.target.value })}
+                        />
+                    </div>
+
+                    {/* Champ Localisation */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Localisation de recherche</label>
+                        <input
+                            type="text"
+                            placeholder="ex: Toulon, 83"
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={profile.city || ''}
+                            onChange={e => setProfile({ ...profile, city: e.target.value })}
+                        />
+                    </div>
+
+                    {/* Champ Secteur */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Secteur cible</label>
+                        <input
+                            type="text"
+                            placeholder="ex: Logistique, Tech..."
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={profile.industry || ''}
+                            onChange={e => setProfile({ ...profile, industry: e.target.value })}
+                        />
+                    </div>
+
+                    {/* Bouton de sauvegarde */}
+                    <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4"
+                    >
+                        {isSaving ? 'Synchronisation...' : 'Mettre à jour mon Agent'}
+                    </button>
+
+                    {/* Message de succès */}
+                    {message && (
+                        <div className={`p-4 rounded-lg text-center ${message.includes('✅') ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                            {message}
+                        </div>
+                    )}
+                </form>
+            </div>
         </div>
     );
 }
@@ -11479,6 +11300,47 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
 }
 
 
+--- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\firebase-admin.ts ---
+
+import * as admin from 'firebase-admin';
+
+// Initialisation Singleton pour Ã©viter les fuites de mÃ©moire dans Next.js
+if (!admin.apps.length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                // On gÃ¨re les sauts de ligne dans la clÃ© privÃ©e
+                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            }),
+        });
+        console.log('ðŸ”¥ Firebase Admin initialisÃ© avec succÃ¨s.');
+    } catch (error) {
+        console.error('Erreur d\'initialisation Firebase Admin:', error);
+    }
+}
+
+export async function sendPushNotification(token: string, title: string, body?: string) {
+    try {
+        const response = await admin.messaging().send({
+            token: token,
+            notification: {
+                title: title,
+                body: body || 'Cliquez pour voir les dÃ©tails de cette opportunitÃ©.',
+            },
+            // Configuration pour rÃ©veiller l'app en arriÃ¨re-plan
+            android: { priority: 'high' },
+            apns: { payload: { aps: { contentAvailable: true } } }
+        });
+        return { success: true, messageId: response };
+    } catch (error) {
+        console.error('âŒ Erreur d\'envoi Push:', error);
+        return { success: false, error };
+    }
+}
+
+
 --- FILE: C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\lib\mistral.ts ---
 
 import { Mistral } from '@mistralai/mistralai';
@@ -13094,240 +12956,117 @@ datasource db {
 }
 
 model Profile {
-  id                      String    @id @default(uuid())
-  name                    String?
-  email                   String?   @unique
-  bio                     String?
-  avatarUrl               String?
+  id        String  @id // DOIT Ãªtre le UUID gÃ©nÃ©rÃ© par auth.users de Supabase
+  email     String  @unique
+  name      String?
+  avatarUrl String?
 
-  // --- NOUVEAUX CHAMPS ---
-  profession              String?
-  hobbies                 String[]
-  objectives              String[] // Ex: ["Travail", "Rencontres"]
-  unifiedAnalysis         String?  @db.Text
-  opportunities           Opportunity[]
-  
-  // ðŸŸ¢ NOUVEAUX PARAMÃˆTRES AGENT IA
-  country                 String?   @db.Text
-  dateOfBirth             String?   // NOUVEAU: Remplace "age"
-  postalCode              String?   // NOUVEAU: Radar gÃ©ographique
-  city                    String?   // NOUVEAU: Radar gÃ©ographique
-  gender                  String?   @db.Text
-  thematicProfile         Json?
+  // IdentitÃ© & Cortex de l'Agent
+  profession      String?
+  thematicProfile Json? // Ce que l'agent sait de toi
+  unifiedAnalysis String? @db.Text
 
-  // ðŸŸ¢ NOUVEAUX PARAMÃˆTRES IA (Profil 2.0)
-  industry                String?
-  seniority               String?
-  professionalStatus      String?
-  environment             String?
-  workNuances             String?   @db.Text
-  ikigaiMission           String?   @db.Text
-  ikigaiValues            String[]
-  dealbreakers            String[]
-  socialStyle             String?
-  // -----------------------
-  
-  // IA Tags (gÃ©nÃ©rÃ©s automatiquement plus tard)
-  tags            String[]
-  
-  // Auth & SÃ©curitÃ© Zero-Knowledge
-  passwordHash            String?
-  saltBase64              String?
-  verifierBase64          String?
-  encryptionKeyEncrypted  String?
-  encryptedMetadata       String?
-  encryptedPhrase         String?
-  subscription            Json?     // Pour les notifications Push
-  
-  // IA & Monitoring
-  vectorNamespace         String?
-  lastAccessedAt          DateTime? @default(now()) // LE CHAMP QUI BLOQUAIT LE BUILD
-  
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt @default(now())
+  // PropriÃ©tÃ© des donnÃ©es (Isolation)
+  memories Memory[]
+  notes    CortexNote[]
+  radars   RadarResult[]
+  files    FileArchive[]
 
-  // Relations
-  recoveryPhrase          RecoveryPhrase?
-  memories                Memory[]
-  dataSources             DataSource[]
-  shadowInteractions      ShadowInteraction[] @relation("SourceProfile")
-  receivedInteractions    ShadowInteraction[] @relation("TargetProfile")
-  channels                Channel[]           @relation("MemberProfile")
-  initiatedNegotiations   Negotiation[]       @relation("Initiator")
-  receivedNegotiations    Negotiation[]       @relation("Receiver")
-  blocking                BlockList[]         @relation("Blocker")
-  blockedBy               BlockList[]         @relation("Blocked")
-  networkEntities         NetworkEntity[]
-  accessRequestsSent      AccessRequest[]     @relation("Requester")
-  accessRequestsReceived  AccessRequest[]     @relation("Provider")
-  directMessagesSent      DirectMessage[]     @relation("DMSent")
-  directMessagesReceived  DirectMessage[]     @relation("DMReceived")
-  notifications           Notification[]
+  // RÃ©seau (Agent-to-Agent & Humain-to-Humain)
+  matchesInitiated Match[]   @relation("UserA")
+  matchesReceived  Match[]   @relation("UserB")
+  messagesSent     Message[] @relation("Sender")
+  messagesReceived Message[] @relation("Receiver")
 
-  // ðŸŽ® SYSTÃˆME DE PROGRESSION AGENT
-  syncLevel    Int      @default(1)
-  credits      Int      @default(100)
-  stats        Json?    @default("{\"messages\": 0, \"memories\": 0, \"scans\": 0}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+model FileArchive {
+  id         String   @id @default(uuid())
+  profileId  String
+  fileName   String
+  fileUrl    String // Chemin Supabase Storage
+  mimeType   String
+  isAnalyzed Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-
-model RecoveryPhrase {
-  id              String   @id @default(uuid())
-  encryptedPhrase String
-  phraseHash      String?
-  createdAt       DateTime @default(now())
-  profileId       String   @unique
-  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
-model Memory {
-  id                String   @id @default(uuid())
-  content           String
-  encryptedContent  String?
-  type              String   @default("thought")
-  source            String?
-  embedding         Unsupported("vector(1024)")?    
-  tags              Json?    // UtilisÃ© dans embedding-service
-  expires_at        DateTime?
-  createdAt         DateTime @default(now()) @map("created_at")
-  
-  profileId         String   @map("profile_id")
-  profile           Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+model CortexNote {
+  id        String                       @id @default(uuid())
+  profileId String
+  content   String                       @db.Text
+  embedding Unsupported("vector(1024)")? // Assure-toi que pgvector est activÃ©
+  createdAt DateTime                     @default(now())
 
-  @@map("memory")
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
-model DataSource {
-  id              String   @id @default(uuid())
-  platform        String   
-  isConnected     Boolean  @default(true)
-  syncStatus      String   @default("IDLE")
-  lastSync        DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  profileId       String
-  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+model RadarResult {
+  id          String   @id @default(uuid())
+  profileId   String
+  opportunity String   @db.Text
+  sourceUrl   String?
+  score       Float
+  isHidden    Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  @@unique([profileId, platform])
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
-model ShadowInteraction {
-  id                 String   @id @default(uuid())
-  timestamp          DateTime @default(now())
-  type               String?  
-  status             String?  
-  compatibilityScore Float?   
-  metadata           Json?    
-  profileId          String
-  profile            Profile  @relation("SourceProfile", fields: [profileId], references: [id], onDelete: Cascade)
-  targetProfileId    String?
-  targetProfile      Profile? @relation("TargetProfile", fields: [targetProfileId], references: [id])
-}
+// --- NOUVEAUX MODULES : MATCHING & MESSAGERIE ---
 
-model Channel {
-  id              String   @id @default(uuid())
-  topic           String?  @default("LIAISON SÃ‰CURISÃ‰E")
-  member_one_id   String
-  member_two_id   String
-  last_message_at DateTime @default(now())
-  initiatorId     String?
-  profile         Profile? @relation("MemberProfile", fields: [member_one_id], references: [id])
-  messages        Message[]
+model Match {
+  id         String      @id @default(uuid())
+  userAId    String
+  userBId    String
+  matchScore Float // % de synergie calculÃ© par les Agents
+  statusA    MatchStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  statusB    MatchStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+
+  userA Profile @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB Profile @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId]) // EmpÃªche les doublons de match
 }
 
 model Message {
-  id               String   @id @default(uuid())
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender   Profile @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver Profile @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// Garde ton modÃ¨le Memory existant, ajoute juste la relation `profileId String`
+model Memory {
+  id               String                       @id @default(uuid())
   content          String
-  sender_id        String
-  communication_id String
-  created_at       DateTime @default(now())
-  channel          Channel  @relation(fields: [communication_id], references: [id], onDelete: Cascade)
-}
+  encryptedContent String?
+  type             String                       @default("thought")
+  source           String?
+  embedding        Unsupported("vector(1024)")?
+  tags             Json? // UtilisÃ© dans embedding-service
+  expires_at       DateTime?
+  createdAt        DateTime                     @default(now()) @map("created_at")
 
-model DirectMessage {
-  id          String   @id @default(uuid())
-  content     String
-  created_at  DateTime @default(now())
-  sender_id   String
-  sender      Profile  @relation("DMSent", fields: [sender_id], references: [id])
-  receiver_id String
-  receiver    Profile  @relation("DMReceived", fields: [receiver_id], references: [id])
-}
+  profileId String  @map("profile_id")
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-model Negotiation {
-  id            String   @id @default(uuid())
-  status        String   @default("ACTIVE")
-  summary       String?
-  verdict       String?  @default("ANALYSE EN COURS")
-  nextStep      String?
-  createdAt     DateTime @default(now())
-  initiatorId   String
-  initiator     Profile  @relation("Initiator", fields: [initiatorId], references: [id])
-  receiverId    String
-  receiver      Profile  @relation("Receiver", fields: [receiverId], references: [id])
-}
-
-model AccessRequest {
-  id             String   @id @default(uuid())
-  topic          String?
-  fullMessage    String?  @db.Text
-  match_score    Int?
-  status         String   @default("pending")
-  created_at     DateTime @default(now())
-  requester_id   String
-  requester      Profile  @relation("Requester", fields: [requester_id], references: [id])
-  provider_id    String
-  provider       Profile  @relation("Provider", fields: [provider_id], references: [id])
-}
-
-model BlockList {
-  id          String   @id @default(uuid())
-  blockerId   String
-  blockedId   String
-  blocker     Profile  @relation("Blocker", fields: [blockerId], references: [id])
-  blocked     Profile  @relation("Blocked", fields: [blockedId], references: [id])
-  
-  @@unique([blockerId, blockedId])
-}
-
-model NetworkEntity {
-  id          String   @id @default(uuid())
-  name        String?
-  type        String?
-  sector      String?
-  matchScore  Int?
-  reasoning   String?
-  status      String?  @default("DETECTED")
-  profileId   String
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-}
-
-// ðŸŸ¢ MODULE Ã‰CLAIREUR WEB : Le journal des interceptions
-model Opportunity {
-  id          String   @id @default(uuid())
-  profileId   String   // L'ID de l'Agent IA qui a fait la recherche
-  title       String   @db.Text // Le titre de la trouvaille
-  sourceUrl   String   @db.Text // Le lien vers le site web
-  reasoning   String   @db.Text // Pourquoi l'IA pense que c'est pertinent
-  priority    Int      // Score d'importance de 1 Ã  10
-  createdAt   DateTime @default(now())
-
-  // Relation avec le profil de l'Agent
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  type      String
-  title     String
-  content   String   @db.Text
-  targetId  String?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("memory")
 }
 
 

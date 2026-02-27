@@ -1,23 +1,49 @@
 ﻿'use server'
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 
-export async function updateProfile(userId: string, formData: any) {
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { PrismaClient } from '@prisma/client'
+import { revalidatePath } from 'next/cache'
+
+const prisma = new PrismaClient()
+
+export async function updateIdentity(formData: FormData) {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll() } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Non autorisé");
+
+    // Extraction sécurisée des données
+    const role = formData.get('role') as string;
+    const customRole = formData.get('customRole') as string;
+    const tjmString = formData.get('tjm') as string;
+    const availability = formData.get('availability') as string;
+    const bio = formData.get('bio') as string;
+
+    const tjm = tjmString ? parseInt(tjmString, 10) : null;
+
     try {
         await prisma.profile.update({
-            where: { id: userId },
+            where: { id: user.id },
             data: {
-                age: parseInt(formData.age),
-                gender: formData.gender,
-                profession: formData.profession,
-                hobbies: formData.hobbies,
-                objectives: formData.objectives,
+                role,
+                customRole: role === 'autre' ? customRole : null,
+                tjm,
+                availability,
+                bio
             }
         });
+
+        console.log(`[IDENTITÉ] Profil de ${user.id} sauvegardé.`);
         revalidatePath('/profile');
-        return { success: true };
+
     } catch (error) {
-        console.error("Erreur updateProfile:", error);
-        return { success: false, error: "Erreur de mise à jour" };
+        console.error("[IDENTITÉ] Erreur BDD:", error);
+        throw new Error("Erreur lors de la sauvegarde.");
     }
 }
