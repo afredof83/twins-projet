@@ -1,101 +1,133 @@
 ﻿"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Save, Loader2, Euro, Calendar, Briefcase } from "lucide-react";
+import { updateIdentity } from "@/app/actions/profile";
+import { useFormStatus } from "react-dom";
 
-export default function Dashboard() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+// Petit composant pour le bouton de soumission avec état de chargement
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
+    >
+      {pending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+      {pending ? "Enregistrement..." : "Sauvegarder l'ADN"}
+    </button>
+  );
+}
 
-  useEffect(() => {
-    fetch('/api/dashboard')
-      .then(res => res.json())
-      .then(result => {
-        setData(result);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Chargement du Centre de Commandes...</div>;
-  }
+export default function IdentityPage() {
+  const [role, setRole] = useState("");
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-md mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-950 text-white p-4 pb-24 md:p-8">
+      <div className="max-w-2xl mx-auto space-y-8">
 
-        {/* En-tête / Bienvenue */}
-        <header className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Bonjour, {data.profile?.name || 'Agent'} 👋</h1>
-            <p className="text-gray-400">Prêt pour de nouvelles opportunités ?</p>
-          </div>
-          {/* Un petit bouton pour aller modifier son profil */}
-          <Link href="/profile" className="bg-gray-800 p-3 rounded-full hover:bg-gray-700 transition">
-            ⚙️
-          </Link>
+        <header className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-emerald-400 flex items-center gap-3">
+            <User className="w-8 h-8" /> Identité
+          </h1>
+          <p className="text-gray-400">Configurez les paramètres profonds de votre Jumeau.</p>
         </header>
 
-        {/* Statistiques (Les Widgets) */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-900/30 border border-blue-800 rounded-xl p-5">
-            <h3 className="text-gray-400 text-sm font-medium mb-1">Pépites trouvées</h3>
-            <p className="text-4xl font-bold text-blue-400">{data.totalResults}</p>
-          </div>
-          <div className="bg-green-900/30 border border-green-800 rounded-xl p-5">
-            <h3 className="text-gray-400 text-sm font-medium mb-1">Statut IA</h3>
-            <p className="text-xl font-bold text-green-400 mt-2 flex items-center gap-2">
-              <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-              En veille
-            </p>
-          </div>
-        </div>
+        <form action={updateIdentity} className="space-y-6">
+          <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl space-y-6">
 
-        {/* Liste des dernières pépites */}
-        <div>
-          <div className="flex justify-between items-end mb-4">
-            <h2 className="text-xl font-bold">Dernières découvertes</h2>
-            <span className="text-sm text-gray-500">Les 3 plus récentes</span>
-          </div>
+            {/* SÉLECTEUR DE RÔLE */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                Rôle Principal
+              </label>
+              <select
+                name="role"
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full p-4 rounded-xl bg-black/40 border border-white/10 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
+                required
+              >
+                <option value="">Sélectionnez votre expertise...</option>
+                <option value="frontend">Développeur Frontend</option>
+                <option value="backend">Développeur Backend</option>
+                <option value="fullstack">Développeur Fullstack</option>
+                <option value="devops">DevOps / Cloud</option>
+                <option value="product">Product Manager</option>
+                <option value="design">UI/UX Designer</option>
+                <option value="autre">Autre (préciser)</option>
+              </select>
+            </div>
 
-          <div className="space-y-4">
-            {data.recentResults && data.recentResults.length > 0 ? (
-              data.recentResults.map((pepite: any) => (
-                <a
-                  key={pepite.id}
-                  href={pepite.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-blue-500 transition-colors"
+            {/* CHAMP CONDITIONNEL "AUTRE" */}
+            <AnimatePresence>
+              {role === "autre" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg leading-tight pr-4">{pepite.title}</h3>
-                    <span className="bg-green-900 text-green-400 text-xs font-bold px-2 py-1 rounded">
-                      {pepite.score}/10
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 line-clamp-2">{pepite.description}</p>
-                </a>
-              ))
-            ) : (
-              <div className="text-center bg-gray-800 border border-gray-700 rounded-xl p-8 text-gray-400">
-                Aucune pépite pour le moment. L'Agent fouille le web...
+                  <input
+                    name="customRole"
+                    placeholder="Quel est votre métier exact ?"
+                    className="w-full p-4 rounded-xl bg-black/40 border border-emerald-500/30 outline-none"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* TJM */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <Euro className="w-4 h-4" /> TJM Souhaité
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    name="tjm"
+                    placeholder="Ex: 600"
+                    className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none pr-12"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€/j</span>
+                </div>
               </div>
-            )}
+
+              {/* DISPONIBILITÉ */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Disponibilité
+                </label>
+                <select
+                  name="availability"
+                  className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none"
+                >
+                  <option value="immediate">Immédiate</option>
+                  <option value="1_month">Sous 1 mois</option>
+                  <option value="3_months">Sous 3 mois</option>
+                  <option value="unavailable">Indisponible</option>
+                </select>
+              </div>
+            </div>
+
+            {/* BIO / OBJECTIFS */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-400">
+                Aspirations & Objectifs (Ce que votre Agent doit chercher)
+              </label>
+              <textarea
+                name="bio"
+                rows={4}
+                placeholder="Ex: Je cherche des projets en architecture Microservices, avec une préférence pour le télétravail complet..."
+                className="w-full p-4 rounded-xl bg-black/40 border border-white/10 outline-none resize-none focus:border-emerald-500/50 transition-all"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Bouton pour forcer un scan MANUEL (Optionnel mais pratique !) */}
-        <button
-          onClick={() => {
-            alert("Ordre envoyé à l'IA ! Vérifie dans 30 secondes.");
-            fetch('/api/cron/radar-worker');
-          }}
-          className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold py-4 px-4 rounded-xl border border-gray-700 transition flex items-center justify-center gap-2 mt-8"
-        >
-          <span>🚀</span> Forcer une recherche IA maintenant
-        </button>
-
+          <SubmitButton />
+        </form>
       </div>
     </div>
   );
