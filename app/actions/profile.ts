@@ -2,11 +2,9 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { PrismaClient } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
-const prisma = new PrismaClient()
-
+import prisma from '@/lib/prisma';
 export async function updateIdentity(formData: FormData) {
     const cookieStore = await cookies();
     const supabase = createServerClient(

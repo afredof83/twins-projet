@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // Fonction utilitaire pour extraire les URLs d'un texte
 function extractUrls(text: string) {

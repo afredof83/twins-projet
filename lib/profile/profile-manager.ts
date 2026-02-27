@@ -3,11 +3,10 @@
  * Handles creation, management, and isolation of digital twin profiles
  */
 
-import { PrismaClient } from '@prisma/client';
 import { base64ToArray, verifyPassword } from '../crypto/zk-encryption';
 import { keyManager } from '../crypto/key-manager';
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export interface ProfileCreationData {
     name: string;

@@ -1,233 +1,129 @@
 ﻿"use client";
 
-import { useState, useEffect } from 'react';
-import { updateIdentity } from '@/app/actions/profile';
-import { Loader2, CheckCircle, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Save, Loader2, Euro, Calendar, Briefcase } from "lucide-react";
+import { updateIdentity } from "@/app/actions/profile";
+import { useFormStatus } from "react-dom";
 
-export default function ProfilePage() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [message, setMessage] = useState('');
-
-    // Le state local du formulaire
-    const [profile, setProfile] = useState({
-        role: 'Frontend',
-        customRole: '',
-        tjm: '',
-        availability: 'Immédiate',
-        bio: ''
-    });
-
-    // Chargement initial des données
-    useEffect(() => {
-        fetch('/api/profile') // Modifiez /api/profile si nécessaire pour renvoyer aussi les nouveaux champs
-            .then(res => res.json())
-            .then(data => {
-                if (data && !data.error) {
-                    setProfile({
-                        role: data.role || 'Frontend',
-                        customRole: data.customRole || '',
-                        tjm: data.tjm ? data.tjm.toString() : '',
-                        availability: data.availability || 'Immédiate',
-                        bio: data.bio || ''
-                    });
-                }
-                setIsLoading(false);
-            })
-            .catch(() => {
-                setIsLoading(false);
-            });
-    }, []);
-
-    // Soumission via Server Action
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        setMessage('');
-
-        const formData = new FormData();
-        formData.append('role', profile.role);
-        if (profile.role === 'Autre') {
-            formData.append('customRole', profile.customRole);
-        }
-        formData.append('tjm', profile.tjm);
-        formData.append('availability', profile.availability);
-        formData.append('bio', profile.bio);
-
-        try {
-            await updateIdentity(formData);
-            setMessage('✅ ADN synchronisé avec succès !');
-            setTimeout(() => setMessage(''), 3000); // Disparaît après 3s
-        } catch (error) {
-            setMessage('❌ Erreur lors de la sauvegarde.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-            </div>
-        );
-    }
-
+// Petit composant pour le bouton de soumission avec état de chargement
+function SubmitButton() {
+    const { pending } = useFormStatus();
     return (
-        <div className="min-h-screen bg-gray-950 text-white p-4 md:p-8 pb-24">
-            <div className="max-w-xl mx-auto space-y-8">
+        <button
+            type="submit"
+            disabled={pending}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
+        >
+            {pending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            {pending ? "Enregistrement..." : "Sauvegarder l'ADN"}
+        </button>
+    );
+}
 
-                {/* En-tête de page */}
-                <header>
-                    <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                        Identité
-                    </h1>
-                    <p className="text-gray-400 mt-1">Paramétrez l'ADN de votre Jumeau Numérique.</p>
+export default function IdentityPage() {
+    return (
+        <div className="min-h-screen text-white p-4 pb-24 md:p-8">
+            <div className="max-w-2xl mx-auto space-y-8">
+
+                <header className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[2rem] text-emerald-400">fingerprint</span>
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black italic tracking-tighter">DOSSIER</h1>
+                        <p className="text-xs font-mono text-emerald-500/60 uppercase">Agent Identity Protocol</p>
+                    </div>
                 </header>
 
-                {/* Le Formulaire Glassmorphism */}
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-xl shadow-2xl">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-
-                        {/* Rôle Principal */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-300">Rôle Principal</label>
-                            <div className="relative">
-                                <select
-                                    value={profile.role}
-                                    onChange={(e) => setProfile({ ...profile, role: e.target.value })}
-                                    className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors"
-                                >
-                                    <option value="Frontend">Développeur Frontend</option>
-                                    <option value="Backend">Développeur Backend</option>
-                                    <option value="Fullstack">Développeur Fullstack</option>
-                                    <option value="DevOps">Ingénieur DevOps / Cloud</option>
-                                    <option value="Product">Product Manager / Owner</option>
-                                    <option value="Autre">Autre...</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                            </div>
+                <form action={updateIdentity} className="space-y-6">
+                    {/* Section Statut */}
+                    <section className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6 backdrop-blur-md">
+                        <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-widest border-b border-white/5 pb-4">
+                            <span className="material-symbols-outlined text-[1rem]">vital_signs</span> Paramètres Vitaux
                         </div>
 
-                        {/* Rôle Personnalisé (Apparaît si "Autre" est sélectionné) */}
-                        <AnimatePresence>
-                            {profile.role === 'Autre' && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="space-y-2 overflow-hidden"
-                                >
-                                    <label className="text-sm font-medium text-emerald-300">Quel est votre rôle précis ?</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Ex: Architecte Solution, Data Scientist..."
-                                        value={profile.customRole}
-                                        onChange={(e) => setProfile({ ...profile, customRole: e.target.value })}
-                                        className="w-full bg-white/5 border border-emerald-500/30 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500 focus:bg-white/10 transition-colors"
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Grille : TJM et Disponibilité */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* TJM */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300">Taux Journalier (TJM)</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        placeholder="500"
-                                        value={profile.tjm}
-                                        onChange={(e) => setProfile({ ...profile, tjm: e.target.value })}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-16 py-3 text-white outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors"
-                                    />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium pointer-events-none">
-                                        € / j
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Disponibilité */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-300">Disponibilité</label>
-                                <div className="relative">
-                                    <select
-                                        value={profile.availability}
-                                        onChange={(e) => setProfile({ ...profile, availability: e.target.value })}
-                                        className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors"
-                                    >
-                                        <option value="Immédiate">Immédiate (ASAP)</option>
-                                        <option value="Dans 1 mois">Dans 1 mois</option>
-                                        <option value="Dans 3 mois">Dans 3 mois</option>
-                                        <option value="Indisponible">En mission (À l'écoute)</option>
-                                    </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                                </div>
-                            </div>
+                        {/* DOMAINE & RÔLE */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] text-slate-500 uppercase font-bold">Domaine d'Activité</label>
+                            <select
+                                name="role"
+                                className="w-full p-4 rounded-xl bg-black/40 border border-white/5 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer text-white font-bold"
+                                required
+                            >
+                                <option value="">Sélectionnez votre domaine...</option>
+                                <option value="artisanat">Artisanat</option>
+                                <option value="sante">Santé</option>
+                                <option value="commerce">Commerce</option>
+                                <option value="conseil">Études/Conseil</option>
+                                <option value="creation">Création</option>
+                                <option value="administration">Administration</option>
+                                <option value="industrie">Industrie</option>
+                                <option value="autre">Autre</option>
+                            </select>
                         </div>
 
-                        {/* Bio libre */}
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-300 flex justify-between">
-                                <span>Bio & Objectifs</span>
-                                <span className="text-xs text-gray-500 font-normal">Sera lu par l'Agent IA</span>
-                            </label>
-                            <textarea
-                                placeholder="Je recherche principalement des missions de refonte d'architecture serverless. Je suis ouvert au remote à 100%..."
-                                value={profile.bio}
-                                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                                className="w-full min-h-[120px] bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none resize-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors"
+                            <label className="text-[10px] text-slate-500 uppercase font-bold">Titre exact de votre métier</label>
+                            <input
+                                name="customRole"
+                                placeholder="Ex: Plombier chauffagiste, Avocat d'affaires, Infirmière..."
+                                className="w-full p-4 rounded-xl bg-black/40 border border-white/5 outline-none focus:border-emerald-500/50 transition-all text-white font-bold"
+                                required
                             />
                         </div>
 
-                        {/* Action Submit */}
-                        <button
-                            type="submit"
-                            disabled={isSaving}
-                            className={`
-                                relative w-full overflow-hidden rounded-xl font-medium text-white shadow-lg transition-transform duration-300 active:scale-[0.98]
-                                ${isSaving ? 'pointer-events-none' : 'hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]'}
-                            `}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
-                            <div className="relative py-4 flex items-center justify-center gap-2">
-                                {isSaving ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Synchronisation en cours...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="w-5 h-5 opacity-90" />
-                                        <span>Mettre à jour l'ADN</span>
-                                    </>
-                                )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-slate-500 uppercase font-bold">TJM Souhaité</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        name="tjm"
+                                        placeholder="Ex: 600"
+                                        className="w-full p-4 rounded-xl bg-black/40 border border-white/5 outline-none pr-12 text-emerald-400 font-bold"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€/j</span>
+                                </div>
                             </div>
-                        </button>
 
-                        {/* Message Toast (Inline) */}
-                        <AnimatePresence>
-                            {message && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className={`text-center text-sm font-medium p-3 rounded-xl border ${message.includes('✅')
-                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
-                                        }`}
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-slate-500 uppercase font-bold">Disponibilité</label>
+                                <select
+                                    name="availability"
+                                    className="w-full p-4 rounded-xl bg-black/40 border border-white/5 outline-none font-bold"
                                 >
-                                    {message}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    <option value="immediate">Immédiate</option>
+                                    <option value="1_month">Sous 1 mois</option>
+                                    <option value="3_months">Sous 3 mois</option>
+                                    <option value="unavailable">Indisponible</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
 
-                    </form>
-                </div>
+                    {/* Section Directives */}
+                    <section className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6 backdrop-blur-md">
+                        <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-widest border-b border-white/5 pb-4">
+                            <span className="material-symbols-outlined text-[1rem]">policy</span> Directives de Chasse
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] text-slate-500 uppercase font-bold">
+                                Aspirations & Objectifs (Zone de texte libre)
+                            </label>
+                            <textarea
+                                name="bio"
+                                rows={4}
+                                placeholder="Ex: Je cherche une opportunité dans une entreprise axée sur le développement durable, avec quelques jours de télétravail..."
+                                className="w-full p-4 rounded-xl bg-black/40 border border-white/5 outline-none resize-none focus:border-blue-500/50 transition-all text-sm leading-relaxed"
+                            />
+                        </div>
+                    </section>
+
+                    <SubmitButton />
+                </form>
+
             </div>
         </div>
     );

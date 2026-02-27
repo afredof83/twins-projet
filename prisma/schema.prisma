@@ -17,22 +17,28 @@ model Profile {
   avatarUrl String?
 
   // Champs d'Identité
-  role          String?   // Le rôle principal (ex: Développeur, Designer...)
+  role          String?   @default("Nouveau") // Le rôle principal
   customRole    String?   // Si le rôle est "Autre", on stocke la valeur ici
-  tjm           Int?      // Taux Journalier Moyen
+  tjm           Int?      @default(0)         // Taux Journalier Moyen
   availability  String?   // Immédiate, Dans 1 mois, etc.
-  bio           String?   // Objectifs et contexte libre
+  bio           String?   @default("")        // Objectifs et contexte libre
 
   // Identité & Cortex de l'Agent
   profession      String?
   thematicProfile Json? // Ce que l'agent sait de toi
   unifiedAnalysis String? @db.Text
+  embedding       Unsupported("vector(1536)")? // Vecteur d'identité complet
 
   // Propriété des données (Isolation)
   memories Memory[]
   notes    CortexNote[]
   radars   RadarResult[]
   files    FileArchive[]
+  discoveries Discovery[]
+
+  // Réseau de connexions (Double Opt-In)
+  initiatedConnections Connection[] @relation("InitiatedConnections")
+  receivedConnections  Connection[] @relation("ReceivedConnections")
 
   // Réseau (Agent-to-Agent & Humain-to-Humain)
   matchesInitiated Match[]   @relation("UserA")
@@ -129,4 +135,30 @@ model Memory {
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("memory")
+}
+
+model Discovery {
+  id          String   @id @default(uuid())
+  title       String
+  company     String?
+  score       Int      // Le pourcentage de match
+  reason      String?  // Pourquoi ça match selon Mistral
+  url         String?
+  createdAt   DateTime @default(now())
+  
+  // Relation avec l'utilisateur
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+}
+
+model Connection {
+  id          String   @id @default(uuid())
+  initiatorId String   
+  receiverId  String   
+  status      String   @default("PENDING") 
+  createdAt   DateTime @default(now())
+
+  // Les "câbles" officiels vers le Profil
+  initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id])
+  receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id])
 }

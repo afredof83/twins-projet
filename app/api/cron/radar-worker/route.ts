@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { Mistral } from '@mistralai/mistralai';
 import { sendPushNotification } from '@/lib/firebase-admin';
 // Importe ton SDK Tavily et Firebase ici plus tard
 
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 const mistral = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
 // Limite de requêtes simultanées pour ne pas exploser les API (Rate Limiting)
