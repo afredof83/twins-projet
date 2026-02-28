@@ -3,6 +3,8 @@ import Link from "next/link";
 import "./globals.css";
 import TopNav from '@/components/TopNav';
 import NavBadge from './components/NavBadge'; // Importer le badge
+import SplashHider from './components/SplashHider';
+import PushManager from './components/PushManager';
 export const runtime = 'nodejs'; // On force la stabilité
 
 export const metadata: Metadata = {
@@ -37,6 +39,8 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>
       <body className="bg-slate-950 text-slate-300 antialiased pb-20">
+        <SplashHider />
+        <PushManager />
         {/* Composant de fond à placer dans ton Layout */}
         <div className="fixed inset-0 -z-10 bg-slate-950">
           {/* Grille Blueprint */}
