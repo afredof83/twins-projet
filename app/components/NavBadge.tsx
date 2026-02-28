@@ -1,27 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useCortexGaps } from "@/app/hooks/useCortexGaps";
 
 export default function NavBadge() {
-    const [hasAlert, setHasAlert] = useState(false);
+    const { gaps, isLoading } = useCortexGaps();
 
-    useEffect(() => {
-        async function fetchGap() {
-            try {
-                const res = await fetch("/api/cortex/analyze-gaps");
-                const data = await res.json();
-                if (data.question && data.field) {
-                    setHasAlert(true);
-                }
-            } catch (e) {
-                console.error("Failed to fetch gap analysis for nav:", e);
-            }
-        }
-
-        fetchGap();
-    }, []);
-
-    if (!hasAlert) return null;
+    // Si ça charge ou qu'il n'y a pas de question, on ne montre pas le badge
+    if (isLoading || !gaps?.question) return null;
 
     return (
         <span className="absolute top-1 right-1/4 translate-x-1/2 -translate-y-1/2 flex h-3 w-3">

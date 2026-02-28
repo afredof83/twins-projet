@@ -34,48 +34,48 @@ export default function RealtimeChat({
         console.log("Agent: Écoute réseau activée...");
 
         const channel = supabase
-            .channel('messages-channel')
+            .channel('public:Message') // Nom explicite du channel
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'Message' },
                 (payload) => {
-                    const rawMessage = payload.new as any;
+                    console.log('🔥 [REALTIME PAYLOAD REÇU]', payload);
 
-                    // 1. On récupère les IDs et on force tout en minuscules pour éviter les conflits
-                    const incSender = String(rawMessage.senderId || rawMessage.senderid).toLowerCase();
-                    const incReceiver = String(rawMessage.receiverId || rawMessage.receiverid).toLowerCase();
-                    const localMe = String(currentUserId).toLowerCase();
-                    const localTarget = String(receiverId).toLowerCase();
+                    const newMessage = payload.new as any;
 
-                    // 2. Le Rapport de Scan dans ta console (F12)
-                    console.log(`[SCAN] Moi localement   : ${localMe}`);
-                    console.log(`[SCAN] Cible localement : ${localTarget}`);
-                    console.log(`[SCAN] Message entrant -> De: ${incSender} Pour: ${incReceiver}`);
+                    // 1. Capture de la casse PostgreSQL vs Prisma (toutes variations possibles)
+                    const incomingSender = newMessage.senderId || newMessage.senderid || newMessage.sender_id;
+                    const incomingReceiver = newMessage.receiverId || newMessage.receiverid || newMessage.receiver_id;
 
-                    // 3. La condition assouplie
-                    const isForThisChat =
-                        (incSender === localMe && incReceiver === localTarget) ||
-                        (incSender === localTarget && incReceiver === localMe);
+                    console.log(`[DIAGNOSTIC] Clés exactes reçues:`, Object.keys(newMessage));
+                    console.log(`[SCAN] Message entrant -> De: ${incomingSender} Pour: ${incomingReceiver}`);
 
-                    if (isForThisChat) {
-                        console.log("✅ MATCH PARFAIT ! Injection sur l'écran.");
+                    // 2. Logique de filtrage stricte
+                    if (
+                        (incomingSender === currentUserId && incomingReceiver === receiverId) ||
+                        (incomingSender === receiverId && incomingReceiver === currentUserId)
+                    ) {
+                        console.log('✅ ACCEPTÉ : Le message rejoint le chat.');
                         setMessages((prev) => {
-                            if (prev.find((m) => m.id === rawMessage.id)) return prev;
+                            if (prev.find((m) => m.id === newMessage.id)) return prev;
 
                             return [...prev, {
-                                id: rawMessage.id,
-                                content: rawMessage.content,
-                                createdAt: rawMessage.createdAt || rawMessage.created_at,
-                                senderId: rawMessage.senderId || rawMessage.senderid,
-                                receiverId: rawMessage.receiverId || rawMessage.receiverid
+                                id: newMessage.id,
+                                content: newMessage.content,
+                                createdAt: newMessage.createdAt || newMessage.created_at || newMessage.createdat,
+                                senderId: incomingSender,
+                                receiverId: incomingReceiver
                             }];
                         });
                     } else {
-                        console.log("❌ REJETÉ : Ce message appartient à un autre chat.");
+                        console.log('❌ REJETÉ : Ce message appartient à un autre chat.');
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status, err) => {
+                console.log('📡 [REALTIME STATUS]', status);
+                if (err) console.error('❌ [REALTIME ERROR]', err);
+            });
 
         return () => {
             supabase.removeChannel(channel);

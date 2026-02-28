@@ -1,54 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { BrainCircuit } from "lucide-react";
 import { updateIdentity } from "../actions/cortex";
+import { useCortexGaps } from "@/app/hooks/useCortexGaps";
 
 export default function LearningAlert() {
-    const [question, setQuestion] = useState<string | null>(null);
-    const [field, setField] = useState<'bio' | 'role' | 'tjm' | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { gaps, isLoading, mutate } = useCortexGaps();
     const [answer, setAnswer] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    useEffect(() => {
-        async function fetchGap() {
-            try {
-                const res = await fetch("/api/cortex/analyze-gaps");
-                const data = await res.json();
-                if (data.question && data.field) {
-                    setQuestion(data.question);
-                    setField(data.field);
-                }
-            } catch (e) {
-                console.error("Failed to fetch gap analysis:", e);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchGap();
-    }, []);
+    if (isLoading || !gaps?.question) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!answer.trim() || !field) return;
+        if (!answer.trim() || !gaps.field) return;
 
         setIsSubmitting(true);
 
-        const result = await updateIdentity(answer, field);
+        const result = await updateIdentity(answer, gaps.field);
 
         if (result?.success) {
             setSuccess(true);
-            setTimeout(() => setQuestion(null), 3000); // Disparaît après 3s
+            // On dit à SWR de rafraîchir la donnée (re-fetch pour voir s'il y a un autre gap)
+            mutate();
+            setTimeout(() => setSuccess(false), 3000); // Disparaît après 3s
         } else {
             console.error("Erreur lors de la mise à jour");
         }
         setIsSubmitting(false);
     };
-
-    if (loading || !question) return null;
 
     return (
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md mb-8 group transition-all">
@@ -68,7 +50,7 @@ export default function LearningAlert() {
                     ) : (
                         <>
                             <p className="text-sm text-white leading-relaxed italic">
-                                "{question}"
+                                "{gaps.question}"
                             </p>
                             <form onSubmit={handleSubmit} className="flex gap-2 pt-2">
                                 <input

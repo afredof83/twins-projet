@@ -1,12 +1,11 @@
 import { mistralClient } from "@/lib/mistral";
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import PDFParser from 'pdf2json';
 import mammoth from 'mammoth';
 
 const mistral = mistralClient;
 
-// Fonction utilitaire pour lire le PDF en texte brut
 function parsePDFBuffer(buffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
         const parser = new PDFParser(null, true);
@@ -18,25 +17,17 @@ function parsePDFBuffer(buffer: Buffer): Promise<string> {
 
 export async function POST(req: Request) {
     try {
-        // 1. Extraction du Bearer token depuis le header Authorization
         const authHeader = req.headers.get('Authorization');
-
         if (!authHeader) {
             return NextResponse.json({ error: "Accès refusé. Token manquant." }, { status: 401 });
         }
 
-        // 2. Client Supabase blindé : obéit uniquement au Bearer token, sans session propre
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
-                auth: {
-                    persistSession: false,   // Empêche Supabase d'écraser notre Token
-                    autoRefreshToken: false,
-                },
-                global: {
-                    headers: { Authorization: authHeader }
-                }
+                auth: { persistSession: false, autoRefreshToken: false },
+                global: { headers: { Authorization: authHeader } }
             }
         );
 
@@ -51,76 +42,71 @@ export async function POST(req: Request) {
         console.log(`[SENSOR] Analyse du fichier: ${file.name} (${file.type})`);
         let textContent = '';
 
-        // 1. EXTRACTION DU TEXTE MULTI-FORMATS
+        // 1. EXTRACTION DU TEXTE
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
         if (file.type === 'application/pdf') {
-            // Décodage PDF
-            try {
-                textContent = await parsePDFBuffer(buffer);
-            } catch (err: any) {
-                return NextResponse.json({ error: 'Architecture PDF corrompue.' }, { status: 500 });
-            }
-        } else if (
-            file.name.toLowerCase().endsWith('.docx') ||
-            file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ) {
-            // Décodage DOCX via Mammoth
-            try {
-                const result = await mammoth.extractRawText({ buffer });
-                textContent = result.value;
-            } catch (err: any) {
-                return NextResponse.json({ error: 'Échec de lecture du fichier Word.' }, { status: 500 });
-            }
+            try { textContent = await parsePDFBuffer(buffer); }
+            catch { return NextResponse.json({ error: 'Architecture PDF corrompue.' }, { status: 500 }); }
+        } else if (file.name.toLowerCase().endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            try { textContent = (await mammoth.extractRawText({ buffer })).value; }
+            catch { return NextResponse.json({ error: 'Échec de lecture du fichier Word.' }, { status: 500 }); }
         } else {
-            // Texte brut : TXT, CSV, MD, JSONâ€¦
             textContent = await file.text();
         }
 
-        // Nettoyage des balises PDF + null bytes + espaces superflus
-        textContent = textContent.replace(/----------------Page \(\d+\) Break----------------/g, '\n');
-        textContent = textContent.replace(/\0/g, '').replace(/\u0000/g, ''); // Sécurité anti-Null Byte
-        textContent = textContent.replace(/\s+/g, ' ').trim();
+        // Nettoyage radical
+        textContent = textContent.replace(/----------------Page \(\d+\) Break----------------/g, '\n')
+            .replace(/\0/g, '').replace(/\u0000/g, '')
+            .replace(/\s+/g, ' ').trim();
 
         if (!textContent || textContent.length < 5) {
             return NextResponse.json({ error: 'Le fichier est vide ou illisible.' }, { status: 400 });
         }
 
-        // 2. DÉCOUPAGE (Fragments de 2000 caractères)
+        // 2. DÉCOUPAGE
         const chunks = textContent.match(/[\s\S]{1,2000}/g) || [textContent];
-        let savedCount = 0;
-
         console.log(`[SENSOR] ${chunks.length} fragment(s) à vectoriser.`);
 
-        // 3. VECTORISATION + STOCKAGE
-        for (const chunk of chunks) {
+        // 3. VECTORISATION DE MASSE (BATCHING) + BULK INSERT
+        const BATCH_SIZE = 20; // On traite 20 fragments à la fois pour ménager la RAM et les limites Mistral
+        let savedCount = 0;
+
+        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+            const batchChunks = chunks.slice(i, i + BATCH_SIZE);
+
+            // Une seule requête Mistral pour envoyer tout le batch
             const embeddingResponse = await mistral.embeddings.create({
                 model: "mistral-embed",
-                inputs: [chunk],
+                inputs: batchChunks,
             });
 
-            const embedding = embeddingResponse.data[0]?.embedding;
-            if (!embedding) continue;
+            if (!embeddingResponse.data || embeddingResponse.data.length === 0) continue;
 
-            // Génération d'un UUID natif (disponible nativement dans Next.js / Node.js moderne)
-            const fragmentId = crypto.randomUUID();
-
-            // Table 'memory' minuscule + colonnes snake_case
-            const { error } = await supabase.from('memory').insert({
-                id: fragmentId,
+            // Préparation du tableau d'insertion Supabase (Bulk Array)
+            const memoryRecords = embeddingResponse.data.map((item, index) => ({
+                id: crypto.randomUUID(),
                 profile_id: profileId,
-                content: `[DOC: ${file.name}] ${chunk}`,
+                content: `[DOC: ${file.name}] ${batchChunks[index]}`,
                 type: 'document',
                 source: 'cortex_dropzone',
-                embedding: embedding,
+                embedding: item.embedding,
                 created_at: new Date().toISOString()
-            });
+            }));
 
-            if (!error) savedCount++;
-            else console.error("[ERREUR BDD]", error);
+            // Une seule requête Supabase pour insérer tout le batch
+            const { error } = await supabase.from('memory').insert(memoryRecords);
+
+            if (!error) {
+                savedCount += memoryRecords.length;
+            } else {
+                console.error("[ERREUR BDD BULK]", error);
+                // Si le batch plante, on ne crashe pas tout, on continue avec le batch suivant
+            }
         }
 
+        console.log(`[SENSOR] Succès : ${savedCount} fragments vectorisés en mémoire.`);
         return NextResponse.json({ success: true, fragments: savedCount });
 
     } catch (error: any) {
