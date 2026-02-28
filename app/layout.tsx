@@ -2,10 +2,12 @@
 import Link from "next/link";
 import "./globals.css";
 import TopNav from '@/components/TopNav';
-import NavBadge from './components/NavBadge'; // Importer le badge
+import NavBadge from './components/NavBadge';
 import SplashHider from './components/SplashHider';
 import PushManager from './components/PushManager';
-export const runtime = 'nodejs'; // On force la stabilité
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+export const runtime = 'nodejs';
 
 export const metadata: Metadata = {
   title: "Twins - Mission Control",
@@ -26,21 +28,29 @@ export const viewport: Viewport = {
   themeColor: "#050a0c",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Récupération de l'utilisateur connecté pour le PushManager
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll() { return cookieStore.getAll() } } }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html lang="fr" className="dark">
       <head>
-        {/* On gère les liens ici pour éviter les erreurs */}
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
       </head>
       <body className="bg-slate-950 text-slate-300 antialiased pb-20">
         <SplashHider />
-        <PushManager />
+        <PushManager userId={user?.id} />
         {/* Composant de fond à placer dans ton Layout */}
         <div className="fixed inset-0 -z-10 bg-slate-950">
           {/* Grille Blueprint */}

@@ -1,51 +1,43 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { saveFcmToken } from '@/app/actions/notifications';
 
 export function usePushNotifications(userId?: string) {
     useEffect(() => {
-        // 1. Sécurité anti-SSR absolue (on s'assure d'être sur le client et sur mobile)
-        if (typeof window === 'undefined' || !Capacitor.isNativePlatform()) {
+        // Si on n'a pas d'ID utilisateur, on ne fait rien (on attend qu'il soit chargé)
+        if (!userId || typeof window === 'undefined' || !Capacitor.isNativePlatform()) {
             return;
         }
 
         const registerPush = async () => {
             try {
-                // 2. Import dynamique du plugin UNIQUEMENT sur le client
                 const { PushNotifications } = await import('@capacitor/push-notifications');
 
-                // 3. Demande la permission
                 let permStatus = await PushNotifications.checkPermissions();
-
                 if (permStatus.receive === 'prompt') {
                     permStatus = await PushNotifications.requestPermissions();
                 }
-
                 if (permStatus.receive !== 'granted') {
-                    console.warn('❌ [PUSH] Permission refusée par l\'utilisateur.');
                     return;
                 }
 
-                // 4. Enregistrement auprès de Firebase
                 await PushNotifications.register();
 
-                // 5. Écouteurs d'événements
-                PushNotifications.addListener('registration', (token) => {
+                // ÉCOUTEUR PRINCIPAL
+                PushNotifications.addListener('registration', async (token) => {
                     console.log('✅ [PUSH] Token FCM généré : ', token.value);
-                });
 
-                PushNotifications.addListener('registrationError', (error) => {
-                    console.error('❌ [PUSH] Erreur d\'enregistrement : ', JSON.stringify(error));
+                    // ---> LE SAUT VERS LA BDD <---
+                    await saveFcmToken(userId, token.value);
+                    console.log('💾 [PUSH] Token sauvegardé dans Supabase.');
                 });
 
             } catch (error) {
-                console.error('❌ [PUSH] Crash critique du plugin : ', error);
+                console.error('❌ [PUSH] Erreur critique : ', error);
             }
         };
 
-        // Petit délai de sécurité (50ms) pour laisser le Bridge Capacitor s'initialiser totalement
-        setTimeout(() => {
-            registerPush();
-        }, 50);
+        setTimeout(() => { registerPush(); }, 50);
 
-    }, [userId]);
+    }, [userId]); // Le hook se relancera si le userId change (ex: connexion)
 }

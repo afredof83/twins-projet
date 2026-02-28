@@ -28,6 +28,7 @@ model Profile {
   thematicProfile Json? // Ce que l'agent sait de toi
   unifiedAnalysis String? @db.Text
   embedding       Unsupported("vector(1536)")? // Vecteur d'identité complet
+  fcmToken        String?   // Token Firebase Cloud Messaging (mobile uniquement)
 
   // Propriété des données (Isolation)
   memories Memory[]
