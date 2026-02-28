@@ -3,6 +3,7 @@ import { Target, Zap, Trash2, ExternalLink, ShieldCheck, RefreshCw, Check, LockO
 import { deleteDiscovery, forceHuntSync } from '@/app/actions/cortex'; // Ton action de suppression
 import { requestConnection, acceptConnection } from '@/app/actions/connection';
 import LearningAlert from '@/app/components/LearningAlert';
+import TestNotificationButton from '@/app/components/TestNotificationButton';
 
 import prisma from '@/lib/prisma';
 
@@ -69,6 +70,9 @@ export default async function RadarPage() {
 
       {/* 🤖 Alerte d'apprentissage de l'Agent */}
       <LearningAlert />
+
+      {/* 🔴 Bouton de test Push Notification */}
+      <TestNotificationButton userId={currentUserId} />
 
       {/* SECTION 1: Requêtes Entrantes */}
       {incomingRequests.length > 0 && (
