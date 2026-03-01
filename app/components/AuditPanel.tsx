@@ -5,7 +5,10 @@ import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare } from 'lucide
 import Link from 'next/link';
 
 export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId }: any) {
-    const cleanText = (text: string) => text.replace(/[*#]/g, '').trim();
+    const cleanText = (text: string) => {
+        if (!text) return "";
+        return text.replace(/[*#_]/g, '').replace(/---/g, '').trim();
+    };
 
     // 🔒 SCROLL LOCK
     useEffect(() => {
@@ -48,7 +51,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
         <div className="fixed inset-0 z-[9999] flex justify-end overflow-hidden">
             <div className="absolute inset-0 bg-zinc-950/90 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
 
-            <div className="relative w-full max-w-lg h-[100dvh] bg-zinc-950 border-l border-white/5 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
+            <div className="relative w-full sm:max-w-lg h-[100dvh] bg-zinc-950 border-l border-white/5 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
 
                 {/* HEADER : Toujours standard et clair */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/20">
@@ -75,11 +78,11 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                             <div className="p-2 bg-blue-500/10 rounded-lg">
                                 <Target className="w-4 h-4 text-blue-400" />
                             </div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-200">Synergies Stratégiques</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-200">Synthèse Stratégique</h3>
                         </div>
 
                         {/* La magie opère ici : flex-1 force ce fond gris à prendre tout le vide */}
-                        <div className="flex-1 p-5 rounded-2xl bg-zinc-900/40 border border-white/5 leading-relaxed text-zinc-300 text-sm whitespace-pre-wrap">
+                        <div className="flex-1 p-5 rounded-2xl bg-zinc-900/40 border border-white/5 leading-relaxed text-zinc-300 text-base whitespace-pre-wrap">
                             {cleanText(synergies)}
                         </div>
                     </section>

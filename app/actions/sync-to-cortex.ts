@@ -35,7 +35,7 @@ export async function syncWebDataToCortex(title: string, url: string, content: s
 
         const updatedProfile = await prisma.profile.findUnique({
             where: { id: user.id },
-            select: { stats: true, credits: true, syncLevel: true }
+            select: { name: true, role: true }
         });
 
         revalidatePath('/memories');

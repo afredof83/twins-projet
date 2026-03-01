@@ -20,23 +20,25 @@ export async function performAudit(oppId: string) {
 
         // 2. On construit le prompt avec les BONS noms de colonnes (name, role, bio)
         const prompt = `
-      Agis comme une IA d'analyse stratégique (Le Cortex).
-      Réalise un audit profond et hyper-personnalisé pour évaluer une collaboration entre ces deux agents :
+Tu es le Cortex, une IA d'analyse tactique B2B.
+Analyse la synergie entre ces deux professionnels et génère un rapport.
 
-      AGENT 1 (${opp.sourceProfile.name || 'Anonyme'}) : 
-      Rôle : ${opp.sourceProfile.role || 'Non défini'}
-      Bio : ${opp.sourceProfile.bio || 'Non définie'}
+RÈGLES ABSOLUES (Sous peine d'échec système) :
+1. AUCUN FORMATAGE MARKDOWN : N'utilise jamais d'astérisques (*), de dièses (#), de tirets (-) ou de soulignés (_).
+2. SOIS ULTRA-CONCIS : Résume l'opportunité en 3 phrases courtes et percutantes maximum.
+3. STYLE : Télégraphique, direct, orienté business et rentabilité.
+4. Ne fais pas d'introduction ni de conclusion, donne juste l'information brute.
 
-      AGENT 2 (${opp.targetProfile.name || 'Anonyme'}) : 
-      Rôle : ${opp.targetProfile.role || 'Non défini'}
-      Bio : ${opp.targetProfile.bio || 'Non définie'}
+Format JSON attendu : { "synergies": "Texte brut ici...", "actions": ["action 1", "action 2"] }
 
-      Détaille :
-      1. Les synergies exactes basées sur leurs vraies compétences.
-      2. 3 opportunités d'actions très concrètes qu'ils peuvent faire ensemble.
-      3. Un titre accrocheur pour leur conversation.
-      Sois direct, pro, et orienté business/innovation.
-    `;
+AGENT 1 (${opp.sourceProfile.name || 'Anonyme'}) : 
+Rôle : ${opp.sourceProfile.role || 'Non défini'}
+Bio : ${opp.sourceProfile.bio || 'Non définie'}
+
+AGENT 2 (${opp.targetProfile.name || 'Anonyme'}) : 
+Rôle : ${opp.targetProfile.role || 'Non défini'}
+Bio : ${opp.targetProfile.bio || 'Non définie'}
+`;
 
         console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
 

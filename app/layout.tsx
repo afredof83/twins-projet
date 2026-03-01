@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { Radar, BrainCircuit, Fingerprint } from 'lucide-react';
 import "./globals.css";
 import TopNav from '@/components/TopNav';
 import NavBadge from './components/NavBadge';
@@ -60,27 +61,20 @@ export default async function RootLayout({
         </div>
 
         {/* --- BOTTOM NAVIGATION BAR --- */}
-        <nav className="fixed bottom-0 left-0 w-full bg-gray-800 border-t border-gray-700 pb-safe z-50">
-          <div className="flex justify-around items-center h-16 max-w-md mx-auto">
-
-            <Link href="/" className="relative flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-400 transition">
-              <span className="text-xl mb-1 relative">
-                📊
-                <NavBadge />
-              </span>
-              <span className="text-xs font-medium">Radar</span>
+        <nav className="fixed bottom-0 left-0 w-full bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 pb-safe z-50">
+          <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4">
+            <Link href="/" className="flex flex-col items-center gap-1.5 text-zinc-500 hover:text-blue-400 transition-colors group">
+              <Radar className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Radar</span>
             </Link>
-
-            <Link href="/cortex" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-purple-400 transition">
-              <span className="text-xl mb-1">🧠</span>
-              <span className="text-xs font-medium">Cortex</span>
+            <Link href="/cortex" className="flex flex-col items-center gap-1.5 text-zinc-500 hover:text-indigo-400 transition-colors group">
+              <BrainCircuit className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Cortex</span>
             </Link>
-
-            <Link href="/profile" className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-green-400 transition">
-              <span className="text-xl mb-1">👤</span>
-              <span className="text-xs font-medium">Identité</span>
+            <Link href="/profile" className="flex flex-col items-center gap-1.5 text-zinc-500 hover:text-emerald-400 transition-colors group">
+              <Fingerprint className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">Identité</span>
             </Link>
-
           </div>
         </nav>
         {/* ----------------------------- */}
