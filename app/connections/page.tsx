@@ -90,7 +90,7 @@ export default function NeuralLinkPage() {
                 {/* Header Navigation */}
                 <div className="flex justify-between items-center border-b border-white/10 pb-6">
                     <div>
-                        <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-2">
+                        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-2">
                             <ArrowLeft size={18} /> Retour au QG
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">

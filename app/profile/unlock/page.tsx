@@ -77,7 +77,7 @@ function UnlockContent() {
             localStorage.setItem('twins_last_id', profileData.id);
             localStorage.setItem('twins_last_name', profileData.name);
 
-            router.push('/dashboard');
+            router.push('/');
         } catch (err: any) {
             setError(err.message);
         } finally {

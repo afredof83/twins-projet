@@ -39,7 +39,7 @@ export async function syncWebDataToCortex(title: string, url: string, content: s
         });
 
         revalidatePath('/memories');
-        revalidatePath('/dashboard');
+        revalidatePath('/');
         return { success: true, newStats: updatedProfile };
     } catch (error: any) {
         console.error('[CRITIQUE] Échec de synchronisation Cortex :', error);

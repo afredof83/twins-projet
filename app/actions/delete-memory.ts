@@ -21,7 +21,7 @@ export async function deleteMemoryFragment(memoryId: string) {
     await trackAgentActivity(user.id, 'memory_delete');
 
     // 3. Revalidation (seulement ici !)
-    revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/memories');
 
     return { success: true };

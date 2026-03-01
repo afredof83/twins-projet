@@ -41,7 +41,7 @@ export async function deleteMemory(formData: FormData) {
 
         // 3. Rafraîchissement automatique des données à l'écran
         revalidatePath('/cortex');
-        revalidatePath('/dashboard');
+        revalidatePath('/');
 
     } catch (error) {
         console.error("[DELETE] Erreur critique lors de la suppression:", error);
