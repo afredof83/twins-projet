@@ -11,6 +11,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import Link from 'next/link';
 
+import ActiveChannelsList from '@/app/components/ActiveChannelsList';
+
 export const dynamic = 'force-dynamic';
 
 export default async function RadarPage() {
@@ -120,25 +122,7 @@ export default async function RadarPage() {
             <LockOpen className="w-4 h-4" />
             <h2 className="text-sm font-bold uppercase tracking-widest">Canaux Sécurisés</h2>
           </div>
-          <div className="grid gap-4">
-            {activeChannels.map((channel: any) => {
-              const targetUser = channel.initiatorId === currentUserId ? channel.receiver : channel.initiator;
-              return (
-                <div key={channel.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex justify-between items-center hover:border-blue-500/30 transition-colors group">
-                  <div>
-                    <p className="text-sm text-white font-bold">{getAgentName(targetUser)}</p>
-                    <p className="text-xs text-slate-500 font-mono mt-1">ID: {targetUser.id.slice(0, 8)}...</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DeleteChannelButton connectionId={channel.id} />
-                    <Link href={`/chat/${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <ActiveChannelsList activeChannels={activeChannels} currentUserId={currentUserId} />
         </section>
       )}
 

@@ -388,6 +388,8 @@ import { cookies } from 'next/headers';
 import { after } from 'next/server';
 import { triggerCortexAnalysis } from './cortex-chat';
 
+import { adminMessaging } from '@/lib/firebase-admin';
+
 export async function sendMessage(formData: FormData) {
     const content = formData.get('content') as string;
     const receiverId = formData.get('receiverId') as string;
@@ -424,9 +426,45 @@ export async function sendMessage(formData: FormData) {
         data: { content, senderId, receiverId }
     });
 
-    // 🧠 LE CORTEX : Exécution fantôme (ne bloque pas le retour client)
+    // 🧠 LE BACKGROUND PROCESSING : IA + FCM Humain
     after(async () => {
+        // 1. On lance le Cortex comme prévu
         await triggerCortexAnalysis(savedMessage, connection.id);
+
+        // 2. NOUVEAU : On réveille le destinataire (Push Humain)
+        try {
+            const receiver = await prisma.profile.findUnique({
+                where: { id: receiverId },
+                select: { fcmToken: true }
+            });
+
+            // On récupère le nom de l'expéditeur pour l'affichage
+            const sender = await prisma.profile.findUnique({
+                where: { id: senderId },
+                select: { name: true }
+            });
+
+            if (receiver?.fcmToken) {
+                const senderName = sender?.name || "Un agent";
+                const shortMessage = content.length > 40 ? content.substring(0, 37) + '...' : content;
+
+                await adminMessaging.send({
+                    token: receiver.fcmToken,
+                    notification: {
+                        title: `Nouveau message de ${senderName}`,
+                        body: shortMessage,
+                    },
+                    data: {
+                        type: "CHAT_MESSAGE",
+                        senderId: senderId, // Important pour le deep-linking
+                        url: `/chat/${senderId}`
+                    }
+                });
+                console.log(`[FCM] Notification envoyée à ${receiverId}`);
+            }
+        } catch (error) {
+            console.error("[FCM ERROR] Échec de l'envoi de la notification humaine :", error);
+        }
     });
 
     // Pas de revalidatePath ! Supabase Realtime prendra le relais côté client.
@@ -7256,6 +7294,77 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
 }
 
 
+--- app\components\ActiveChannelsList.tsx ---
+'use client';
+import { useEffect, useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { getAgentName } from '@/lib/utils';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import DeleteChannelButton from '@/app/components/DeleteChannelButton';
+
+export default function ActiveChannelsList({ activeChannels, currentUserId }: { activeChannels: any[], currentUserId: string }) {
+    const [unreadSenders, setUnreadSenders] = useState<Set<string>>(new Set());
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    useEffect(() => {
+        // Le Radar Global : On écoute tous les messages qui NOUS sont destinés
+        const channel = supabase
+            .channel('global_inbox')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'Message',
+                filter: `receiverId=eq.${currentUserId}`
+            }, (payload) => {
+                const newMsg = payload.new;
+                // On ajoute l'ID de l'expéditeur dans notre Set des "non lus"
+                setUnreadSenders(prev => new Set(prev).add(newMsg.senderId));
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [currentUserId, supabase]);
+
+    return (
+        <div className="grid gap-4">
+            {activeChannels.map((channel: any) => {
+                const targetUser = channel.initiatorId === currentUserId ? channel.receiver : channel.initiator;
+                // Si l'ID de l'autre participant est dans notre Set, on affiche la pastille
+                const hasUnread = unreadSenders.has(targetUser.id);
+
+                return (
+                    <div key={channel.id} className="relative p-4 rounded-xl bg-white/[0.02] border border-white/10 flex justify-between items-center hover:border-blue-500/30 transition-colors group">
+
+                        {/* La Pastille Rouge Visuelle (Radar) */}
+                        {hasUnread && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)] border-2 border-[#050a0c] z-10 text-[8px] flex items-center justify-center font-bold text-white">
+                                !
+                            </span>
+                        )}
+
+                        <div>
+                            <p className={`text-sm font-bold ${hasUnread ? 'text-red-400' : 'text-white'}`}>{getAgentName(targetUser)}</p>
+                            <p className="text-xs text-slate-500 font-mono mt-1">ID: {targetUser.id.slice(0, 8)}...</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <DeleteChannelButton connectionId={channel.id} />
+                            <Link href={`/chat/${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
+    );
+}
+
+
 --- app\components\CortexUploader.tsx ---
 "use client";
 
@@ -9992,6 +10101,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import Link from 'next/link';
 
+import ActiveChannelsList from '@/app/components/ActiveChannelsList';
+
 export const dynamic = 'force-dynamic';
 
 export default async function RadarPage() {
@@ -10101,25 +10212,7 @@ export default async function RadarPage() {
             <LockOpen className="w-4 h-4" />
             <h2 className="text-sm font-bold uppercase tracking-widest">Canaux Sécurisés</h2>
           </div>
-          <div className="grid gap-4">
-            {activeChannels.map((channel: any) => {
-              const targetUser = channel.initiatorId === currentUserId ? channel.receiver : channel.initiator;
-              return (
-                <div key={channel.id} className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex justify-between items-center hover:border-blue-500/30 transition-colors group">
-                  <div>
-                    <p className="text-sm text-white font-bold">{getAgentName(targetUser)}</p>
-                    <p className="text-xs text-slate-500 font-mono mt-1">ID: {targetUser.id.slice(0, 8)}...</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <DeleteChannelButton connectionId={channel.id} />
-                    <Link href={`/chat/${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <ActiveChannelsList activeChannels={activeChannels} currentUserId={currentUserId} />
         </section>
       )}
 
@@ -10785,6 +10878,8 @@ const config: CapacitorConfig = {
   appId: 'com.twins.app',
   appName: 'Twins',
   webDir: 'public', // On met 'public' par défaut, Capacitor ne s'en servira pas
+  // @ts-ignore: Property might be deprecated in newer Capacitor versions
+  bundledWebRuntime: false,
   server: {
     url: 'https://clone-app-v1.vercel.app/', // <-- L'ADRESSE DE TON SERVEUR VIVANT
     cleartext: true // <-- VITAL: Autorise Android à charger du HTTP (sans le S de HTTPS)
