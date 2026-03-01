@@ -44,7 +44,7 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
     }));
 
     return (
-        <div className="flex flex-col h-screen bg-slate-950 p-4 md:p-8 animate-in fade-in duration-500">
+        <div className="flex flex-col h-[100dvh] pb-20 bg-slate-950 p-4 md:p-8 animate-in fade-in duration-500">
 
             {/* HEADER TACTIQUE */}
             <header className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">

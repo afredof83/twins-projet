@@ -5,6 +5,7 @@ import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare } from 'lucide
 import Link from 'next/link';
 
 export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId }: any) {
+    const cleanText = (text: string) => text.replace(/[*#]/g, '').trim();
 
     // 🔒 SCROLL LOCK
     useEffect(() => {
@@ -44,10 +45,10 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex justify-end overflow-hidden">
-            <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose} />
+        <div className="fixed inset-0 z-[9999] flex justify-end overflow-hidden">
+            <div className="absolute inset-0 bg-zinc-950/90 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
 
-            <div className="relative w-full max-w-lg h-full bg-zinc-950 border-l border-white/5 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
+            <div className="relative w-full max-w-lg h-[100dvh] bg-zinc-950 border-l border-white/5 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
 
                 {/* HEADER : Toujours standard et clair */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/20">
@@ -78,8 +79,8 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                         </div>
 
                         {/* La magie opère ici : flex-1 force ce fond gris à prendre tout le vide */}
-                        <div className="flex-1 p-5 rounded-2xl bg-zinc-900/40 border border-white/5 leading-relaxed text-zinc-400 text-sm whitespace-pre-wrap">
-                            {synergies}
+                        <div className="flex-1 p-5 rounded-2xl bg-zinc-900/40 border border-white/5 leading-relaxed text-zinc-300 text-sm whitespace-pre-wrap">
+                            {cleanText(synergies)}
                         </div>
                     </section>
 
