@@ -20,16 +20,23 @@ export async function performAudit(oppId: string) {
 
         // 2. On construit le prompt avec les BONS noms de colonnes (name, role, bio)
         const prompt = `
-Tu es le Cortex, une IA d'analyse tactique B2B.
-Analyse la synergie entre ces deux professionnels et génère un rapport.
+Tu es le Cortex, une IA de renseignement stratégique B2B.
+Analyse la synergie entre ces deux professionnels.
 
-RÈGLES ABSOLUES (Sous peine d'échec système) :
-1. AUCUN FORMATAGE MARKDOWN : N'utilise jamais d'astérisques (*), de dièses (#), de tirets (-) ou de soulignés (_).
-2. SOIS ULTRA-CONCIS : Résume l'opportunité en 3 phrases courtes et percutantes maximum.
-3. STYLE : Télégraphique, direct, orienté business et rentabilité.
-4. Ne fais pas d'introduction ni de conclusion, donne juste l'information brute.
+RÈGLES DE SURVIE ABSOLUES :
+1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
+2. LONGUEUR : Le champ 'synergies' doit faire MAXIMUM 3 phrases courtes. Va droit au but.
+3. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
+4. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
 
-Format JSON attendu : { "synergies": "Texte brut ici...", "actions": ["action 1", "action 2"] }
+FORMAT ATTENDU :
+{
+  "synergies": "Texte clair, percutant et ultra-bref décrivant le gain mutuel.",
+  "actions": [
+    "Action précise 1",
+    "Action précise 2"
+  ]
+}
 
 AGENT 1 (${opp.sourceProfile.name || 'Anonyme'}) : 
 Rôle : ${opp.sourceProfile.role || 'Non défini'}
