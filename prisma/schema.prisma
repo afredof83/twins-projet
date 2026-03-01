@@ -41,6 +41,9 @@ model Profile {
   initiatedConnections Connection[] @relation("InitiatedConnections")
   receivedConnections  Connection[] @relation("ReceivedConnections")
 
+  initiatedOpportunities Opportunity[] @relation("InitiatedOpportunities")
+  receivedOpportunities  Opportunity[] @relation("ReceivedOpportunities")
+
   // Réseau (Agent-to-Agent & Humain-to-Humain)
   matchesInitiated Match[]   @relation("UserA")
   matchesReceived  Match[]   @relation("UserB")
@@ -162,4 +165,20 @@ model Connection {
   // Les "câbles" officiels vers le Profil
   initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id])
   receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id])
+}
+
+model Opportunity {
+  id            String   @id @default(cuid())
+  sourceId      String   // Ton ID
+  targetId      String   // L'ID de l'autre agent
+  matchScore    Int      // Le pourcentage
+  summary       String   // Le petit résumé initial
+  audit         String?  // L'audit profond (rempli après clic)
+  status        String   @default("DETECTED") // DETECTED, AUDITED, INVITED, BLOCKED, CANCELLED, ACCEPTED
+  title         String?  // Le titre de l'invitation chat
+  createdAt     DateTime @default(now())
+
+  // Relations
+  sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id])
+  targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id])
 }

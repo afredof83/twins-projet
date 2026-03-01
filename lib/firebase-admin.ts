@@ -17,6 +17,7 @@ if (!admin.apps.length) {
     }
 }
 
+export const adminMessaging = admin.messaging();
 export async function sendPushNotification(token: string, title: string, body?: string) {
     try {
         const response = await admin.messaging().send({

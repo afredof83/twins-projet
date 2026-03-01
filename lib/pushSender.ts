@@ -13,7 +13,7 @@ if (!admin.apps.length) {
     });
 }
 
-export async function sendCortexAlert(userId: string, title: string, body: string) {
+export async function sendCortexAlert(userId: string, title: string, body: string, data?: Record<string, string>) {
     try {
         const userProfile = await prisma.profile.findUnique({
             where: { id: userId },
@@ -25,8 +25,9 @@ export async function sendCortexAlert(userId: string, title: string, body: strin
             return { success: false, error: 'NO_TOKEN' };
         }
 
-        const message = {
+        const message: admin.messaging.Message = {
             notification: { title, body },
+            data: data || {},
             token: userProfile.fcmToken,
         };
 
@@ -38,4 +39,28 @@ export async function sendCortexAlert(userId: string, title: string, body: strin
         console.error(`❌ [PUSH SENDER] Échec du tir :`, error);
         return { success: false, error: error.message };
     }
+}
+
+export async function sendOpportunityNotif(userId: string, oppId: string, score: number, summary: string) {
+    const userProfile = await prisma.profile.findUnique({
+        where: { id: userId },
+        select: { fcmToken: true }
+    });
+
+    if (!userProfile?.fcmToken) return;
+
+    const message: admin.messaging.Message = {
+        notification: {
+            title: `🎯 Opportunité détectée (${score}%)`,
+            body: summary,
+        },
+        data: {
+            type: 'OPPORTUNITY_DETECTED',
+            opportunityId: oppId,
+            url: `/cortex/opportunity/${oppId}` // Vers la page de décision
+        },
+        token: userProfile.fcmToken,
+    };
+
+    return await admin.messaging().send(message);
 }

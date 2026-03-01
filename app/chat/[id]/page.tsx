@@ -1,7 +1,6 @@
 import prisma from '@/lib/prisma';
-import { Shield, Send, ArrowLeft } from 'lucide-react';
+import { Shield, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { sendMessage } from '@/app/actions/chat';
 import RealtimeChat from '@/app/components/RealtimeChat';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -26,7 +25,7 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
 
     const currentUserId = user.id;
 
-    // Récupérer l'historique de la conversation
+    // Récupérer l'historique de la conversation (50 derniers)
     const messages = await prisma.message.findMany({
         where: {
             OR: [
@@ -34,8 +33,11 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
                 { senderId: receiverId, receiverId: currentUserId }
             ]
         },
-        orderBy: { createdAt: 'asc' }
+        take: 50,
+        orderBy: { createdAt: 'desc' }
     });
+
+    const initialMessages = messages.reverse();
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 p-4 md:p-8 animate-in fade-in duration-500">
@@ -59,32 +61,12 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
                 </div>
             </header>
 
-            {/* ZONE DES MESSAGES EN TEMPS RÉEL */}
+            {/* ZONE DES MESSAGES ET CONSOLE DE SAISIE EN TEMPS RÉEL */}
             <RealtimeChat
-                initialMessages={messages}
+                initialMessages={initialMessages}
                 currentUserId={currentUserId}
                 receiverId={receiverId}
             />
-
-            {/* CONSOLE DE SAISIE */}
-            <div className="shrink-0 pt-4">
-                <form action={sendMessage} className="flex gap-2">
-                    <input type="hidden" name="receiverId" value={receiverId} />
-                    <input
-                        type="text"
-                        name="content"
-                        placeholder="Entrez votre message tactique..."
-                        autoComplete="off"
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-sm text-white outline-none focus:border-blue-500/50 transition-colors"
-                    />
-                    <button
-                        type="submit"
-                        className="px-6 py-4 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-xl hover:bg-blue-500/30 transition-all active:scale-95 flex items-center justify-center"
-                    >
-                        <Send className="w-5 h-5" />
-                    </button>
-                </form>
-            </div>
         </div>
     );
 }
