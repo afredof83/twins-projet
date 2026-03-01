@@ -2,15 +2,17 @@
 import { useState } from 'react';
 import { performAudit, updateOppStatus, acceptInvite } from '@/app/actions/opportunities';
 import { getAgentName } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AuditPanel from './AuditPanel';
 
 export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
     const router = useRouter();
     const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
     const [loading, setLoading] = useState(false);
     const [auditData, setAuditData] = useState(opportunity.audit);
+    const [showAudit, setShowAudit] = useState(false);
 
     // On détermine qui est l'autre agent
     const otherProfile = opportunity.sourceId === myId
@@ -23,6 +25,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
         const res = await performAudit(opportunity.id);
         setAuditData(res.audit);
         setStatus('AUDITED');
+        setShowAudit(true); // Open the panel right after auditing
         setLoading(false);
     };
 
@@ -36,56 +39,69 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
     };
 
     return (
-        <div className="border border-zinc-800 bg-black p-4 rounded-xl mb-4 shadow-2xl transition-all">
+        <div className="b2b-card p-8 mb-6">
             {/* HEADER : Nom + Score */}
-            <div className="flex justify-between items-center mb-4">
-                <span className="text-zinc-500 text-xs font-mono uppercase tracking-tighter">
-                    Agent: <span className="text-zinc-300">{getAgentName(otherProfile)}</span>
-                </span>
-                <span className="text-green-500 font-bold bg-green-500/10 px-2 py-1 rounded border border-green-500/20 text-xs">
-                    MATCH {opportunity.matchScore}%
+            <div className="flex items-start justify-between mb-6">
+                <div>
+                    <h3 className="text-xl font-bold tracking-tight text-white">{getAgentName(otherProfile)}</h3>
+                    <p className="text-sm text-zinc-500">{otherProfile.role || "Agent"}</p>
+                </div>
+                <span className="badge-status border-blue-500/20 text-blue-400">
+                    {opportunity.matchScore}% Match
                 </span>
             </div>
 
             {/* BODY : Résumé ou Audit */}
-            <div className="mb-6">
+            <div className="mb-8">
                 {status === 'DETECTED' ? (
-                    <p className="text-zinc-300 text-sm leading-relaxed italic">
-                        "{opportunity.summary}"
+                    <p className="text-zinc-400 text-sm leading-relaxed">
+                        {opportunity.summary}
                     </p>
                 ) : (
-                    <div className="bg-zinc-900/50 p-4 rounded border border-zinc-800">
-                        <h4 className="text-blue-400 text-xs font-bold uppercase mb-3 tracking-widest">Rapport d'Audit Profond</h4>
-                        <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap font-mono mix-blend-lighten">{auditData}</p>
+                    <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-800 text-center">
+                        <h4 className="text-zinc-300 text-sm font-bold uppercase mb-4 tracking-widest text-center">Rapport d'Audit Prêt</h4>
+                        <button
+                            onClick={() => setShowAudit(true)}
+                            className="btn-outline text-white hover:text-white"
+                        >
+                            Lire l'Audit Cortex
+                        </button>
                     </div>
                 )}
             </div>
 
-            {/* ACTIONS : Le workflow dynamique */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-zinc-900/50">
+            {/* Rendu conditionnel des actions (UN SEUL BOUTON PRINCIPAL PAR STATUT) */}
+            <div className="mt-6">
+
                 {status === 'DETECTED' && (
                     <button
                         disabled={loading}
                         onClick={handleAudit}
-                        className="flex-1 bg-green-600/90 text-black font-bold py-2 px-4 rounded-lg text-xs hover:bg-green-500 transition-colors flex justify-center items-center"
+                        className="btn-primary w-full flex items-center justify-center gap-2"
                     >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "LANCER L'AUDIT"}
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                            <>
+                                <Zap className="w-4 h-4 fill-white" />
+                                Lancer l'Audit Stratégique
+                            </>
+                        )}
                     </button>
                 )}
 
                 {status === 'AUDITED' && (
-                    <Link
-                        href={`/cortex/opportunity/${opportunity.id}`}
-                        className="flex-1 bg-blue-600/90 text-white font-bold py-2 px-4 rounded-lg text-xs hover:bg-blue-500 transition-colors text-center flex justify-center items-center"
+                    <button
+                        onClick={() => setShowAudit(true)}
+                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                     >
-                        FORMULAIRE D'INVITATION
-                    </Link>
+                        <Target className="w-4 h-4" />
+                        Lire l'Audit Cortex
+                    </button>
                 )}
 
                 {/* --- NOUVEAU : STATUT INVITÉ --- */}
                 {/* Si JE suis celui qui a envoyé l'invitation (Source) */}
                 {status === 'INVITED' && opportunity.sourceId === myId && (
-                    <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center">
+                    <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center mt-6">
                         <p className="text-blue-400 text-xs font-bold">
                             ⏳ Invitation envoyée. En attente de réponse...
                         </p>
@@ -94,21 +110,21 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 
                 {/* Si JE suis celui qui reçoit l'invitation (Cible) */}
                 {status === 'INVITED' && opportunity.targetId === myId && (
-                    <div className="w-full bg-green-900/20 border border-green-500/30 p-3 rounded text-center">
-                        <p className="text-green-400 text-sm font-bold mb-3">
+                    <div className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-xl text-center mt-6">
+                        <p className="text-green-400 text-sm font-bold mb-4">
                             📩 Demande d'ouverture de canal : {opportunity.title || "Nouvelle invitation"}
                         </p>
                         <div className="flex gap-2">
                             <button
                                 disabled={loading}
                                 onClick={handleAccept}
-                                className="flex-1 bg-green-600 text-black font-bold py-2 rounded text-xs hover:bg-green-500 transition"
+                                className="btn-primary flex-1 bg-green-600 hover:bg-green-500 text-white"
                             >
                                 {loading ? "CRÉATION..." : "ACCEPTER"}
                             </button>
                             <button
                                 onClick={() => updateOppStatus(opportunity.id, 'CANCELLED')}
-                                className="flex-1 border border-red-900 text-red-500 py-2 rounded text-xs hover:bg-red-900/30 transition"
+                                className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
                             >
                                 REFUSER
                             </button>
@@ -116,23 +132,34 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     </div>
                 )}
 
-                {status !== 'INVITED' && (
-                    <>
+                {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
+                    <div className="flex gap-2 mt-6">
                         <button
                             onClick={() => updateOppStatus(opportunity.id, 'CANCELLED')}
-                            className="px-4 py-2 border border-zinc-700 text-zinc-500 text-xs font-bold rounded-lg hover:bg-zinc-800 hover:text-zinc-400 transition-colors"
+                            className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
                         >
                             IGNORER
                         </button>
                         <button
                             onClick={() => updateOppStatus(opportunity.id, 'BLOCKED')}
-                            className="px-4 py-2 text-red-900/70 text-xs font-bold rounded-lg hover:text-red-500 transition-colors"
+                            className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
                         >
                             BLOQUER
                         </button>
-                    </>
+                    </div>
                 )}
+
             </div>
+
+            <AuditPanel
+                isOpen={showAudit}
+                onClose={() => setShowAudit(false)}
+                auditData={auditData}
+                targetName={getAgentName(otherProfile)}
+                opportunityId={opportunity.id}
+                status={status}
+                targetId={otherProfile.id}
+            />
         </div>
     );
 }

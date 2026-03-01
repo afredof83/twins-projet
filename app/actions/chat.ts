@@ -4,9 +4,10 @@ import prisma from '@/lib/prisma'; // Assure-toi d'utiliser le singleton qu'on a
 import { revalidatePath } from 'next/cache';
 import { createServerClient } from '@supabase/ssr'; // Ajuste selon ton auth
 import { cookies } from 'next/headers';
+import { encryptMessage, decryptMessage } from '@/lib/crypto';
 
 import { after } from 'next/server';
-import { triggerCortexAnalysis } from './cortex-chat';
+import { triggerCortexAnalysis, evolveAgentProfile } from './cortex-chat';
 
 import { adminMessaging } from '@/lib/firebase-admin';
 
@@ -41,15 +42,51 @@ export async function sendMessage(formData: FormData) {
 
     if (!connection) throw new Error("Violation d'accès : Aucun canal sécurisé actif.");
 
-    // 💾 Sauvegarde ultra-rapide
+    // 💾 Sauvegarde ultra-rapide (Chiffrement au Repos)
     const savedMessage = await prisma.message.create({
-        data: { content, senderId, receiverId }
+        data: { content: encryptMessage(content), senderId, receiverId }
     });
 
     // 🧠 LE BACKGROUND PROCESSING : IA + FCM Humain
     after(async () => {
         // 1. On lance le Cortex comme prévu
         await triggerCortexAnalysis(savedMessage, connection.id);
+
+        // 1.5. NOUVEAU : On lance la boucle mémoire (Memory Loop) tous les 10 messages
+        try {
+            const messageCount = await prisma.message.count({
+                where: {
+                    OR: [
+                        { senderId: savedMessage.senderId, receiverId: savedMessage.receiverId },
+                        { senderId: savedMessage.receiverId, receiverId: savedMessage.senderId }
+                    ]
+                }
+            });
+
+            if (messageCount > 0 && messageCount % 10 === 0) {
+                const last10 = await prisma.message.findMany({
+                    where: {
+                        OR: [
+                            { senderId: savedMessage.senderId, receiverId: savedMessage.receiverId },
+                            { senderId: savedMessage.receiverId, receiverId: savedMessage.senderId }
+                        ]
+                    },
+                    take: 10,
+                    orderBy: { createdAt: 'desc' }
+                });
+
+                const decryptedLast10 = last10.reverse().map(m => ({
+                    ...m,
+                    content: decryptMessage(m.content)
+                }));
+
+                // On met à jour les deux profils avec leur propre ID
+                await evolveAgentProfile(senderId, decryptedLast10);
+                await evolveAgentProfile(receiverId, decryptedLast10);
+            }
+        } catch (e) {
+            console.error("[CORTEX MEMORY LOOP ERROR]:", e);
+        }
 
         // 2. NOUVEAU : On réveille le destinataire (Push Humain)
         try {
@@ -92,31 +129,38 @@ export async function sendMessage(formData: FormData) {
 }
 
 export async function deleteChannel(connectionId: string) {
-    // 1. Récupérer la connexion pour identifier les deux utilisateurs
-    const connection = await prisma.connection.findUnique({
-        where: { id: connectionId },
-        select: { initiatorId: true, receiverId: true }
-    });
+    try {
+        // 1. Récupérer la connexion pour identifier les deux utilisateurs
+        const connection = await prisma.connection.findUnique({
+            where: { id: connectionId },
+            select: { initiatorId: true, receiverId: true }
+        });
 
-    if (!connection) throw new Error("Canal introuvable");
-
-    // 2. Supprimer tous les messages entre les deux utilisateurs
-    await prisma.message.deleteMany({
-        where: {
-            OR: [
-                { senderId: connection.initiatorId, receiverId: connection.receiverId },
-                { senderId: connection.receiverId, receiverId: connection.initiatorId }
-            ]
+        if (!connection) {
+            return { success: false, error: "Canal introuvable ou déjà supprimé." };
         }
-    });
 
-    // 3. Supprimer la connexion
-    await prisma.connection.delete({
-        where: { id: connectionId },
-    });
+        // 2. Supprimer tous les messages entre les deux utilisateurs
+        await prisma.message.deleteMany({
+            where: {
+                OR: [
+                    { senderId: connection.initiatorId, receiverId: connection.receiverId },
+                    { senderId: connection.receiverId, receiverId: connection.initiatorId }
+                ]
+            }
+        });
 
-    // 4. Rafraîchir l'interface
-    revalidatePath('/');
+        // 3. Supprimer la connexion
+        await prisma.connection.delete({
+            where: { id: connectionId },
+        });
+
+        // 4. Rafraîchir l'interface
+        revalidatePath('/');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message || "Erreur interne serveur" };
+    }
 }
 
 export async function getOlderMessages(receiverId: string, cursorId: string) {
@@ -143,5 +187,8 @@ export async function getOlderMessages(receiverId: string, cursorId: string) {
         orderBy: { createdAt: 'desc' }
     });
 
-    return olderMessages.reverse();
+    return olderMessages.reverse().map(m => ({
+        ...m,
+        content: decryptMessage(m.content)
+    }));
 }

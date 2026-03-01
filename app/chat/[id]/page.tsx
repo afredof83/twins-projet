@@ -5,6 +5,7 @@ import RealtimeChat from '@/app/components/RealtimeChat';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
+import { decryptMessage } from '@/lib/crypto';
 
 export default async function SecureChatPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
@@ -37,7 +38,10 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
         orderBy: { createdAt: 'desc' }
     });
 
-    const initialMessages = messages.reverse();
+    const initialMessages = messages.reverse().map(m => ({
+        ...m,
+        content: decryptMessage(m.content)
+    }));
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 p-4 md:p-8 animate-in fade-in duration-500">

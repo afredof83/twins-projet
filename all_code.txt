@@ -7365,6 +7365,86 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
 }
 
 
+--- app\components\AuditSheet.tsx ---
+'use client';
+
+import { useState } from 'react';
+import { FileSearch, Target, Zap, Lightbulb, X } from 'lucide-react';
+
+export default function AuditSheet({ auditData, title }: { auditData: any, title: string }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Gérer le cas où auditData n'est pas un objet ou est null
+    const parsedAudit = typeof auditData === 'string' ? JSON.parse(auditData || '{}') : (auditData || {});
+
+    return (
+        <>
+            {/* Le Bouton Trigger - Discret mais Premium */}
+            <button
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition-all group"
+            >
+                <FileSearch className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-bold uppercase tracking-wider">Consulter l'Audit Stratégique</span>
+            </button>
+
+            {/* L'Overlay et le Panneau Coulissant */}
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                    {/* Backdrop flouté */}
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                        onClick={() => setIsOpen(false)}
+                    />
+
+                    {/* Le Panneau */}
+                    <div className="relative w-full max-w-md h-full bg-zinc-950 border-l border-white/10 shadow-2xl p-6 overflow-y-auto animate-in slide-in-from-right duration-300">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Target className="text-blue-500" /> {title || "Analyse Tactique"}
+                            </h2>
+                            <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/5 rounded-full">
+                                <X className="w-6 h-6 text-zinc-500" />
+                            </button>
+                        </div>
+
+                        {/* Contenu de l'Audit (Parsé proprement) */}
+                        <div className="space-y-8">
+                            <section>
+                                <h3 className="text-blue-400 text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Zap className="w-3 h-3" /> Synergies Détectées
+                                </h3>
+                                <div className="text-zinc-300 text-sm leading-relaxed bg-blue-500/5 border border-blue-500/10 p-4 rounded-xl">
+                                    {parsedAudit.synergies || "En attente d'analyse..."}
+                                </div>
+                            </section>
+
+                            <section>
+                                <h3 className="text-purple-400 text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Lightbulb className="w-3 h-3" /> Actions Concrètes
+                                </h3>
+                                <ul className="space-y-3">
+                                    {parsedAudit.actions?.map((action: string, i: number) => (
+                                        <li key={i} className="flex gap-3 text-sm text-zinc-400 border-b border-white/5 pb-2">
+                                            <span className="text-purple-500 font-bold">{i + 1}.</span>
+                                            {action}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </section>
+                        </div>
+
+                        <div className="mt-12 p-4 rounded-xl bg-zinc-900 border border-white/5 italic text-xs text-zinc-500">
+                            Généré par le Cortex • Analyse temps réel certifiée
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+
 --- app\components\CortexUploader.tsx ---
 "use client";
 
@@ -7821,6 +7901,7 @@ import { getAgentName } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AuditSheet from './AuditSheet';
 
 export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
     const router = useRouter();
@@ -7871,8 +7952,10 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     </p>
                 ) : (
                     <div className="bg-zinc-900/50 p-4 rounded border border-zinc-800">
-                        <h4 className="text-blue-400 text-xs font-bold uppercase mb-3 tracking-widest">Rapport d'Audit Profond</h4>
-                        <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap font-mono mix-blend-lighten">{auditData}</p>
+                        <h4 className="text-blue-400 text-xs font-bold uppercase mb-3 tracking-widest text-center">Rapport d'Audit Profond</h4>
+                        <div className="flex justify-center">
+                            <AuditSheet auditData={auditData} title={`Audit de ${getAgentName(otherProfile)}`} />
+                        </div>
                     </div>
                 )}
             </div>

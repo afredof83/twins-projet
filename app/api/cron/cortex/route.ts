@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { sendCortexAlert } from '@/lib/pushSender';
 import prisma from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
+import { decryptMessage } from '@/lib/crypto';
 
 export async function GET(req: Request) {
     // 1. SÉCURITÉ : Vérification Vercel Cron
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
 
         // On les remet dans l'ordre chronologique et on formate
         const historyContext = lastMessages.length > 0
-            ? lastMessages.reverse().map(m => `${m.senderId === profile.id ? 'L\'utilisateur' : 'Le Cortex'}: ${m.content}`).join('\n')
+            ? lastMessages.reverse().map(m => `${m.senderId === profile.id ? 'L\'utilisateur' : 'Le Cortex'}: ${decryptMessage(m.content)}`).join('\n')
             : "Aucun échange récent.";
 
         // 4. CONSTRUCTION DU PROMPT PSYCHOLOGIQUE

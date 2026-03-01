@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { adminMessaging } from '@/lib/firebase-admin';
+import { encryptMessage, decryptMessage } from '@/lib/crypto';
 
 const CORTEX_SYSTEM_ID = "CORTEX_SYSTEM";
 
@@ -20,7 +21,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             orderBy: { createdAt: 'desc' }
         });
 
-        const contextText = recentMessages.reverse().map(m => `${m.senderId}: ${m.content}`).join('\n');
+        const contextText = recentMessages.reverse().map(m => `${m.senderId}: ${decryptMessage(m.content)}`).join('\n');
 
         // 2. Interrogation de Mistral AI (Le cerveau)
         const systemPrompt = `
@@ -49,7 +50,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
         // 3. L'IA décide de parler : Insertion en Base
         const cortexMessage = await prisma.message.create({
             data: {
-                content: cortexDecision.message,
+                content: encryptMessage(cortexDecision.message),
                 senderId: CORTEX_SYSTEM_ID,
                 receiverId: savedMessage.receiverId, // Envoie théoriquement à la cible de la discussion
             }
@@ -88,5 +89,54 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
     } catch (error) {
         console.error("[CORTEX ERROR] Échec de l'analyse ou de la notification:", error);
         // On ne throw pas l'erreur pour ne pas faire crasher la boucle 'after()'
+    }
+}
+
+export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
+    try {
+        const historyText = lastMessages.map(m => `${m.senderId}: ${m.content}`).join('\n');
+
+        const evolutionPrompt = `
+            Tu es le module de synthèse évolutive du Cortex.
+            Analyse ces derniers échanges et identifie si de nouveaux éléments de carrière, 
+            objectifs business, ou compétences ont été révélés pour l'utilisateur (ID: ${userId}).
+            
+            DONNÉES ACTUELLES DU PROFIL : (Chargées depuis la BDD)
+            
+            MISSION : Si l'échange contient des infos cruciales, génère un condensé de mise à jour.
+            RÈGLE : Si rien de nouveau n'est détecté, réponds "STABLE".
+            FORMAT : JSON { "newInsights": "string", "updatedObjectives": ["string"] }
+        `;
+
+        const response = await mistralClient.chat.complete({
+            model: 'mistral-small-latest',
+            messages: [{ role: 'user', content: evolutionPrompt + historyText }],
+            responseFormat: { type: 'json_object' }
+        });
+
+        const rawContent = response.choices?.[0]?.message.content;
+
+        let result: any = "STABLE";
+        try {
+            if (rawContent && rawContent !== "STABLE") {
+                result = JSON.parse(rawContent as string);
+            }
+        } catch (e) {
+            console.error("JSON parse error:", e);
+        }
+
+        if (result !== "STABLE" && result.newInsights) {
+            // Mise à jour de la Bio dynamique sans écraser le socle dur
+            const currentProfile = await prisma.profile.findUnique({ where: { id: userId } });
+            await prisma.profile.update({
+                where: { id: userId },
+                data: {
+                    bio: `${currentProfile?.bio || ''}\n\n[MEMOIRE CORTEX]: ${result.newInsights}`,
+                }
+            });
+            console.log(`[CORTEX] Profil de ${userId} a évolué.`);
+        }
+    } catch (e) {
+        console.error("Échec de l'évolution du profil:", e);
     }
 }
