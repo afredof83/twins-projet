@@ -10,13 +10,11 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
 
     // 1. Récupération des deux profils (Les deux ADN)
     const user = await prisma.profile.findUnique({
-        where: { id: userId },
-        select: { profession: true, industry: true, objectives: true, thematicProfile: true }
+        where: { id: userId }
     });
 
     const target = await prisma.profile.findUnique({
-        where: { id: targetId },
-        select: { profession: true, industry: true, objectives: true, thematicProfile: true }
+        where: { id: targetId }
     });
 
     if (!user || !target) throw new Error("Cible ou Expéditeur introuvable.");
@@ -26,8 +24,8 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
 Tu es MISTRAL-TWIN, un proxy tactique d'ingénierie sociale.
 Ta mission : Rédiger l'approche PARFAITE.
 
-ADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${user.industry || 'Non spécifié'}
-ADN CIBLE : ${target.profession || 'Non spécifié'} - ${target.industry || 'Non spécifié'}
+ADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
+ADN CIBLE : ${target.profession || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}
 
 RÈGLES D'ENGAGEMENT :
 Tu dois générer DEUX éléments distincts.
