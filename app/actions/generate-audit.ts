@@ -26,7 +26,7 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
       if (input && isUUID(input)) {
         p = await prisma.profile.findUnique({
           where: { id: input },
-          select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true }
+          select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true }
         });
       }
 
@@ -36,17 +36,17 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         // Recherche insensible à la casse (si supporté) ou exacte
         p = await prisma.profile.findFirst({
           where: { name: input }, // Cherche le profil qui s'appelle exactement comme ça
-          select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true }
+          select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true }
         });
       }
 
       // C. Fallback (Dernier recours : Premier profil dispo)
       if (!p) {
         console.warn(`⚠️ ${label} introuvable ("${input}"). Utilisation d'un profil par défaut.`);
-        p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, dateOfBirth: true, gender: true, thematicProfile: true } });
+        p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true } });
       }
 
-      return p || { id: "ghost", name: "Entité Inconnue", dateOfBirth: null, gender: null, thematicProfile: null, unifiedAnalysis: null };
+      return p || { id: "ghost", name: "Entité Inconnue", thematicProfile: null, unifiedAnalysis: null };
     };
 
     const agentProfile = await findProfileSmart(userInput, "AGENT");
@@ -102,18 +102,16 @@ Ta mission est d'évaluer la compatibilité absolue entre notre Agent IA (le Cli
 Base-toi sur l'ADN de l'Agent, le profil de la Cible et leurs fragments de mémoire récents.
 
 RÈGLES :
-1. Tu dois réaliser un AUDIT PROFOND strict, structuré et froid.
+1. Génère un JSON avec 'synergies' (3 phrases max, pas de markdown) et 'actions' (2 puces max). Utilise un ton chirurgical.
 2. Identifie sur quoi les deux profils s'accordent (Favorable).
-3. Identifie les points de friction / dangers (Où cela risque de bloquer).
-4. Suggère une stratégie d'approche (Comment notre Agent doit se comporter).
-5. Style : Cyberpunk / Militaire. Sans politesse, droit au but.
-6. SORTIE OBLIGATOIRE : FORMAT JSON STRICT.
+3. Suggère une courte stratégie d'approche (Comment notre Agent doit se comporter).
+4. Style : Cyberpunk / Militaire. Sans politesse, droit au but.
+5. SORTIE OBLIGATOIRE : FORMAT JSON STRICT.
 `;
 
     const userPrompt = `
 === 🟦 ADN DE NOTRE AGENT IA ===
 - Nom de code : ${agentProfile.name}
-- Âge/Genre : ${agentProfile.dateOfBirth || 'X'} ans, ${agentProfile.gender || 'Non spécifié'}
 - Profil Pro : ${JSON.stringify(agentMatrice?.travail || 'Inconnu')}
 - Profil Relationnel : ${JSON.stringify(agentMatrice?.rencontre || 'Inconnu')}
 - Profil Loisirs : ${JSON.stringify(agentMatrice?.loisirs || 'Inconnu')}
@@ -128,19 +126,10 @@ ${formatData(targetMemories)}
 
 === STRUCTURE JSON ATTENDUE ===
 {
-  "identity": { "role": "Rôle / Fonction estimée de la Cible", "clearance": "Niveau Cyberpunk (ex: LEVEL 4)" },
-  "scores": { "match": 0-100, "reliability": 0-100, "influence": 0-100 },
-  "psyche": [
-    { "trait": "Trait Psychologique Dominant 1", "value": 0-100, "label": "Justification de cet accord/désaccord" },
-    { "trait": "Trait Psychologique Dominant 2", "value": 0-100, "label": "Justification" }
-  ],
-  "network": [
-    "Stratégie d'approche 1 : Comment l'Agent doit l'aborder",
-    "Point d'accord identifié entre l'Agent et la Cible"
-  ],
-  "risks": [
-    "Friction 1 : Point de blocage potentiel majeur",
-    "Danger : Avertissement tactique"
+  "synergies": "Analyse tactique et points d'accroche (3 phrases max, pas de markdown)",
+  "actions": [
+    "Action 1 : Stratégie d'approche claire",
+    "Action 2 : Autre directive chirurgicale"
   ]
 }
     `;
@@ -174,7 +163,7 @@ ${formatData(targetMemories)}
 
     // Force le nom correct pour l'affichage UI
     auditData.identity = {
-      ...auditData.identity,
+      ...(auditData.identity || {}),
       name: targetProfile.name, // Le vrai nom de la base de données
       lastActive: "En ligne"
     };
