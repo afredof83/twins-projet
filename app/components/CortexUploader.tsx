@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Paperclip, Send, Loader2, CheckCircle, AlertCircle, X, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uploadCortexMemoryContext } from '@/app/actions/memory-ingest';
 
 type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
 
@@ -93,15 +94,11 @@ export default function CortexUploader() {
         }, 1500);
 
         try {
-            const res = await fetch('/api/cortex/upload', {
-                method: 'POST',
-                body: formData,
-            });
+            const data = await uploadCortexMemoryContext(formData);
 
             clearTimeout(analyzingTimeout);
 
-            if (!res.ok) {
-                const data = await res.json();
+            if (!data.success) {
                 throw new Error(data.error || "Erreur lors de l'envoi");
             }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { performAudit, sendChatInvite, updateOppStatus } from '@/app/actions/opportunities';
+import { performAudit, sendChatInvite, updateOppStatus, getOpportunity } from '@/app/actions/opportunities';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
 import Link from 'next/link';
@@ -21,10 +21,9 @@ export default function OpportunityPage() {
         // Puisque nous avons les Server Actions, on pourrait ajouter un getOpportunity(id) dans opportunities.ts
         // Pour l'instant, on simule le chargement pour brancher l'UI
         const fetchOpp = async () => {
-            const res = await fetch(`/api/opportunities/${oppId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setOpp(data);
+            const res = await getOpportunity(oppId);
+            if (res.success && res.opportunity) {
+                setOpp(res.opportunity);
             }
             setLoading(false);
         };

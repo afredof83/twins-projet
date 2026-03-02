@@ -1,0 +1,2 @@
+app/profile/new/page.tsx(106,26): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.

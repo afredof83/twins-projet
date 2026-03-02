@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { extractProfileData, confirmProfileIngestion } from '@/app/actions/auto-ingest-profile';
+import { extractTextFromUpload, extractProfileData, confirmProfileIngestion } from '@/app/actions/auto-ingest-profile';
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
 
 export default function GestationOnboarding({ userId }: { userId: string }) {
@@ -15,17 +15,11 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
 
         setIsProcessing(true);
         try {
-            // Étape A : On lit le PDF via ton endpoint existant
+            // Étape A : On lit le PDF via la Server Action
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('profileId', userId);
 
-            const uploadRes = await fetch('/api/sensors/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const uploadData = await uploadRes.json();
-
+            const uploadData = await extractTextFromUpload(formData);
             if (!uploadData.success) throw new Error("Échec lecture PDF");
 
             // Étape B : On envoie le texte extrait à Mistral pour profilage

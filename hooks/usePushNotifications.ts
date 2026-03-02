@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
+import { saveFcmToken } from '@/app/actions/notifications';
 
 export const usePushNotifications = (profileId: string | null) => {
     useEffect(() => {
@@ -36,16 +37,9 @@ export const usePushNotifications = (profileId: string | null) => {
 
                 // On envoie le token à notre nouvelle route API
                 try {
-                    const response = await fetch('/api/profile/push-token', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            profileId: profileId,
-                            token: token.value
-                        })
-                    });
+                    const response = await saveFcmToken(profileId, token.value);
 
-                    if (!response.ok) {
+                    if (!response.success) {
                         console.error("❌ Échec de la sauvegarde du token côté serveur.");
                     } else {
                         console.log("☁️ Jeton Firebase synchronisé avec la base de données.");

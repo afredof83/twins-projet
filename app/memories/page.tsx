@@ -10,14 +10,19 @@ import {
 } from 'lucide-react';
 
 import CortexGrid from '@/components/cortex/CortexGrid';
+import { getMemories, addMemory, scrapeUrl, uploadMemory } from '@/app/actions/memory-ingest';
+import { deleteMemoryFragment } from '@/app/actions/delete-memory';
+import { updateMemoryAndVector } from '@/app/actions/update-memory';
+import { guardianCheck } from '@/app/actions/guardian';
 
 // â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Memory {
     id: string;
     content: string;
     type: string;
-    source?: string;
-    created_at: string;
+    source?: string | null;
+    created_at?: string | Date;
+    createdAt?: string | Date;
 }
 
 type LogLevel = 'info' | 'success' | 'error' | 'warning';
@@ -97,8 +102,7 @@ function CortexManager() {
     const fetchMemories = async () => {
         if (!profileId) return;
         try {
-            const res = await fetch(`/api/memories?profileId=${profileId}`);
-            const data = await res.json();
+            const data = await getMemories(profileId);
             if (data.memories) setMemories(data.memories.slice(0, 20));
         } catch {
             addLog('[ERREUR] Impossible de charger les archives.', 'error');
@@ -124,29 +128,16 @@ function CortexManager() {
         formData.append('profileId', session.user.id);
 
         try {
-            const res = await fetch('/api/sensors/upload', {
-                method: 'POST',
-                // ✅ Passeport d'identité transmis à l'API
-                headers: { 'Authorization': `Bearer ${session.access_token}` },
-                body: formData,
-            });
-            const data = await res.json();
+            const data = await uploadMemory(formData);
 
             if (data.success) {
-                addLog(`[SUCCÈS] ${data.fragments} fragment(s) de "${file.name}" gravés.`, 'success');
+                addLog(`[SUCCÈS] Fragment de "${file.name}" gravés.`, 'success');
                 await fetchMemories();
 
-                // ðŸŸ¢ NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
-                // On ne met pas de "await" devant le fetch, pour ne pas geler l'écran de l'utilisateur.
-                console.log("ðŸ¦‡ Envoi du signal au Gardien...");
-                fetch('/api/guardian', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        profileId: session.user.id,
-                        newMemoryContent: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.` // Vous pourrez remplacer ça par le vrai texte extrait plus tard
-                    })
-                }).catch(err => console.error("Erreur du Gardien :", err));
+                // 🟢 NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
+                console.log("🦇 Envoi du signal au Gardien...");
+                guardianCheck(session.user.id, `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.`)
+                    .catch(err => console.error("Erreur du Gardien :", err));
             } else {
                 addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
             }
@@ -176,18 +167,10 @@ function CortexManager() {
         }
 
         try {
-            const res = await fetch('/api/sensors/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`, // ✅ Passeport transmis
-                },
-                body: JSON.stringify({ url: targetUrl, profileId: session.user.id }),
-            });
-            const data = await res.json();
+            const data = await scrapeUrl(targetUrl, session.user.id);
 
             if (data.success) {
-                addLog(`[SUCCÈS] ${data.fragments} fragment(s) du site extraits et indexés.`, 'success');
+                addLog(`[SUCCÈS] Fragments du site extraits et indexés.`, 'success');
                 await fetchMemories();
             } else {
                 addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping échoué.'}`, 'error');
@@ -221,22 +204,8 @@ function CortexManager() {
         addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
 
         try {
-            const res = await fetch('/api/memories', {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({ id: memoryId, profileId: session.user.id }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
-            } else {
-                addLog(`[ERREUR] La purge a échoué : ${data.error}`, 'error');
-                // Rollback : on recharge depuis l'API
-                fetchMemories();
-            }
+            await deleteMemoryFragment(memoryId);
+            addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
         } catch {
             addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
             fetchMemories();
@@ -257,19 +226,7 @@ function CortexManager() {
         }
 
         try {
-            const res = await fetch('/api/memories', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    id: editingMemory.id,
-                    content: editContent,
-                    profileId: session.user.id,
-                }),
-            });
-            const data = await res.json();
+            const data = await updateMemoryAndVector(editingMemory.id, editContent);
             if (data.success) {
                 addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
                 setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
@@ -323,19 +280,12 @@ function CortexManager() {
                 return;
             }
 
-            const res = await fetch('/api/memories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    content: cleanThought,
-                    profileId: session.user.id,
-                    type: 'thought',
-                }),
+            const data = await addMemory({
+                content: cleanThought,
+                profileId: session.user.id,
+                type: 'thought',
             });
-            const data = await res.json();
+
             if (data.error) throw new Error(data.error);
 
             setQuickThought('');
@@ -571,7 +521,7 @@ function CortexManager() {
                                     <CortexGrid userId={profileId ?? undefined} initialFragments={memories.map(m => ({
                                         id: m.id,
                                         content: m.content,
-                                        createdAt: m.created_at
+                                        createdAt: m.createdAt ? (m.createdAt instanceof Date ? m.createdAt.toISOString() : String(m.createdAt)) : (m.created_at ? String(m.created_at) : new Date().toISOString())
                                     }))} />
                                 )}
                             </div>

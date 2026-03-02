@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { uploadMemory } from '@/app/actions/memory-ingest';
 
 export default function FileUploader({ profileId, onUploadComplete }: { profileId: string, onUploadComplete: () => void }) {
     const [isDragging, setIsDragging] = useState(false);
@@ -27,17 +28,11 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
         formData.append('profileId', profileId);
 
         try {
-            const res = await fetch('/api/memories/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) throw new Error(data.error || "Erreur upload");
+            const data = await uploadMemory(formData);
+            if (!data.success) throw new Error(data.error || "Erreur upload");
 
             setStatus('success');
-            setMessage(`Assimilation terminée ! ${data.chunks} fragments de mémoire créés.`);
+            setMessage(`Assimilation terminée ! Fragments de mémoire créés.`);
             if (onUploadComplete) onUploadComplete();
 
             // Reset après 3 secondes
@@ -55,8 +50,8 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
     return (
         <div
             className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 ${isDragging
-                    ? 'border-green-500 bg-green-900/20 scale-105'
-                    : 'border-slate-700 hover:border-slate-500 bg-slate-900/50'
+                ? 'border-green-500 bg-green-900/20 scale-105'
+                : 'border-slate-700 hover:border-slate-500 bg-slate-900/50'
                 }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}

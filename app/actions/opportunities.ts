@@ -171,3 +171,59 @@ export async function updateOppStatus(oppId: string, status: 'BLOCKED' | 'CANCEL
         data: { status }
     });
 }
+
+// 4. GET OPPORTUNITY
+export async function getOpportunity(oppId: string) {
+    try {
+        if (!oppId) throw new Error("Missing ID");
+        const opp = await prisma.opportunity.findUnique({
+            where: { id: oppId },
+            include: { sourceProfile: true, targetProfile: true }
+        });
+        if (!opp) throw new Error("Not found");
+        return { success: true, opportunity: opp };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// 5. GET OPPORTUNITIES
+export async function getOpportunities(profileId: string) {
+    try {
+        if (!profileId) throw new Error("Missing ID");
+        const opps = await prisma.opportunity.findMany({
+            where: {
+                OR: [
+                    { sourceId: profileId },
+                    { targetId: profileId }
+                ]
+            },
+            include: { sourceProfile: true, targetProfile: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        return { success: true, opportunities: opps };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// 6. SCOUT (Trigger Radar) - This just triggers forceHuntSync
+export async function scoutOpportunities(profileId: string) {
+    try {
+        const { forceHuntSync } = await import('./radar');
+        await forceHuntSync();
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+// 7. DELETE OPPORTUNITY
+export async function deleteOpportunity(oppId: string) {
+    try {
+        if (!oppId) throw new Error("Missing ID");
+        await prisma.opportunity.delete({ where: { id: oppId } });
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}

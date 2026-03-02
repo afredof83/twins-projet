@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Radar, ExternalLink, Zap, Trash2 } from 'lucide-react';
+import { getOpportunities, scoutOpportunities, deleteOpportunity } from '@/app/actions/opportunities';
 
 export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -11,9 +12,8 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const fetchOpps = async () => {
         if (!profileId) return;
         try {
-            const res = await fetch(`/api/opportunities?profileId=${profileId}`);
-            const data = await res.json();
-            if (data.success) setOpportunities(data.opportunities);
+            const data = await getOpportunities(profileId);
+            if (data.success && data.opportunities) setOpportunities(data.opportunities);
         } catch (err) {
             console.error("Erreur de lecture :", err);
         }
@@ -28,11 +28,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const launchScout = async () => {
         setIsScanning(true);
         try {
-            await fetch('/api/scout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profileId })
-            });
+            await scoutOpportunities(profileId);
             // Une fois le scan terminé, on recharge la liste pour voir la nouveauté
             await fetchOpps();
         } catch (err) {
@@ -48,11 +44,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
 
         // 2. Envoi de l'ordre de destruction au serveur
         try {
-            await fetch('/api/opportunities', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: idToDelete })
-            });
+            await deleteOpportunity(idToDelete);
         } catch (err) {
             console.error("Échec de la destruction :", err);
         }

@@ -1,6 +1,7 @@
 ﻿'use client';
 import { useState } from 'react';
 import { ShieldCheck, UserCheck } from 'lucide-react';
+import { simulateNegotiation } from '@/app/actions/guardian';
 
 export default function GuardianLoop({ profileId }: { profileId: string }) {
     const [activeNegotiations, setNegotiations] = useState<any[]>([]);
@@ -15,13 +16,9 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
         const fakeTargetId = "partner-profile-id-placeholder";
 
         try {
-            const res = await fetch('/api/network/negotiate', {
-                method: 'POST',
-                body: JSON.stringify({ myProfileId: profileId, targetProfileId: fakeTargetId }),
-            });
+            const data = await simulateNegotiation(profileId, fakeTargetId);
 
-            if (res.ok) {
-                const data = await res.json();
+            if (data.success) {
                 setNegotiations(prev => [data, ...prev]);
             } else {
                 // Si l'API renvoie 404 car pas de profil, on simule une réponse pour la démo UI

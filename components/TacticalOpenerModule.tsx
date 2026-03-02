@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { generateTacticalOpener } from '@/app/actions/generate-opener';
 import { createClient } from '@/lib/supabase/client';
+import { requestConnection } from '@/app/actions/connection';
 
 export function TacticalOpenerModule({
     userId,
@@ -41,24 +42,11 @@ export function TacticalOpenerModule({
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) { alert('Session expirée.'); return; }
 
-            const res = await fetch('/api/network/request', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({
-                    targetId,
-                    senderClassification: targetClassification ?? 'entité inconnue',
-                    initialMessage: hook,
-                    fullMessage: message
-                }),
-            });
-            const data = await res.json();
-            if (data.success) {
+            const data = await requestConnection(targetId);
+            if (data?.success) {
                 onSuccess();
             } else {
-                alert(`[ERREUR] ${data.error || 'Demande échouée.'}`);
+                alert(`[ERREUR] ${data?.error || 'Demande échouée.'}`);
             }
         } catch (err: any) {
             alert(`[CRITIQUE] Échec de connexion : ${err.message}`);

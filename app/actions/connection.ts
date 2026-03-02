@@ -25,14 +25,14 @@ async function getAuthUser() {
 }
 
 export async function requestConnection(targetId: string) {
-    if (!targetId) return;
+    if (!targetId) return { success: false, error: 'Target ID missing' };
 
     try {
         const user = await getAuthUser();
         const currentUserId = user.id;
 
         // Prevent self-connection
-        if (currentUserId === targetId) return;
+        if (currentUserId === targetId) return { success: false, error: 'Self connection not allowed' };
 
         // Vérifier si la connexion n'existe pas déjà
         const existingConnection = await prisma.connection.findFirst({
@@ -46,7 +46,7 @@ export async function requestConnection(targetId: string) {
 
         if (existingConnection) {
             console.warn("Connexion déjà existante ou en attente.");
-            return;
+            return { success: false, error: 'Connexion déjà existante' };
         }
 
         // 1. Créer la demande de connexion
@@ -67,8 +67,10 @@ export async function requestConnection(targetId: string) {
         });
 
         revalidatePath('/');
-    } catch (error) {
+        return { success: true };
+    } catch (error: any) {
         console.error("Erreur requestConnection:", error);
+        return { success: false, error: error.message };
     }
 }
 

@@ -1,6 +1,8 @@
 ﻿'use client';
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
+import { scrapeUrl } from '@/app/actions/memory-ingest';
+import { deleteMemoryFragment } from '@/app/actions/delete-memory';
 
 export default function KnowledgeIngester({ profileId, memories = [], onRefresh }: { profileId: string, memories?: any[], onRefresh?: () => void }) {
     const [url, setUrl] = useState('');
@@ -12,17 +14,9 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
         setStatus('loading');
 
         try {
-            const res = await fetch('/api/cortex/ingest', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url,
-                    profileId,
-                    category: 'STRATÉGIE'
-                })
-            });
+            const data = await scrapeUrl(url, profileId);
 
-            if (res.ok) {
+            if (data.success) {
                 setStatus('success');
                 setTimeout(() => setStatus('idle'), 3000);
                 setUrl('');
@@ -38,8 +32,8 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
     const handleDelete = async (id: string) => {
         if (!confirm('Supprimer ce souvenir ?')) return;
         try {
-            const res = await fetch(`/api/memories/${id}`, { method: 'DELETE' });
-            if (res.ok) {
+            const data = await deleteMemoryFragment(id);
+            if (data.success) {
                 if (onRefresh) onRefresh();
             }
         } catch (e) {

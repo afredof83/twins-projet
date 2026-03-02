@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { acceptInvite, updateOppStatus } from '@/app/actions/opportunities';
+import { acceptInvite, updateOppStatus, getOpportunity } from '@/app/actions/opportunities';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2, ShieldCheck, UserPlus, X } from 'lucide-react';
 import { getAgentName } from '@/lib/utils';
@@ -17,10 +17,9 @@ export default function InvitationPage() {
 
     useEffect(() => {
         const fetchOpp = async () => {
-            const res = await fetch(`/api/opportunities/${oppId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setOpp(data);
+            const res = await getOpportunity(oppId);
+            if (res.success && res.opportunity) {
+                setOpp(res.opportunity);
             }
             setLoading(false);
         };

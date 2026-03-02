@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { base64ToArray, verifyPassword } from '@/lib/crypto/zk-encryption';
 import { keyManager } from '@/lib/crypto/key-manager';
+import { getProfile } from '@/app/actions/profile';
 
 function UnlockContent() {
     const router = useRouter();
@@ -22,13 +23,12 @@ function UnlockContent() {
 
     useEffect(() => {
         if (activeId) {
-            fetch(`/api/profile/${activeId}`)
-                .then(res => {
-                    if (!res.ok) throw new Error('Profil introuvable');
-                    return res.json();
+            getProfile(activeId)
+                .then((res: any) => {
+                    if (!res.success) throw new Error(res.error || 'Profil introuvable');
+                    setProfileData(res.profile);
                 })
-                .then(setProfileData)
-                .catch(err => setError(err.message));
+                .catch((err: any) => setError(err.message));
         }
     }, [activeId]);
 
@@ -43,10 +43,9 @@ function UnlockContent() {
 
         setLoading(true);
         try {
-            const res = await fetch(`/api/profile/${manualId}`);
-            if (!res.ok) throw new Error('Profil introuvable');
-            const data = await res.json();
-            setProfileData(data);
+            const res = await getProfile(manualId);
+            if (!res.success) throw new Error(res.error || 'Profil introuvable');
+            setProfileData(res.profile);
             setStep('PASSWORD_INPUT');
         } catch (err: any) {
             setError(err.message);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, Zap, Target, Edit3, RefreshCw } from 'lucide-react'
+import { getAgentProfile, updateAgentProfile, reflectAgent } from '@/app/actions/agent'
 
 const QUESTIONS = {
     travail: [
@@ -40,13 +41,8 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
     const handleManualReflect = async () => {
         setIsReflecting(true);
         try {
-            const res = await fetch('/api/agent/reflect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profileId })
-            });
-            const data = await res.json();
-            if (data.success) {
+            const data = await reflectAgent(profileId);
+            if (data.success && data.synthesis) {
                 setSynthesis(data.synthesis);
                 alert("Profilage du Gardien synchronisé avec succès !");
             }
@@ -89,34 +85,36 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         const fetchAgentMemory = async () => {
             if (!profileId) return;
             try {
-                const res = await fetch(`/api/agent/get?profileId=${profileId}`, { cache: 'no-store' });
-                const data = await res.json();
+                const data = await getAgentProfile(profileId);
 
                 if (data.success && data.profile) {
-                    setDateOfBirth(data.profile.dateOfBirth || '');
-                    setPostalCode(data.profile.postalCode || '');
-                    setCity(data.profile.city || '');
-                    setGender(data.profile.gender || '');
-                    setCountry(data.profile.country || 'France');
+                    const profile = data.profile as any;
+                    const thematic = profile.thematicProfile as any;
+
+                    setDateOfBirth(profile.dateOfBirth || '');
+                    setPostalCode(profile.postalCode || '');
+                    setCity(profile.city || '');
+                    setGender(profile.gender || '');
+                    setCountry(profile.country || 'France');
 
                     // ✅ Mappage des top-level fields combinés avec ThematicProfile
                     setFormData({
-                        ...data.profile.thematicProfile,
+                        ...thematic,
                         travail: {
-                            ...data.profile.thematicProfile?.travail,
-                            industry: data.profile.industry || data.profile.thematicProfile?.travail?.industry || '',
-                            seniority: data.profile.seniority || data.profile.thematicProfile?.travail?.seniority || '',
-                            professionalStatus: data.profile.professionalStatus || data.profile.thematicProfile?.travail?.professionalStatus || '',
-                            environment: data.profile.environment || data.profile.thematicProfile?.travail?.environment || '',
-                            objectives: data.profile.objectives?.[0] || data.profile.thematicProfile?.travail?.objectives || '',
-                            precisionsLibres: data.profile.workNuances || data.profile.thematicProfile?.travail?.precisionsLibres || ''
+                            ...thematic?.travail,
+                            industry: profile.industry || thematic?.travail?.industry || '',
+                            seniority: profile.seniority || thematic?.travail?.seniority || '',
+                            professionalStatus: profile.professionalStatus || thematic?.travail?.professionalStatus || '',
+                            environment: profile.environment || thematic?.travail?.environment || '',
+                            objectives: profile.objectives?.[0] || thematic?.travail?.objectives || '',
+                            precisionsLibres: profile.workNuances || thematic?.travail?.precisionsLibres || ''
                         },
                         ikigai: {
-                            ...data.profile.thematicProfile?.ikigai,
-                            ikigaiMission: data.profile.ikigaiMission || data.profile.thematicProfile?.ikigai?.ikigaiMission || '',
-                            ikigaiValues: data.profile.ikigaiValues?.[0] || data.profile.thematicProfile?.ikigai?.ikigaiValues || '',
-                            dealbreakers: data.profile.dealbreakers?.[0] || data.profile.thematicProfile?.ikigai?.dealbreakers || '',
-                            socialStyle: data.profile.socialStyle || data.profile.thematicProfile?.ikigai?.socialStyle || ''
+                            ...thematic?.ikigai,
+                            ikigaiMission: profile.ikigaiMission || thematic?.ikigai?.ikigaiMission || '',
+                            ikigaiValues: profile.ikigaiValues?.[0] || thematic?.ikigai?.ikigaiValues || '',
+                            dealbreakers: profile.dealbreakers?.[0] || thematic?.ikigai?.dealbreakers || '',
+                            socialStyle: profile.socialStyle || thematic?.ikigai?.socialStyle || ''
                         }
                     });
 
@@ -138,12 +136,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
 
     const handleSave = async () => {
         try {
-            const res = await fetch('/api/agent/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData })
-            });
-            const data = await res.json();
+            const data = await updateAgentProfile({ profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData });
             if (data.success) alert("ADN de l'Agent sauvegardé avec succès !");
             else alert("Erreur lors de la sauvegarde.");
         } catch (error) {

@@ -15,6 +15,7 @@ import {
     encryptObject,
     arrayToBase64,
 } from '@/lib/crypto/zk-encryption';
+import { createProfile } from '@/app/actions/profile';
 
 export default function NewProfilePage() {
     const router = useRouter();
@@ -87,29 +88,22 @@ export default function NewProfilePage() {
             );
 
             // ===== SEND ONLY ENCRYPTED DATA TO SERVER =====
-            const response = await fetch('/api/profile/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.name,
-                    passwordHash,
-                    saltBase64,
-                    encryptedMetadata,
-                    encryptedPhrase,
-                    vectorNamespace,
-                }),
+            const response = await createProfile({
+                name: formData.name,
+                passwordHash,
+                saltBase64,
+                encryptedMetadata,
+                encryptedPhrase,
+                vectorNamespace,
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Échec de la création du profil');
+            if (!response.success) {
+                throw new Error(response.error || 'Échec de la création du profil');
             }
-
-            const data = await response.json();
 
             // Store recovery phrase (generated client-side, never sent to server)
             setRecoveryPhrase(generatedRecoveryPhrase);
-            setProfileId(data.profileId);
+            setProfileId(response.profileId!);
             setStep('recovery');
         } catch (err: any) {
             setError(err.message);

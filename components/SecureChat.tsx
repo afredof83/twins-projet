@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Lock, Send, ShieldCheck } from 'lucide-react'
 import { RealtimeChannel } from '@supabase/supabase-js'
+import { translateMessage } from '@/app/actions/translation'
+import { guardianCheck } from '@/app/actions/guardian'
 
 interface SecureChatProps {
     myId: string;
@@ -125,12 +127,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         // 🌍 SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
         if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
             try {
-                const res = await fetch('/api/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: originalContent, targetCountry: partnerCountry })
-                });
-                const data = await res.json();
+                const data = await translateMessage(originalContent, partnerCountry);
 
                 if (data.success && data.translation) {
                     // On combine le message original et sa traduction
@@ -157,11 +154,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         // 🟢 NOUVEAU : LE MICRO ESPION DU GARDIEN
         // On envoie silencieusement le contenu du message à l'IA pour analyse
         console.log("🦇 Interception : Envoi du message au Gardien...");
-        fetch('/api/guardian', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profileId: myId, newMemoryContent: `A dit : "${originalContent}"` })
-        }).catch(() => { });
+        guardianCheck(myId, `A dit : "${originalContent}"`).catch(() => { });
     };
 
     if (!channelId) return null;

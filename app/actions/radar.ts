@@ -97,3 +97,25 @@ export async function forceHuntSync(formData?: FormData) {
         console.error("🔥 [RADAR] CRASH:", error.message);
     }
 }
+
+export async function getRadarResults(profileId: string) {
+    try {
+        if (!profileId) throw new Error("Missing profile ID");
+        const results = await prisma.opportunity.findMany({
+            where: {
+                targetId: profileId,
+                status: 'DETECTED'
+            },
+            include: { sourceProfile: true },
+            orderBy: { matchScore: 'desc' }
+        });
+        return { success: true, results };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getGlobalRadarNews() {
+    // Bouchon pour remplacer l'ancienne route /api/radar
+    return { success: true, news: [] };
+}

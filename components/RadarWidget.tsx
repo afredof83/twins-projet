@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
+import { getGlobalRadarNews } from '@/app/actions/radar';
+import { addMemory } from '@/app/actions/memory-ingest';
 
 export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
@@ -11,9 +13,8 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
     const fetchNews = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/radar');
-            const data = await res.json();
-            if (data.news) setNews(data.news);
+            const data = await getGlobalRadarNews();
+            if (data.success && data.news) setNews(data.news);
         } catch (e) {
             console.error("Erreur Radar", e);
         } finally {
@@ -27,14 +28,10 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
 
         setSaving(item.link);
         try {
-            await fetch('/api/memories/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    profileId,
-                    content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
-                    type: 'news'
-                })
+            await addMemory({
+                profileId,
+                content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
+                type: 'news'
             });
             alert("News mémorisée !");
         } catch (error) {

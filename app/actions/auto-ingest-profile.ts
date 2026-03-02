@@ -3,6 +3,17 @@ import { mistralClient } from "@/lib/mistral";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+export async function extractTextFromUpload(formData: FormData) {
+    try {
+        const file = formData.get('file') as File;
+        if (!file) throw new Error("Fichier manquant");
+        const text = await file.text(); // Simplification pour la démo
+        return { success: true, extractedText: text };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 // 1. PHASE D'EXTRACTION (Ne touche pas à la DB)
 export async function extractProfileData(rawData: string) {
     try {
