@@ -87,14 +87,10 @@ export default function NewProfilePage() {
                 masterKey
             );
 
-            // ===== SEND ONLY ENCRYPTED DATA TO SERVER =====
+            // ===== SEND ONLY REQUIRED DATA TO SERVER =====
+            // Les champs ZK ne sont plus stockés en base selon le nouveau schéma
             const response = await createProfile({
                 name: formData.name,
-                passwordHash,
-                saltBase64,
-                encryptedMetadata,
-                encryptedPhrase,
-                vectorNamespace,
             });
 
             if (!response.success) {
@@ -216,7 +212,7 @@ export default function NewProfilePage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Nouveau Jumeau Numérique</h1>
+                    <h1 className="text-3xl font-bold text-white mb-2">Initialisation de l'Agent Ipse</h1>
                     <p className="text-purple-200">Créez votre profil sécurisé avec chiffrement Zero-Knowledge</p>
                 </div>
 

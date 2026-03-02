@@ -18,13 +18,33 @@ export async function getProfile(id: string) {
     }
 }
 
-export async function createProfile(data: any) {
+export async function createProfile(data: { name: string }) {
     try {
-        // Les champs ZK (passwordHash, encryptedPhrase, etc) ne sont plus dans le schéma Prisma actuel.
-        // Puisque le profil nécessite un 'email' et un 'id' (Supabase), cette action legacy
-        // est purement structurelle pour l'instant afin de permettre la compilation.
-        console.warn("createProfile appelé avec des champs ZK obsolètes :", data);
-        return { success: true, profileId: "legacy-id" };
+        const cookieStore = await cookies();
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            { cookies: { getAll() { return cookieStore.getAll() } } }
+        );
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { success: false, error: 'Utilisateur non authentifié' };
+        }
+
+        const profile = await prisma.profile.upsert({
+            where: { id: user.id },
+            update: {
+                name: data.name,
+            },
+            create: {
+                id: user.id,
+                email: user.email!,
+                name: data.name,
+            }
+        });
+
+        return { success: true, profileId: profile.id };
     } catch (err: any) {
         return { success: false, error: err.message };
     }
