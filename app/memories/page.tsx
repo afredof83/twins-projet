@@ -9,7 +9,6 @@ import {
     CheckCircle2, AlertTriangle, Wifi
 } from 'lucide-react';
 
-import { autoIngestProfile } from '@/app/actions/auto-ingest-profile';
 import CortexGrid from '@/components/cortex/CortexGrid';
 
 // â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -292,13 +291,15 @@ function CortexManager() {
         setIsAssimilating(true);
         addLog('[MATRICE] Injection des données brutes en cours...', 'info');
         try {
-            const result = await autoIngestProfile(profileId, profileRawData);
-            if (result?.success) {
-                addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
-                setProfileRawData('');
-            } else {
-                addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
-            }
+            // La logique a été déplacée dans le composant d'onboarding
+            // const result = await autoIngestProfile(profileId, profileRawData);
+            // if (result?.success) {
+            //     addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
+            //     setProfileRawData('');
+            // } else {
+            //     addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
+            // }
+            addLog("[DÉSACTIVÉ] Veuillez utiliser l'interface d'Onboarding pour l'ingestion du profil.", 'warning');
         } catch (e: any) {
             addLog("[CRITIQUE] Impossible de contacter le centre d'assimilation.", 'error');
         } finally {
