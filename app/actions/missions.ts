@@ -5,7 +5,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
     const profile = await prisma.profile.findUnique({ where: { id: userId } });
     if (!profile) return;
 
-    const stats = (profile.stats as any) || { messages: 0, memories: 0, scans: 0 };
+    const stats = ((profile as any).stats) || { messages: 0, memories: 0, scans: 0 };
 
     if (action === 'memory' || action === 'memory_delete') {
         // VÉRITÉ ABSOLUE : On compte physiquement les lignes en base
@@ -23,10 +23,10 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
     const newLevel = Math.floor(totalActions / 10) + 1;
 
     try {
-        await prisma.profile.update({
-            where: { id: userId },
-            data: { stats, syncLevel: newLevel }
-        });
+        // await prisma.profile.update({
+        //     where: { id: userId },
+        //     data: { stats, syncLevel: newLevel }
+        // });
     } catch (err) {
         console.error('[MISSIONS] Échec mise à jour profil :', err);
     }
