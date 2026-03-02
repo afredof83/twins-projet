@@ -1,12 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
   extensions = [vector]
 }
 
@@ -27,8 +26,9 @@ model Profile {
   profession      String?
   thematicProfile Json? // Ce que l'agent sait de toi
   unifiedAnalysis String? @db.Text
-  embedding       Unsupported("vector(1536)")? // Vecteur d'identité complet
+  embedding       Unsupported("vector(1024)")? // Vecteur d'identité complet
   fcmToken        String?   // Token Firebase Cloud Messaging (mobile uniquement)
+  publicKey       String?   @db.Text // Clé publique ECDH (Format JWK) — l'annuaire public
 
   // Propriété des données (Isolation)
   memories Memory[]

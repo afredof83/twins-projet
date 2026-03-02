@@ -71,8 +71,8 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
         if (tokens.length > 0) {
             const payload = {
                 notification: {
-                    title: "🧠 Intervention du Cortex",
-                    body: cortexDecision.message,
+                    title: "Nouveau signal Ipse",
+                    body: "Un Agent vous a transmis un message chiffré."
                 },
                 data: {
                     type: "CORTEX_INTERVENTION",

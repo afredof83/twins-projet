@@ -3,13 +3,18 @@
 import { useState, useEffect, useOptimistic, useRef } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { sendMessage, getOlderMessages } from '@/app/actions/chat';
+import { deriveSharedKey, encryptLocal, decryptLocal } from '@/lib/crypto-client';
 import { Send, AlertCircle, Loader2 } from 'lucide-react';
+import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
+import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
 
 type Message = { id: string; content: string; senderId: string; receiverId?: string; createdAt: Date | string };
 
-export default function RealtimeChat({ initialMessages, currentUserId, receiverId }: any) {
+export default function RealtimeChat({ initialMessages, currentUserId, receiverId, receiverPublicKeyJwk }: any) {
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isError, setIsError] = useState(false);
+    const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
+    const [isDecrypting, setIsDecrypting] = useState(true);
 
     // --- ÉTATS DE PAGINATION ---
     const [isLoadingOlder, setIsLoadingOlder] = useState(false);
@@ -19,6 +24,20 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
     const bottomRef = useRef<HTMLDivElement>(null);
     const topObserverRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const decryptedContextRef = useRef<{ id: string, clearText: string, isMe: boolean, createdAt: number }[]>([]);
+
+    const handleDecrypted = (id: string, clearText: string, isMe: boolean) => {
+        const current = decryptedContextRef.current;
+        // Éviter les doublons
+        if (current.some(m => m.id === id)) return;
+
+        // On ajoute, puis on trie chronologiquement (createdAt)
+        const newMsg = { id, clearText, isMe, createdAt: Date.now() };
+        const updated = [...current, newMsg].sort((a, b) => a.createdAt - b.createdAt);
+
+        // On ne conserve que les 20 derniers max pour la perf
+        decryptedContextRef.current = updated.slice(-20);
+    };
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +48,34 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         messages,
         (state, newMsg: Message) => [...state, newMsg]
     );
+
+    // =====================================================
+    // 🔑 DÉRIVATION ECDH AU MONTAGE
+    // Clé privée auto-récupérée depuis Secure Storage + clé publique du destinataire
+    // =====================================================
+    useEffect(() => {
+        async function initCrypto() {
+            try {
+                if (!receiverPublicKeyJwk) {
+                    console.warn("[E2E] Clé publique du destinataire manquante, chiffrement désactivé.");
+                    setIsDecrypting(false);
+                    return;
+                }
+
+                // Dérivation de la clé partagée (récupère auto la clé privée du coffre-fort)
+                const derived = await deriveSharedKey(JSON.parse(receiverPublicKeyJwk));
+                setSharedKey(derived);
+
+                // On ne déchiffre pas les messages lors du chargement : SecureMessageBubble s'en chargera
+                setMessages(initialMessages);
+            } catch (e) {
+                console.error("[E2E] Erreur dérivation ECDH:", e);
+            } finally {
+                setIsDecrypting(false);
+            }
+        }
+        initCrypto();
+    }, [receiverPublicKeyJwk]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // --- L'OBSERVATEUR D'INFINITE SCROLL (Le Radar Front-end) ---
     useEffect(() => {
@@ -50,12 +97,11 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     try {
                         const older = await getOlderMessages(receiverId, oldestMessage.id);
 
-                        if (older.length < 50) setHasMore(false); // Fin des archives
+                        if (older.length < 50) setHasMore(false);
 
-                        // Injection des archives au-dessus
+                        // Ne pas déchiffrer ici, laisser SecureMessageBubble s'en occuper
                         setMessages((prev) => [...older, ...prev]);
 
-                        // ANCRAGE DU SCROLL : On compense mathématiquement la taille des nouveaux éléments
                         setTimeout(() => {
                             if (container) {
                                 container.scrollTop = container.scrollHeight - previousScrollHeight;
@@ -73,7 +119,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
         if (topObserverRef.current) observer.observe(topObserverRef.current);
         return () => observer.disconnect();
-    }, [hasMore, isLoadingOlder, messages, receiverId]);
+    }, [hasMore, isLoadingOlder, messages, receiverId, sharedKey]);
 
     // Écoute des WebSockets Supabase
     useEffect(() => {
@@ -82,17 +128,19 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
-                table: 'Message', // Vérifiez la majuscule/minuscule exacte en BDD
-                filter: `receiverId=eq.${currentUserId}` // On n'écoute que ce qui nous est destiné
-            }, (payload) => {
-                setMessages((prev) => [...prev, payload.new as Message]);
+                table: 'Message',
+                filter: `receiverId=eq.${currentUserId}`
+            }, async (payload) => {
+                const incoming = payload.new as Message;
+                // Le déchiffrement est délégué au composant graphique
+                setMessages((prev) => [...prev, incoming]);
             })
             .subscribe();
 
         return () => { supabase.removeChannel(channel); };
-    }, [currentUserId, receiverId, supabase]);
+    }, [currentUserId, receiverId, supabase, sharedKey]);
 
-    // Auto-scroll intelligent (uniquement pour les nouveaux messages, pas pendant le scroll infini)
+    // Auto-scroll intelligent
     const prevMessagesLen = useRef(optimisticMessages.length);
     useEffect(() => {
         if (optimisticMessages.length > prevMessagesLen.current && bottomRef.current) {
@@ -105,11 +153,10 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         const content = formData.get('content') as string;
         if (!content.trim()) return;
 
-        // 1. On vide le formulaire et on retire l'erreur précédente
         formRef.current?.reset();
         setIsError(false);
 
-        // 2. Affichage Optimiste 0ms (Le client croit que c'est envoyé)
+        // Affichage Optimiste 0ms (Le client voit le texte en clair)
         addOptimisticMessage({
             id: `temp-${Date.now()}`,
             content,
@@ -118,28 +165,40 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             createdAt: new Date(),
         });
 
-        // 3. Le crash-test Server
+        // CHIFFREMENT CÔTÉ CLIENT puis envoi au serveur aveugle
         try {
-            const result = await sendMessage(formData);
+            if (sharedKey) {
+                const encrypted = await encryptLocal(content, sharedKey);
+                formData.set('content', encrypted);
+            }
 
-            // Si votre Server Action retourne un objet avec success: false
+            const result = await sendMessage(formData);
             if (!result?.success) throw new Error("Refus du serveur");
 
         } catch (error) {
             console.error("Échec de transmission:", error);
-
-            // 4. LE ROLLBACK : Le message optimiste va disparaître, on sauve les meubles.
             setIsError(true);
-
             if (formRef.current) {
                 const input = formRef.current.elements.namedItem('content') as HTMLInputElement;
                 if (input) {
-                    input.value = content; // On remet le texte dans l'input !
-                    input.focus(); // On force le focus pour qu'il puisse retenter
+                    input.value = content;
+                    input.focus();
                 }
             }
         }
     };
+
+    // SKELETON DE DÉCHIFFREMENT
+    if (isDecrypting) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-3">
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto" />
+                    <p className="text-xs text-emerald-400 font-mono uppercase tracking-widest">Déchiffrement en cours...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -178,19 +237,27 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                             }
 
                             return (
-                                <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`p-3 rounded-xl max-w-[80%] ${isMe ? 'bg-blue-600/20 border border-blue-500/30 text-blue-100 rounded-tr-sm' : 'bg-zinc-800/50 border border-zinc-700 text-zinc-300 rounded-tl-sm'}`}>
-                                        {msg.content}
-                                    </div>
-                                </div>
+                                <SecureMessageBubble
+                                    key={msg.id}
+                                    id={msg.id}
+                                    encryptedPayload={msg.content}
+                                    sharedKey={sharedKey}
+                                    isSender={isMe}
+                                    onDecrypted={handleDecrypted}
+                                />
                             );
                         })
                     )}
                     <div ref={bottomRef} />
                 </div>
+
+                {/* OREILLETTE TACTIQUE (Ne s'active qu'avec du texte déchiffré) */}
+                <div className="mt-8">
+                    <TacticalEarpiece getDecryptedContext={() => decryptedContextRef.current} />
+                </div>
             </div>
 
-            {/* FORMULAIRE (Inchangé) */}
+            {/* FORMULAIRE */}
             <div className="shrink-0 p-4 border-t border-white/10 bg-black/50 backdrop-blur-md">
                 {isError && (
                     <div className="mb-2 flex items-center gap-2 text-red-400 text-xs font-semibold animate-pulse">
@@ -203,7 +270,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     <input
                         type="text"
                         name="content"
-                        placeholder="Entrez votre message tactique..."
+                        placeholder="Message chiffré de bout en bout..."
                         autoComplete="off"
                         className={`flex-1 bg-black/40 border ${isError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-blue-500/50'} rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors`}
                     />

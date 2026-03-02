@@ -141,8 +141,8 @@ export default function NewProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Profil Créé avec Succès !</h1>
-                        <p className="text-purple-200">Votre jumeau numérique est maintenant initialisé</p>
+                        <h1 className="text-3xl font-bold text-white mb-2">Initialisation de votre Agent</h1>
+                        <p className="text-purple-200">Votre Agent est maintenant initialisé</p>
                     </div>
 
                     <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
@@ -151,10 +151,10 @@ export default function NewProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Sauvegardez Votre Phrase de Récupération</h3>
+                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Phrase Cryptographique Fondatrice</h3>
                                 <p className="text-red-100 text-sm">
-                                    Cette phrase de 12 mots est la SEULE façon de récupérer votre profil si vous oubliez votre mot de passe.
-                                    <strong className="block mt-2">Perte de cette phrase = Perte IRRÉVERSIBLE de toutes vos données.</strong>
+                                    Voici la phrase cryptographique qui verrouille votre accès à Ipse. Elle sécurise la mémoire et les communications de votre Agent. Si vous perdez ces 12 mots, votre Agent sera amnésique de façon irréversible.
+                                    <strong className="block mt-2">Nous n'avons aucun double.</strong>
                                 </p>
                             </div>
                         </div>
@@ -192,7 +192,7 @@ export default function NewProfilePage() {
                                 className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
                             />
                             <span className="text-white text-sm">
-                                J'ai sauvegardé ma phrase de récupération en lieu sûr et je comprends qu'elle ne peut pas être récupérée
+                                J'ai sécurisé la mémoire de mon Agent
                             </span>
                         </label>
                     </div>
@@ -202,7 +202,7 @@ export default function NewProfilePage() {
                         disabled={!phraseConfirmed}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Continuer vers le Profil
+                        J'AI SÉCURISÉ LA MÉMOIRE DE MON AGENT
                     </button>
 
                     <p className="text-purple-200 text-xs text-center mt-4">

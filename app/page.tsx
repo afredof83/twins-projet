@@ -130,7 +130,7 @@ export default async function RadarPage() {
       <section className="space-y-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 text-slate-400">
           <Target className="w-4 h-4" />
-          <h2 className="text-sm font-bold uppercase tracking-widest">Opportunités Détectées</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest">Synergies détectées par votre Agent</h2>
         </div>
 
         {discoveries.length === 0 ? (

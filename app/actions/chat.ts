@@ -1,16 +1,38 @@
 'use server';
 
-import prisma from '@/lib/prisma'; // Assure-toi d'utiliser le singleton qu'on a créé !
+import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { createServerClient } from '@supabase/ssr'; // Ajuste selon ton auth
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { encryptMessage, decryptMessage } from '@/lib/crypto';
 
 import { after } from 'next/server';
-import { triggerCortexAnalysis, evolveAgentProfile } from './cortex-chat';
 
 import { adminMessaging } from '@/lib/firebase-admin';
 
+// Le serveur reçoit DIRECTEMENT le texte déjà chiffré par le client.
+export async function sendSecureMessage(senderId: string, receiverId: string, encryptedContent: string) {
+    try {
+        // 1. Sauvegarde du message chiffré (Le serveur ne comprend pas ce qu'il stocke)
+        await prisma.message.create({
+            data: {
+                senderId,
+                receiverId,
+                content: encryptedContent, // <-- C'est du charabia AES pour le serveur
+            }
+        });
+
+        // 2. Notification (optionnelle, sans le contenu)
+        // Ne jamais envoyer le contenu chiffré dans le payload d'une notification push.
+
+        revalidatePath('/chat');
+        return { success: true };
+    } catch (error) {
+        console.error("Erreur routage message:", error);
+        return { success: false, error: "Échec de la transmission sécurisée." };
+    }
+}
+
+// L'ancienne fonction sendMessage conservée pour rétrocompatibilité mais nettoyée
 export async function sendMessage(formData: FormData) {
     const content = formData.get('content') as string;
     const receiverId = formData.get('receiverId') as string;
@@ -40,62 +62,36 @@ export async function sendMessage(formData: FormData) {
         }
     });
 
-    if (!connection) throw new Error("Violation d'accès : Aucun canal sécurisé actif.");
-
-    // 💾 Sauvegarde ultra-rapide (Chiffrement au Repos)
-    const savedMessage = await prisma.message.create({
-        data: { content: encryptMessage(content), senderId, receiverId }
+    const oppConnection = await prisma.opportunity.findFirst({
+        where: {
+            status: 'ACCEPTED',
+            OR: [
+                { sourceId: senderId, targetId: receiverId },
+                { sourceId: receiverId, targetId: senderId }
+            ]
+        }
     });
 
-    // 🧠 LE BACKGROUND PROCESSING : IA + FCM Humain
+    if (!connection && !oppConnection) throw new Error("Violation d'accès : Aucun canal sécurisé actif.");
+
+    const activeChannelId = connection?.id || oppConnection?.id || "unknown";
+
+    // 💾 Sauvegarde directe (Le contenu arrive déjà chiffré du client)
+    const savedMessage = await prisma.message.create({
+        data: { content, senderId, receiverId }
+    });
+
+    // 🧠 LE BACKGROUND PROCESSING : FCM Humain
     after(async () => {
-        // 1. On lance le Cortex comme prévu
-        await triggerCortexAnalysis(savedMessage, connection.id);
+        // 1. NOTIFICATION PUSH : On réveille le destinataire (sans le contenu)
 
-        // 1.5. NOUVEAU : On lance la boucle mémoire (Memory Loop) tous les 10 messages
-        try {
-            const messageCount = await prisma.message.count({
-                where: {
-                    OR: [
-                        { senderId: savedMessage.senderId, receiverId: savedMessage.receiverId },
-                        { senderId: savedMessage.receiverId, receiverId: savedMessage.senderId }
-                    ]
-                }
-            });
-
-            if (messageCount > 0 && messageCount % 10 === 0) {
-                const last10 = await prisma.message.findMany({
-                    where: {
-                        OR: [
-                            { senderId: savedMessage.senderId, receiverId: savedMessage.receiverId },
-                            { senderId: savedMessage.receiverId, receiverId: savedMessage.senderId }
-                        ]
-                    },
-                    take: 10,
-                    orderBy: { createdAt: 'desc' }
-                });
-
-                const decryptedLast10 = last10.reverse().map(m => ({
-                    ...m,
-                    content: decryptMessage(m.content)
-                }));
-
-                // On met à jour les deux profils avec leur propre ID
-                await evolveAgentProfile(senderId, decryptedLast10);
-                await evolveAgentProfile(receiverId, decryptedLast10);
-            }
-        } catch (e) {
-            console.error("[CORTEX MEMORY LOOP ERROR]:", e);
-        }
-
-        // 2. NOUVEAU : On réveille le destinataire (Push Humain)
+        // 2. NOTIFICATION PUSH : On réveille le destinataire (sans le contenu)
         try {
             const receiver = await prisma.profile.findUnique({
                 where: { id: receiverId },
                 select: { fcmToken: true }
             });
 
-            // On récupère le nom de l'expéditeur pour l'affichage
             const sender = await prisma.profile.findUnique({
                 where: { id: senderId },
                 select: { name: true }
@@ -103,17 +99,16 @@ export async function sendMessage(formData: FormData) {
 
             if (receiver?.fcmToken) {
                 const senderName = sender?.name || "Un agent";
-                const shortMessage = content.length > 40 ? content.substring(0, 37) + '...' : content;
 
                 await adminMessaging.send({
                     token: receiver.fcmToken,
                     notification: {
-                        title: `Nouveau message de ${senderName}`,
-                        body: shortMessage,
+                        title: "Nouveau signal Ipse",
+                        body: "Un Agent vous a transmis un message chiffré.",
                     },
                     data: {
-                        type: "CHAT_MESSAGE",
-                        senderId: senderId, // Important pour le deep-linking
+                        type: "NEW_MESSAGE",
+                        chatId: senderId,
                         url: `/chat/${senderId}`
                     }
                 });
@@ -124,13 +119,11 @@ export async function sendMessage(formData: FormData) {
         }
     });
 
-    // Pas de revalidatePath ! Supabase Realtime prendra le relais côté client.
     return { success: true, messageId: savedMessage.id };
 }
 
 export async function deleteChannel(connectionId: string) {
     try {
-        // 1. Récupérer la connexion pour identifier les deux utilisateurs
         const connection = await prisma.connection.findUnique({
             where: { id: connectionId },
             select: { initiatorId: true, receiverId: true }
@@ -140,7 +133,6 @@ export async function deleteChannel(connectionId: string) {
             return { success: false, error: "Canal introuvable ou déjà supprimé." };
         }
 
-        // 2. Supprimer tous les messages entre les deux utilisateurs
         await prisma.message.deleteMany({
             where: {
                 OR: [
@@ -150,12 +142,23 @@ export async function deleteChannel(connectionId: string) {
             }
         });
 
-        // 3. Supprimer la connexion
+        // 🔒 Sécurité supplementaire : on annule aussi toute opportunité liée 
+        // pour empêcher l'accès via le système de rétro-compatibilité
+        await prisma.opportunity.updateMany({
+            where: {
+                status: 'ACCEPTED',
+                OR: [
+                    { sourceId: connection.initiatorId, targetId: connection.receiverId },
+                    { sourceId: connection.receiverId, targetId: connection.initiatorId }
+                ]
+            },
+            data: { status: 'CANCELLED' }
+        });
+
         await prisma.connection.delete({
             where: { id: connectionId },
         });
 
-        // 4. Rafraîchir l'interface
         revalidatePath('/');
         return { success: true };
     } catch (e: any) {
@@ -163,6 +166,7 @@ export async function deleteChannel(connectionId: string) {
     }
 }
 
+// Le serveur retourne les messages tels quels (chiffrés). Le client déchiffrera.
 export async function getOlderMessages(receiverId: string, cursorId: string) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -182,13 +186,11 @@ export async function getOlderMessages(receiverId: string, cursorId: string) {
             ]
         },
         take: 50,
-        skip: 1, // On saute le curseur pour ne pas avoir de message en double
+        skip: 1,
         cursor: { id: cursorId },
         orderBy: { createdAt: 'desc' }
     });
 
-    return olderMessages.reverse().map(m => ({
-        ...m,
-        content: decryptMessage(m.content)
-    }));
+    // Le serveur est aveugle : il renvoie les messages tels quels
+    return olderMessages.reverse();
 }

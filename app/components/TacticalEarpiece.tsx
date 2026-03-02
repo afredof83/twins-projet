@@ -1,0 +1,64 @@
+'use client';
+
+import { useState } from 'react';
+import { askIpseAdvice } from '@/app/actions/ipse-advisor';
+import { Brain, Loader2 } from 'lucide-react';
+
+export function TacticalEarpiece({
+    getDecryptedContext
+}: {
+    getDecryptedContext: () => { id: string, clearText: string, isMe: boolean }[]
+}) {
+    const [advice, setAdvice] = useState<string | null>(null);
+    const [isThinking, setIsThinking] = useState(false);
+
+    const handleCallIpse = async () => {
+        setIsThinking(true);
+        setAdvice(null);
+
+        // On appelle la fonction pour générer la liste fraîche au moment du clic
+        const decryptedMessages = getDecryptedContext();
+        if (decryptedMessages.length === 0) {
+            setAdvice("Pas assez de contexte pour analyser.");
+            setIsThinking(false);
+            return;
+        }
+
+        // On compile les 5 derniers messages en clair (déjà déchiffrés par l'UI)
+        const context = decryptedMessages
+            .slice(-5)
+            .map(m => `${m.isMe ? 'MOI' : 'CIBLE'}: ${m.clearText}`)
+            .join('\n');
+
+        const res = await askIpseAdvice(context);
+        if (res.success && res.advice) {
+            setAdvice(res.advice);
+        } else {
+            setAdvice("Interférence réseau. Impossible de contacter le Cortex.");
+        }
+        setIsThinking(false);
+    };
+
+    return (
+        <div className="mb-8 flex flex-col items-center animate-in fade-in duration-500">
+            <button
+                onClick={handleCallIpse}
+                disabled={isThinking}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-900/20 text-blue-400 border border-blue-800/50 hover:bg-blue-800/30 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(37,99,235,0.15)] hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-50"
+            >
+                {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+                {isThinking ? "Ipse analyse..." : "Demander conseil à Ipse"}
+            </button>
+
+            {advice && (
+                <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-indigo-950/40 border border-indigo-500/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                    <p className="text-[10px] text-indigo-400 font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                        <Brain className="w-3 h-3" /> Signal Tactique Intercepté
+                    </p>
+                    <p className="text-sm md:text-base text-indigo-100 italic leading-relaxed">"{advice}"</p>
+                </div>
+            )}
+        </div>
+    );
+}

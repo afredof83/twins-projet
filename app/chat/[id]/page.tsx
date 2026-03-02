@@ -5,7 +5,6 @@ import RealtimeChat from '@/app/components/RealtimeChat';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
-import { decryptMessage } from '@/lib/crypto';
 
 export default async function SecureChatPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params;
@@ -21,12 +20,12 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        redirect('/auth-page'); // Ou vers la page de login appropriée
+        redirect('/auth-page');
     }
 
     const currentUserId = user.id;
 
-    // Récupérer l'historique de la conversation (50 derniers)
+    // Récupérer l'historique de la conversation (50 derniers) — BRUT (chiffré)
     const messages = await prisma.message.findMany({
         where: {
             OR: [
@@ -38,10 +37,17 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
         orderBy: { createdAt: 'desc' }
     });
 
-    const initialMessages = messages.reverse().map(m => ({
-        ...m,
-        content: decryptMessage(m.content)
-    }));
+    // ⚠️ Le serveur est AVEUGLE : on ne déchiffre plus ici.
+    // Les messages partent tels quels au client. Le RealtimeChat déchiffrera localement.
+    const initialMessages = messages.reverse();
+
+    // 📡 Récupérer la clé publique ECDH du destinataire (pour la dérivation côté client)
+    const receiverProfile = await prisma.profile.findUnique({
+        where: { id: receiverId },
+        select: { publicKey: true, name: true }
+    });
+
+    const receiverName = receiverProfile?.name || "Agent Industriel";
 
     return (
         <div className="flex flex-col h-[100dvh] pb-20 bg-slate-950 p-4 md:p-8 animate-in fade-in duration-500">
@@ -55,9 +61,9 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
                     <div>
                         <div className="flex items-center gap-2 text-emerald-400 mb-1">
                             <Shield className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison Chiffrée</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison Chiffrée E2E</span>
                         </div>
-                        <h1 className="text-xl font-black italic tracking-tighter text-white">Agent Industriel</h1>
+                        <h1 className="text-xl font-black italic tracking-tighter text-white">{receiverName}</h1>
                     </div>
                 </div>
                 <div className="px-3 py-1 rounded border border-emerald-500/30 bg-emerald-500/10 text-[10px] text-emerald-400 font-mono animate-pulse">
@@ -70,6 +76,7 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
                 initialMessages={initialMessages}
                 currentUserId={currentUserId}
                 receiverId={receiverId}
+                receiverPublicKeyJwk={receiverProfile?.publicKey || null}
             />
         </div>
     );
