@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { mistralClient } from '@/lib/mistral'
 
 export async function deleteMemory(formData: FormData) {
     const fileId = formData.get('fileId') as string;
@@ -193,4 +194,64 @@ export async function forceHuntSync() {
     });
 
     revalidatePath('/'); // Rafraîchit le Radar
+}
+
+export async function analyzeGaps() {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll() } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const profile = await prisma.profile.findUnique({ where: { id: user.id } });
+    if (!profile) return null;
+
+    let missingField: 'bio' | 'role' | 'tjm' | null = null;
+
+    if (!profile.role || profile.role === 'Nouveau' || profile.role === '') {
+        missingField = 'role';
+    } else if (!profile.tjm || profile.tjm === 0) {
+        missingField = 'tjm';
+    } else if (!profile.bio || profile.bio === '') {
+        missingField = 'bio';
+    }
+
+    if (!missingField) return null;
+
+    try {
+        const prompt = `Tu es Cortex, une IA assistante. Ton but est de profiler cet utilisateur.
+Son rôle actuel: ${profile.role || 'Inconnu'}
+Son TJM: ${profile.tjm || 'Inconnu'}
+Sa bio: ${profile.bio || 'Inconnue'}
+
+Le champ prioritaire manquant aujourd'hui est : "${missingField}".
+Pose UNE SEULE question courte, sympa et ultra directe (max 12 mots) pour obtenir cette information.`;
+
+        const chatResponse = await mistralClient.chat.complete({
+            model: 'mistral-large-latest',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+        });
+
+        const content = chatResponse.choices?.[0].message.content;
+        const question = typeof content === 'string' ? content.replace(/[""]/g, '').trim() : null;
+
+        if (question) {
+            return { question, field: missingField };
+        }
+        return null;
+    } catch (e) {
+        console.error("Erreur analyzeGaps Mistral:", e);
+        // Fallback
+        return {
+            question: missingField === 'role' ? "Quel est ton rôle ou titre actuel ?" :
+                missingField === 'tjm' ? "Quel est ton Taux Journalier Moyen ?" :
+                    "En quelques mots, quel est ton parcours ?",
+            field: missingField
+        };
+    }
 }

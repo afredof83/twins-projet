@@ -1,12 +1,10 @@
 import useSWR from 'swr';
-
-// Le fetcher standard pour SWR
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { analyzeGaps } from '@/app/actions/cortex';
 
 export function useCortexGaps() {
     const { data, error, isLoading, mutate } = useSWR(
-        '/api/cortex/analyze-gaps',
-        fetcher,
+        'cortex-gaps',
+        () => analyzeGaps(),
         {
             revalidateOnFocus: false, // Empêche de rappeler l'API Mistral juste en changeant d'onglet
             dedupingInterval: 60000,  // Déduplique toutes les requêtes identiques pendant 60 secondes
