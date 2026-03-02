@@ -21,7 +21,7 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
 
     // 2. Le Prompt d'Ingénierie Sociale
     const prompt = `
-Tu es MISTRAL-TWIN, un proxy tactique d'ingénierie sociale.
+Tu es Agent, un proxy tactique d'ingénierie sociale.
 Ta mission : Rédiger l'approche PARFAITE.
 
 ADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
