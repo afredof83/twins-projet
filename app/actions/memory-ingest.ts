@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
+// @ts-ignore
+import pdf from 'pdf-extraction';
 
 // 1. GET MEMORIES
 export async function getMemories(profileId: string) {
@@ -70,13 +72,22 @@ export async function uploadMemory(formData: FormData) {
         const profileId = formData.get('profileId') as string;
         if (!file || !profileId) throw new Error("Fichier ou ID manquant");
 
-        // Basic parsing depending on file type (simulated or simplified text extraction)
-        const text = await file.text(); // Simplification for demo. Real app might use pdf2json.
+        // Validation du type et extraction
+        let text = '';
+        if (file.type === 'application/pdf') {
+            const buffer = Buffer.from(await file.arrayBuffer());
+            const pdfData = await pdf(buffer, { max: 0 });
+            text = pdfData.text;
+        } else {
+            text = await file.text();
+        }
+
+        const sanitizedText = text.replace(/\0/g, '');
 
         const memory = await prisma.memory.create({
             data: {
                 profileId,
-                content: `[FICHIER: ${file.name}] ${text.substring(0, 2000)}`,
+                content: `[FICHIER: ${file.name}]\n\n${sanitizedText}`,
                 type: 'document',
                 source: file.name
             }
@@ -135,9 +146,18 @@ export async function uploadCortexMemoryContext(formData: FormData) {
 
         let content = textContext;
         if (file) {
-            const fileText = await file.text();
-            content += `\n[FICHIER: ${file.name}] ${fileText.substring(0, 3000)}`;
+            let fileText = '';
+            if (file.type === 'application/pdf') {
+                const buffer = Buffer.from(await file.arrayBuffer());
+                const pdfData = await pdf(buffer, { max: 0 });
+                fileText = pdfData.text;
+            } else {
+                fileText = await file.text();
+            }
+            content += `\n[FICHIER: ${file.name}]\n\n${fileText}`;
         }
+
+        content = content.replace(/\0/g, ''); // Fix Null Byte for PostgreSQL
 
         if (!content) throw new Error("Aucun contenu fourni");
 

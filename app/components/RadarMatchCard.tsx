@@ -13,6 +13,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
     const [loading, setLoading] = useState(false);
     const [auditData, setAuditData] = useState(opportunity.audit);
     const [showAudit, setShowAudit] = useState(false);
+    const [isAccepted, setIsAccepted] = useState(false);
 
     // On détermine qui est l'autre agent
     const otherProfile = opportunity.sourceId === myId
@@ -33,6 +34,8 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
         setLoading(true);
         const res = await acceptInvite(opportunity.id);
         if (res.success) {
+            setIsAccepted(true);
+            // Redirection occurs immediately, but UI confirms to the user it worked immediately.
             router.push(`/chat/${otherProfile.id}`);
         }
         setLoading(false);
@@ -59,13 +62,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     </p>
                 ) : (
                     <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-800 text-center">
-                        <h4 className="text-zinc-300 text-sm font-bold uppercase mb-4 tracking-widest text-center">Rapport d'Audit Prêt</h4>
-                        <button
-                            onClick={() => setShowAudit(true)}
-                            className="btn-outline text-white hover:text-white"
-                        >
-                            Lire l'Audit Cortex
-                        </button>
+                        <h4 className="text-zinc-300 text-sm font-bold uppercase tracking-widest text-center">Rapport d'Audit Stratégique Prêt</h4>
                     </div>
                 )}
             </div>
@@ -116,11 +113,11 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                         </p>
                         <div className="flex gap-2">
                             <button
-                                disabled={loading}
+                                disabled={loading || isAccepted}
                                 onClick={handleAccept}
-                                className="btn-primary flex-1 bg-green-600 hover:bg-green-500 text-white"
+                                className={`btn-primary flex-1 ${isAccepted ? 'bg-emerald-600/50 cursor-default text-emerald-100' : 'bg-green-600 hover:bg-green-500 text-white'}`}
                             >
-                                {loading ? "CRÉATION..." : "ACCEPTER"}
+                                {loading ? "CRÉATION..." : isAccepted ? "ACCEPTÉ ✓" : "ACCEPTER"}
                             </button>
                             <button
                                 onClick={() => updateOppStatus(opportunity.id, 'CANCELLED')}
@@ -159,6 +156,10 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 opportunityId={opportunity.id}
                 status={status}
                 targetId={otherProfile.id}
+                onInviteSuccess={() => {
+                    setStatus('INVITED');
+                    setShowAudit(false);
+                }}
             />
         </div>
     );

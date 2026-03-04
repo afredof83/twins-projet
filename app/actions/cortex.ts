@@ -83,6 +83,38 @@ export async function deleteNote(formData: FormData) {
     }
 }
 
+export async function deleteCortexMemory(formData: FormData) {
+    const memoryId = formData.get('memoryId') as string;
+
+    if (!memoryId) return;
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { cookies: { getAll() { return cookieStore.getAll() } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Non autorisé");
+
+    try {
+        await prisma.memory.delete({
+            where: {
+                id: memoryId,
+                profileId: user.id
+            }
+        });
+
+        console.log(`[DELETE] Memory ${memoryId} effacée de la mémoire.`);
+
+        revalidatePath('/cortex');
+        revalidatePath('/memories');
+    } catch (error) {
+        console.error("[DELETE] Erreur lors de la suppression de la memory:", error);
+    }
+}
+
 export async function deleteDiscovery(formData: FormData) {
     const id = formData.get('id') as string;
 

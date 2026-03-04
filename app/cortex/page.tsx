@@ -1,6 +1,6 @@
 // app/cortex/page.tsx
 import { Trash2 } from 'lucide-react'
-import { deleteMemory, deleteNote } from '@/app/actions/cortex'
+import { deleteMemory, deleteNote, deleteCortexMemory } from '@/app/actions/cortex'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -24,7 +24,7 @@ export default async function CortexPage() {
         where: { id: user.id },
         include: {
             files: { orderBy: { createdAt: 'desc' } },
-            notes: { orderBy: { createdAt: 'desc' } } // On ajoute la récupération des notes IA
+            memories: { orderBy: { createdAt: 'desc' } } // On ajoute la récupération des Memory créées lors de l'ingestion
         }
     })
 
@@ -90,25 +90,25 @@ export default async function CortexPage() {
                         <span className="material-symbols-outlined text-[1rem]">history</span> Mémoires Extraites
                     </h2>
 
-                    {(!profile.notes || profile.notes.length === 0) ? (
+                    {(!profile.memories || profile.memories.length === 0) ? (
                         <div className="p-8 text-center border border-dashed border-purple-500/10 rounded-2xl">
                             <p className="text-slate-600 italic">Le noyau mémoriel est vide.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
-                            {profile.notes.map((note) => (
-                                <div key={note.id} className="group relative p-6 rounded-2xl bg-purple-500/[0.03] border border-purple-500/10 backdrop-blur-md hover:border-purple-500/30 transition-all">
+                            {profile.memories.map((memory) => (
+                                <div key={memory.id} className="group relative p-6 rounded-2xl bg-purple-500/[0.03] border border-purple-500/10 backdrop-blur-md hover:border-purple-500/30 transition-all">
                                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                                         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                                            Synthèse #{note.id.split('-')[0]}
+                                            Fragment #{memory.id.split('-')[0]}
                                         </span>
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-600 font-mono">
-                                                {new Date(note.createdAt).toLocaleDateString('fr-FR')} {new Date(note.createdAt).toLocaleTimeString('fr-FR')}
+                                                {new Date(memory.createdAt).toLocaleDateString('fr-FR')} {new Date(memory.createdAt).toLocaleTimeString('fr-FR')}
                                             </span>
-                                            <form action={deleteNote}>
-                                                <input type="hidden" name="noteId" value={note.id} />
+                                            <form action={deleteCortexMemory}>
+                                                <input type="hidden" name="memoryId" value={memory.id} />
                                                 <button className="p-1.5 rounded-md hover:bg-red-500/20 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
@@ -116,7 +116,7 @@ export default async function CortexPage() {
                                         </div>
                                     </div>
                                     <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap pl-3 border-l-2 border-purple-500/20">
-                                        {note.content}
+                                        {memory.content}
                                     </div>
                                 </div>
                             ))}

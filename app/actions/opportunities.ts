@@ -1,15 +1,40 @@
 'use server';
 import { mistralClient } from '@/lib/mistral';
 import prisma from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
+import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+
+// Helper for auth
+async function getAuthUser() {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set(name, value, options) { },
+                remove(name, options) { }
+            }
+        }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Non autorisé");
+    return user;
+}
 
 // 1. AUDIT PROFOND
 export async function performAudit(oppId: string) {
     try {
+        const user = await getAuthUser();
+        const myId = user.id;
+
         // 1. On récupère l'opportunité avec les relations exactes
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId },
             include: {
-                sourceProfile: true, // Vérifie que c'est bien le nom de ta relation Prisma
+                sourceProfile: true,
                 targetProfile: true
             }
         });
@@ -18,33 +43,34 @@ export async function performAudit(oppId: string) {
             return { success: false, error: "Données introuvables" };
         }
 
-        // 2. On construit le prompt avec les BONS noms de colonnes (name, role, bio)
+        // Identifier clairement qui est la cible (l'autre agent)
+        const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
+
+        // 2. On construit le prompt avec un FOCUS REQUIS STRICT SUR LA CIBLE
         const prompt = `
 Tu es le Cortex, une IA de renseignement stratégique B2B.
-Analyse la synergie entre ces deux professionnels.
 
 RÈGLES DE SURVIE ABSOLUES :
 1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
-2. LONGUEUR : Le champ 'synergies' doit faire MAXIMUM 3 phrases courtes. Va droit au but.
-3. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
-4. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
+2. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
+3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
+
+NOUVELLE DIRECTIVE STRICTE :
+Dans la section 'Match Stratégique' (le champ 'synergies'), tu dois UNIQUEMENT décrire l'identité et l'activité de la CIBLE détectée. 
+Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un résumé direct de la cible détectée sous ce format : "[Nom de la cible] est [Métier de la cible]. Il/Elle cherche à [Objectif]."
 
 FORMAT ATTENDU :
 {
-  "synergies": "Texte clair, percutant et ultra-bref décrivant le gain mutuel.",
+  "synergies": "[Nom de la cible] est [Métier]. Il cherche à [Objectif].",
   "actions": [
     "Action précise 1",
     "Action précise 2"
   ]
 }
 
-AGENT 1 (${opp.sourceProfile.name || 'Anonyme'}) : 
-Rôle : ${opp.sourceProfile.role || 'Non défini'}
-Bio : ${opp.sourceProfile.bio || 'Non définie'}
-
-AGENT 2 (${opp.targetProfile.name || 'Anonyme'}) : 
-Rôle : ${opp.targetProfile.role || 'Non défini'}
-Bio : ${opp.targetProfile.bio || 'Non définie'}
+CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
+Rôle : ${targetProfile.role || 'Non défini'}
+Bio : ${targetProfile.bio || 'Non définie'}
 `;
 
         console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
@@ -126,6 +152,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
             console.log("⚠️ [OPP] Cible sans fcmToken. Invitation créée en BDD mais pas de notification Push envoyée.");
         }
 
+        revalidatePath('/');
         return { success: true };
     } catch (error: any) {
         console.error("❌ [OPP] Erreur envoi invitation:", error);
@@ -157,6 +184,7 @@ export async function acceptInvite(oppId: string) {
             data: { status: 'ACCEPTED' }
         });
 
+        revalidatePath('/');
         return { success: true, connectionId: newConnection.id };
     } catch (error) {
         console.error("❌ [OPP] Erreur acceptation invitation:", error);
@@ -194,8 +222,8 @@ export async function getOpportunities(profileId: string) {
         const opps = await prisma.opportunity.findMany({
             where: {
                 OR: [
-                    { sourceId: profileId },
-                    { targetId: profileId }
+                    { sourceId: profileId, targetId: { not: profileId } },
+                    { targetId: profileId, sourceId: { not: profileId } }
                 ]
             },
             include: { sourceProfile: true, targetProfile: true },

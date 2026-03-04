@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Flame } from 'lucide-react';
+import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Flame, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { sendChatInvite } from '@/app/actions/opportunities';
 
-export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId }: any) {
+export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId, onInviteSuccess }: any) {
     const [mounted, setMounted] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [isSent, setIsSent] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -116,10 +119,31 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                             Rejoindre la Discussion
                         </Link>
                     ) : (
-                        <Link href={`/cortex/opportunity/${opportunityId}`} className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-                            Ouvrir un Canal Sécurisé
-                            <ChevronRight className="w-4 h-4" />
-                        </Link>
+                        <button
+                            onClick={async () => {
+                                setIsSending(true);
+                                const res = await sendChatInvite(opportunityId, "Demande de Canal Sécurisé");
+                                setIsSending(false);
+                                if (res.success) {
+                                    setIsSent(true);
+                                    if (onInviteSuccess) onInviteSuccess();
+                                }
+                            }}
+                            disabled={isSending || isSent}
+                            className={`w-full py-4 flex items-center justify-center gap-2 transition-all ${isSent
+                                    ? 'bg-emerald-600/50 text-emerald-100 cursor-default border border-emerald-500/50 rounded-xl font-bold'
+                                    : 'btn-primary shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                                }`}
+                        >
+                            {isSending && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {isSent && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+
+                            {isSending ? "Négociation en cours..." :
+                                isSent ? "✓ Signal transmis au Gardien adverse" :
+                                    "Ouvrir un Canal Sécurisé - Envoyer l'Invitation"}
+
+                            {!isSending && !isSent && <ChevronRight className="w-4 h-4" />}
+                        </button>
                     )}
                 </div>
             </div>
