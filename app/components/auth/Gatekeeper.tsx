@@ -30,10 +30,17 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 // 3. VÉRIFICATION DE LA MATRICE (Prisma Check)
                 const response = await fetch('/api/auth/sync');
                 if (!response.ok) {
-                    // C'est ici qu'on tue la session fantôme
-                    await supabase.auth.signOut();
-                    localStorage.clear();
-                    throw new Error("Profile deleted from DB");
+                    // ⚡ ANTIGRAVITY : Si c'est un nouveau compte, on lui laisse 3 secondes
+                    // pour que la BDD se mette à jour avant de déclarer forfait.
+                    console.warn("Profil non trouvé, tentative de re-synchronisation...");
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+
+                    const retryResponse = await fetch('/api/auth/sync');
+                    if (!retryResponse.ok) {
+                        await supabase.auth.signOut();
+                        localStorage.clear();
+                        throw new Error("Profile truly not found after retry");
+                    }
                 }
 
                 // 4. BIOMÉTRIE (Touch ID / Face ID)
