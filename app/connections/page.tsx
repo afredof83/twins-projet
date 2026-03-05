@@ -1,12 +1,15 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft, Linkedin, Twitter, Instagram, Facebook,
     Github, Database, FileText, MessageCircle, Mail,
     Music, Video, Activity, Globe, Lock
 } from 'lucide-react';
+import { createClient } from '@/lib/supabaseBrowser';
+import { checkProfileExists } from '@/app/actions/auth-guard';
 
 // --- CONFIGURATION DES MODULES ---
 const MODULES = [
@@ -56,21 +59,22 @@ const MODULES = [
 ];
 
 export default function NeuralLinkPage() {
+    const router = useRouter();
     const [sources, setSources] = useState<any[]>([]);
     const [simulating, setSimulating] = useState<string | null>(null);
 
-    // Chargement initial
+    // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const res = await fetch('/api/sources');
-                if (res.ok) {
-                    const data = await res.json();
-                    setSources(Array.isArray(data) ? data : []);
-                }
-            } catch (e) { console.error(e); }
-        }
-        fetchData();
+        const supabase = createClient();
+        supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
+            if (!user) { router.push('/login'); return; }
+            const exists = await checkProfileExists(user.id);
+            if (!exists) {
+                console.log("⚠️ [AUTH] Session Fantôme détectée sur /connections.");
+                await supabase.auth.signOut();
+                router.push('/login');
+            }
+        });
     }, []);
 
     // Simulation de connexion

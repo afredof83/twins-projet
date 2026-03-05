@@ -6,6 +6,7 @@ import TopNav from '@/components/TopNav';
 import NavBadge from './components/NavBadge';
 import SplashHider from './components/SplashHider';
 import PushManager from './components/PushManager';
+import Gatekeeper from '@/app/components/auth/Gatekeeper';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 export const runtime = 'nodejs';
@@ -56,9 +57,11 @@ export default async function RootLayout({
 
         {/* Le 'pb-20' ci-dessus laisse de la place pour la barre en bas */}
 
-        <div className="relative z-0">
-          {children}
-        </div>
+        <Gatekeeper>
+          <div className="relative z-0">
+            {children}
+          </div>
+        </Gatekeeper>
 
         {/* --- BOTTOM NAVIGATION BAR --- */}
         <nav className="fixed bottom-0 left-0 w-full bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 pb-safe z-50">

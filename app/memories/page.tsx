@@ -14,8 +14,9 @@ import { getMemories, addMemory, scrapeUrl, uploadMemory } from '@/app/actions/m
 import { deleteMemoryFragment } from '@/app/actions/delete-memory';
 import { updateMemoryAndVector } from '@/app/actions/update-memory';
 import { guardianCheck } from '@/app/actions/guardian';
+import { checkProfileExists } from '@/app/actions/auth-guard';
 
-// â”€â”€â”€ TYPE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ——— TYPE ————————————————————————————————————————————————————————————
 interface Memory {
     id: string;
     content: string;
@@ -28,7 +29,7 @@ interface Memory {
 type LogLevel = 'info' | 'success' | 'error' | 'warning';
 interface Log { msg: string; level: LogLevel; ts: string }
 
-// â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ——— HELPERS ————————————————————————————————————————————————————————
 const typeIcon: Record<string, string> = {
     document: 'ðŸ“„', knowledge: '🌐', THOUGHT: 'ðŸ’­', thought: 'ðŸ’­',
     secret: 'ðŸ”’', default: 'ðŸ§©',
@@ -42,7 +43,7 @@ const typeColor: Record<string, string> = {
     default: 'bg-slate-800    text-slate-400  border-slate-700',
 };
 
-// â”€â”€â”€ COMPOSANT PRINCIPAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ——— COMPOSANT PRINCIPAL ————————————————————————————————————————————
 function CortexManager() {
     const router = useRouter();
     const [supabase] = useState(() => createClient());
@@ -72,15 +73,23 @@ function CortexManager() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
 
-    // â”€â”€ Auth check â”€â”€
+    // — Auth check + AuthGuard —
     useEffect(() => {
-        supabase.auth.getUser().then(({ data: { user } }: { data: { user: { id: string } | null } }) => {
+        supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: { id: string } | null } }) => {
             if (!user) { router.push('/'); return; }
+            // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
+            const exists = await checkProfileExists(user.id);
+            if (!exists) {
+                console.log("⚠️ [AUTH] Session Fantôme détectée sur /memories.");
+                await supabase.auth.signOut();
+                router.push('/login');
+                return;
+            }
             setProfileId(user.id);
         });
     }, []);
 
-    // â”€â”€ Load memories quand profileId est dispo â”€â”€
+    // ——— Load memories quand profileId est dispo ———
     useEffect(() => {
         if (profileId) fetchMemories();
     }, [profileId]);

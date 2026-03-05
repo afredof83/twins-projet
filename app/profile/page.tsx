@@ -1,10 +1,13 @@
 ﻿"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Save, Loader2, Euro, Calendar, Briefcase } from "lucide-react";
 import { updateIdentity } from "@/app/actions/profile";
 import { useFormStatus } from "react-dom";
+import { createClient } from "@/lib/supabaseBrowser";
+import { checkProfileExists } from "@/app/actions/auth-guard";
 
 // Petit composant pour le bouton de soumission avec état de chargement
 function SubmitButton() {
@@ -22,6 +25,22 @@ function SubmitButton() {
 }
 
 export default function IdentityPage() {
+    const router = useRouter();
+
+    // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
+            if (!user) { router.push('/login'); return; }
+            const exists = await checkProfileExists(user.id);
+            if (!exists) {
+                console.log("⚠️ [AUTH] Session Fantôme détectée sur /profile.");
+                await supabase.auth.signOut();
+                router.push('/login');
+            }
+        });
+    }, []);
+
     return (
         <div className="min-h-screen text-white p-4 pb-24 md:p-8">
             <div className="max-w-2xl mx-auto space-y-8">

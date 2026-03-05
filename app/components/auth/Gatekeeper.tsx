@@ -1,0 +1,82 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabaseBrowser';
+import { NativeBiometric } from 'capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { Loader2, ShieldAlert } from 'lucide-react';
+
+export default function Gatekeeper({ children }: { children: React.ReactNode }) {
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
+    const pathname = usePathname();
+    const supabase = createClient();
+
+    useEffect(() => {
+        const checkShield = async () => {
+            // 1. Pages publiques : On laisse circuler
+            if (pathname === '/login' || pathname === '/profile/new' || pathname === '/profile/unlock' || pathname === '/auth/callback') {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                // 2. Vérification Session locale (Token)
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) throw new Error("No session");
+
+                // 3. VÉRIFICATION DE LA MATRICE (Prisma Check)
+                const response = await fetch('/api/auth/sync');
+                if (!response.ok) {
+                    // C'est ici qu'on tue la session fantôme
+                    await supabase.auth.signOut();
+                    localStorage.clear();
+                    throw new Error("Profile deleted from DB");
+                }
+
+                // 4. BIOMÉTRIE (Touch ID / Face ID)
+                if (Capacitor.isNativePlatform()) {
+                    const available = await NativeBiometric.isAvailable();
+                    if (available.isAvailable) {
+                        await NativeBiometric.verifyIdentity({
+                            reason: "Accès à votre Agent Ipse",
+                            title: "Sécurité Biométrique",
+                        });
+                    }
+                }
+
+                setIsLoading(false);
+            } catch (err) {
+                console.error("🚨 Gatekeeper éjection immédiate.");
+                router.replace('/login');
+            }
+        };
+
+        checkShield();
+
+        // ⚡ ANTIGRAVITY : On s'abonne aux événements de l'OS
+        const listener = App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                console.log("🚀 App revient au premier plan. Re-vérification...");
+                checkShield();
+            }
+        });
+
+        return () => {
+            listener.remove();
+        };
+    }, [pathname]);
+
+    if (isLoading && pathname !== '/login') {
+        return (
+            <div className="h-screen w-screen bg-black flex flex-col items-center justify-center">
+                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mb-4" />
+                <p className="text-emerald-500/50 text-xs tracking-widest uppercase">Synchronisation...</p>
+            </div>
+        );
+    }
+
+    return <>{children}</>;
+}
