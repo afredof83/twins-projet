@@ -16,8 +16,15 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
     useEffect(() => {
         const checkShield = async () => {
-            // 1. Pages publiques : On laisse circuler
-            if (pathname === '/login' || pathname === '/profile/new' || pathname === '/profile/unlock' || pathname === '/auth/callback') {
+            // 1. Pages publiques + routes système : On laisse circuler
+            if (
+                pathname === '/login' ||
+                pathname === '/profile/new' ||
+                pathname === '/profile/unlock' ||
+                pathname === '/auth/callback' ||
+                pathname === '/_not-found' ||
+                pathname.startsWith('/api/')
+            ) {
                 setIsLoading(false);
                 return;
             }
