@@ -11,7 +11,8 @@
     "init": "node scripts/init.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -27,6 +28,7 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "bip39": "^3.1.0",
+    "capacitor-native-biometric": "^4.2.2",
     "capacitor-secure-storage-plugin": "^0.13.0",
     "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
@@ -61,6 +63,8 @@
     "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "^16.1.6",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "prisma": "^7.4.2",
     "server-only": "^0.0.1",
     "tailwindcss": "^4.0.0",
