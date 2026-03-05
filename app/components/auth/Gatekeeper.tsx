@@ -2,96 +2,126 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { createClient } from '@/lib/supabaseBrowser'; // Ton import exact
+import { createClient } from '@/lib/supabaseBrowser';
 import { NativeBiometric } from 'capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Loader2 } from 'lucide-react';
 
 export default function Gatekeeper({ children }: { children: React.ReactNode }) {
-    const isVerifying = useRef(false); // Anti-boucle de vérification
-    const hasUnlocked = useRef(false); // ⚡ MÉMOIRE DU COFFRE-FORT
+    const isVerifying = useRef(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const router = useRouter();
     const pathname = usePathname();
     const supabase = createClient();
 
-    useEffect(() => {
-        const checkShield = async (isWakeUp = false) => {
-            if (isVerifying.current) return;
+    const checkShield = async (isWakeUp = false) => {
+        // Anti-rebond d'exécution
+        if (isVerifying.current) return;
 
-            // Pages publiques
-            if (
-                pathname === '/login' ||
-                pathname === '/profile/new' ||
-                pathname === '/profile/unlock' ||
-                pathname === '/auth/callback' ||
-                pathname === '/_not-found' ||
-                pathname.startsWith('/api/')
-            ) {
-                setIsLoading(false);
-                return;
+        // Pages publiques
+        if (
+            pathname === '/login' ||
+            pathname === '/onboarding' ||
+            pathname === '/_not-found' ||
+            pathname.startsWith('/api/')
+        ) {
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            isVerifying.current = true;
+
+            // 1. Vérification Supabase & BDD
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("No session");
+
+            // Optionnel: sync API seulement si on n'est pas déjà en train de charger
+            const response = await fetch('/api/auth/sync');
+            if (!response.ok) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const retry = await fetch('/api/auth/sync');
+                if (!retry.ok) {
+                    await supabase.auth.signOut();
+                    localStorage.clear();
+                    throw new Error("Profile ghost");
+                }
             }
 
-            try {
-                isVerifying.current = true;
+            // 2. ⚡ BIOMÉTRIE (Basée sur le SessionStorage)
+            if (Capacitor.isNativePlatform()) {
+                const hasUnlocked = sessionStorage.getItem('ipse_unlocked') === 'true';
+                const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
-                // 1. Check Session & BDD (Silencieux à chaque changement de page)
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session) throw new Error("No session");
-
-                const response = await fetch('/api/auth/sync');
-                if (!response.ok) {
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    const retry = await fetch('/api/auth/sync');
-                    if (!retry.ok) {
-                        await supabase.auth.signOut();
-                        localStorage.clear();
-                        throw new Error("Profile ghost");
-                    }
+                // 🚨 CORRECTION: Si on est déjà déverrouillé et qu'on change juste de page, on SKIP la biométrie
+                if (hasUnlocked && !isWakeUp) {
+                    setIsLoading(false);
+                    return;
                 }
 
-                // 2. BIOMÉTRIE (Seulement si pas encore déverrouillé, ou si retour de veille)
-                if (Capacitor.isNativePlatform() && (!hasUnlocked.current || isWakeUp)) {
+                // Si on n'a pas encore déverrouillé OU que c'est un retour de veille
+                if ((!hasUnlocked || isWakeUp) && !isPromptOpen) {
                     const available = await NativeBiometric.isAvailable();
                     if (available.isAvailable) {
-                        await NativeBiometric.verifyIdentity({
-                            reason: "Accès à votre Agent Ipse",
-                            title: "Sécurité Biométrique",
-                        });
-                        hasUnlocked.current = true; // ⚡ ON MÉMORISE LE DÉVERROUILLAGE
+                        sessionStorage.setItem('ipse_bio_prompt', 'true');
+
+                        try {
+                            await NativeBiometric.verifyIdentity({
+                                reason: "Accès à votre Agent Ipse",
+                                title: "Sécurité Biométrique",
+                            });
+                            sessionStorage.setItem('ipse_unlocked', 'true');
+                        } catch (bioError) {
+                            console.error("Biometric failed", bioError);
+                            router.replace('/login');
+                            return;
+                        } finally {
+                            setTimeout(() => {
+                                sessionStorage.setItem('ipse_bio_prompt', 'false');
+                            }, 1000);
+                        }
                     }
                 }
-
-                setIsLoading(false);
-            } catch (err) {
-                console.error("🚨 Gatekeeper Intercept:", err);
-                router.replace('/login');
-            } finally {
-                setTimeout(() => { isVerifying.current = false; }, 1000);
             }
-        };
 
-        checkShield();
+            setIsLoading(false);
+        } catch (err) {
+            console.error("🚨 Gatekeeper Intercept:", err);
+            router.replace('/login');
+        } finally {
+            setTimeout(() => { isVerifying.current = false; }, 1000);
+        }
+    };
 
-        // 3. ECOUTEUR SYSTÈME : Si l'app revient du background
-        let listenerPromise: any = null;
+    // 🛡️ EFFECT 1: Initialisation et Listeners (UNE SEULE FOIS)
+    useEffect(() => {
+        checkShield(false);
+
+        let listener: any = null;
         if (Capacitor.isNativePlatform()) {
-            listenerPromise = App.addListener('appStateChange', ({ isActive }) => {
+            listener = App.addListener('appStateChange', ({ isActive }) => {
                 if (isActive) {
-                    hasUnlocked.current = false; // ⚡ ON REFERME LE COFFRE
-                    checkShield(true); // On force la demande d'empreinte
+                    const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
+                    if (!isPromptOpen) {
+                        console.log("📱 App Wake Up. Re-verrouillage.");
+                        sessionStorage.setItem('ipse_unlocked', 'false');
+                        checkShield(true);
+                    }
                 }
             });
         }
 
         return () => {
-            if (listenerPromise) {
-                listenerPromise.then((h: any) => h.remove());
-            }
+            if (listener) listener.then((h: any) => h.remove());
         };
-    }, [pathname]);
+    }, []);
+
+    // 🛡️ EFFECT 2: Check Session sur changement de page (SANS boucle biométrique)
+    useEffect(() => {
+        checkShield(false);
+    }, [pathname]); // ⚠️ pathname ici fait que Next re-lance l'effet à chaque page
 
     if (isLoading && pathname !== '/login') {
         return (
@@ -102,5 +132,5 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         );
     }
 
-    return <> {children}</>;
+    return <>{children}</>;
 }
