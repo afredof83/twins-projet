@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { getMistralEmbedding } from '@/lib/mistral';
 
 import prisma from '@/lib/prisma';
 
@@ -71,6 +72,7 @@ export async function updateIdentity(formData: FormData) {
     const tjm = tjmString ? parseInt(tjmString, 10) : null;
 
     try {
+        // 1. Mise à jour des champs standards
         await prisma.profile.update({
             where: { id: user.id },
             data: {
@@ -82,11 +84,32 @@ export async function updateIdentity(formData: FormData) {
             }
         });
 
+        // 2. ⚡ GÉNÉRATION DU VECTEUR MAÎTRE (Unified Embedding)
+        // On combine les infos clés pour une recherche vectorielle précise
+        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}€. Dispo: ${availability}`;
+
+        console.log(`[IDENTITÉ] Génération d'embedding pour ${user.id}...`);
+
+        const embedding = await getMistralEmbedding(identityString);
+
+        if (embedding) {
+            // Prisma ne supporte pas nativement le type 'vector', on passe en SQL brut
+            // On s'assure que l'ID est bien formaté pour PostgreSQL
+            await prisma.$executeRawUnsafe(
+                `UPDATE "Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
+                `[${embedding.join(',')}]`,
+                user.id
+            );
+            console.log(`✅ [IDENTITÉ] Vecteur Maître mis à jour.`);
+        } else {
+            console.error("[IDENTITÉ] Échec de génération d'embedding Mistral.");
+        }
+
         console.log(`[IDENTITÉ] Profil de ${user.id} sauvegardé.`);
         revalidatePath('/profile');
 
     } catch (error) {
-        console.error("[IDENTITÉ] Erreur BDD:", error);
+        console.error("[IDENTITÉ] Erreur BDD/IA:", error);
         throw new Error("Erreur lors de la sauvegarde.");
     }
 }

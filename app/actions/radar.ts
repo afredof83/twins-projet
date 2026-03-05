@@ -43,26 +43,28 @@ export async function forceHuntSync(formData?: FormData) {
             const userEmbedding = currentUserRaw[0]?.unifiedEmbedding;
 
             if (userEmbedding) {
-                console.log("✅ [RADAR] Matchmaking Vectoriel Cosinus sur Vecteur Maître...");
+                console.log("✅ [RADAR] Matchmaking Vectoriel Cosinus en cours...");
 
                 // ⚡ ANTIGRAVITY: Comparaison directe. Pas de JOIN. Zéro duplication.
-                others = await prisma.$queryRaw`
+                others = await prisma.$queryRawUnsafe(`
                   SELECT 
                     id, 
                     name, 
                     role, 
                     bio, 
-                    1 - ("unifiedEmbedding" <=> ${userEmbedding}::vector) as similarity
+                    1 - ("unifiedEmbedding" <=> $1::vector) as similarity
                   FROM "Profile"
-                  WHERE id::text != ${currentUserId}::text 
+                  WHERE id::text != $2 
                   AND "unifiedEmbedding" IS NOT NULL
-                  ORDER BY "unifiedEmbedding" <=> ${userEmbedding}::vector
+                  ORDER BY similarity DESC
                   LIMIT 5;
-                `;
+                `, userEmbedding, currentUserId);
             } else {
-                console.log("⚠️ [RADAR] Pas de Vecteur Maître, fallback classique...");
+                console.warn("⚠️ [RADAR] Aucun Vecteur Maître détecté pour l'utilisateur courant. Le scan sera limité.");
                 others = await prisma.profile.findMany({
-                    where: { NOT: { id: currentUserId } },
+                    where: {
+                        NOT: { id: currentUserId }
+                    },
                     take: 5
                 });
             }
