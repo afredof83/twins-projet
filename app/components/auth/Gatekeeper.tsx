@@ -102,5 +102,5 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         );
     }
 
-    return <>{children}</>;
+    return <> {children}</>;
 }
