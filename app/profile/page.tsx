@@ -8,6 +8,7 @@ import { updateIdentity } from "@/app/actions/profile";
 import { useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabaseBrowser";
 import { checkProfileExists } from "@/app/actions/auth-guard";
+import LogoutButton from "@/app/components/auth/LogoutButton";
 
 // Petit composant pour le bouton de soumission avec état de chargement
 function SubmitButton() {
@@ -142,6 +143,9 @@ export default function IdentityPage() {
 
                     <SubmitButton />
                 </form>
+
+                {/* Le bouton d'éjection à la fin */}
+                <LogoutButton />
 
             </div>
         </div>
