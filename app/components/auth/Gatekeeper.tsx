@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabaseBrowser';
 import { NativeBiometric } from 'capacitor-native-biometric';
@@ -12,6 +12,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
+    const isverifying = useRef(false); // ⚡ Verrou pour éviter les boucles
     const supabase = createClient();
 
     useEffect(() => {
@@ -24,6 +25,8 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         }
 
         const checkShield = async () => {
+            if (isverifying.current) return; // ⚡ Si déjà en train de checker, on stop
+
             // 1. Pages publiques + routes système : On laisse circuler
             if (
                 pathname === '/login' ||
@@ -37,6 +40,8 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
             }
 
             try {
+                isverifying.current = true; // 🔒 On verrouille
+
                 // 2. Vérification Session locale (Token)
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) throw new Error("No session");
@@ -72,6 +77,9 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
             } catch (err) {
                 console.error("🚨 Gatekeeper éjection immédiate.");
                 router.replace('/login');
+            } finally {
+                // 🔓 On ne déverrouille qu'après un petit délai
+                setTimeout(() => { isverifying.current = false; }, 2000);
             }
         };
 
