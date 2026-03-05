@@ -20,7 +20,6 @@ export async function GET() {
 
         const profile = await prisma.profile.findUnique({
             where: { id: user.id },
-            select: { id: true }
         });
 
         if (!profile) {
