@@ -4,6 +4,33 @@ import prisma from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
 
+// --- FONCTION UTILITAIRE PRIVÉE POUR VECTORISER ---
+// Transforme un texte en vecteur et l'injecte dans la table Memory
+async function vectorizeAndStoreMemory(memoryId: string, content: string) {
+    try {
+        console.log(`🧠 [VECTORISATION] Calcul de l'embedding pour la mémoire ${memoryId.slice(0, 8)}...`);
+        // 1. Demande du vecteur à Mistral (1024 dimensions)
+        const embeddingsResponse = await mistralClient.embeddings.create({
+            model: 'mistral-embed',
+            inputs: [content],
+        });
+
+        const embeddingVector = embeddingsResponse.data[0].embedding;
+
+        // 2. Injection SQL brute (obligatoire pour le type pgvector avec Prisma)
+        await prisma.$executeRaw`
+            UPDATE "Memory" 
+            SET embedding = ${embeddingVector}::vector 
+            WHERE id = ${memoryId}
+        `;
+        console.log(`✅ [VECTORISATION] Succès.`);
+    } catch (error) {
+        console.error(`❌ [VECTORISATION ERREUR] Impossible de vectoriser la mémoire:`, error);
+        // On ne crashe pas l'appli si la vectorisation échoue, la mémoire texte est quand même là
+    }
+}
+
+
 // 1. GET MEMORIES
 export async function getMemories(profileId: string) {
     try {
@@ -23,9 +50,15 @@ export async function getMemories(profileId: string) {
 export async function addMemory(data: { profileId: string, content: string, type?: string, source?: string }) {
     try {
         const { profileId, content, type = 'thought', source = 'manual' } = data;
+
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: { profileId, content, type, source }
         });
+
+        // 2. Vectorisation ⚡
+        await vectorizeAndStoreMemory(memory.id, content);
+
         revalidatePath('/memories');
         return { success: true, memory };
     } catch (error: any) {
@@ -50,10 +83,15 @@ export async function scrapeUrl(url: string, profileId: string) {
 
         const data = await response.json();
         const content = data?.results?.[0]?.rawContent || "Aucun contenu";
+        const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
 
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
-            data: { profileId, content: `[EXTRACTION ${url}] ${content.substring(0, 1000)}`, type: 'scraped', source: url }
+            data: { profileId, content: memoryContent, type: 'scraped', source: url }
         });
+
+        // 2. Vectorisation ⚡
+        await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
         return { success: true, content, memory };
@@ -71,15 +109,20 @@ export async function uploadMemory(formData: FormData) {
 
         const text = await file.text();
         const sanitizedText = text.replace(/\0/g, '');
+        const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
 
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: {
                 profileId,
-                content: `[FICHIER: ${file.name}]\n\n${sanitizedText}`,
+                content: memoryContent,
                 type: 'document',
                 source: file.name
             }
         });
+
+        // 2. Vectorisation ⚡
+        await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
         return { success: true, memory };
@@ -128,15 +171,15 @@ export async function uploadCortexMemoryContext(formData: FormData) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Non autorisé");
 
-        // ⚡ ANTIGRAVITY: On réceptionne uniquement du texte
         let content = formData.get('textContext') as string || '';
         const fileName = formData.get('fileName') as string || 'manual';
         const hasFile = formData.get('hasFile') === 'true';
 
-        content = content.replace(/\0/g, ''); // Fix Null Byte Postgres indispensable
+        content = content.replace(/\0/g, '');
 
         if (!content) throw new Error("Aucun contenu valide généré.");
 
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: {
                 profileId: user.id,
@@ -145,6 +188,9 @@ export async function uploadCortexMemoryContext(formData: FormData) {
                 source: fileName
             }
         });
+
+        // 2. Vectorisation ⚡
+        await vectorizeAndStoreMemory(memory.id, content);
 
         revalidatePath('/memories');
         revalidatePath('/cortex');
