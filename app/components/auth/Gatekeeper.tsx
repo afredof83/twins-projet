@@ -2,37 +2,32 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { createClient } from '@/lib/supabaseBrowser';
+import { createClient } from '@/lib/supabaseBrowser'; // Ton import exact
 import { NativeBiometric } from 'capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function Gatekeeper({ children }: { children: React.ReactNode }) {
+    const isVerifying = useRef(false); // Anti-boucle de vérification
+    const hasUnlocked = useRef(false); // ⚡ MÉMOIRE DU COFFRE-FORT
     const [isLoading, setIsLoading] = useState(true);
+
     const router = useRouter();
     const pathname = usePathname();
-    const isVerifying = useRef(false); // ⚡ Verrou pour éviter les boucles
     const supabase = createClient();
 
     useEffect(() => {
-        // 0. Circuit Breaker : Ne pas boucler sur les pages 404
-        const isNotFound = pathname === '/_not-found' || document.title.includes("404");
+        const checkShield = async (isWakeUp = false) => {
+            if (isVerifying.current) return;
 
-        if (isNotFound) {
-            setIsLoading(false);
-            return;
-        }
-
-        const checkShield = async () => {
-            if (isVerifying.current) return; // ⚡ Si déjà en train de checker, on stop
-
-            // 1. Pages publiques + routes système : On laisse circuler
+            // Pages publiques
             if (
                 pathname === '/login' ||
                 pathname === '/profile/new' ||
                 pathname === '/profile/unlock' ||
                 pathname === '/auth/callback' ||
+                pathname === '/_not-found' ||
                 pathname.startsWith('/api/')
             ) {
                 setIsLoading(false);
@@ -40,62 +35,61 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
             }
 
             try {
-                isVerifying.current = true; // 🔒 On verrouille
+                isVerifying.current = true;
 
-                // 2. Vérification Session locale (Token)
+                // 1. Check Session & BDD (Silencieux à chaque changement de page)
                 const { data: { session } } = await supabase.auth.getSession();
                 if (!session) throw new Error("No session");
 
-                // 3. VÉRIFICATION DE LA MATRICE (Prisma Check)
                 const response = await fetch('/api/auth/sync');
                 if (!response.ok) {
-                    // ⚡ ANTIGRAVITY : Si c'est un nouveau compte, on lui laisse 3 secondes
-                    // pour que la BDD se mette à jour avant de déclarer forfait.
-                    console.warn("Profil non trouvé, tentative de re-synchronisation...");
                     await new Promise(resolve => setTimeout(resolve, 3000));
-
-                    const retryResponse = await fetch('/api/auth/sync');
-                    if (!retryResponse.ok) {
+                    const retry = await fetch('/api/auth/sync');
+                    if (!retry.ok) {
                         await supabase.auth.signOut();
                         localStorage.clear();
-                        throw new Error("Profile truly not found after retry");
+                        throw new Error("Profile ghost");
                     }
                 }
 
-                // 4. BIOMÉTRIE (Touch ID / Face ID)
-                if (Capacitor.isNativePlatform()) {
+                // 2. BIOMÉTRIE (Seulement si pas encore déverrouillé, ou si retour de veille)
+                if (Capacitor.isNativePlatform() && (!hasUnlocked.current || isWakeUp)) {
                     const available = await NativeBiometric.isAvailable();
                     if (available.isAvailable) {
                         await NativeBiometric.verifyIdentity({
                             reason: "Accès à votre Agent Ipse",
                             title: "Sécurité Biométrique",
                         });
+                        hasUnlocked.current = true; // ⚡ ON MÉMORISE LE DÉVERROUILLAGE
                     }
                 }
 
                 setIsLoading(false);
             } catch (err) {
-                console.error("🚨 Gatekeeper éjection immédiate.");
+                console.error("🚨 Gatekeeper Intercept:", err);
                 router.replace('/login');
             } finally {
-                // 🔓 On ne déverrouille qu'après un petit délai
-                setTimeout(() => { isVerifying.current = false; }, 2000);
+                setTimeout(() => { isVerifying.current = false; }, 1000);
             }
         };
 
         checkShield();
 
-        // 1. On stocke la promesse du listener
-        const listenerPromise = App.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
-            if (isActive) {
-                console.log("🚀 App revient au premier plan. Re-vérification...");
-                checkShield();
-            }
-        });
+        // 3. ECOUTEUR SYSTÈME : Si l'app revient du background
+        let listenerPromise: any = null;
+        if (Capacitor.isNativePlatform()) {
+            listenerPromise = App.addListener('appStateChange', ({ isActive }) => {
+                if (isActive) {
+                    hasUnlocked.current = false; // ⚡ ON REFERME LE COFFRE
+                    checkShield(true); // On force la demande d'empreinte
+                }
+            });
+        }
 
-        // 2. ⚡ NETTOYAGE ANTIGRAVITY
         return () => {
-            listenerPromise.then(handle => handle.remove());
+            if (listenerPromise) {
+                listenerPromise.then((h: any) => h.remove());
+            }
         };
     }, [pathname]);
 
