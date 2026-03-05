@@ -12,7 +12,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
-    const isverifying = useRef(false); // ⚡ Verrou pour éviter les boucles
+    const isVerifying = useRef(false); // ⚡ Verrou pour éviter les boucles
     const supabase = createClient();
 
     useEffect(() => {
@@ -25,7 +25,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         }
 
         const checkShield = async () => {
-            if (isverifying.current) return; // ⚡ Si déjà en train de checker, on stop
+            if (isVerifying.current) return; // ⚡ Si déjà en train de checker, on stop
 
             // 1. Pages publiques + routes système : On laisse circuler
             if (
@@ -40,7 +40,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
             }
 
             try {
-                isverifying.current = true; // 🔒 On verrouille
+                isVerifying.current = true; // 🔒 On verrouille
 
                 // 2. Vérification Session locale (Token)
                 const { data: { session } } = await supabase.auth.getSession();
@@ -79,7 +79,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 router.replace('/login');
             } finally {
                 // 🔓 On ne déverrouille qu'après un petit délai
-                setTimeout(() => { isverifying.current = false; }, 2000);
+                setTimeout(() => { isVerifying.current = false; }, 2000);
             }
         };
 
