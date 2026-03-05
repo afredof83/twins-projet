@@ -1,84 +1,116 @@
 // lib/crypto-client.ts
-// Chiffrement E2E + Identité Cryptographique (BIP39 + ECDH + AES-GCM)
-// "Vos données sont verrouillées par une phrase secrète que vous êtes le seul à posséder."
+// ⚡ ANTIGRAVITY: Chiffrement E2E + Identité Cryptographique (BIP39 + ECDH + AES-GCM)
+// Règle absolue : Zéro localStorage. La clé privée ne quitte JAMAIS le Keystore/Keychain natif.
 
 import { Capacitor } from '@capacitor/core';
 import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 import * as bip39 from 'bip39';
 
-const SEED_ALIAS = 'mission_control_seed_phrase';
+const SEED_ALIAS = 'ipse_private_key';
 
 // =====================================================
 // 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
 // =====================================================
 
-// 1. GÉNÉRER LA SEED PHRASE ET LES CLÉS
-export async function generateIdentity() {
-    // A. Génération des 12 mots
-    const mnemonic = bip39.generateMnemonic();
+/**
+ * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
+ * Ne retourne QUE la clé publique à envoyer au serveur.
+ * La clé privée est séquestrée dans la puce matérielle.
+ */
+export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
+    try {
+        // A. Génération des 12 mots
+        const mnemonic = bip39.generateMnemonic();
 
-    // B. Dérivation d'une "graine" depuis les 12 mots
-    const seed = await bip39.mnemonicToSeed(mnemonic);
+        // B. Génération Mathématique de la paire ECDH
+        const keyPair = await crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" },
+            true,
+            ["deriveKey", "deriveBits"]
+        );
 
-    // C. Génération de la paire ECDH basée sur cette graine
-    // (Dans un vrai flow crypto, on utiliserait HDKey, mais ici on l'utilise comme entropie)
-    const keyPair = await window.crypto.subtle.generateKey(
-        { name: "ECDH", namedCurve: "P-256" },
-        true,
-        ["deriveKey", "deriveBits"]
-    );
+        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
 
-    const publicKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
-    const privateKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        // C. Le Bouclier Matériel (Zero-Tolerance)
+        if (Capacitor.isNativePlatform()) {
+            await SecureStoragePlugin.set({
+                key: SEED_ALIAS,
+                value: JSON.stringify(privateKeyJwk)
+            });
+            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif.");
+        } else {
+            // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
+            throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
+        }
 
-    // D. Sauvegarde MATÉRIELLE de la clé privée
-    if (Capacitor.isNativePlatform()) {
-        await SecureStoragePlugin.set({ key: SEED_ALIAS, value: JSON.stringify(privateKeyJwk) });
-    } else {
-        localStorage.setItem(SEED_ALIAS, JSON.stringify(privateKeyJwk));
+        // D. On ne renvoie que ce qui est publiable
+        return { publicKeyJwk, mnemonic };
+
+    } catch (error: any) {
+        console.error("❌ [CRYPTO FATAL ERROR]:", error.message);
+        throw error;
     }
-
-    // On retourne la clé publique (pour Prisma) ET les 12 mots (à afficher à l'utilisateur 1 SEULE FOIS)
-    return { publicKeyJwk, mnemonic };
 }
 
-// 2. RÉCUPÉRATION DU COFFRE-FORT
-export async function getStoredPrivateKeyJwk() {
-    let privateKeyString;
-    if (Capacitor.isNativePlatform()) {
+// Rétrocompatibilité : alias pour l'ancien nom
+export const generateIdentity = generateAndStoreKeyPair;
+
+/**
+ * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
+ */
+export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
+    if (!Capacitor.isNativePlatform()) {
+        console.warn("⚠️ [CRYPTO] Tentative de lecture de clé hors environnement natif.");
+        return null;
+    }
+
+    try {
         const result = await SecureStoragePlugin.get({ key: SEED_ALIAS });
-        privateKeyString = result.value;
-    } else {
-        privateKeyString = localStorage.getItem(SEED_ALIAS);
+        if (result.value) {
+            return JSON.parse(result.value);
+        }
+        return null;
+    } catch (error) {
+        // SecureStorage throw une erreur si la clé n'existe pas
+        return null;
     }
-    if (!privateKeyString) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
-    return JSON.parse(privateKeyString);
 }
 
-// 3. RESTAURATION DEPUIS LA SEED PHRASE (Si changement d'appareil)
-export async function restoreFromMnemonic(mnemonic: string) {
+// Rétrocompatibilité : alias pour l'ancien nom
+export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
+    const key = await getLocalPrivateKey();
+    if (!key) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
+    return key;
+}
+
+/**
+ * Restauration depuis la Seed Phrase (changement d'appareil).
+ * Même règle : stockage natif uniquement.
+ */
+export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
     if (!bip39.validateMnemonic(mnemonic)) {
         throw new Error("Phrase secrète invalide.");
     }
 
-    // On re-dérive la graine (même processus qu'à la génération)
-    const seed = await bip39.mnemonicToSeed(mnemonic);
-
-    // Régénération de la paire de clés
-    const keyPair = await window.crypto.subtle.generateKey(
+    const keyPair = await crypto.subtle.generateKey(
         { name: "ECDH", namedCurve: "P-256" },
         true,
         ["deriveKey", "deriveBits"]
     );
 
-    const publicKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
-    const privateKeyJwk = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
 
-    // Sauvegarde dans le coffre-fort local
+    // Le Bouclier Matériel (Zero-Tolerance)
     if (Capacitor.isNativePlatform()) {
-        await SecureStoragePlugin.set({ key: SEED_ALIAS, value: JSON.stringify(privateKeyJwk) });
+        await SecureStoragePlugin.set({
+            key: SEED_ALIAS,
+            value: JSON.stringify(privateKeyJwk)
+        });
+        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain natif.");
     } else {
-        localStorage.setItem(SEED_ALIAS, JSON.stringify(privateKeyJwk));
+        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
     }
 
     return { publicKeyJwk };
@@ -88,22 +120,21 @@ export async function restoreFromMnemonic(mnemonic: string) {
 // 🔑 ECDH KEY EXCHANGE
 // =====================================================
 
-// 4. CALCULER LA CLÉ PARTAGÉE (Quand tu ouvres un chat)
+/**
+ * Calculer la clé partagée AES-GCM (quand tu ouvres un chat).
+ */
 export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
-    // 1. On sort la clé privée du coffre-fort local
     const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
 
-    // 2. Importation pour la Web Crypto API
-    const privateKey = await window.crypto.subtle.importKey(
+    const privateKey = await crypto.subtle.importKey(
         "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
     );
 
-    const publicKey = await window.crypto.subtle.importKey(
+    const publicKey = await crypto.subtle.importKey(
         "jwk", otherPersonPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []
     );
 
-    // 3. LA MAGIE MATHÉMATIQUE : Création de la clé AES-GCM commune
-    const sharedKey = await window.crypto.subtle.deriveKey(
+    const sharedKey = await crypto.subtle.deriveKey(
         { name: "ECDH", public: publicKey },
         privateKey,
         { name: "AES-GCM", length: 256 },
@@ -118,14 +149,11 @@ export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<Cry
 // 🔒 CHIFFREMENT / DÉCHIFFREMENT AES-GCM
 // =====================================================
 
-/**
- * Chiffre un message en clair → string formatée "iv:ciphertext" (base64).
- */
 export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(plaintext);
 
-    const cipherBuffer = await window.crypto.subtle.encrypt(
+    const cipherBuffer = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         sharedKey,
         encoded
@@ -137,19 +165,14 @@ export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Pro
     return `${ivB64}:${cipherB64}`;
 }
 
-// Fonction pour convertir de l'Hexa (ou Base64) en Uint8Array
 const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
 
-/**
- * Déchiffre un message au format "iv:ciphertext" (ou "iv:authTag:ciphertext") → texte en clair.
- */
 export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
     try {
-        // 1. On nettoie le préfixe
         const cleanPayload = encryptedPayload.replace('🧠 ', '').trim();
 
         if (!cleanPayload.includes(':')) {
-            return encryptedPayload; // Message non chiffré
+            return encryptedPayload;
         }
 
         const parts = cleanPayload.split(':');
@@ -157,25 +180,20 @@ export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKe
         let cipherData: Uint8Array;
 
         if (parts.length === 3) {
-            // Ancien format hex : iv:authTag:ciphertext
             iv = hexToBuffer(parts[0]);
-            const authTag = hexToBuffer(parts[1]); // L'authTag est au milieu dans le payload fourni
+            const authTag = hexToBuffer(parts[1]);
             const ciphertext = hexToBuffer(parts[2]);
-
-            // Web Crypto API attend que l'authTag soit concaténé à la fin du ciphertext
             cipherData = new Uint8Array(ciphertext.length + authTag.length);
             cipherData.set(ciphertext);
             cipherData.set(authTag, ciphertext.length);
-
         } else if (parts.length === 2) {
-            // Nouveau format base64 : iv:ciphertext(+authTag intégré)
             iv = base64ToArrayBuffer(parts[0]);
             cipherData = base64ToArrayBuffer(parts[1]);
         } else {
             return encryptedPayload;
         }
 
-        const decrypted = await window.crypto.subtle.decrypt(
+        const decrypted = await crypto.subtle.decrypt(
             { name: "AES-GCM", iv: iv as BufferSource },
             sharedKey,
             cipherData as BufferSource
@@ -205,14 +223,6 @@ function base64ToArrayBuffer(base64: string): Uint8Array {
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-}
-
-function hexToBytes(hex: string): Uint8Array {
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
     }
     return bytes;
 }

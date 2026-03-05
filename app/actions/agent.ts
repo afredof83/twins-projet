@@ -60,8 +60,10 @@ export async function reflectAgent(profileId: string) {
         const profile = await prisma.profile.findUnique({ where: { id: profileId } });
         if (!profile) throw new Error("Profil introuvable");
 
+        // 1. Synthèse Cognitive (Texte)
         const prompt = `Tu es le Cortex de l'application Ipse. Ton rôle est de profiler cet utilisateur pour configurer son Agent B2B autonome.
-Fais une synthèse de ce profil en 3 phrases maximum.
+Fais une synthèse de ce profil en 3 phrases maximum. 
+Concentre-toi sur son expertise, sa séniorité et son objectif.
 Profil: ${JSON.stringify(profile.thematicProfile || {})}
 Bio: ${profile.bio || "Non renseignée"}`;
 
@@ -72,14 +74,29 @@ Bio: ${profile.bio || "Non renseignée"}`;
 
         const synthesis = response.choices?.[0]?.message.content as string;
 
+        // ⚡ ANTIGRAVITY: Vectorisation de l'identité unifiée
+        const embedResponse = await mistralClient.embeddings.create({
+            model: "mistral-embed", // Format 1024 dimensions
+            inputs: [synthesis]
+        });
+        const masterVector = embedResponse.data[0].embedding;
+
+        // 2. Sauvegarde des métadonnées classiques
         await prisma.profile.update({
             where: { id: profileId },
             data: { unifiedAnalysis: synthesis }
         });
 
+        // 3. Injection chirurgicale du Vecteur Maître (bypass Prisma limit sur les arrays de vecteurs)
+        await prisma.$executeRaw`
+            UPDATE "Profile"
+            SET "unifiedEmbedding" = ${masterVector}::vector
+            WHERE id = ${profileId}
+        `;
+
         return { success: true, synthesis };
     } catch (error: any) {
-        console.error("❌ [AGENT REFLECT] Error:", error.message);
+        console.error("❌ [AGENT REFLECT] Erreur:", error.message);
         return { success: false, error: error.message };
     }
 }

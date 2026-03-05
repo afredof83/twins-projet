@@ -35,8 +35,8 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
         const res = await acceptInvite(opportunity.id);
         if (res.success) {
             setIsAccepted(true);
-            // Redirection occurs immediately, but UI confirms to the user it worked immediately.
             router.push(`/chat/${otherProfile.id}`);
+            return; // Le composant sera démonté par la navigation, pas de setState après
         }
         setLoading(false);
     };

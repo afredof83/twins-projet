@@ -34,35 +34,40 @@ export async function forceHuntSync(formData?: FormData) {
 
         let others: any[] = [];
         try {
-            // Extraction sécurisée de l'embedding courant (qui se trouve dans CortexNote)
-            const currentUserRaw: any[] = await prisma.$queryRaw`SELECT embedding::text FROM "CortexNote" WHERE "profileId" = ${currentUserId} LIMIT 1`;
-            const userEmbedding = currentUserRaw[0]?.embedding;
+            // 1. Extraction du Vecteur Maître de l'utilisateur
+            const currentUserRaw: any[] = await prisma.$queryRaw`
+                SELECT "unifiedEmbedding"::text 
+                FROM "Profile" 
+                WHERE id = ${currentUserId}
+            `;
+            const userEmbedding = currentUserRaw[0]?.unifiedEmbedding;
 
             if (userEmbedding) {
-                console.log("✅ [RADAR] Lancement de la requête pgvector (Cosinus Distance)...");
+                console.log("✅ [RADAR] Matchmaking Vectoriel Cosinus sur Vecteur Maître...");
+
+                // ⚡ ANTIGRAVITY: Comparaison directe. Pas de JOIN. Zéro duplication.
                 others = await prisma.$queryRaw`
                   SELECT 
-                    p.id, 
-                    p.name, 
-                    p.role, 
-                    p.bio, 
-                    1 - (c.embedding <=> ${userEmbedding}::vector) as similarity
-                  FROM "Profile" p
-                  JOIN "CortexNote" c ON c."profileId" = p.id
-                  WHERE p.id::text != ${currentUserId} 
-                  AND c.embedding IS NOT NULL
-                  ORDER BY c.embedding <=> ${userEmbedding}::vector
+                    id, 
+                    name, 
+                    role, 
+                    bio, 
+                    1 - ("unifiedEmbedding" <=> ${userEmbedding}::vector) as similarity
+                  FROM "Profile"
+                  WHERE id::text != ${currentUserId}::text 
+                  AND "unifiedEmbedding" IS NOT NULL
+                  ORDER BY "unifiedEmbedding" <=> ${userEmbedding}::vector
                   LIMIT 5;
                 `;
             } else {
-                console.log("⚠️ [RADAR] L'utilisateur courant n'a pas d'embedding, fallback sur une recherche de base...");
+                console.log("⚠️ [RADAR] Pas de Vecteur Maître, fallback classique...");
                 others = await prisma.profile.findMany({
                     where: { NOT: { id: currentUserId } },
                     take: 5
                 });
             }
         } catch (error: any) {
-            console.error("⚠️ [RADAR] Erreur pgvector, fallback sur findMany :", error.message);
+            console.error("⚠️ [RADAR] Erreur pgvector, fallback :", error.message);
             others = await prisma.profile.findMany({
                 where: { NOT: { id: currentUserId } },
                 take: 5

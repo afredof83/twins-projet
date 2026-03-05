@@ -237,14 +237,15 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                             }
 
                             return (
-                                <SecureMessageBubble
-                                    key={msg.id}
-                                    id={msg.id}
-                                    encryptedPayload={msg.content}
-                                    sharedKey={sharedKey}
-                                    isSender={isMe}
-                                    onDecrypted={handleDecrypted}
-                                />
+                                <div key={msg.id} className={`transition-all duration-300 ${msg.id.startsWith('temp-') ? 'opacity-50 grayscale' : 'opacity-100'}`}>
+                                    <SecureMessageBubble
+                                        id={msg.id}
+                                        encryptedPayload={msg.content}
+                                        sharedKey={sharedKey}
+                                        isSender={isMe}
+                                        onDecrypted={handleDecrypted}
+                                    />
+                                </div>
                             );
                         })
                     )}

@@ -3,8 +3,6 @@
 import prisma from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
-// @ts-ignore
-import pdf from 'pdf-extraction';
 
 // 1. GET MEMORIES
 export async function getMemories(profileId: string) {
@@ -39,7 +37,6 @@ export async function addMemory(data: { profileId: string, content: string, type
 export async function scrapeUrl(url: string, profileId: string) {
     try {
         if (!url || !profileId) throw new Error("Missing data");
-        // Simulated Tavily or direct fetch based on old API
         const response = await fetch('https://api.tavily.com/extract', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -65,23 +62,14 @@ export async function scrapeUrl(url: string, profileId: string) {
     }
 }
 
-// 4. UPLOAD MEMORY FORMAT (Replacing upload API)
+// 4. UPLOAD MEMORY FORMAT (Text-only, PDF extraction done client-side)
 export async function uploadMemory(formData: FormData) {
     try {
         const file = formData.get('file') as File;
         const profileId = formData.get('profileId') as string;
         if (!file || !profileId) throw new Error("Fichier ou ID manquant");
 
-        // Validation du type et extraction
-        let text = '';
-        if (file.type === 'application/pdf') {
-            const buffer = Buffer.from(await file.arrayBuffer());
-            const pdfData = await pdf(buffer, { max: 0 });
-            text = pdfData.text;
-        } else {
-            text = await file.text();
-        }
-
+        const text = await file.text();
         const sanitizedText = text.replace(/\0/g, '');
 
         const memory = await prisma.memory.create({
@@ -105,7 +93,6 @@ export async function ingestKnowledge(profileId: string) {
     try {
         if (!profileId) throw new Error("Missing Profile ID");
 
-        // This simulates the old /api/cortex/ingest endpoint combining all memories
         const memories = await prisma.memory.findMany({ where: { profileId } });
         const combined = memories.map(m => m.content).join('\n');
 
@@ -127,7 +114,7 @@ export async function ingestKnowledge(profileId: string) {
     }
 }
 
-// 6. UPLOAD CORTEX MEMORY (with auth from cookies)
+// 6. UPLOAD CORTEX MEMORY (Serveur Allégé)
 export async function uploadCortexMemoryContext(formData: FormData) {
     try {
         const { cookies } = await import('next/headers');
@@ -141,32 +128,21 @@ export async function uploadCortexMemoryContext(formData: FormData) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Non autorisé");
 
-        const textContext = formData.get('textContext') as string || '';
-        const file = formData.get('file') as File | null;
+        // ⚡ ANTIGRAVITY: On réceptionne uniquement du texte
+        let content = formData.get('textContext') as string || '';
+        const fileName = formData.get('fileName') as string || 'manual';
+        const hasFile = formData.get('hasFile') === 'true';
 
-        let content = textContext;
-        if (file) {
-            let fileText = '';
-            if (file.type === 'application/pdf') {
-                const buffer = Buffer.from(await file.arrayBuffer());
-                const pdfData = await pdf(buffer, { max: 0 });
-                fileText = pdfData.text;
-            } else {
-                fileText = await file.text();
-            }
-            content += `\n[FICHIER: ${file.name}]\n\n${fileText}`;
-        }
+        content = content.replace(/\0/g, ''); // Fix Null Byte Postgres indispensable
 
-        content = content.replace(/\0/g, ''); // Fix Null Byte for PostgreSQL
-
-        if (!content) throw new Error("Aucun contenu fourni");
+        if (!content) throw new Error("Aucun contenu valide généré.");
 
         const memory = await prisma.memory.create({
             data: {
                 profileId: user.id,
                 content: content,
-                type: file ? 'document' : 'thought',
-                source: file ? file.name : 'manual'
+                type: hasFile ? 'document' : 'thought',
+                source: fileName
             }
         });
 
@@ -174,7 +150,7 @@ export async function uploadCortexMemoryContext(formData: FormData) {
         revalidatePath('/cortex');
         return { success: true, memory };
     } catch (error: any) {
+        console.error("❌ [INGESTION ERREUR]:", error.message);
         return { success: false, error: error.message };
     }
 }
-

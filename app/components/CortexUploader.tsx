@@ -71,36 +71,38 @@ export default function CortexUploader() {
     const handleSubmit = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
 
-        if (!textContext.trim() && !selectedFile) {
-            // Ne rien faire si tout est vide
-            return;
-        }
+        if (!textContext.trim() && !selectedFile) return;
 
         setUploadState('UPLOADING');
-        const formData = new FormData();
 
-        if (textContext.trim()) {
-            formData.append('textContext', textContext);
-        }
-
-        if (selectedFile) {
-            formData.append('file', selectedFile);
-        }
-
-        // Transition arbitraire pour l'UX : on passe d'upload à analyse.
-        // Puisque le back-end fait upload + api ai séquentiellement, on estime ici.
-        const analyzingTimeout = setTimeout(() => {
-            setUploadState((prev) => (prev === 'UPLOADING' ? 'ANALYZING' : prev));
-        }, 1500);
+        let finalExtractedText = textContext.trim();
+        let fileName = 'manual';
 
         try {
+            // ⚡ ANTIGRAVITY: Extraction locale avant l'envoi réseau !
+            if (selectedFile) {
+                fileName = selectedFile.name;
+                setUploadState('ANALYZING'); // On met à jour l'UI pendant l'extraction locale
+
+                if (selectedFile.type === 'application/pdf') {
+                    const { extractTextFromPdf } = await import('@/lib/pdf-client');
+                    const pdfText = await extractTextFromPdf(selectedFile);
+                    finalExtractedText += `\n[FICHIER: ${fileName}]\n\n${pdfText}`;
+                } else {
+                    const text = await selectedFile.text();
+                    finalExtractedText += `\n[FICHIER: ${fileName}]\n\n${text}`;
+                }
+            }
+
+            // On n'envoie PLUS le binaire (File), SEULEMENT le texte pur
+            const formData = new FormData();
+            formData.append('textContext', finalExtractedText);
+            formData.append('fileName', fileName);
+            formData.append('hasFile', selectedFile ? 'true' : 'false');
+
             const data = await uploadCortexMemoryContext(formData);
 
-            clearTimeout(analyzingTimeout);
-
-            if (!data.success) {
-                throw new Error(data.error || "Erreur lors de l'envoi");
-            }
+            if (!data.success) throw new Error(data.error || "Erreur lors de l'envoi");
 
             setUploadState('SUCCESS');
             router.refresh();
@@ -115,11 +117,8 @@ export default function CortexUploader() {
             }, 3000);
 
         } catch (err: any) {
-            clearTimeout(analyzingTimeout);
             setErrorMsg(err.message || 'Une erreur est survenue');
             setUploadState('ERROR');
-
-            // Revenir à l'état initial
             setTimeout(() => setUploadState('IDLE'), 4000);
         }
     };
