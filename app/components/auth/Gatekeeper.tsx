@@ -56,16 +56,17 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
         checkShield();
 
-        // ⚡ ANTIGRAVITY : On s'abonne aux événements de l'OS
-        const listener = App.addListener('appStateChange', ({ isActive }) => {
+        // 1. On stocke la promesse du listener
+        const listenerPromise = App.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
             if (isActive) {
                 console.log("🚀 App revient au premier plan. Re-vérification...");
                 checkShield();
             }
         });
 
+        // 2. ⚡ NETTOYAGE ANTIGRAVITY
         return () => {
-            listener.remove();
+            listenerPromise.then(handle => handle.remove());
         };
     }, [pathname]);
 
