@@ -29,6 +29,15 @@ export default async function RadarPage() {
   if (!user) return null; // Safe fallback
   const currentUserId = user.id;
 
+  // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
+  const profile = await prisma.profile.findUnique({ where: { id: currentUserId }, select: { id: true } });
+  if (!profile) {
+    console.log("⚠️ [AUTH] Session Fantôme détectée. Profil inexistant en BDD.");
+    await supabase.auth.signOut();
+    const { redirect } = await import('next/navigation');
+    redirect('/login');
+  }
+
   // Récupération des données
   const discoveries = await prisma.opportunity.findMany({
     where: {

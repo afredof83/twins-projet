@@ -25,6 +25,14 @@ export default async function SecureChatPage({ params }: { params: Promise<{ id:
 
     const currentUserId = user.id;
 
+    // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
+    const myProfile = await prisma.profile.findUnique({ where: { id: currentUserId }, select: { id: true } });
+    if (!myProfile) {
+        console.log("⚠️ [AUTH] Session Fantôme détectée sur /chat. Profil inexistant en BDD.");
+        await supabase.auth.signOut();
+        redirect('/login');
+    }
+
     // Récupérer l'historique de la conversation (50 derniers) — BRUT (chiffré)
     const messages = await prisma.message.findMany({
         where: {
