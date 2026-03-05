@@ -99,22 +99,40 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
     useEffect(() => {
         checkShield(false);
 
-        let listener: any = null;
+        // 3. ⚡ ECOUTEUR SYSTÈME AVEC DÉLAI DE GRÂCE DE 2 MINUTES
+        let listenerPromise: any = null;
         if (Capacitor.isNativePlatform()) {
-            listener = App.addListener('appStateChange', ({ isActive }) => {
-                if (isActive) {
-                    const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
+            listenerPromise = App.addListener('appStateChange', ({ isActive }) => {
+                const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
+
+                if (!isActive) {
+                    // 🔻 L'APP PASSE EN VEILLE : On enregistre l'heure exacte
                     if (!isPromptOpen) {
-                        console.log("📱 App Wake Up. Re-verrouillage.");
-                        sessionStorage.setItem('ipse_unlocked', 'false');
-                        checkShield(true);
+                        sessionStorage.setItem('ipse_bg_timestamp', Date.now().toString());
+                    }
+                } else {
+                    // 🔺 L'APP REVIENT AU PREMIER PLAN
+                    if (!isPromptOpen) {
+                        const bgTimeStr = sessionStorage.getItem('ipse_bg_timestamp');
+                        const timeElapsed = bgTimeStr ? Date.now() - parseInt(bgTimeStr) : 0;
+
+                        // 120000 millisecondes = 2 minutes
+                        if (timeElapsed > 120000 || !bgTimeStr) {
+                            console.log("📱 Inactivité prolongée (> 2min). Verrouillage du coffre.");
+                            sessionStorage.setItem('ipse_unlocked', 'false');
+                            checkShield(true);
+                        } else {
+                            console.log(`🔓 Retour rapide (${Math.round(timeElapsed / 1000)}s). Accès autorisé.`);
+                        }
                     }
                 }
             });
         }
 
         return () => {
-            if (listener) listener.then((h: any) => h.remove());
+            if (listenerPromise) {
+                listenerPromise.then((h: any) => h.remove());
+            }
         };
     }, []);
 
