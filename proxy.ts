@@ -38,7 +38,7 @@ export async function proxy(request: NextRequest) {
         // VÉRIFICATION N°2 : Lecture du User
         const { data: { user } } = await supabase.auth.getUser()
 
-        const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
+        const isProtectedRoute = request.nextUrl.pathname === '/' ||
             request.nextUrl.pathname.startsWith('/cortex');
 
         if (!user && isProtectedRoute) {
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
 
         if (user && request.nextUrl.pathname === '/login') {
             const url = request.nextUrl.clone()
-            url.pathname = '/dashboard'
+            url.pathname = '/'
             return NextResponse.redirect(url)
         }
 

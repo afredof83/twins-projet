@@ -20,12 +20,12 @@ export default function BottomNav() {
                 <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
 
                 {/* SCAN : Centre de Commande (Dashboard) */}
-                <Link href="/dashboard" className="relative group flex flex-col items-center">
-                    <div className={`p-4 rounded-full border-2 transition-all duration-500 ${pathname === '/dashboard'
+                <Link href="/" className="relative group flex flex-col items-center">
+                    <div className={`p-4 rounded-full border-2 transition-all duration-500 ${pathname === '/'
                         ? 'bg-orange-500/20 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]'
                         : 'bg-orange-500/5 border-orange-900/50 hover:border-orange-500'
                         }`}>
-                        <Radar className={`w-7 h-7 ${pathname === '/dashboard' ? 'text-orange-500' : 'text-orange-900 group-hover:text-orange-500'}`} />
+                        <Radar className={`w-7 h-7 ${pathname === '/' ? 'text-orange-500' : 'text-orange-900 group-hover:text-orange-500'}`} />
                     </div>
                     <span className="text-[9px] uppercase mt-1 font-black tracking-widest text-orange-900 group-hover:text-orange-500">Scan</span>
                 </Link>

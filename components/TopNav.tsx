@@ -33,8 +33,8 @@ export default function TopNav() {
                         </Link>
 
                         <Link
-                            href="/dashboard"
-                            className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${pathname.includes('/dashboard') ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}
+                            href="/"
+                            className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${pathname === '/' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}`}
                         >
                             <Radar size={18} className="mr-2 hidden sm:block" /> SCAN
                         </Link>

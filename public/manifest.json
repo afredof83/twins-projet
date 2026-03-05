@@ -2,7 +2,7 @@
     "name": "TWINS : Jumeau Numérique",
     "short_name": "Twins",
     "description": "Interface de contrôle du projet Twins",
-    "start_url": "/dashboard?profileId=afredof83",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#020617",
     "theme_color": "#020617",
