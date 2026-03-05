@@ -25,7 +25,13 @@ export default function LoginPage() {
 
     const { error: authError } = actionType === 'login'
       ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
+      : await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        }
+      });
 
     if (authError) {
       setError(authError.message); // Affichera exactement POURQUOI ça plante (ex: "Password should be at least 6 characters")

@@ -15,6 +15,14 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
     const supabase = createClient();
 
     useEffect(() => {
+        // 0. Circuit Breaker : Ne pas boucler sur les pages 404
+        const isNotFound = pathname === '/_not-found' || document.title.includes("404");
+
+        if (isNotFound) {
+            setIsLoading(false);
+            return;
+        }
+
         const checkShield = async () => {
             // 1. Pages publiques + routes système : On laisse circuler
             if (
@@ -22,7 +30,6 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 pathname === '/profile/new' ||
                 pathname === '/profile/unlock' ||
                 pathname === '/auth/callback' ||
-                pathname === '/_not-found' ||
                 pathname.startsWith('/api/')
             ) {
                 setIsLoading(false);
