@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateMemoryAndVector } from '@/app/actions/update-memory';
-import { deleteMemoryFragment } from '@/app/actions/delete-memory';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/memories
 import { createClient } from '@/lib/supabaseBrowser';
 
 type MemoryFragment = {
@@ -83,7 +83,17 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
     const handleSave = async (fragId: string) => {
         setIsSaving(true);
         try {
-            const result = await updateMemoryAndVector(fragId, editContent);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createSupabase();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const result = await fetch(getApiUrl('/api/memories'), {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({ memoryId: fragId, newContent: editContent })
+            }).then(r => r.json());
             if (result.success) {
                 setFragments(prev =>
                     prev.map(f => f.id === fragId ? { ...f, content: editContent } : f)
@@ -106,7 +116,17 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
 
         // ÉTAPE 2 : Action serveur en arrière-plan
         try {
-            await deleteMemoryFragment(id);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createSupabase();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl('/api/memories'), {
+                method: 'DELETE',
+                headers,
+                body: JSON.stringify({ memoryId: id })
+            });
             router.refresh();
         } catch (error) {
             // ÉTAPE 3 : Rollback — on retire de la blacklist pour réafficher

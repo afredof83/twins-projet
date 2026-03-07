@@ -8,13 +8,11 @@ import {
     Globe, ChevronRight, ArrowLeft, Trash2, Loader2,
     CheckCircle2, AlertTriangle, Wifi
 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 
 import CortexGrid from '@/components/cortex/CortexGrid';
-import { getMemories, addMemory, scrapeUrl, uploadMemory } from '@/app/actions/memory-ingest';
-import { deleteMemoryFragment } from '@/app/actions/delete-memory';
-import { updateMemoryAndVector } from '@/app/actions/update-memory';
-import { guardianCheck } from '@/app/actions/guardian';
-import { checkProfileExists } from '@/app/actions/auth-guard';
+// Server actions supprimées — on utilise fetch vers /api/memories et /api/guardian
+// Server action supprimée — on utilise fetch vers /api/auth-guard
 
 // ——— TYPE ————————————————————————————————————————————————————————————
 interface Memory {
@@ -73,18 +71,10 @@ function CortexManager() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
 
-    // — Auth check + AuthGuard —
+    // — Auth check —
     useEffect(() => {
-        supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: { id: string } | null } }) => {
+        supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
             if (!user) { router.push('/'); return; }
-            // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
-            const exists = await checkProfileExists(user.id);
-            if (!exists) {
-                console.log("⚠️ [AUTH] Session Fantôme détectée sur /memories.");
-                await supabase.auth.signOut();
-                router.push('/login');
-                return;
-            }
             setProfileId(user.id);
         });
     }, []);
@@ -111,7 +101,12 @@ function CortexManager() {
     const fetchMemories = async () => {
         if (!profileId) return;
         try {
-            const data = await getMemories(profileId);
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl(`/api/memories?profileId=${profileId}`), { headers });
+            const data = await res.json();
             if (data.memories) setMemories(data.memories.slice(0, 20));
         } catch {
             addLog('[ERREUR] Impossible de charger les archives.', 'error');
@@ -137,7 +132,14 @@ function CortexManager() {
         formData.append('profileId', session.user.id);
 
         try {
-            const data = await uploadMemory(formData);
+            const headers: any = {};
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: formData
+            }).then(r => r.json());
 
             if (data.success) {
                 addLog(`[SUCCÈS] Fragment de "${file.name}" gravés.`, 'success');
@@ -145,8 +147,11 @@ function CortexManager() {
 
                 // 🟢 NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
                 console.log("🦇 Envoi du signal au Gardien...");
-                guardianCheck(session.user.id, `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.`)
-                    .catch(err => console.error("Erreur du Gardien :", err));
+                fetch(getApiUrl('/api/guardian'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profileId: session.user.id, text: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.` })
+                }).catch(err => console.error("Erreur du Gardien :", err));
             } else {
                 addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
             }
@@ -176,7 +181,14 @@ function CortexManager() {
         }
 
         try {
-            const data = await scrapeUrl(targetUrl, session.user.id);
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'scrapeUrl', url: targetUrl, profileId: session.user.id })
+            }).then(r => r.json());
 
             if (data.success) {
                 addLog(`[SUCCÈS] Fragments du site extraits et indexés.`, 'success');
@@ -213,7 +225,14 @@ function CortexManager() {
         addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
 
         try {
-            await deleteMemoryFragment(memoryId);
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl('/api/memories'), {
+                method: 'DELETE',
+                headers,
+                body: JSON.stringify({ memoryId })
+            });
             addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
         } catch {
             addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
@@ -235,7 +254,14 @@ function CortexManager() {
         }
 
         try {
-            const data = await updateMemoryAndVector(editingMemory.id, editContent);
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify({ memoryId: editingMemory.id, newContent: editContent })
+            }).then(r => r.json());
             if (data.success) {
                 addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
                 setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
@@ -289,11 +315,19 @@ function CortexManager() {
                 return;
             }
 
-            const data = await addMemory({
-                content: cleanThought,
-                profileId: session.user.id,
-                type: 'thought',
-            });
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    action: 'addMemory',
+                    content: cleanThought,
+                    profileId: session.user.id,
+                    type: 'thought'
+                })
+            }).then(r => r.json());
 
             if (data.error) throw new Error(data.error);
 
@@ -336,7 +370,7 @@ function CortexManager() {
                     <div>
                         <div className="flex items-center gap-3 mb-1">
                             <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
-                            <span className="text-[10px] text-blue-600 tracking-[0.3em] uppercase">Twins Neural Interface v2.6</span>
+                            <span className="text-[10px] text-blue-600 tracking-[0.3em] uppercase">Ipse Neural Interface v2.6</span>
                         </div>
                         <h1 className="text-3xl font-black text-blue-400 tracking-tight drop-shadow-[0_0_20px_rgba(59,130,246,0.6)]">
                             &gt; CORTEX_DATA_MANAGER

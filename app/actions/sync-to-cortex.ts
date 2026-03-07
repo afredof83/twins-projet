@@ -1,4 +1,4 @@
-'use server';
+// 'use server' (static build fix)
 import { mistralClient } from '@/lib/mistral';
 import { createClient } from '@/lib/supabaseServer';
 import { revalidatePath } from 'next/cache';

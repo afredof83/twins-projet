@@ -1,6 +1,6 @@
 // inngest/functions.ts
 import { inngest } from "./client";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { mistralClient } from "@/lib/mistral";
 
 export const processRadarMatch = inngest.createFunction(

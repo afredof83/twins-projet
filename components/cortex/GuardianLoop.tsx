@@ -1,7 +1,8 @@
 ﻿'use client';
 import { useState } from 'react';
 import { ShieldCheck, UserCheck } from 'lucide-react';
-import { simulateNegotiation } from '@/app/actions/guardian';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/guardian
 
 export default function GuardianLoop({ profileId }: { profileId: string }) {
     const [activeNegotiations, setNegotiations] = useState<any[]>([]);
@@ -16,7 +17,18 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
         const fakeTargetId = "partner-profile-id-placeholder";
 
         try {
-            const data = await simulateNegotiation(profileId, fakeTargetId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/guardian'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'simulate', myProfileId: profileId, targetProfileId: fakeTargetId })
+            });
+            const data = await res.json();
 
             if (data.success) {
                 setNegotiations(prev => [data, ...prev]);

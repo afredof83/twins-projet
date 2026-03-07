@@ -1,39 +1,76 @@
-// app/cortex/page.tsx
-import { Trash2 } from 'lucide-react'
-import { deleteMemory, deleteNote, deleteCortexMemory } from '@/app/actions/cortex'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import CortexUploader from '@/app/components/CortexUploader'
+'use client';
 
-import prisma from '@/lib/prisma';
-export default async function CortexPage() {
-    const cookieStore = await cookies()
+import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+import CortexUploader from '@/app/components/CortexUploader';
+import CortexDeleteButton from '@/app/components/CortexDeleteButton';
+import { getApiUrl } from '@/lib/api-config';
+import { createClient } from '@/lib/supabaseBrowser';
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { getAll() { return cookieStore.getAll() } } }
-    )
+function CortexContent() {
+    const [profile, setProfile] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+    const fetchData = async () => {
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
 
-    const profile = await prisma.profile.findUnique({
-        where: { id: user.id },
-        include: {
-            files: { orderBy: { createdAt: 'desc' } },
-            memories: { orderBy: { createdAt: 'desc' } } // On ajoute la récupération des Memory créées lors de l'ingestion
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+
+            // ⚡ Le cache: 'no-store' empêche Next.js de renvoyer l'erreur 401 mémorisée
+            const res = await fetch(getApiUrl('/api/cortex'), {
+                headers,
+                cache: 'no-store'
+            }).then(r => r.json());
+
+            if (res.success) {
+                setProfile(res.profile);
+            } else {
+                console.error("Cortex API Error:", res.error);
+                if (res.error === 'Non autorisé') {
+                    setProfile(null); // Déclenche l'écran rouge
+                }
+            }
+        } catch (e) {
+            console.error("fetchData error", e);
+        } finally {
+            setLoading(false);
         }
-    })
+    };
 
-    if (!profile) redirect('/login')
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono">
+                <Loader2 className="w-8 h-8 animate-spin mr-2" />
+                LOADING CORTEX...
+            </div>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-red-500 font-mono">
+                <p className="mb-4">⚠️ Erreur d'accès aux données du Cortex.</p>
+                <button onClick={fetchData} className="px-4 py-2 border border-red-500 rounded hover:bg-red-500/20">
+                    Réessayer
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen text-white p-4 md:p-8">
             <div className="max-w-5xl mx-auto space-y-10">
-
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <Link href="/" className="text-purple-400 hover:text-purple-300 text-sm mb-2 inline-flex items-center gap-2">
@@ -46,14 +83,12 @@ export default async function CortexPage() {
                     </div>
                 </header>
 
-                {/* Zone de saisie stylisée */}
                 <div className="relative p-1 bg-gradient-to-b from-purple-500/20 to-transparent rounded-[2.5rem]">
                     <div className="bg-slate-950/80 rounded-[2.4rem] backdrop-blur-xl p-4">
-                        <CortexUploader />
+                        <CortexUploader onUploadComplete={fetchData} />
                     </div>
                 </div>
 
-                {/* Historique des fichiers */}
                 <div className="space-y-6">
                     <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
                         <span className="material-symbols-outlined text-[1rem]">database</span> Source Code
@@ -63,7 +98,7 @@ export default async function CortexPage() {
                         <p className="text-slate-600 text-sm italic">Aucun dataset injecté.</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {profile.files.map((file) => (
+                            {profile.files.map((file: any) => (
                                 <div key={file.id} className="relative group p-4 rounded-xl bg-purple-500/[0.02] border border-purple-500/10 backdrop-blur-md hover:border-purple-500/30 transition-all flex justify-between items-center">
                                     <div className="flex-1 truncate pr-4">
                                         <p className="text-sm font-medium text-slate-300 truncate">{file.fileName}</p>
@@ -71,20 +106,17 @@ export default async function CortexPage() {
                                             STATUS: {file.isAnalyzed ? 'SYNTHESIZED' : 'PROCESSING'}
                                         </p>
                                     </div>
-                                    <form action={deleteMemory}>
-                                        <input type="hidden" name="fileId" value={file.id} />
-                                        <input type="hidden" name="fileUrl" value={file.fileUrl} />
-                                        <button className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </form>
+                                    <CortexDeleteButton
+                                        action="deleteMemory"
+                                        payload={{ fileId: file.id, fileUrl: file.fileUrl }}
+                                        onDelete={fetchData}
+                                    />
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Grille de notes IA style "Microchips" */}
                 <div className="space-y-6">
                     <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
                         <span className="material-symbols-outlined text-[1rem]">history</span> Mémoires Extraites
@@ -96,7 +128,7 @@ export default async function CortexPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
-                            {profile.memories.map((memory) => (
+                            {profile.memories.map((memory: any) => (
                                 <div key={memory.id} className="group relative p-6 rounded-2xl bg-purple-500/[0.03] border border-purple-500/10 backdrop-blur-md hover:border-purple-500/30 transition-all">
                                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                                         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
@@ -107,12 +139,13 @@ export default async function CortexPage() {
                                             <span className="text-[10px] text-slate-600 font-mono">
                                                 {new Date(memory.createdAt).toLocaleDateString('fr-FR')} {new Date(memory.createdAt).toLocaleTimeString('fr-FR')}
                                             </span>
-                                            <form action={deleteCortexMemory}>
-                                                <input type="hidden" name="memoryId" value={memory.id} />
-                                                <button className="p-1.5 rounded-md hover:bg-red-500/20 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </form>
+                                            <CortexDeleteButton
+                                                action="deleteCortexMemory"
+                                                payload={{ memoryId: memory.id }}
+                                                onDelete={fetchData}
+                                                className="p-1.5 rounded-md hover:bg-red-500/20 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                iconSize={14}
+                                            />
                                         </div>
                                     </div>
                                     <div className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap pl-3 border-l-2 border-purple-500/20">
@@ -123,8 +156,20 @@ export default async function CortexPage() {
                         </div>
                     )}
                 </div>
-
             </div>
         </div>
-    )
+    );
+}
+
+export default function CortexPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono">
+                <Loader2 className="w-8 h-8 animate-spin mr-2" />
+                LOADING...
+            </div>
+        }>
+            <CortexContent />
+        </Suspense>
+    );
 }

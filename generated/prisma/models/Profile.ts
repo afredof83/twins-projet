@@ -27,10 +27,12 @@ export type AggregateProfile = {
 }
 
 export type ProfileAvgAggregateOutputType = {
+  age: number | null
   tjm: number | null
 }
 
 export type ProfileSumAggregateOutputType = {
+  age: number | null
   tjm: number | null
 }
 
@@ -38,6 +40,10 @@ export type ProfileMinAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  age: number | null
+  gender: string | null
+  city: string | null
+  country: string | null
   avatarUrl: string | null
   role: string | null
   customRole: string | null
@@ -56,6 +62,10 @@ export type ProfileMaxAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  age: number | null
+  gender: string | null
+  city: string | null
+  country: string | null
   avatarUrl: string | null
   role: string | null
   customRole: string | null
@@ -74,6 +84,10 @@ export type ProfileCountAggregateOutputType = {
   id: number
   email: number
   name: number
+  age: number
+  gender: number
+  city: number
+  country: number
   avatarUrl: number
   role: number
   customRole: number
@@ -92,10 +106,12 @@ export type ProfileCountAggregateOutputType = {
 
 
 export type ProfileAvgAggregateInputType = {
+  age?: true
   tjm?: true
 }
 
 export type ProfileSumAggregateInputType = {
+  age?: true
   tjm?: true
 }
 
@@ -103,6 +119,10 @@ export type ProfileMinAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  age?: true
+  gender?: true
+  city?: true
+  country?: true
   avatarUrl?: true
   role?: true
   customRole?: true
@@ -121,6 +141,10 @@ export type ProfileMaxAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  age?: true
+  gender?: true
+  city?: true
+  country?: true
   avatarUrl?: true
   role?: true
   customRole?: true
@@ -139,6 +163,10 @@ export type ProfileCountAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  age?: true
+  gender?: true
+  city?: true
+  country?: true
   avatarUrl?: true
   role?: true
   customRole?: true
@@ -245,6 +273,10 @@ export type ProfileGroupByOutputType = {
   id: string
   email: string
   name: string | null
+  age: number | null
+  gender: string | null
+  city: string | null
+  country: string | null
   avatarUrl: string | null
   role: string | null
   customRole: string | null
@@ -287,6 +319,10 @@ export type ProfileWhereInput = {
   id?: Prisma.StringFilter<"Profile"> | string
   email?: Prisma.StringFilter<"Profile"> | string
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableFilter<"Profile"> | number | null
+  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
+  city?: Prisma.StringNullableFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableFilter<"Profile"> | string | null
   avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
   role?: Prisma.StringNullableFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
@@ -319,6 +355,10 @@ export type ProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrderInput | Prisma.SortOrder
   customRole?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -354,6 +394,10 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ProfileWhereInput[]
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableFilter<"Profile"> | number | null
+  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
+  city?: Prisma.StringNullableFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableFilter<"Profile"> | string | null
   avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
   role?: Prisma.StringNullableFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
@@ -386,6 +430,10 @@ export type ProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrderInput | Prisma.SortOrder
   customRole?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -413,6 +461,10 @@ export type ProfileScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   email?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
+  gender?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  city?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   role?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
@@ -432,6 +484,10 @@ export type ProfileCreateInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -464,6 +520,10 @@ export type ProfileUncheckedCreateInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -496,6 +556,10 @@ export type ProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -528,6 +592,10 @@ export type ProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -560,6 +628,10 @@ export type ProfileCreateManyInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -579,6 +651,10 @@ export type ProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -598,6 +674,10 @@ export type ProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -617,6 +697,10 @@ export type ProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
   role?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
@@ -633,6 +717,7 @@ export type ProfileCountOrderByAggregateInput = {
 }
 
 export type ProfileAvgOrderByAggregateInput = {
+  age?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
 }
 
@@ -640,6 +725,10 @@ export type ProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
   role?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
@@ -658,6 +747,10 @@ export type ProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
   role?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
@@ -673,6 +766,7 @@ export type ProfileMinOrderByAggregateInput = {
 }
 
 export type ProfileSumOrderByAggregateInput = {
+  age?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
 }
 
@@ -887,6 +981,10 @@ export type ProfileCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -918,6 +1016,10 @@ export type ProfileUncheckedCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -965,6 +1067,10 @@ export type ProfileUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -996,6 +1102,10 @@ export type ProfileUncheckedUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1027,6 +1137,10 @@ export type ProfileCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1058,6 +1172,10 @@ export type ProfileUncheckedCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1105,6 +1223,10 @@ export type ProfileUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1136,6 +1258,10 @@ export type ProfileUncheckedUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1167,6 +1293,10 @@ export type ProfileCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1198,6 +1328,10 @@ export type ProfileUncheckedCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1245,6 +1379,10 @@ export type ProfileUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1276,6 +1414,10 @@ export type ProfileUncheckedUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1307,6 +1449,10 @@ export type ProfileCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1338,6 +1484,10 @@ export type ProfileUncheckedCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1374,6 +1524,10 @@ export type ProfileCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1405,6 +1559,10 @@ export type ProfileUncheckedCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1452,6 +1610,10 @@ export type ProfileUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1483,6 +1645,10 @@ export type ProfileUncheckedUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1525,6 +1691,10 @@ export type ProfileUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1556,6 +1726,10 @@ export type ProfileUncheckedUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1587,6 +1761,10 @@ export type ProfileCreateWithoutMessagesSentInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1618,6 +1796,10 @@ export type ProfileUncheckedCreateWithoutMessagesSentInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1654,6 +1836,10 @@ export type ProfileCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1685,6 +1871,10 @@ export type ProfileUncheckedCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1732,6 +1922,10 @@ export type ProfileUpdateWithoutMessagesSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1763,6 +1957,10 @@ export type ProfileUncheckedUpdateWithoutMessagesSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1805,6 +2003,10 @@ export type ProfileUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1836,6 +2038,10 @@ export type ProfileUncheckedUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1867,6 +2073,10 @@ export type ProfileCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1898,6 +2108,10 @@ export type ProfileUncheckedCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -1945,6 +2159,10 @@ export type ProfileUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1976,6 +2194,10 @@ export type ProfileUncheckedUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2007,6 +2229,10 @@ export type ProfileCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2038,6 +2264,10 @@ export type ProfileUncheckedCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2085,6 +2315,10 @@ export type ProfileUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2116,6 +2350,10 @@ export type ProfileUncheckedUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2147,6 +2385,10 @@ export type ProfileCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2178,6 +2420,10 @@ export type ProfileUncheckedCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2214,6 +2460,10 @@ export type ProfileCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2245,6 +2495,10 @@ export type ProfileUncheckedCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2292,6 +2546,10 @@ export type ProfileUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2323,6 +2581,10 @@ export type ProfileUncheckedUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2365,6 +2627,10 @@ export type ProfileUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2396,6 +2662,10 @@ export type ProfileUncheckedUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2427,6 +2697,10 @@ export type ProfileCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2458,6 +2732,10 @@ export type ProfileUncheckedCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2494,6 +2772,10 @@ export type ProfileCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2525,6 +2807,10 @@ export type ProfileUncheckedCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
   avatarUrl?: string | null
   role?: string | null
   customRole?: string | null
@@ -2572,6 +2858,10 @@ export type ProfileUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2603,6 +2893,10 @@ export type ProfileUncheckedUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2645,6 +2939,10 @@ export type ProfileUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2676,6 +2974,10 @@ export type ProfileUncheckedUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2846,6 +3148,10 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   id?: boolean
   email?: boolean
   name?: boolean
+  age?: boolean
+  gender?: boolean
+  city?: boolean
+  country?: boolean
   avatarUrl?: boolean
   role?: boolean
   customRole?: boolean
@@ -2879,6 +3185,10 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   name?: boolean
+  age?: boolean
+  gender?: boolean
+  city?: boolean
+  country?: boolean
   avatarUrl?: boolean
   role?: boolean
   customRole?: boolean
@@ -2898,6 +3208,10 @@ export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   name?: boolean
+  age?: boolean
+  gender?: boolean
+  city?: boolean
+  country?: boolean
   avatarUrl?: boolean
   role?: boolean
   customRole?: boolean
@@ -2917,6 +3231,10 @@ export type ProfileSelectScalar = {
   id?: boolean
   email?: boolean
   name?: boolean
+  age?: boolean
+  gender?: boolean
+  city?: boolean
+  country?: boolean
   avatarUrl?: boolean
   role?: boolean
   customRole?: boolean
@@ -2932,7 +3250,7 @@ export type ProfileSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "avatarUrl" | "role" | "customRole" | "tjm" | "availability" | "bio" | "profession" | "thematicProfile" | "unifiedAnalysis" | "fcmToken" | "publicKey" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "age" | "gender" | "city" | "country" | "avatarUrl" | "role" | "customRole" | "tjm" | "availability" | "bio" | "profession" | "thematicProfile" | "unifiedAnalysis" | "fcmToken" | "publicKey" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   memories?: boolean | Prisma.Profile$memoriesArgs<ExtArgs>
   notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
@@ -2973,6 +3291,10 @@ export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     id: string
     email: string
     name: string | null
+    age: number | null
+    gender: string | null
+    city: string | null
+    country: string | null
     avatarUrl: string | null
     role: string | null
     customRole: string | null
@@ -3425,6 +3747,10 @@ export interface ProfileFieldRefs {
   readonly id: Prisma.FieldRef<"Profile", 'String'>
   readonly email: Prisma.FieldRef<"Profile", 'String'>
   readonly name: Prisma.FieldRef<"Profile", 'String'>
+  readonly age: Prisma.FieldRef<"Profile", 'Int'>
+  readonly gender: Prisma.FieldRef<"Profile", 'String'>
+  readonly city: Prisma.FieldRef<"Profile", 'String'>
+  readonly country: Prisma.FieldRef<"Profile", 'String'>
   readonly avatarUrl: Prisma.FieldRef<"Profile", 'String'>
   readonly role: Prisma.FieldRef<"Profile", 'String'>
   readonly customRole: Prisma.FieldRef<"Profile", 'String'>

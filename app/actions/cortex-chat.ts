@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { adminMessaging } from '@/lib/firebase-admin';
 import { encryptMessage, decryptMessage } from '@/lib/crypto';
@@ -77,7 +77,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
                 data: {
                     type: "CORTEX_INTERVENTION",
                     connectionId: connectionId,
-                    url: `/chat/${savedMessage.receiverId}` // Deep linking
+                    url: `/chat?id=${savedMessage.receiverId}` // Deep linking
                 },
                 tokens: tokens,
             };

@@ -20,7 +20,7 @@ export default function TopNav() {
                     {/* LOGO TACTIQUE */}
                     <div className="flex-shrink-0 flex items-center">
                         <Shield className="text-blue-500 mr-2" size={24} />
-                        <span className="font-bold text-white tracking-widest">TWINS</span>
+                        <span className="font-bold text-white tracking-widest">IPSE</span>
                     </div>
 
                     {/* LIENS DE NAVIGATION CLASSIQUES */}

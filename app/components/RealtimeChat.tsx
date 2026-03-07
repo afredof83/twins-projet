@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useOptimistic, useRef } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { sendMessage, getOlderMessages } from '@/app/actions/chat';
+// Server actions supprimées — on utilise fetch vers /api/chat
 import { deriveSharedKey, encryptLocal, decryptLocal } from '@/lib/crypto-client';
 import { Send, AlertCircle, Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
 import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
 
@@ -95,7 +96,15 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     const previousScrollHeight = container?.scrollHeight || 0;
 
                     try {
-                        const older = await getOlderMessages(receiverId, oldestMessage.id);
+                        const { createClient } = await import('@/lib/supabaseBrowser');
+                        const supabaseClient = createClient();
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const headers: any = { 'Content-Type': 'application/json' };
+                        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                        const res = await fetch(getApiUrl(`/api/chat?receiverId=${receiverId}&cursorId=${oldestMessage.id}`), { headers });
+                        const data = await res.json();
+                        const older = data.messages || [];
 
                         if (older.length < 50) setHasMore(false);
 
@@ -167,13 +176,24 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
         // CHIFFREMENT CÔTÉ CLIENT puis envoi au serveur aveugle
         try {
+            let payload = content;
             if (sharedKey) {
-                const encrypted = await encryptLocal(content, sharedKey);
-                formData.set('content', encrypted);
+                payload = await encryptLocal(content, sharedKey);
             }
 
-            const result = await sendMessage(formData);
-            if (!result?.success) throw new Error("Refus du serveur");
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createClient();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/chat'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ content: payload, receiverId })
+            });
+            const result = await res.json();
+            if (!result?.success) throw new Error(result?.error || "Refus du serveur");
 
         } catch (error) {
             console.error("Échec de transmission:", error);

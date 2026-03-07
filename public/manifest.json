@@ -1,7 +1,7 @@
 {
-    "name": "TWINS : Jumeau Numérique",
-    "short_name": "Twins",
-    "description": "Interface de contrôle du projet Twins",
+    "name": "IPSE : Agent Tactique",
+    "short_name": "Ipse",
+    "description": "Interface de contrôle de l'Agent Ipse",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#020617",

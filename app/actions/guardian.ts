@@ -1,27 +1,47 @@
-'use server';
+// 'use server' (static build fix)
 
 import { mistralClient } from '@/lib/mistral';
 
 export async function guardianCheck(profileId: string, text: string) {
     try {
-        if (!text) return { success: true, isSafe: true };
+        // NIVEAU 1 : Filtrage algorithmique gratuit
+        if (!text || text.length < 5) return { success: true, isSafe: true, intervention: false };
 
-        const prompt = `Tu es le Gardien de sécurité. Analyse ce texte. Contient-il des menaces graves, du spam violent ou des requêtes illégales ? 
-Répond uniquement par "SAFE" ou "DANGER".
-Texte: "${text}"`;
+        // NIVEAU 2 : Triage avec Mistral Small (Faible coût, haute vitesse)
+        const triagePrompt = `Ce texte est-il critique ou dangereux (menaces, spam violent, illégal) ? Réponds strictement par OUI ou NON. Texte: "${text}"`;
 
-        const response = await mistralClient.chat.complete({
+        const triageResponse = await mistralClient.chat.complete({
             model: "mistral-small-latest",
-            messages: [{ role: "user", content: prompt }]
+            messages: [{ role: "user", content: triagePrompt }]
         });
 
-        const decision = response.choices?.[0]?.message.content as string;
-        const isSafe = !decision.includes("DANGER");
+        const triageContent = triageResponse.choices?.[0]?.message.content;
+        const triageDecision = typeof triageContent === 'string' ? triageContent : "";
+        const isCritical = triageDecision.includes("OUI") || triageDecision.includes("oui");
 
-        return { success: true, isSafe };
+        // Arrêt prématuré : économie d'API
+        if (!isCritical) return { success: true, isSafe: true, intervention: false };
+
+        // NIVEAU 3 : Analyse profonde avec Mistral Large UNIQUEMENT si critique
+        const deepAuditResponse = await mistralClient.chat.complete({
+            model: "mistral-large-latest",
+            messages: [
+                { role: "system", content: "Tu es le Gardien de sécurité Ipse. Analyse avancée de menace pour ce texte. Rédige un bref rapport sur le risque." },
+                { role: "user", content: text }
+            ]
+        });
+
+        return {
+            success: true,
+            isSafe: false,
+            intervention: true,
+            report: deepAuditResponse.choices?.[0]?.message.content
+        };
+
     } catch (error: any) {
         // En cas de doute ou d'erreur, on laisse passer pour pas bloquer
-        return { success: true, isSafe: true };
+        console.error("Guardian Cascade Error:", error);
+        return { success: true, isSafe: true, intervention: false };
     }
 }
 

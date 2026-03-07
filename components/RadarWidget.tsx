@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
-import { getGlobalRadarNews } from '@/app/actions/radar';
-import { addMemory } from '@/app/actions/memory-ingest';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/radar et /api/memories
 
 export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
@@ -13,7 +13,14 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
     const fetchNews = async () => {
         setLoading(true);
         try {
-            const data = await getGlobalRadarNews();
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/radar?action=news'), { headers });
+            const data = await res.json();
             if (data.success && data.news) setNews(data.news);
         } catch (e) {
             console.error("Erreur Radar", e);
@@ -28,10 +35,21 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
 
         setSaving(item.link);
         try {
-            await addMemory({
-                profileId,
-                content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
-                type: 'news'
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    action: 'addMemory',
+                    profileId,
+                    content: `[VEILLE] ${item.title} (${item.source}) - ${item.link}`,
+                    type: 'news'
+                })
             });
             alert("News mémorisée !");
         } catch (error) {

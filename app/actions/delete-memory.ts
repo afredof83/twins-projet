@@ -1,4 +1,4 @@
-'use server';
+// 'use server' (static build fix)
 import { createClient } from '@/lib/supabaseServer';
 import { trackAgentActivity } from './missions';
 import { revalidatePath } from 'next/cache';

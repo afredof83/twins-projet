@@ -1,4 +1,4 @@
-'use server';
+// 'use server' (static build fix)
 
 import { mistralClient } from '@/lib/mistral';
 

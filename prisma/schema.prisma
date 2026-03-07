@@ -13,6 +13,10 @@ model Profile {
   id        String  @id // DOIT être le UUID généré par auth.users de Supabase
   email     String  @unique
   name      String?
+  age       Int?
+  gender    String?
+  city      String?
+  country   String?
   avatarUrl String?
 
   // Champs d'Identité

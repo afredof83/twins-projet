@@ -1,21 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import { acceptConnection } from '@/app/actions/connection';
+// Server action supprimée — on utilise fetch vers /api/connection
 import { Check, Loader2, CheckCircle2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 
-export default function AcceptConnectionButton({ connectionId }: { connectionId: string }) {
+export default function AcceptConnectionButton({ connectionId, onAccept }: { connectionId: string, onAccept?: () => void }) {
     const [isAccepting, setIsAccepting] = useState(false);
     const [isAccepted, setIsAccepted] = useState(false);
 
     const handleAccept = async () => {
         setIsAccepting(true);
-        const formData = new FormData();
-        formData.append('connectionId', connectionId);
-        await acceptConnection(formData);
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+        await fetch(getApiUrl('/api/connection'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'accept', connectionId })
+        });
 
         setIsAccepting(false);
         setIsAccepted(true);
+        if (onAccept) onAccept();
     };
 
     if (isAccepted) {

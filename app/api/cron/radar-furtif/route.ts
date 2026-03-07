@@ -1,8 +1,10 @@
+export const dynamic = 'force-static';
 import { NextResponse } from "next/server";
 import { inngest } from "@/inngest/client";
-import prisma from "@/lib/prisma";
+import { prisma } from '@/lib/prisma';
 
 export async function GET(req: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         // 1. Authentification du Cron (Vercel sécurise la route via un header secret)
         if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {

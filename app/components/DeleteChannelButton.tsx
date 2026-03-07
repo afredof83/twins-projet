@@ -1,7 +1,8 @@
 'use client';
 
 import { Trash2 } from 'lucide-react';
-import { deleteChannel } from '@/app/actions/chat';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/chat
 import { useRouter } from 'next/navigation';
 
 export default function DeleteChannelButton({ connectionId }: { connectionId: string }) {
@@ -11,18 +12,35 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
         e.stopPropagation();
         if (!confirm("Voulez-vous supprimer ce canal sécurisé ?")) return;
 
-        // 1. Appel au serveur blindé
-        const result = await deleteChannel(connectionId);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-        // 2. Traitement du cas "Fantôme" (User A a déjà supprimé)
-        if (!result.success) {
-            alert("Action impossible : " + result.error); // Idéalement, utilisez un Toast UI ici
-            router.push('/'); // On téléporte User B hors de ce chat fantôme
-            return;
+            // 1. Appel au serveur blindé via API REST
+            const res = await fetch(getApiUrl('/api/chat'), {
+                method: 'DELETE',
+                headers,
+                body: JSON.stringify({ connectionId })
+            });
+            const result = await res.json();
+
+            // 2. Traitement du cas "Fantôme" (User A a déjà supprimé)
+            if (!result.success) {
+                alert("Action impossible : " + result.error);
+                router.push('/');
+                return;
+            }
+
+            // 3. Traitement du Succès normal
+            router.push('/');
+        } catch (error) {
+            console.error("Erreur suppression canal:", error);
+            alert("Erreur réseau lors de la suppression.");
+            router.push('/');
         }
-
-        // 3. Traitement du Succès normal
-        router.push('/'); // On le ramène au menu principal ou au Radar
     };
 
     return (

@@ -1,34 +1,64 @@
+export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import prisma from '@/lib/prisma';
+import { getPrismaForUser } from '@/lib/prisma'; // ⚡ Import NOMMÉ et SÉCURISÉ
 
 export async function GET() {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const cookieStore = await cookies();
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            { cookies: { getAll() { return cookieStore.getAll() } } }
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        try {
+                            cookiesToSet.forEach(({ name, value, options }) =>
+                                cookieStore.set(name, value, options)
+                            )
+                        } catch {
+                            // The `setAll` method was called from a Server Component.
+                            // This can be ignored if you have middleware refreshing
+                            // user sessions.
+                        }
+                    },
+                }
+            }
         );
 
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        // 1. Vérification absolue de l'identité
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (authError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        if (!user) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        const profile = await prisma.profile.findUnique({
+        // 2. Instanciation du client blindé RLS
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // 3. Synchronisation du profil (grâce à la nouvelle politique INSERT)
+        const profile = await prismaRLS.profile.upsert({
             where: { id: user.id },
+            update: {
+                email: user.email!,
+                // Mets à jour d'autres champs si nécessaire
+            },
+            create: {
+                id: user.id,
+                email: user.email!,
+                // Assigne les champs par défaut
+            }
         });
 
-        if (!profile) {
-            return NextResponse.json({ error: "Ghost" }, { status: 404 });
-        }
+        return NextResponse.json({ success: true, profile });
 
-        return NextResponse.json({ active: true });
     } catch (error) {
-        console.error("Critical Sync Error:", error);
-        return NextResponse.json({ error: "Server Error" }, { status: 500 });
+        console.error("Erreur de synchronisation Auth:", error);
+        return NextResponse.json({ error: "Erreur serveur critique" }, { status: 500 });
     }
 }

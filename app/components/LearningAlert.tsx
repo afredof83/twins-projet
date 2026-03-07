@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { BrainCircuit } from "lucide-react";
-import { updateIdentity } from "../actions/cortex";
 import { useCortexGaps } from "@/app/hooks/useCortexGaps";
+import { getApiUrl } from "@/lib/api-config";
 
 export default function LearningAlert() {
     const { gaps, isLoading, mutate } = useCortexGaps();
@@ -19,17 +19,38 @@ export default function LearningAlert() {
 
         setIsSubmitting(true);
 
-        const result = await updateIdentity(answer, gaps.field);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-        if (result?.success) {
-            setSuccess(true);
-            // On dit à SWR de rafraîchir la donnée (re-fetch pour voir s'il y a un autre gap)
-            mutate();
-            setTimeout(() => setSuccess(false), 3000); // Disparaît après 3s
-        } else {
-            console.error("Erreur lors de la mise à jour");
+            const response = await fetch(getApiUrl('/api/cortex'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    action: 'updateIdentity',
+                    answer: answer,
+                    field: gaps.field
+                })
+            });
+
+            const result = await response.json();
+
+            if (result?.success) {
+                setSuccess(true);
+                // On dit à SWR de rafraîchir la donnée (re-fetch pour voir s'il y a un autre gap)
+                mutate();
+                setTimeout(() => setSuccess(false), 3000); // Disparaît après 3s
+            } else {
+                console.error("Erreur lors de la mise à jour:", result?.error);
+            }
+        } catch (err) {
+            console.error("Erreur critique:", err);
+        } finally {
+            setIsSubmitting(false);
         }
-        setIsSubmitting(false);
     };
 
     return (

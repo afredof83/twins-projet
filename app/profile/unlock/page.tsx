@@ -1,172 +1,79 @@
 ﻿'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { base64ToArray, verifyPassword } from '@/lib/crypto/zk-encryption';
-import { keyManager } from '@/lib/crypto/key-manager';
-import { getProfile } from '@/app/actions/profile';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { performBiometricVaultUnlock } from '@/lib/biometrics';
+import { useKeyStore } from '@/store/keyStore';
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
-function UnlockContent() {
+export default function UnlockPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const urlId = searchParams.get('id');
-
-    const [step, setStep] = useState<'ID_INPUT' | 'PASSWORD_INPUT'>(urlId ? 'PASSWORD_INPUT' : 'ID_INPUT');
-    const [manualId, setManualId] = useState('');
-    const [password, setPassword] = useState('');
+    const setMasterKey = useKeyStore((state) => state.setMasterKey);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [profileData, setProfileData] = useState<any>(null);
 
-    // The active profile ID (either from URL or manual input)
-    const activeId = urlId || manualId;
-
-    useEffect(() => {
-        if (activeId) {
-            getProfile(activeId)
-                .then((res: any) => {
-                    if (!res.success) throw new Error(res.error || 'Profil introuvable');
-                    setProfileData(res.profile);
-                })
-                .catch((err: any) => setError(err.message));
-        }
-    }, [activeId]);
-
-    const handleIdSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-
-        if (!manualId.trim()) {
-            setError('Veuillez entrer un ID de profil');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const res = await getProfile(manualId);
-            if (!res.success) throw new Error(res.error || 'Profil introuvable');
-            setProfileData(res.profile);
-            setStep('PASSWORD_INPUT');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePasswordSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUnlock = async () => {
         setLoading(true);
         setError('');
 
         try {
-            if (!profileData) throw new Error("Profil non chargé");
+            // 1. Déclenchement du scan natif
+            const isVerified = await performBiometricVaultUnlock();
 
-            const salt = base64ToArray(profileData.saltBase64);
-            // const isValid = verifyPassword(password, salt, profileData.passwordHash);
-            console.log("⚠️ BYPASS ACTIVÉ : Connexion forcée");
-            const isValid = true;
+            if (isVerified) {
+                // 2. Récupération de la clé depuis l'enclave sécurisée (Hardware)
+                const { value: encryptedKey } = await SecureStoragePlugin.get({ key: 'master_key_secret' });
 
-            if (!isValid) throw new Error("Mot de passe incorrect");
-
-            // Initialiser la session sécurisée en mémoire
-            await keyManager.initializeSession(profileData.id, password, salt);
-
-            // Save to localStorage for future quick access
-            localStorage.setItem('twins_last_id', profileData.id);
-            localStorage.setItem('twins_last_name', profileData.name);
-
-            router.push('/');
+                if (encryptedKey) {
+                    // 3. Injection dans la RAM pour SQLite (Phase 2 & 4)
+                    setMasterKey(encryptedKey);
+                    router.push('/cortex');
+                } else {
+                    setError("Clé de coffre-fort introuvable sur cet appareil.");
+                }
+            } else {
+                setError("Accès refusé. Identité non reconnue.");
+            }
         } catch (err: any) {
-            setError(err.message);
+            setError(err.message || "Erreur technique lors du déverrouillage.");
         } finally {
             setLoading(false);
         }
     };
-
-    // Step 1: ID Input
-    if (step === 'ID_INPUT') {
-        return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
-                    <h1 className="text-2xl font-bold text-white mb-2 text-center">Connexion Manuelle</h1>
-                    <p className="text-purple-300 text-sm text-center mb-6">Entrez votre ID de profil</p>
-
-                    {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4">{error}</div>}
-
-                    <form onSubmit={handleIdSubmit} className="space-y-4">
-                        <input
-                            type="text"
-                            value={manualId}
-                            onChange={(e) => setManualId(e.target.value)}
-                            className="w-full bg-black/20 border border-purple-500/30 rounded p-3 text-white font-mono text-sm"
-                            placeholder="clxxx..."
-                            autoFocus
-                        />
-                        <button
-                            disabled={loading}
-                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition"
-                        >
-                            {loading ? 'Vérification...' : 'Continuer'}
-                        </button>
-                    </form>
-                </div>
-            </div>
-        );
-    }
-
-    // Step 2: Password Input
-    if (!profileData) {
-        return <div className="text-white text-center mt-20">Chargement du profil...</div>;
-    }
 
     return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20">
-                <h1 className="text-2xl font-bold text-white mb-2 text-center">Déverrouiller {profileData.name}</h1>
-                <p className="text-purple-300 text-xs text-center mb-6 font-mono">ID: {profileData.id.slice(0, 12)}...</p>
+            <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20 text-center">
+                <div className="w-20 h-20 bg-blue-600/20 rounded-full mx-auto mb-6 flex items-center justify-center border border-blue-500/30">
+                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
 
-                {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4">{error}</div>}
+                <h1 className="text-2xl font-bold text-white mb-2">Bunker Verrouillé</h1>
+                <p className="text-blue-200 text-sm mb-8">Authentification biométrique requise pour dévouer votre clé de chiffrement.</p>
 
-                <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-black/20 border border-purple-500/30 rounded p-3 text-white"
-                        placeholder="Mot de passe maître"
-                        autoFocus
-                    />
-                    <button
-                        disabled={loading}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded transition"
-                    >
-                        {loading ? 'Déchiffrement...' : 'Accéder au Jumeau'}
-                    </button>
+                {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-6 text-sm">{error}</div>}
 
-                    {!urlId && (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setStep('ID_INPUT');
-                                setPassword('');
-                                setError('');
-                            }}
-                            className="w-full text-purple-300 hover:text-white text-sm transition"
-                        >
-                            â† Retour
-                        </button>
+                <button
+                    onClick={handleUnlock}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                    {loading ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    ) : (
+                        <>
+                            <span className="animate-pulse">🔓</span>
+                            Déverrouiller par Biométrie
+                        </>
                     )}
-                </form>
+                </button>
+
+                <div className="mt-8 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                    Hardware Protected Storage
+                </div>
             </div>
         </div>
-    );
-}
-
-export default function UnlockPage() {
-    return (
-        <Suspense fallback={<div>Chargement...</div>}>
-            <UnlockContent />
-        </Suspense>
     );
 }

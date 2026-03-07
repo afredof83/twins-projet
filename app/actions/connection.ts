@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
 import { processRadarMatch } from "../../../inngest/functions";

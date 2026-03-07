@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function saveFcmToken(profileId: string, token: string) {
     try {

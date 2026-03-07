@@ -1,7 +1,9 @@
+export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     // 🛡️ Sécurité : Vérifie que l'appel vient bien de Vercel Cron
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

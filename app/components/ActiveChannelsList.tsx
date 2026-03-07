@@ -56,7 +56,7 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
                         </div>
                         <div className="flex items-center gap-2">
                             <DeleteChannelButton connectionId={channel.id} />
-                            <Link href={`/chat/${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
+                            <Link href={`/chat?id=${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
                                 <ArrowRight className="w-4 h-4" />
                             </Link>
                         </div>

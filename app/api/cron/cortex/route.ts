@@ -1,10 +1,12 @@
+export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { sendCortexAlert } from '@/lib/pushSender';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { decryptMessage } from '@/lib/crypto';
 
 export async function GET(req: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     // 1. SÉCURITÉ : Vérification Vercel Cron
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

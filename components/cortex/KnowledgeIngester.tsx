@@ -1,8 +1,8 @@
 ﻿'use client';
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
-import { scrapeUrl } from '@/app/actions/memory-ingest';
-import { deleteMemoryFragment } from '@/app/actions/delete-memory';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/memories
 
 export default function KnowledgeIngester({ profileId, memories = [], onRefresh }: { profileId: string, memories?: any[], onRefresh?: () => void }) {
     const [url, setUrl] = useState('');
@@ -14,7 +14,18 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
         setStatus('loading');
 
         try {
-            const data = await scrapeUrl(url, profileId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'scrapeUrl', url, profileId })
+            });
+            const data = await res.json();
 
             if (data.success) {
                 setStatus('success');
@@ -32,7 +43,17 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
     const handleDelete = async (id: string) => {
         if (!confirm('Supprimer ce souvenir ?')) return;
         try {
-            const data = await deleteMemoryFragment(id);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'DELETE',
+                headers,
+                body: JSON.stringify({ memoryId: id })
+            }).then(r => r.json());
             if (data.success) {
                 if (onRefresh) onRefresh();
             }

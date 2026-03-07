@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
@@ -45,7 +45,7 @@ export async function forceHuntSync(formData?: FormData) {
             if (userEmbedding) {
                 console.log("✅ [RADAR] Matchmaking Vectoriel Cosinus en cours...");
 
-                // ⚡ ANTIGRAVITY: Comparaison directe. Pas de JOIN. Zéro duplication.
+                // Récupérer les profils avec une similarité cosinus > 0.65
                 others = await prisma.$queryRawUnsafe(`
                   SELECT 
                     id, 
@@ -56,6 +56,7 @@ export async function forceHuntSync(formData?: FormData) {
                   FROM "Profile"
                   WHERE id::text != $2 
                   AND "unifiedEmbedding" IS NOT NULL
+                  AND 1 - ("unifiedEmbedding" <=> $1::vector) > 0.65 -- LE FILTRE MATHÉMATIQUE STRICT
                   ORDER BY similarity DESC
                   LIMIT 5;
                 `, userEmbedding, currentUserId);
@@ -116,8 +117,17 @@ export async function forceHuntSync(formData?: FormData) {
                 responseFormat: { type: 'json_object' }
             });
 
-            const content = res.choices?.[0]?.message.content;
-            const result = JSON.parse(typeof content === 'string' ? content : '{}');
+            const rawContent = res.choices?.[0]?.message.content;
+            let result: any = {};
+            try {
+                const cleanedContent = typeof rawContent === 'string'
+                    ? rawContent.replace(/```json/gi, '').replace(/```/g, '').trim()
+                    : '{}';
+                result = JSON.parse(cleanedContent);
+            } catch (e: any) {
+                console.error("❌ [RADAR] Parsing JSON Mistral échoué. Contenu brut :");
+                console.error(rawContent);
+            }
             const summaryText = result.summary || "Compatibilité stratégique détectée par le Cortex.";
 
             if (result.score && result.score > 60) {

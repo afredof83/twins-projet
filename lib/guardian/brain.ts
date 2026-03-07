@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-// Récupère le contexte vital du Twin (Derniers souvenirs, Radar)
+// Récupère le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
 async function getContext(profileId: string) {
     const { data: memories } = await supabase
         .from('Memory')
@@ -33,7 +33,7 @@ export async function guardianSelfReflection(profileId: string) {
     const myContext = await getContext(profileId);
     const externalSignals = await getRadarSignals();
 
-    // 2. Chercher des matchs avec d'autres clones (via Intentions)
+    // 2. Chercher des matchs avec d'autres Agents (via Intentions)
     // Note: 'containedBy' est spécifique Postgres, Supabase supporte 'cs' (contains) ou 'ov' (overlap) pour les tableaux
     // Ici on fait simple : on récupère tout ce qui est public et pas à nous, et on filtrera/triera
     const { data: potentialMatches } = await supabase
@@ -49,10 +49,10 @@ export async function guardianSelfReflection(profileId: string) {
         model: "mistral-large-latest",
         messages: [{
             role: "system",
-            content: "Tu es le Gardien de Frédéric (Projet Twins/FisherMade). TA MISSION : Être proactif. Ne réponds pas à une question. ANALYSE sa situation actuelle et les opportunités externes. Si tu trouves un match avec un autre clone (Match Intention), c'est une priorité absolue : propose une prise de contact. Sinon, pose une question stratégique pour avancer sur ses objectifs (Brevets, Business)."
+            content: "Tu es le Gardien de Frédéric (Projet Ipse/FisherMade). TA MISSION : Être proactif. Ne réponds pas à une question. ANALYSE sa situation actuelle et les opportunités externes. Si tu trouves un match avec un autre Agent (Match Intention), c'est une priorité absolue : propose une prise de contact. Sinon, pose une question stratégique pour avancer sur ses objectifs (Brevets, Business)."
         }, {
             role: "user",
-            content: `CONTEXTE INTERNE (Souvenirs récents) : \n${myContext.recentMemories}\n\nOPPORTUNITÉS EXTERNES (Intentions d'autres Clones) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller Frédéric, ou une proposition de mise en relation si pertinent.`
+            content: `CONTEXTE INTERNE (Souvenirs récents) : \n${myContext.recentMemories}\n\nOPPORTUNITÉS EXTERNES (Intentions d'autres Agents) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller Frédéric, ou une proposition de mise en relation si pertinent.`
         }]
     });
 

@@ -9,7 +9,8 @@ import {
     Music, Video, Activity, Globe, Lock
 } from 'lucide-react';
 import { createClient } from '@/lib/supabaseBrowser';
-import { checkProfileExists } from '@/app/actions/auth-guard';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/auth-guard
 
 // --- CONFIGURATION DES MODULES ---
 const MODULES = [
@@ -63,19 +64,7 @@ export default function NeuralLinkPage() {
     const [sources, setSources] = useState<any[]>([]);
     const [simulating, setSimulating] = useState<string | null>(null);
 
-    // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
-    useEffect(() => {
-        const supabase = createClient();
-        supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
-            if (!user) { router.push('/login'); return; }
-            const exists = await checkProfileExists(user.id);
-            if (!exists) {
-                console.log("⚠️ [AUTH] Session Fantôme détectée sur /connections.");
-                await supabase.auth.signOut();
-                router.push('/login');
-            }
-        });
-    }, []);
+
 
     // Simulation de connexion
     const handleConnect = (platformId: string) => {

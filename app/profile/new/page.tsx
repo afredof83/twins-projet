@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateMnemonic } from 'bip39';
+import { getApiUrl } from '@/lib/api-config';
 import {
     generateSalt,
     hashPassword,
@@ -15,7 +16,7 @@ import {
     encryptObject,
     arrayToBase64,
 } from '@/lib/crypto/zk-encryption';
-import { createProfile } from '@/app/actions/profile';
+// Server action supprimée — on utilise fetch vers /api/profile
 
 export default function NewProfilePage() {
     const router = useRouter();
@@ -87,11 +88,20 @@ export default function NewProfilePage() {
                 masterKey
             );
 
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
             // ===== SEND ONLY REQUIRED DATA TO SERVER =====
             // Les champs ZK ne sont plus stockés en base selon le nouveau schéma
-            const response = await createProfile({
-                name: formData.name,
+            const r = await fetch(getApiUrl('/api/profile'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'create', name: formData.name })
             });
+            const response = await r.json();
 
             if (!response.success) {
                 throw new Error(response.error || 'Échec de la création du profil');
@@ -232,7 +242,7 @@ export default function NewProfilePage() {
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Ex: Mon Jumeau Personnel"
+                            placeholder="Ex: Mon Agent Personnel"
                             required
                         />
                     </div>

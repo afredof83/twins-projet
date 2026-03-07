@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { askIpseAdvice } from '@/app/actions/ipse-advisor';
+// Server action supprimée — on utilise fetch vers /api/ipse-advisor
 import { Brain, Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 
 export function TacticalEarpiece({
     getDecryptedContext
@@ -30,7 +31,17 @@ export function TacticalEarpiece({
             .map(m => `${m.isMe ? 'MOI' : 'CIBLE'}: ${m.clearText}`)
             .join('\n');
 
-        const res = await askIpseAdvice(context);
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+        const res = await fetch(getApiUrl('/api/ipse-advisor'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ decryptedContext: context })
+        }).then(r => r.json());
         if (res.success && res.advice) {
             setAdvice(res.advice);
         } else {

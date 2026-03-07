@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 /**
  * ⚡ ANTIGRAVITY: AuthGuard côté client.

@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { performAudit, sendChatInvite, updateOppStatus, getOpportunity } from '@/app/actions/opportunities';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
 
-export default function OpportunityPage() {
-    const params = useParams();
+function OpportunityContent() {
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const oppId = params.id as string;
+    const oppId = searchParams.get('id');
 
     const [opp, setOpp] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -17,13 +18,24 @@ export default function OpportunityPage() {
     const [inviteTitle, setInviteTitle] = useState('');
 
     useEffect(() => {
-        // Dans une vraie app, tu ferais un fetch pour récupérer l'opp depuis le serveur.
-        // Puisque nous avons les Server Actions, on pourrait ajouter un getOpportunity(id) dans opportunities.ts
-        // Pour l'instant, on simule le chargement pour brancher l'UI
+        if (!oppId) {
+            setLoading(false);
+            return;
+        }
         const fetchOpp = async () => {
-            const res = await getOpportunity(oppId);
-            if (res.success && res.opportunity) {
-                setOpp(res.opportunity);
+            try {
+                const { createClient } = await import('@/lib/supabaseBrowser');
+                const supabase = createClient();
+                const { data: { session } } = await supabase.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const res = await fetch(getApiUrl(`/api/opportunities?id=${oppId}`), { headers }).then(r => r.json());
+                if (res.success && res.opportunity) {
+                    setOpp(res.opportunity);
+                }
+            } catch (e) {
+                console.error("fetchOpp error", e);
             }
             setLoading(false);
         };
@@ -31,34 +43,89 @@ export default function OpportunityPage() {
     }, [oppId]);
 
     const handleAudit = async () => {
+        if (!oppId) return;
         setActionLoading(true);
-        const updated = await performAudit(oppId);
-        setOpp(updated);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'audit', oppId })
+            }).then(r => r.json());
+
+            if (res.success) {
+                setOpp(res.opportunity); // API returns updated op
+            }
+        } catch (e) { console.error(e) }
         setActionLoading(false);
     };
 
     const handleCancel = async () => {
+        if (!oppId) return;
         setActionLoading(true);
-        await updateOppStatus(oppId, 'CANCELLED');
-        router.push('/cortex');
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'CANCELLED' })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
     };
 
     const handleBlock = async () => {
+        if (!oppId) return;
         if (!confirm("Voulez-vous bloquer cet agent définitivement ?")) return;
         setActionLoading(true);
-        await updateOppStatus(oppId, 'BLOCKED');
-        router.push('/cortex');
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'BLOCKED' })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
     };
 
     const handleInvite = async () => {
+        if (!oppId) return;
         if (!inviteTitle.trim()) return alert("Veuillez saisir un titre");
         setActionLoading(true);
-        await sendChatInvite(oppId, inviteTitle);
-        router.push('/cortex'); // Rediriger vers le dashboard après envoi
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'sendInvite', oppId, customTitle: inviteTitle })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
     };
 
     if (loading) return <div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
-    if (!opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
+    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
 
     // Vue Initiale : Résumé + Match %
     if (opp.status === "DETECTED") {
@@ -166,5 +233,13 @@ export default function OpportunityPage() {
                 Retour au Radar
             </Link>
         </div>
+    );
+}
+
+export default function OpportunityPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>}>
+            <OpportunityContent />
+        </Suspense>
     );
 }

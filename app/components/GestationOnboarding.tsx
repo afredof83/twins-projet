@@ -1,7 +1,8 @@
 'use client';
 import { useState, useRef } from 'react';
-import { extractTextFromUpload, extractProfileData, confirmProfileIngestion } from '@/app/actions/auto-ingest-profile';
+// Server actions supprimées — on utilise fetch vers /api/auto-ingest
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 
 export default function GestationOnboarding({ userId }: { userId: string }) {
     const [isProcessing, setIsProcessing] = useState(false);
@@ -19,11 +20,27 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
             const formData = new FormData();
             formData.append('file', file);
 
-            const uploadData = await extractTextFromUpload(formData);
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = {};
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const uploadData = await fetch(getApiUrl('/api/auto-ingest'), {
+                method: 'POST',
+                headers,
+                body: formData
+            }).then(r => r.json());
             if (!uploadData.success) throw new Error("Échec lecture PDF");
 
-            // Étape B : On envoie le texte extrait à Mistral pour profilage
-            const extractRes = await extractProfileData(uploadData.extractedText || "Contenu du CV...");
+            const headersJson: any = { 'Content-Type': 'application/json' };
+            if (session) headersJson['Authorization'] = `Bearer ${session.access_token}`;
+
+            const extractRes = await fetch(getApiUrl('/api/auto-ingest'), {
+                method: 'POST',
+                headers: headersJson,
+                body: JSON.stringify({ action: 'extractProfileData', rawData: uploadData.extractedText || 'Contenu du CV...' })
+            }).then(r => r.json());
             if (extractRes.success) {
                 setExtractedMatrix(extractRes.data);
             }
@@ -37,7 +54,17 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
     // 2. Validation Finale
     const handleConfirm = async () => {
         setIsProcessing(true);
-        const res = await confirmProfileIngestion(userId, extractedMatrix);
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+        const res = await fetch(getApiUrl('/api/auto-ingest'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'confirmIngestion', userId, validatedData: extractedMatrix })
+        }).then(r => r.json());
         if (res.success) {
             alert("Matrice injectée avec succès.");
             window.location.href = '/'; // Redirection vers le Radar
@@ -47,7 +74,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
 
     return (
         <div className="max-w-2xl mx-auto p-8 bg-zinc-950 border border-zinc-800 rounded-2xl">
-            <h2 className="text-2xl font-bold text-white mb-6">Initialisation du Jumeau Numérique</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">Initialisation de l'Agent Ipse</h2>
 
             {!extractedMatrix ? (
                 <div

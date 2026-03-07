@@ -1,11 +1,11 @@
-ï»¿'use server'
+'use server'
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { getMistralEmbedding } from '@/lib/mistral';
 
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function getProfile(id: string) {
     try {
@@ -30,7 +30,7 @@ export async function createProfile(data: { name: string }) {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return { success: false, error: 'Utilisateur non authentifiÃ©' };
+            return { success: false, error: 'Utilisateur non authentifié' };
         }
 
         const profile = await prisma.profile.upsert({
@@ -60,9 +60,9 @@ export async function updateIdentity(formData: FormData) {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
 
-    // Extraction sÃ©curisÃ©e des donnÃ©es
+    // Extraction sécurisée des données
     const role = formData.get('role') as string;
     const customRole = formData.get('customRole') as string;
     const tjmString = formData.get('tjm') as string;
@@ -72,7 +72,7 @@ export async function updateIdentity(formData: FormData) {
     const tjm = tjmString ? parseInt(tjmString, 10) : null;
 
     try {
-        // 1. Mise Ã  jour des champs standards
+        // 1. Mise à jour des champs standards
         await prisma.profile.update({
             where: { id: user.id },
             data: {
@@ -84,32 +84,32 @@ export async function updateIdentity(formData: FormData) {
             }
         });
 
-        // 2. âš¡ GÃ‰NÃ‰RATION DU VECTEUR MAÃŽTRE (Unified Embedding)
-        // On combine les infos clÃ©s pour une recherche vectorielle prÃ©cise
-        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}â‚¬. Dispo: ${availability}`;
+        // 2. ? GÉNÉRATION DU VECTEUR MAÎTRE (Unified Embedding)
+        // On combine les infos clés pour une recherche vectorielle précise
+        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}€. Dispo: ${availability}`;
 
-        console.log(`[IDENTITÃ‰] GÃ©nÃ©ration d'embedding pour ${user.id}...`);
+        console.log(`[IDENTITÉ] Génération d'embedding pour ${user.id}...`);
 
         const embedding = await getMistralEmbedding(identityString);
 
         if (embedding) {
             // Prisma ne supporte pas nativement le type 'vector', on passe en SQL brut
-            // On s'assure que l'ID est bien formatÃ© pour PostgreSQL
+            // On s'assure que l'ID est bien formaté pour PostgreSQL
             await prisma.$executeRawUnsafe(
                 `UPDATE "Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
                 `[${embedding.join(',')}]`,
                 user.id
             );
-            console.log(`âœ… [IDENTITÃ‰] Vecteur MaÃ®tre mis Ã  jour.`);
+            console.log(`? [IDENTITÉ] Vecteur Maître mis à jour.`);
         } else {
-            console.error("[IDENTITÃ‰] Ã‰chec de gÃ©nÃ©ration d'embedding Mistral.");
+            console.error("[IDENTITÉ] Échec de génération d'embedding Mistral.");
         }
 
-        console.log(`[IDENTITÃ‰] Profil de ${user.id} sauvegardÃ©.`);
+        console.log(`[IDENTITÉ] Profil de ${user.id} sauvegardé.`);
         revalidatePath('/profile');
 
     } catch (error) {
-        console.error("[IDENTITÃ‰] Erreur BDD/IA:", error);
+        console.error("[IDENTITÉ] Erreur BDD/IA:", error);
         throw new Error("Erreur lors de la sauvegarde.");
     }
 }

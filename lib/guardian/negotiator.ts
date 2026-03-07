@@ -8,7 +8,7 @@ export async function processDeepNegotiation(negotiationId: string) {
     const { data: neg, error: negError } = await supabase.from('Negotiation').select('*').eq('id', negotiationId).single();
     if (negError || !neg) return null;
 
-    // 2. DEEP SCAN : On extrait les mémoires des deux clones
+    // 2. DEEP SCAN : On extrait les mémoires des deux Agents
     const { data: myMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.initiatorId).limit(20);
     const { data: targetMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.receiverId).limit(20);
 

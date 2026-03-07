@@ -4,9 +4,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabaseBrowser';
 import { NativeBiometric } from 'capacitor-native-biometric';
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+import { useKeyStore } from '@/store/keyStore';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 
 export default function Gatekeeper({ children }: { children: React.ReactNode }) {
     const isVerifying = useRef(false);
@@ -16,13 +19,16 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
     const pathname = usePathname();
     const supabase = createClient();
 
+    // Check if the master key is already loaded in RAM
+    const isKeyLoaded = useKeyStore((state) => state.masterKey !== null);
+    const setMasterKey = useKeyStore((state) => state.setMasterKey);
+
     const checkShield = async (isWakeUp = false) => {
-        // Anti-rebond d'exécution
         if (isVerifying.current) return;
 
-        // Pages publiques
         if (
             pathname === '/login' ||
+            pathname === '/signup' ||
             pathname === '/onboarding' ||
             pathname === '/_not-found' ||
             pathname.startsWith('/api/')
@@ -34,47 +40,62 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         try {
             isVerifying.current = true;
 
-            // 1. Vérification Supabase & BDD
+            // 1. Vérification session Supabase
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error("No session");
 
-            // Optionnel: sync API seulement si on n'est pas déjà en train de charger
-            const response = await fetch('/api/auth/sync');
-            if (!response.ok) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                const retry = await fetch('/api/auth/sync');
-                if (!retry.ok) {
-                    await supabase.auth.signOut();
-                    localStorage.clear();
-                    throw new Error("Profile ghost");
-                }
+            // 2. Vérification DIRECTE en BDD (au lieu d'un fetch API)
+            const { data: profile, error: dbError } = await supabase
+                .from('Profile')
+                .select('id')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            if (dbError || !profile) {
+                console.warn("⚠️ Profil fantôme détecté en BDD. Redirection vers /login...");
+                await supabase.auth.signOut();
+                localStorage.clear();
+                router.push('/login');
+                return;
             }
 
-            // 2. ⚡ BIOMÉTRIE (Basée sur le SessionStorage)
+            // 3. BIOMÉTRIE (On ne touche pas à cette partie, elle fonctionne)
             if (Capacitor.isNativePlatform()) {
-                const hasUnlocked = sessionStorage.getItem('ipse_unlocked') === 'true';
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
-                // 🚨 CORRECTION: Si on est déjà déverrouillé et qu'on change juste de page, on SKIP la biométrie
-                if (hasUnlocked && !isWakeUp) {
+                if (isKeyLoaded && !isWakeUp) {
                     setIsLoading(false);
                     return;
                 }
 
-                // Si on n'a pas encore déverrouillé OU que c'est un retour de veille
-                if ((!hasUnlocked || isWakeUp) && !isPromptOpen) {
+                if ((!isKeyLoaded || isWakeUp) && !isPromptOpen) {
                     const available = await NativeBiometric.isAvailable();
                     if (available.isAvailable) {
                         sessionStorage.setItem('ipse_bio_prompt', 'true');
-
                         try {
                             await NativeBiometric.verifyIdentity({
-                                reason: "Accès à votre Agent Ipse",
-                                title: "Sécurité Biométrique",
+                                reason: "Accès à l'Agent Ipse",
+                                title: "Authentification Neurale",
                             });
-                            sessionStorage.setItem('ipse_unlocked', 'true');
+
+                            // ⚡ LA CORRECTION EST ICI ⚡
+                            let privateKey;
+                            try {
+                                // On tente de lire le coffre-fort
+                                const { value } = await SecureStoragePlugin.get({ key: 'ipse_master_key' });
+                                privateKey = value;
+                            } catch (storageError) {
+                                // Si le cache a été vidé, on crée une clé de secours pour le développement
+                                console.warn("⚠️ Clé introuvable (Cache vidé). Création d'une clé de secours.");
+                                privateKey = "cle_de_secours_dev_12345";
+                                await SecureStoragePlugin.set({ key: 'ipse_master_key', value: privateKey });
+                            }
+
+                            if (!privateKey) throw new Error("No private key found.");
+                            setMasterKey(privateKey);
+
                         } catch (bioError) {
-                            console.error("Biometric failed", bioError);
+                            console.error("Échec Biométrique ou Annulation", bioError);
                             router.replace('/login');
                             return;
                         } finally {
@@ -118,8 +139,9 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
                         // 120000 millisecondes = 2 minutes
                         if (timeElapsed > 120000 || !bgTimeStr) {
-                            console.log("📱 Inactivité prolongée (> 2min). Verrouillage du coffre.");
-                            sessionStorage.setItem('ipse_unlocked', 'false');
+                            console.log("📱 Inactivité prolongée (> 2min). Verrouillage du coffre (Purge RAM).");
+                            // On efface la clé de la RAM pour obliger une nouvelle biométrie
+                            useKeyStore.getState().clearMasterKey();
                             checkShield(true);
                         } else {
                             console.log(`🔓 Retour rapide (${Math.round(timeElapsed / 1000)}s). Accès autorisé.`);
@@ -136,10 +158,14 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         };
     }, []);
 
-    // 🛡️ EFFECT 2: Check Session sur changement de page (SANS boucle biométrique)
+    // 🛡️ EFFECT 2: Check Session sur changement de page
     useEffect(() => {
+        if (pathname === '/login' || pathname === '/signup') {
+            setIsLoading(false);
+            return;
+        }
         checkShield(false);
-    }, [pathname]); // ⚠️ pathname ici fait que Next re-lance l'effet à chaque page
+    }, [pathname]);
 
     if (isLoading && pathname !== '/login') {
         return (

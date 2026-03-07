@@ -1,80 +1,93 @@
-﻿// app/page.tsx
-import { requestConnection, acceptConnection } from '@/app/actions/connection';
+﻿'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { Loader2, Target, Zap, ShieldCheck, LockOpen, RefreshCw } from 'lucide-react';
+import { getAgentName } from '@/lib/utils';
+import { createClient } from '@/lib/supabaseBrowser';
+import { getApiUrl } from '@/lib/api-config';
+import RadarPoller from '@/app/components/RadarPoller';
 import LearningAlert from '@/app/components/LearningAlert';
-import DeleteChannelButton from '@/app/components/DeleteChannelButton';
 import RadarMatchCard from '@/app/components/RadarMatchCard';
 import AcceptConnectionButton from '@/app/components/AcceptConnectionButton';
-import RadarPoller from '@/app/components/RadarPoller';
-import { Target, Zap, ShieldCheck, Check, LockOpen, ArrowRight, RefreshCw } from 'lucide-react';
-import { forceHuntSync } from '@/app/actions/radar';
-import { getAgentName } from '@/lib/utils';
-import prisma from '@/lib/prisma';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import Link from 'next/link';
-
 import ActiveChannelsList from '@/app/components/ActiveChannelsList';
 
-export const dynamic = 'force-dynamic';
+function RadarContent() {
+  const [user, setUser] = useState<any>(null);
+  const [discoveries, setDiscoveries] = useState<any[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  const [activeChannels, setActiveChannels] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
 
-export default async function RadarPage() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll() { return cookieStore.getAll() } } }
-  );
+  const supabase = createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null; // Safe fallback
-  const currentUserId = user.id;
+  const fetchData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      setUser(session.user);
 
-  // ⚡ ANTIGRAVITY: AuthGuard — Session Fantôme → Éjection
-  const profile = await prisma.profile.findUnique({ where: { id: currentUserId }, select: { id: true } });
-  if (!profile) {
-    console.log("⚠️ [AUTH] Session Fantôme détectée. Profil inexistant en BDD.");
-    await supabase.auth.signOut();
-    const { redirect } = await import('next/navigation');
-    redirect('/login');
+      // ⚡ NOUVEAU : On prépare le badge de sécurité pour l'API
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      };
+
+      // On ajoute les headers aux requêtes
+      const oppsRes = await fetch(getApiUrl('/api/opportunities'), { headers }).then(r => r.json());
+      if (oppsRes.success) {
+        setDiscoveries(oppsRes.opportunities.filter((o: any) => o.status !== 'CANCELLED').slice(0, 10));
+      }
+
+      const connRes = await fetch(getApiUrl('/api/connection'), { headers }).then(r => r.json());
+      if (connRes.success) {
+        setIncomingRequests(connRes.incoming);
+        setActiveChannels(connRes.active);
+      }
+    } catch (e) {
+      console.error("fetchData error", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+      const res = await fetch(getApiUrl('/api/opportunities'), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'scout' })
+      }).then(r => r.json());
+
+      if (res.success) {
+        await fetchData();
+      }
+    } catch (e) {
+      console.error("Sync error", e);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono">
+        <Loader2 className="w-8 h-8 animate-spin mr-2" />
+        INIT RADAR...
+      </div>
+    );
   }
 
-  // Récupération des données
-  const discoveries = await prisma.opportunity.findMany({
-    where: {
-      OR: [
-        { sourceId: currentUserId, targetId: { not: currentUserId } },
-        { targetId: currentUserId, sourceId: { not: currentUserId } }
-      ],
-      status: { not: 'CANCELLED' }
-    },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      sourceProfile: true, // Pour savoir qui a initié
-      targetProfile: true  // Pour savoir qui est la cible
-    },
-    take: 10
-  });
-
-  console.log(`🖥️ [FRONTEND] User connecté : ${currentUserId}`);
-  console.log(`🖥️ [FRONTEND] Nombre d'opportunités à afficher : ${discoveries.length}`);
-
-  const incomingRequests = await prisma.connection.findMany({
-    where: { receiverId: currentUserId, status: "PENDING" },
-    include: { initiator: true },
-    orderBy: { createdAt: 'desc' }
-  });
-
-  const activeChannels = await prisma.connection.findMany({
-    where: {
-      OR: [
-        { initiatorId: currentUserId },
-        { receiverId: currentUserId }
-      ],
-      status: "ACCEPTED"
-    },
-    include: { initiator: true, receiver: true },
-    orderBy: { createdAt: 'desc' }
-  });
+  if (!user) return null;
 
   return (
     <div className="p-4 md:p-8 space-y-8">
@@ -88,16 +101,18 @@ export default async function RadarPage() {
           <h1 className="text-3xl font-black italic tracking-tighter text-white">RADAR</h1>
         </div>
 
-        {/* Le bouton Sync de test local */}
-        <form action={forceHuntSync}>
-          <button type="submit" className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all group">
-            <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Sync</span>
-          </button>
-        </form>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 transition-all group disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+          <span className="text-[10px] font-bold uppercase tracking-widest">
+            {syncing ? 'SYNCING...' : 'Sync'}
+          </span>
+        </button>
       </header>
 
-      {/* 🤖 Alerte d'apprentissage de l'Agent */}
       <LearningAlert />
 
       {/* SECTION 1: Requêtes Entrantes */}
@@ -114,7 +129,7 @@ export default async function RadarPage() {
                   <p className="text-sm text-emerald-300 font-mono">Agent: {getAgentName(req.initiator)}</p>
                   <p className="text-xs text-slate-400 mt-1">Souhaite établir une liaison chiffrée</p>
                 </div>
-                <AcceptConnectionButton connectionId={req.id} />
+                <AcceptConnectionButton connectionId={req.id} onAccept={fetchData} />
               </div>
             ))}
           </div>
@@ -128,7 +143,7 @@ export default async function RadarPage() {
             <LockOpen className="w-4 h-4" />
             <h2 className="text-sm font-bold uppercase tracking-widest">Canaux Sécurisés</h2>
           </div>
-          <ActiveChannelsList activeChannels={activeChannels} currentUserId={currentUserId} />
+          <ActiveChannelsList activeChannels={activeChannels} currentUserId={user.id} />
         </section>
       )}
 
@@ -146,7 +161,7 @@ export default async function RadarPage() {
         ) : (
           <div className="grid gap-4">
             {discoveries.map((opp: any) => (
-              <RadarMatchCard key={opp.id} opportunity={opp} myId={currentUserId} />
+              <RadarMatchCard key={opp.id} opportunity={opp} myId={user.id} />
             ))}
           </div>
         )}
@@ -154,4 +169,16 @@ export default async function RadarPage() {
     </div>
   );
 }
-// Déploiement Vercel - Ipse Phase 5
+
+export default function RadarPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono">
+        <Loader2 className="w-8 h-8 animate-spin mr-2" />
+        LOADING...
+      </div>
+    }>
+      <RadarContent />
+    </Suspense>
+  );
+}

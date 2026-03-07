@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { uploadMemory } from '@/app/actions/memory-ingest';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/memories
 
 export default function FileUploader({ profileId, onUploadComplete }: { profileId: string, onUploadComplete: () => void }) {
     const [isDragging, setIsDragging] = useState(false);
@@ -28,7 +29,17 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
         formData.append('profileId', profileId);
 
         try {
-            const data = await uploadMemory(formData);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = {};
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers,
+                body: formData
+            }).then(r => r.json());
             if (!data.success) throw new Error(data.error || "Erreur upload");
 
             setStatus('success');

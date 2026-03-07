@@ -6,7 +6,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const mistral = mistralClient;
 
 // Simulation simplifiée des fonctions internes pour l'instant
-async function scanOtherClones(profileId: string) {
+async function scanOtherAgents(profileId: string) {
     // Réutilise la logique de l'intention ou du radar interne
     const { data: intentions } = await supabase
         .from('Intention')
@@ -43,14 +43,14 @@ export async function runGuardianCycle(profileId: string) {
     console.log(`🔄 [GARDIEN] Cycle autonome démarré pour ${profileId}`);
 
     // 1. PERCEPTION (Ancien Radar/Sentinelle maintenant invisible)
-    const internalMatches = await scanOtherClones(profileId); // Cherche les autres humains compatibles
+    const internalMatches = await scanOtherAgents(profileId); // Cherche les autres humains compatibles
     const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblée (uniquement ce qui te concerne)
 
     // 2. RÉFLEXION (L'Oracle interne)
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [
-            { role: "system", content: "Tu es le Gardien de Frédéric Rey. Ton but est son épanouissement et la réussite de FisherMade. Tu agis seul. Si tu trouves une opportunité réelle ou un match avec un autre clone, prépare une intervention. Si c'est calme, ne dis rien (réponds 'RIEN')." },
+            { role: "system", content: "Tu es le Gardien de Frédéric Rey. Ton but est son épanouissement et la réussite de FisherMade. Tu agis seul. Si tu trouves une opportunité réelle ou un match avec un autre Agent, prépare une intervention. Si c'est calme, ne dis rien (réponds 'RIEN')." },
             { role: "user", content: `Signaux détectés : ${JSON.stringify({ internalMatches, webSignals })}` }
         ]
     });

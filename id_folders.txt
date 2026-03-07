@@ -1,0 +1,2 @@
+﻿C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\api\opportunities\[id]
+C:\Users\Frédéric\.gemini\antigravity\scratch\digital-twin-profile\app\chat\[id]

@@ -7,7 +7,7 @@ export async function extractTextFromUpload(formData: FormData) {
     try {
         const file = formData.get('file') as File;
         if (!file) throw new Error("Fichier manquant");
-        const text = await file.text(); // Simplification pour la démo
+        const text = await file.text();
         return { success: true, extractedText: text };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -36,13 +36,12 @@ export async function extractProfileData(rawData: string) {
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }],
             responseFormat: { type: 'json_object' },
-            temperature: 0.1, // Extrêmement bas pour éviter les hallucinations
+            temperature: 0.1,
         });
 
         const rawContent = chatResponse.choices?.[0].message.content;
         if (!rawContent) throw new Error("Réponse vide de Mistral");
 
-        // Sécurisation stricte du parsing
         let profileData;
         try {
             profileData = JSON.parse(rawContent as string);
@@ -57,9 +56,10 @@ export async function extractProfileData(rawData: string) {
     }
 }
 
-// 2. PHASE D'INJECTION (Après validation humaine)
+// 2. PHASE D'INJECTION (Avec génération du Vecteur 1024 de Mistral)
 export async function confirmProfileIngestion(userId: string, validatedData: any) {
     try {
+        // 1. On sauvegarde d'abord les données texte classiques via Prisma
         await prisma.profile.update({
             where: { id: userId },
             data: {
@@ -74,9 +74,29 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
             }
         });
 
+        // 2. ⚡ GÉNÉRATION DE L'EMBEDDING (Le moteur du Radar)
+        // On crée un texte riche qui représente parfaitement l'utilisateur pour le Radar
+        const textToEmbed = `Profil: ${validatedData.profession}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
+
+        const embeddingsResponse = await mistralClient.embeddings.create({
+            model: 'mistral-embed', // Modèle obligatoire pour les vecteurs
+            inputs: [textToEmbed],
+        });
+
+        const embeddingVector = embeddingsResponse.data[0].embedding;
+
+        // 3. ⚡ SAUVEGARDE DU VECTEUR DANS POSTGRESQL (Prisma requiert $executeRaw pour pgvector)
+        // Note: Mistral génère des vecteurs à 1024 dimensions.
+        await prisma.$executeRaw`
+            UPDATE "Profile" 
+            SET embedding = ${embeddingVector}::vector 
+            WHERE id = ${userId}
+        `;
+
         revalidatePath('/', 'layout');
         return { success: true };
     } catch (error) {
+        console.error("Erreur confirmProfileIngestion:", error);
         return { success: false, error: "Erreur lors de l'enregistrement en DB." };
     }
 }

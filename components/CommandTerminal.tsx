@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { executeTerminalCommand } from '@/app/actions/terminal-command';
-import { syncWebDataToCortex } from '@/app/actions/sync-to-cortex';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/terminal et /api/sync-cortex
 
 interface WebResult {
     title: string;
@@ -24,7 +24,17 @@ function SyncButton({ result, onStatsUpdate }: { result: WebResult; onStatsUpdat
     const handleSync = async () => {
         setSyncState('syncing');
         try {
-            const res = await syncWebDataToCortex(result.title, result.url, result.content);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/sync-cortex'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ title: result.title, url: result.url, content: result.content })
+            }).then(r => r.json());
             if (res.success) {
                 setSyncState('synced');
                 if (res.newStats && onStatsUpdate) {
@@ -66,7 +76,17 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
         setIsProcessing(true);
 
         try {
-            const result = await executeTerminalCommand(userId, currentCmd);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const result = await fetch(getApiUrl('/api/terminal'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ userId, prompt: currentCmd })
+            }).then(r => r.json());
             if (result.success && result.answer) {
                 const textAnswer = typeof result.answer === 'string' ? result.answer : JSON.stringify(result.answer);
                 setHistory(prev => [...prev, {
@@ -88,7 +108,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
             {/* HEADER TERMINAL */}
             <div className="flex items-center justify-between border-b border-white/10 p-4 mx-2">
                 <h3 className="text-xs text-cyan-500 font-bold tracking-widest flex items-center gap-2">
-                    <span className="animate-pulse">☄️</span> TWINS_OS // TERMINAL
+                    <span className="animate-pulse">☄️</span> IPSE_OS // TERMINAL
                 </h3>
                 <span className="text-[10px] flex items-center gap-2 text-gray-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RADAR EN LIGNE

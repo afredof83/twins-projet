@@ -1,13 +1,33 @@
 import useSWR from 'swr';
-import { analyzeGaps } from '@/app/actions/cortex';
+import { getApiUrl } from '@/lib/api-config';
+import { createClient } from '@/lib/supabaseBrowser';
+
+const fetcher = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const headers: any = { 'Content-Type': 'application/json' };
+    if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
+    const res = await fetch(getApiUrl('/api/cortex'), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'analyzeGaps' })
+    });
+    return res.json();
+};
 
 export function useCortexGaps() {
+    const isLoginPage = typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/signup');
+
     const { data, error, isLoading, mutate } = useSWR(
-        'cortex-gaps',
-        () => analyzeGaps(),
+        isLoginPage ? null : 'cortex-gaps',
+        fetcher,
         {
-            revalidateOnFocus: false, // Empêche de rappeler l'API Mistral juste en changeant d'onglet
-            dedupingInterval: 60000,  // Déduplique toutes les requêtes identiques pendant 60 secondes
+            revalidateOnFocus: false,
+            dedupingInterval: 60000,
         }
     );
 
@@ -15,6 +35,6 @@ export function useCortexGaps() {
         gaps: data,
         isLoading,
         isError: error,
-        mutate // Permettra de forcer un rafraîchissement après que l'utilisateur ait répondu
+        mutate
     };
 }

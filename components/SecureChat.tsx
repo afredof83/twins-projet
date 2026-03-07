@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Lock, Send, ShieldCheck } from 'lucide-react'
 import { RealtimeChannel } from '@supabase/supabase-js'
-import { translateMessage } from '@/app/actions/translation'
-import { guardianCheck } from '@/app/actions/guardian'
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/translation et /api/guardian
 
 interface SecureChatProps {
     myId: string;
@@ -127,7 +127,17 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         // 🌍 SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
         if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
             try {
-                const data = await translateMessage(originalContent, partnerCountry);
+                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+                const supabaseClient = createSupabase();
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const data = await fetch(getApiUrl('/api/translation'), {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ text: originalContent, targetCountry: partnerCountry })
+                }).then(r => r.json());
 
                 if (data.success && data.translation) {
                     // On combine le message original et sa traduction
@@ -154,7 +164,19 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         // 🟢 NOUVEAU : LE MICRO ESPION DU GARDIEN
         // On envoie silencieusement le contenu du message à l'IA pour analyse
         console.log("🦇 Interception : Envoi du message au Gardien...");
-        guardianCheck(myId, `A dit : "${originalContent}"`).catch(() => { });
+        (async () => {
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createSupabase();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            fetch(getApiUrl('/api/guardian'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ profileId: myId, text: `A dit : "${originalContent}"` })
+            }).catch(() => { });
+        })();
     };
 
     if (!channelId) return null;

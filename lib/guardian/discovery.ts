@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
-export async function findInternalClone(myProfileId: string) {
+export async function findInternalAgent(myProfileId: string) {
     // 1. On récupère TOUT pour voir ce qui bloque
     const { data: allProfiles } = await supabase.from('Profile').select('id, name');
     console.log("📊 [DIAGNOSTIC] Profils en base :", allProfiles);

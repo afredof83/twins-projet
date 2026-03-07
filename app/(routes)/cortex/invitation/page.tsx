@@ -1,52 +1,94 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { acceptInvite, updateOppStatus, getOpportunity } from '@/app/actions/opportunities';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, ShieldCheck, UserPlus, X } from 'lucide-react';
 import { getAgentName } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-config';
+import { createClient } from '@/lib/supabaseBrowser';
 
-export default function InvitationPage() {
-    const params = useParams();
+function InvitationContent() {
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const oppId = params.id as string;
+    const oppId = searchParams.get('id');
 
     const [opp, setOpp] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
+        if (!oppId) {
+            setLoading(false);
+            return;
+        }
         const fetchOpp = async () => {
-            const res = await getOpportunity(oppId);
-            if (res.success && res.opportunity) {
-                setOpp(res.opportunity);
-            }
+            try {
+                const { createClient } = await import('@/lib/supabaseBrowser');
+                const supabase = createClient();
+                const { data: { session } } = await supabase.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const res = await fetch(getApiUrl(`/api/opportunities?id=${oppId}`), { headers }).then(r => r.json());
+                if (res.success && res.opportunity) {
+                    setOpp(res.opportunity);
+                }
+            } catch (e) { console.error(e) }
             setLoading(false);
         };
         fetchOpp();
     }, [oppId]);
 
     const onAccept = async () => {
+        if (!oppId) return;
         setActionLoading(true);
-        const res = await acceptInvite(oppId);
-        if (res.success && res.connectionId) {
-            // L'opportunité contient sourceId, on peut rediriger vers le chat avec cet utilisateur
-            // Note: res.connectionId est la connexion créée, mais notre route de chat utilise l'ID de l'autre utilisateur
-            router.push(`/chat/${opp.sourceId}`);
-        } else {
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'acceptInvite', oppId: oppId })
+            }).then(r => r.json());
+
+            if (res.success && res.connectionId) {
+                // L'opportunité contient sourceId, on peut rediriger vers le chat avec cet utilisateur
+                router.push(`/chat?id=${opp.sourceId}`);
+            } else {
+                setActionLoading(false);
+                alert("Erreur lors de l'acceptation.");
+            }
+        } catch (e) {
             setActionLoading(false);
-            alert("Erreur lors de l'acceptation.");
+            console.error(e);
         }
     };
 
     const onDecline = async () => {
+        if (!oppId) return;
         setActionLoading(true);
-        await updateOppStatus(oppId, 'CANCELLED');
-        router.push('/cortex');
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'updateStatus', oppId: oppId, status: 'CANCELLED' })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
     };
 
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-    if (!opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirée</div>;
+    if (!oppId || !opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirée</div>;
 
     if (opp.status !== 'INVITED') {
         return (
@@ -106,5 +148,13 @@ export default function InvitationPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function InvitationPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+            <InvitationContent />
+        </Suspense>
     );
 }

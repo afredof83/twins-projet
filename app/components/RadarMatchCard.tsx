@@ -1,8 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { performAudit, updateOppStatus, acceptInvite } from '@/app/actions/opportunities';
+// Server actions supprimées — on utilise fetch vers /api/opportunities
 import { getAgentName } from '@/lib/utils';
 import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuditPanel from './AuditPanel';
@@ -21,9 +22,23 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
         : opportunity.sourceProfile;
 
     // --- LOGIQUE AUDIT ---
+    const getOppHeaders = async () => {
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+        return headers;
+    };
+
     const handleAudit = async () => {
         setLoading(true);
-        const res = await performAudit(opportunity.id);
+        const headers = await getOppHeaders();
+        const res = await fetch(getApiUrl('/api/opportunities'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'audit', oppId: opportunity.id })
+        }).then(r => r.json());
         setAuditData(res.audit);
         setStatus('AUDITED');
         setShowAudit(true); // Open the panel right after auditing
@@ -32,10 +47,15 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 
     const handleAccept = async () => {
         setLoading(true);
-        const res = await acceptInvite(opportunity.id);
+        const headers = await getOppHeaders();
+        const res = await fetch(getApiUrl('/api/opportunities'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'acceptInvite', oppId: opportunity.id })
+        }).then(r => r.json());
         if (res.success) {
             setIsAccepted(true);
-            router.push(`/chat/${otherProfile.id}`);
+            router.push(`/chat?id=${otherProfile.id}`);
             return; // Le composant sera démonté par la navigation, pas de setState après
         }
         setLoading(false);
@@ -120,7 +140,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                                 {loading ? "CRÉATION..." : isAccepted ? "ACCEPTÉ ✓" : "ACCEPTER"}
                             </button>
                             <button
-                                onClick={() => updateOppStatus(opportunity.id, 'CANCELLED')}
+                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
                                 className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
                             >
                                 REFUSER
@@ -132,13 +152,13 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
                     <div className="flex gap-2 mt-6">
                         <button
-                            onClick={() => updateOppStatus(opportunity.id, 'CANCELLED')}
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
                             className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
                         >
                             IGNORER
                         </button>
                         <button
-                            onClick={() => updateOppStatus(opportunity.id, 'BLOCKED')}
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'BLOCKED' }) })}
                             className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
                         >
                             BLOQUER

@@ -1,12 +1,13 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     namespace = "com.twins.app"
-    compileSdk = rootProject.ext.compileSdkVersion
+    compileSdk = (project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36)
     defaultConfig {
         applicationId "com.twins.app"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
+        minSdkVersion (project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24)
+        targetSdkVersion (project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36)
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -20,6 +21,16 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "21"
         }
     }
 }

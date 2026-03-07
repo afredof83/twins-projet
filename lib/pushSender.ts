@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from "@/lib/prisma";
 import admin from 'firebase-admin';
 
 // Initialisation sécurisée de Firebase Admin (s'assure qu'il n'est pas initialisé 2 fois)

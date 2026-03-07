@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, Zap, Target, Edit3, RefreshCw } from 'lucide-react'
-import { getAgentProfile, updateAgentProfile, reflectAgent } from '@/app/actions/agent'
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/agent
 
 const QUESTIONS = {
     travail: [
@@ -20,7 +21,7 @@ const QUESTIONS = {
         { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
         { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
         { id: 'superpouvoir', label: 'Votre "Zone de Génie"', options: ['Vision stratégique & Anticipation', 'Exécution & Résolution de problèmes complexes', 'Communication & Fédérer les humains', 'Analyse & Compréhension technique profonde'] },
-        { id: 'socialStyle', label: 'Ton de votre Jumeau Numérique', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
+        { id: 'socialStyle', label: 'Ton de votre Agent Ipse', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
     ]
 };
 
@@ -41,7 +42,17 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
     const handleManualReflect = async () => {
         setIsReflecting(true);
         try {
-            const data = await reflectAgent(profileId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/agent'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'reflect', profileId })
+            }).then(r => r.json());
             if (data.success && data.synthesis) {
                 setSynthesis(data.synthesis);
                 alert("Profilage du Gardien synchronisé avec succès !");
@@ -85,7 +96,13 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         const fetchAgentMemory = async () => {
             if (!profileId) return;
             try {
-                const data = await getAgentProfile(profileId);
+                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+                const supabase = createSupabase();
+                const { data: { session } } = await supabase.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const data = await fetch(getApiUrl(`/api/agent?profileId=${profileId}`), { headers }).then(r => r.json());
 
                 if (data.success && data.profile) {
                     const profile = data.profile as any;
@@ -136,8 +153,18 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
 
     const handleSave = async () => {
         try {
-            const data = await updateAgentProfile({ profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData });
-            if (data.success) alert("ADN de l'Agent sauvegardé avec succès !");
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/agent'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'update', profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData })
+            }).then(r => r.json());
+            if (data.success) alert("ADN de l'Agent Ipse sauvegardé avec succès !");
             else alert("Erreur lors de la sauvegarde.");
         } catch (error) {
             console.error(error);
@@ -302,7 +329,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
 
             {/* BOUTON GLOBAL DE SAUVEGARDE */}
             <button onClick={handleSave} className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-500 py-4 rounded-lg font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.4)] text-lg">
-                <Save className="mr-2" size={24} /> SAUVEGARDER L'ADN DE L'AGENT
+                <Save className="mr-2" size={24} /> SAUVEGARDER L'ADN IPSE
             </button>
         </div>
     );

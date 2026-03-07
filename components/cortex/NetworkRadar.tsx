@@ -1,7 +1,8 @@
 ﻿'use client';
 import { useState } from 'react';
 import { Radar, Target, UserPlus, ShieldAlert } from 'lucide-react';
-import { scanGlobalNetwork } from '@/app/actions/scan-global-network';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/scan-network
 
 export default function NetworkRadar({ profileId }: { profileId: string }) {
     const [isScanning, setIsScanning] = useState(false);
@@ -11,7 +12,17 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
         setIsScanning(true);
         // On scanne le secteur "Marine Tech & Fishing" par défaut pour FisherMade
         try {
-            const data = await scanGlobalNetwork(profileId, 'basic');
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/scan-network'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ userId: profileId, mode: 'basic' })
+            }).then(r => r.json());
             if (data && data.targets) {
                 setAgents(data.targets);
             }

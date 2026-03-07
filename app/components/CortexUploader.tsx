@@ -4,13 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Paperclip, Send, Loader2, CheckCircle, AlertCircle, X, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadCortexMemoryContext } from '@/app/actions/memory-ingest';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/memories
 
 type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-export default function CortexUploader() {
+export default function CortexUploader({ onUploadComplete }: { onUploadComplete?: () => void }) {
     const [uploadState, setUploadState] = useState<UploadState>('IDLE');
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [textContext, setTextContext] = useState<string>('');
@@ -100,11 +101,27 @@ export default function CortexUploader() {
             formData.append('fileName', fileName);
             formData.append('hasFile', selectedFile ? 'true' : 'false');
 
-            const data = await uploadCortexMemoryContext(formData);
+            // ⚡ NOUVEAU : On récupère la session pour avoir le jeton
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+
+            const headers: any = {};
+            if (session) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+
+            // ⚡ NOUVEAU : On passe les headers à la requête fetch
+            const data = await fetch(getApiUrl('/api/memories'), {
+                method: 'POST',
+                headers: headers, // <-- Ajout des headers ici
+                body: formData
+            }).then(r => r.json());
 
             if (!data.success) throw new Error(data.error || "Erreur lors de l'envoi");
 
             setUploadState('SUCCESS');
+            if (onUploadComplete) onUploadComplete();
             router.refresh();
 
             // Reset l'état après succès
@@ -164,7 +181,7 @@ export default function CortexUploader() {
                                         <Brain className="w-8 h-8 text-blue-400 animate-pulse relative z-10" />
                                     </div>
                                     <span className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 animate-pulse">
-                                        Le Jumeau analyse le contenu...
+                                        L'Agent Ipse analyse le contenu...
                                     </span>
                                 </div>
                             )}

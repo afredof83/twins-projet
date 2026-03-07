@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react';
-import { generateTacticalOpener } from '@/app/actions/generate-opener';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/generate-opener et /api/connection
 import { createClient } from '@/lib/supabase/client';
-import { requestConnection } from '@/app/actions/connection';
 
 export function TacticalOpenerModule({
     userId,
@@ -23,7 +23,17 @@ export function TacticalOpenerModule({
     const handleGenerate = async () => {
         setIsGenerating(true);
         try {
-            const result = await generateTacticalOpener(userId, targetId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const result = await fetch(getApiUrl('/api/generate-opener'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ userId, targetId })
+            }).then(r => r.json());
             if (result.success) {
                 setHook(result.hook || '');
                 setMessage(result.message || '');
@@ -38,11 +48,19 @@ export function TacticalOpenerModule({
 
     const handleSendRequest = async () => {
         try {
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { alert('Session expirée.'); return; }
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createSupabase();
+            const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
+            if (!currentSession) { alert('Session expirée.'); return; }
 
-            const data = await requestConnection(targetId);
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (currentSession) headers['Authorization'] = `Bearer ${currentSession.access_token}`;
+
+            const data = await fetch(getApiUrl('/api/connection'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'request', targetId })
+            }).then(r => r.json());
             if (data?.success) {
                 onSuccess();
             } else {

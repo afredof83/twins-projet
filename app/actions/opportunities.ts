@@ -1,6 +1,6 @@
-'use server';
+// 'use server' (static build fix)
 import { mistralClient } from '@/lib/mistral';
-import prisma from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
+import { prisma } from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
@@ -137,7 +137,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
                 data: {
                     type: 'CHAT_INVITATION',
                     opportunityId: oppId,
-                    url: `/cortex/invitation/${oppId}`
+                    url: `/cortex/invitation?id=${oppId}`
                 },
                 token: opp.targetProfile.fcmToken,
             };

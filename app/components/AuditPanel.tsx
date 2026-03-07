@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Flame, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { sendChatInvite } from '@/app/actions/opportunities';
+import { getApiUrl } from '@/lib/api-config';
+// Server action supprimée — on utilise fetch vers /api/opportunities
 
 export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId, onInviteSuccess }: any) {
     const [mounted, setMounted] = useState(false);
@@ -114,7 +115,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                 {/* FOOTER (Fixe : flex-none) */}
                 <div className="flex-none p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md">
                     {status === 'ACCEPTED' ? (
-                        <Link href={`/chat/${targetId}`} className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                        <Link href={`/chat?id=${targetId}`} className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
                             <MessageSquare className="w-4 h-4" />
                             Rejoindre la Discussion
                         </Link>
@@ -122,7 +123,17 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                         <button
                             onClick={async () => {
                                 setIsSending(true);
-                                const res = await sendChatInvite(opportunityId, "Demande de Canal Sécurisé");
+                                const { createClient } = await import('@/lib/supabaseBrowser');
+                                const supabase = createClient();
+                                const { data: { session } } = await supabase.auth.getSession();
+                                const headers: any = { 'Content-Type': 'application/json' };
+                                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                                const res = await fetch(getApiUrl('/api/opportunities'), {
+                                    method: 'POST',
+                                    headers,
+                                    body: JSON.stringify({ action: 'sendChatInvite', oppId: opportunityId, customTitle: 'Demande de Canal Sécurisé' })
+                                }).then(r => r.json());
                                 setIsSending(false);
                                 if (res.success) {
                                     setIsSent(true);
@@ -131,8 +142,8 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                             }}
                             disabled={isSending || isSent}
                             className={`w-full py-4 flex items-center justify-center gap-2 transition-all ${isSent
-                                    ? 'bg-emerald-600/50 text-emerald-100 cursor-default border border-emerald-500/50 rounded-xl font-bold'
-                                    : 'btn-primary shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                                ? 'bg-emerald-600/50 text-emerald-100 cursor-default border border-emerald-500/50 rounded-xl font-bold'
+                                : 'btn-primary shadow-[0_0_15px_rgba(37,99,235,0.3)]'
                                 }`}
                         >
                             {isSending && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Radar, ExternalLink, Zap, Trash2 } from 'lucide-react';
-import { getOpportunities, scoutOpportunities, deleteOpportunity } from '@/app/actions/opportunities';
+import { getApiUrl } from '@/lib/api-config';
+// Server actions supprimées — on utilise fetch vers /api/opportunities
 
 export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -12,7 +13,14 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const fetchOpps = async () => {
         if (!profileId) return;
         try {
-            const data = await getOpportunities(profileId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl(`/api/opportunities?profileId=${profileId}`), { headers });
+            const data = await res.json();
             if (data.success && data.opportunities) setOpportunities(data.opportunities);
         } catch (err) {
             console.error("Erreur de lecture :", err);
@@ -28,7 +36,17 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const launchScout = async () => {
         setIsScanning(true);
         try {
-            await scoutOpportunities(profileId);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl('/api/opportunities'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'scout', profileId })
+            });
             // Une fois le scan terminé, on recharge la liste pour voir la nouveauté
             await fetchOpps();
         } catch (err) {
@@ -44,7 +62,17 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
 
         // 2. Envoi de l'ordre de destruction au serveur
         try {
-            await deleteOpportunity(idToDelete);
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabase = createSupabase();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl('/api/opportunities'), {
+                method: 'DELETE',
+                headers,
+                body: JSON.stringify({ oppId: idToDelete })
+            });
         } catch (err) {
             console.error("Échec de la destruction :", err);
         }
