@@ -39,10 +39,11 @@ export async function updateAgentProfile(data: any) {
         await prisma.profile.update({
             where: { id: profileId },
             data: {
-                // We do not have country, dateOfBirth, postalCode, city, gender in the current Prisma schema
-                // But we can store them in thematicProfile JSON, or just overwrite the JSON field
                 thematicProfile,
-                profession: professionalStatus,
+                primaryRole: professionalStatus,
+                country,
+                city,
+                gender
             },
         });
 
