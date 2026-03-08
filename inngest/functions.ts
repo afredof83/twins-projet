@@ -66,7 +66,7 @@ CIBLE DÉTECTÉE (${target.name || 'Cible'}): ${target.bio} | Role: ${target.rol
 
 Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
 DIRECTIVE STRICTE POUR LE RÉSUMÉ : Décris uniquement "${target.name || 'la cible'}". Ne mentionne JAMAIS l'utilisateur connecté.
-Format JSON strict: { "score": number, "summary": "string" }`;
+Format JSON strict: { "score": number, "synergies": "string" }`;
 
                 const res = await mistralClient.chat.complete({
                     model: 'mistral-small-latest',
@@ -85,7 +85,7 @@ Format JSON strict: { "score": number, "summary": "string" }`;
                             sourceId: userId,
                             targetId: target.id,
                             matchScore: result.score,
-                            summary: result.summary || "Compatibilité stratégique détectée par le Cortex.",
+                            synergies: result.synergies || result.summary || result.content || "Analyse sémantique non fournie par l'IA.",
                             status: 'DETECTED'
                         }
                     });

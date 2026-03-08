@@ -125,15 +125,17 @@ function RadarContent() {
             <h2 className="text-sm font-bold uppercase tracking-widest">{t('radar.incoming_requests')}</h2>
           </div>
           <div className="grid gap-4">
-            {incomingRequests.map((req: any) => (
-              <div key={req.id} className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center backdrop-blur-sm">
-                <div>
-                  <p className="text-sm text-emerald-300 font-mono">Agent: {getAgentName(req.initiator)}</p>
-                  <p className="text-xs text-slate-400 mt-1">{t('radar.encrypted_link')}</p>
+            {incomingRequests
+              .filter((req: any) => req && req.initiator)
+              .map((req: any) => (
+                <div key={req.id} className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center backdrop-blur-sm">
+                  <div>
+                    <p className="text-sm text-emerald-300 font-mono">Agent: {getAgentName(req.initiator)}</p>
+                    <p className="text-xs text-slate-400 mt-1">{t('radar.encrypted_link')}</p>
+                  </div>
+                  <AcceptConnectionButton connectionId={req.id} onAccept={fetchData} />
                 </div>
-                <AcceptConnectionButton connectionId={req.id} onAccept={fetchData} />
-              </div>
-            ))}
+              ))}
           </div>
         </section>
       )}
@@ -162,9 +164,11 @@ function RadarContent() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {discoveries.map((opp: any) => (
-              <RadarMatchCard key={opp.id} opportunity={opp} myId={user.id} />
-            ))}
+            {discoveries
+              .filter((opp: any) => opp && opp.id)
+              .map((opp: any) => (
+                <RadarMatchCard key={opp.id} opportunity={opp} myId={user.id} />
+              ))}
           </div>
         )}
       </section>

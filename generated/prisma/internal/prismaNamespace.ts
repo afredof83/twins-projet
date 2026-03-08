@@ -1331,7 +1331,7 @@ export const OpportunityScalarFieldEnum = {
   sourceId: 'sourceId',
   targetId: 'targetId',
   matchScore: 'matchScore',
-  summary: 'summary',
+  synergies: 'synergies',
   audit: 'audit',
   status: 'status',
   title: 'title',

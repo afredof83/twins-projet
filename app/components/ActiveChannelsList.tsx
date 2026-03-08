@@ -35,34 +35,36 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
 
     return (
         <div className="grid gap-4">
-            {activeChannels.map((channel: any) => {
-                const targetUser = channel.initiatorId === currentUserId ? channel.receiver : channel.initiator;
-                // Si l'ID de l'autre participant est dans notre Set, on affiche la pastille
-                const hasUnread = unreadSenders.has(targetUser.id);
+            {activeChannels
+                .filter((channel: any) => channel && (channel.initiator || channel.receiver))
+                .map((channel: any, index: number) => {
+                    const targetUser = channel.initiatorId === currentUserId ? channel.receiver : channel.initiator;
+                    // Si l'ID de l'autre participant est dans notre Set, on affiche la pastille
+                    const hasUnread = targetUser?.id ? unreadSenders.has(targetUser.id) : false;
 
-                return (
-                    <div key={channel.id} className="relative p-4 rounded-xl bg-white/[0.02] border border-white/10 flex justify-between items-center hover:border-blue-500/30 transition-colors group">
+                    return (
+                        <div key={channel.id || index} className="relative p-4 rounded-xl bg-white/[0.02] border border-white/10 flex justify-between items-center hover:border-blue-500/30 transition-colors group">
 
-                        {/* La Pastille Rouge Visuelle (Radar) */}
-                        {hasUnread && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)] border-2 border-[#050a0c] z-10 text-[8px] flex items-center justify-center font-bold text-white">
-                                !
-                            </span>
-                        )}
+                            {/* La Pastille Rouge Visuelle (Radar) */}
+                            {hasUnread && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)] border-2 border-[#050a0c] z-10 text-[8px] flex items-center justify-center font-bold text-white">
+                                    !
+                                </span>
+                            )}
 
-                        <div>
-                            <p className={`text-sm font-bold ${hasUnread ? 'text-red-400' : 'text-white'}`}>{getAgentName(targetUser)}</p>
-                            <p className="text-xs text-slate-500 font-mono mt-1">ID: {targetUser.id.slice(0, 8)}...</p>
+                            <div>
+                                <p className={`text-sm font-bold ${hasUnread ? 'text-red-400' : 'text-white'}`}>{getAgentName(targetUser)}</p>
+                                <p className="text-xs text-slate-500 font-mono mt-1">ID: {targetUser?.id?.slice(0, 8) || "???"}...</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <DeleteChannelButton connectionId={channel.id} />
+                                <Link href={`/chat?id=${targetUser?.id || ""}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
+                                    <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <DeleteChannelButton connectionId={channel.id} />
-                            <Link href={`/chat?id=${targetUser.id}`} className="p-3 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all group-hover:scale-105">
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </div>
-                )
-            })}
+                    )
+                })}
         </div>
     );
 }

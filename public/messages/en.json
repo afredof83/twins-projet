@@ -70,6 +70,9 @@
             "IMMEDIATE": "Immediate",
             "ONE_MONTH": "Within 1 month",
             "UNAVAILABLE": "Unavailable"
+        },
+        "settings": {
+            "logout": "Logout"
         }
     },
     "radar": {

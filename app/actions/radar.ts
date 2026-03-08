@@ -7,8 +7,6 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
 export async function forceHuntSync(formData?: FormData) {
-    console.log("📡 [RADAR] Lancement du scan Mistral IA...");
-
     try {
         const cookieStore = await cookies();
         const supabase = createServerClient(
@@ -18,98 +16,95 @@ export async function forceHuntSync(formData?: FormData) {
         );
 
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log("❌ [RADAR] Non authentifié. Fermeture du scan.");
+        if (!user) return;
+
+        await executeRadarScan(user.id, 'work');
+        revalidatePath('/');
+    } catch (error: any) {
+        console.error("🔥 [RADAR] CRASH:", error.message);
+    }
+}
+
+export async function executeRadarScan(userId: string, theme: string = 'work') {
+    console.log(`📡 [RADAR] Scan IA pour ${userId} (Thème: ${theme})...`);
+
+    try {
+        const myProfile = await prisma.profile.findUnique({ where: { id: userId } });
+        if (!myProfile) return;
+
+        // Configuration selon le thème
+        let embeddingField = "unifiedEmbedding";
+        let myBio = myProfile.bio;
+        let myRole = myProfile.primaryRole;
+        let mySector = myProfile.sector;
+
+        if (theme === 'dating') {
+            embeddingField = "social_embedding";
+            myBio = myProfile.socialBio;
+            myRole = myProfile.socialRole;
+            mySector = myProfile.socialSector;
+        } else if (theme === 'hobby') {
+            embeddingField = "hobby_embedding";
+            myBio = myProfile.hobbyBio;
+            myRole = myProfile.hobbyRole;
+            mySector = myProfile.hobbySector;
+        }
+
+        // 1. Extraction du Vecteur de l'utilisateur
+        const currentUserRaw: any[] = await prisma.$queryRawUnsafe(`
+            SELECT "${embeddingField}"::text as "embedding"
+            FROM "Profile" 
+            WHERE id = $1
+        `, userId);
+        const userEmbedding = currentUserRaw[0]?.embedding;
+
+        if (!userEmbedding) {
+            console.log(`⚠️ [RADAR] Aucun vecteur trouvé pour ${userId} sur le thème ${theme}.`);
             return;
         }
 
-        const currentUserId = user.id;
-        console.log(`👤 [RADAR] Mon ID Interne (Supabase auth) : ${currentUserId}`);
-
-        const myProfile = await prisma.profile.findUnique({ where: { id: currentUserId } });
-        if (!myProfile) {
-            console.log("❌ [RADAR] Profil introuvable en BDD.");
-            return;
-        }
-
-        let others: any[] = [];
-        try {
-            // 1. Extraction du Vecteur Maître de l'utilisateur
-            const currentUserRaw: any[] = await prisma.$queryRaw`
-                SELECT "unifiedEmbedding"::text 
-                FROM "Profile" 
-                WHERE id = ${currentUserId}
-            `;
-            const userEmbedding = currentUserRaw[0]?.unifiedEmbedding;
-
-            if (userEmbedding) {
-                console.log("✅ [RADAR] Matchmaking Vectoriel Cosinus en cours...");
-
-                // Récupérer les profils avec une similarité cosinus > 0.65
-                others = await prisma.$queryRawUnsafe(`
-                  SELECT 
-                    id, 
-                    name, 
-                    primary_role as role, 
-                    bio, 
-                    1 - ("unifiedEmbedding" <=> $1::vector) as similarity
-                  FROM "Profile"
-                  WHERE id::text != $2 
-                  AND "unifiedEmbedding" IS NOT NULL
-                  AND 1 - ("unifiedEmbedding" <=> $1::vector) > 0.65 -- LE FILTRE MATHÉMATIQUE STRICT
-                  ORDER BY similarity DESC
-                  LIMIT 5;
-                `, userEmbedding, currentUserId);
-            } else {
-                console.warn("⚠️ [RADAR] Aucun Vecteur Maître détecté pour l'utilisateur courant. Le scan sera limité.");
-                others = await prisma.profile.findMany({
-                    where: {
-                        NOT: { id: currentUserId }
-                    },
-                    take: 5
-                });
-            }
-        } catch (error: any) {
-            console.error("⚠️ [RADAR] Erreur pgvector, fallback :", error.message);
-            others = await prisma.profile.findMany({
-                where: { NOT: { id: currentUserId } },
-                take: 5
-            });
-        }
-
-        console.log(`🔎 [RADAR] ${others.length} cibles potentielles trouvées.`);
+        // 2. Recherche Cosinus
+        const others: any[] = await prisma.$queryRawUnsafe(`
+            SELECT 
+                id, name, bio, sector,
+                primary_role as "primaryRole", 
+                social_bio as "socialBio", social_role as "socialRole", social_sector as "socialSector",
+                hobby_bio as "hobbyBio", hobby_role as "hobbyRole", hobby_sector as "hobbySector",
+                1 - ("${embeddingField}" <=> $1::vector) as similarity
+            FROM "Profile"
+            WHERE id::text != $2::text 
+            AND "${embeddingField}" IS NOT NULL
+            AND 1 - ("${embeddingField}" <=> $1::vector) > 0.65
+            ORDER BY similarity DESC
+            LIMIT 5;
+        `, userEmbedding, userId);
 
         for (const target of others) {
-            // 🛡️ DOUBLE SÉCURITÉ : Au cas où l'ID serait mal passé
-            if (target.id === currentUserId) {
-                console.log("🚨 [CRITICAL] AUTO-MATCH DETECTE ET BLOQUE !");
-                continue;
-            }
-
             const existing = await prisma.opportunity.findFirst({
                 where: {
                     OR: [
-                        { sourceId: currentUserId, targetId: target.id },
-                        { sourceId: target.id, targetId: currentUserId }
+                        { sourceId: userId, targetId: target.id },
+                        { sourceId: target.id, targetId: userId }
                     ]
                 }
             });
+            if (existing) continue;
 
-            if (existing) {
-                console.log(`⚠️ [RADAR] On skip ${target.id} car une opportunité existe déjà.`);
-                continue;
-            }
+            const prompt = `Tu es Cortex, une IA de renseignement sémantique. Compare ces deux profils pour évaluer une synergie stratégique.
+        
+        [MON PROFIL (Utilisateur Courant)]:
+        Rôle : ${myRole || 'Non défini'}
+        Secteur : ${mySector || 'Non défini'}
+        Bio : ${myBio || 'Non spécifié'}
 
-            console.log(`🤖 [RADAR] Appel Mistral pour match avec la cible validée : ${target.name || target.id}`);
-
-            // APPEL MISTRAL
-            const prompt = `Tu es Cortex. Compare ces deux profils pour évaluer une synergie.
-        UTILISATEUR COURANT: ${myProfile?.bio} | Role: ${myProfile?.primaryRole}
-        CIBLE DÉTECTÉE (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
+        [CIBLE DÉTECTÉE (${target.name || 'Cible'})]:
+        Rôle : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non défini'}
+        Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non défini'}
+        Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spécifié'}
         
         Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
-        DIRECTIVE STRICTE POUR LE RÉSUMÉ : Force le prompt à dire : "Voici ${target.name || 'la cible'}. Il/Elle est [Métier de la cible]. Il/Elle cherche [Objectif]." Ne mentionne JAMAIS l'utilisateur connecté.
-        Format JSON strict: { "score": number, "summary": "string" }`;
+        Directive : Décris la cible. Format JSON: { "score": number, "synergies": "string" }
+        RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
 
             const res = await mistralClient.chat.complete({
                 model: 'mistral-small-latest',
@@ -118,36 +113,25 @@ export async function forceHuntSync(formData?: FormData) {
             });
 
             const rawContent = res.choices?.[0]?.message.content;
-            let result: any = {};
             try {
-                const cleanedContent = typeof rawContent === 'string'
-                    ? rawContent.replace(/```json/gi, '').replace(/```/g, '').trim()
-                    : '{}';
-                result = JSON.parse(cleanedContent);
-            } catch (e: any) {
-                console.error("❌ [RADAR] Parsing JSON Mistral échoué. Contenu brut :");
-                console.error(rawContent);
-            }
-            const summaryText = result.summary || "Compatibilité stratégique détectée par le Cortex.";
+                const cleanedContent = typeof rawContent === 'string' ? rawContent.replace(/```json/gi, '').replace(/```/g, '').trim() : '{}';
+                const result = JSON.parse(cleanedContent);
 
-            if (result.score && result.score > 60) {
-                const newOpp = await prisma.opportunity.create({
-                    data: {
-                        sourceId: currentUserId,
-                        targetId: target.id,
-                        matchScore: result.score,
-                        summary: summaryText,
-                        status: 'DETECTED'
-                    }
-                });
-                console.log(`✅ [RADAR] Match réussi: ${target.name} à ${result.score}% ! Opportunité ID: ${newOpp.id}`);
-            } else {
-                console.log(`📉 [RADAR] Échec du match avec ${target.id} (Score: ${result.score || 'Inconnu'})`);
-            }
+                if (result.score && result.score > 60) {
+                    await prisma.opportunity.create({
+                        data: {
+                            sourceId: userId,
+                            targetId: target.id,
+                            matchScore: result.score,
+                            synergies: result.synergies || "Compatibilité détectée.",
+                            status: 'DETECTED'
+                        }
+                    });
+                }
+            } catch (e) { continue; }
         }
-        revalidatePath('/');
     } catch (error: any) {
-        console.error("🔥 [RADAR] CRASH:", error.message);
+        console.error(`❌ [RADAR-EXEC] Error for ${userId}:`, error.message);
     }
 }
 

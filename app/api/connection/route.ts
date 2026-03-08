@@ -72,11 +72,33 @@ export async function POST(request: Request) {
             if (existing) return NextResponse.json({ success: false, error: 'Connexion déjà existante' });
 
             await prismaRLS.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
+
+            // Si on vient d'un Radar, on met à jour le statut de l'opportunité
+            const { oppId } = body;
+            if (oppId) {
+                await prismaRLS.opportunity.update({
+                    where: { id: oppId },
+                    data: { status: 'INVITED' }
+                });
+            }
+
             return NextResponse.json({ success: true });
         }
 
         if (action === 'accept') {
-            const { connectionId } = body;
+            const { connectionId, oppId } = body;
+
+            if (oppId) {
+                const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
+                if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+
+                await prismaRLS.connection.create({
+                    data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: "ACCEPTED" }
+                });
+                await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: "ACCEPTED" } });
+                return NextResponse.json({ success: true });
+            }
+
             if (!connectionId) return NextResponse.json({ success: false, error: 'connectionId manquant' }, { status: 400 });
             const result = await prismaRLS.connection.updateMany({
                 where: { id: connectionId, receiverId: user.id, status: "PENDING" },

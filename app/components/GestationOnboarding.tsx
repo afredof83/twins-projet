@@ -97,9 +97,9 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
                         <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Matrice Déduite (Vérifiez les données)</h3>
 
                         <div className="grid grid-cols-2 gap-4 text-sm text-zinc-300">
-                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix.profession}</div>
-                            <div><span className="text-zinc-500 block text-xs">Séniorité</span> {extractedMatrix.seniority}</div>
-                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix.ikigaiMission}</div>
+                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix?.primaryRole || 'Non spécifié'}</div>
+                            <div><span className="text-zinc-500 block text-xs">Séniorité</span> {extractedMatrix?.seniority || 'Non spécifiée'}</div>
+                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix?.ikigaiMission || 'Non spécifiée'}</div>
                         </div>
                     </div>
 

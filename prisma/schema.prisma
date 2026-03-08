@@ -172,7 +172,7 @@ model Opportunity {
   sourceId      String
   targetId      String
   matchScore    Int
-  summary       String
+  synergies     String
   audit         String?
   status        String   @default("DETECTED")
   title         String?

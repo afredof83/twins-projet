@@ -34,7 +34,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
         }
 
         if (parsedData && typeof parsedData === 'object') {
-            synergies = parsedData.synergies || synergies;
+            synergies = parsedData.synergies || parsedData.summary || synergies;
             actions = parsedData.actions || actions;
         } else if (typeof parsedData === 'string') {
             synergies = parsedData.replace(/[*#_]/g, '').trim();
@@ -129,10 +129,10 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                                 const headers: any = { 'Content-Type': 'application/json' };
                                 if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-                                const res = await fetch(getApiUrl('/api/opportunities'), {
+                                const res = await fetch(getApiUrl('/api/connection'), {
                                     method: 'POST',
                                     headers,
-                                    body: JSON.stringify({ action: 'sendChatInvite', oppId: opportunityId, customTitle: 'Demande de Canal Sécurisé' })
+                                    body: JSON.stringify({ action: 'request', targetId: targetId, oppId: opportunityId })
                                 }).then(r => r.json());
                                 setIsSending(false);
                                 if (res.success) {

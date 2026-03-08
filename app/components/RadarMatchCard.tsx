@@ -14,14 +14,17 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
     const router = useRouter();
     const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
     const [loading, setLoading] = useState(false);
+    const [isAuditing, setIsAuditing] = useState(false);
     const [auditData, setAuditData] = useState(opportunity.audit);
     const [showAudit, setShowAudit] = useState(false);
     const [isAccepted, setIsAccepted] = useState(false);
 
+    const hasAudit = Boolean(opportunity.synergies || opportunity.summary || opportunity.matchScore);
+
     // On détermine qui est l'autre agent
-    const otherProfile = opportunity.sourceId === myId
-        ? opportunity.targetProfile
-        : opportunity.sourceProfile;
+    const otherProfile = opportunity?.sourceId === myId
+        ? opportunity?.targetProfile
+        : opportunity?.sourceProfile;
 
     // --- LOGIQUE AUDIT ---
     const getOppHeaders = async () => {
@@ -34,30 +37,50 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
     };
 
     const handleAudit = async () => {
+        setIsAuditing(true);
+        const headers = await getOppHeaders();
+        try {
+            const res = await fetch(getApiUrl('/api/opportunities'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'audit', oppId: opportunity.id, targetId: otherProfile?.id })
+            }).then(r => r.json());
+            if (res.success) {
+                setAuditData(res.audit);
+                setStatus('AUDITED');
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        setIsAuditing(false);
+    };
+
+    const handleConnect = async () => {
         setLoading(true);
         const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/opportunities'), {
+        const res = await fetch(getApiUrl('/api/connection'), {
             method: 'POST',
             headers,
-            body: JSON.stringify({ action: 'audit', oppId: opportunity.id })
+            body: JSON.stringify({ action: 'request', targetId: otherProfile?.id, oppId: opportunity.id })
         }).then(r => r.json());
-        setAuditData(res.audit);
-        setStatus('AUDITED');
-        setShowAudit(true); // Open the panel right after auditing
+        if (res.success) {
+            setStatus('INVITED');
+        }
         setLoading(false);
     };
 
     const handleAccept = async () => {
+        if (!opportunity?.id || !otherProfile?.id) return;
         setLoading(true);
         const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/opportunities'), {
+        const res = await fetch(getApiUrl('/api/connection'), {
             method: 'POST',
             headers,
-            body: JSON.stringify({ action: 'acceptInvite', oppId: opportunity.id })
+            body: JSON.stringify({ action: 'accept', oppId: opportunity.id })
         }).then(r => r.json());
         if (res.success) {
             setIsAccepted(true);
-            router.push(`/chat?id=${otherProfile.id}`);
+            router.push(`/chat?id=${otherProfile?.id}`);
             return; // Le composant sera démonté par la navigation, pas de setState après
         }
         setLoading(false);
@@ -69,7 +92,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-bold tracking-tight text-white">{getAgentName(otherProfile)}</h3>
-                    <p className="text-sm text-zinc-500">{otherProfile.role || "Agent"}</p>
+                    <p className="text-sm text-zinc-500">{otherProfile?.primaryRole || "Agent"}</p>
                 </div>
                 <span className="badge-status border-blue-500/20 text-blue-400">
                     {opportunity.matchScore}% {t('radar.match_score')}
@@ -80,7 +103,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
             <div className="mb-8">
                 {status === 'DETECTED' ? (
                     <p className="text-zinc-400 text-sm leading-relaxed">
-                        {opportunity.summary}
+                        {opportunity.synergies || opportunity.summary || opportunity.content || "Le rapport d'audit est en cours de décryptage par le Cortex..."}
                     </p>
                 ) : (
                     <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-800 text-center">
@@ -92,19 +115,32 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
             {/* Rendu conditionnel des actions (UN SEUL BOUTON PRINCIPAL PAR STATUT) */}
             <div className="mt-6">
 
-                {status === 'DETECTED' && (
+                {!hasAudit ? (
                     <button
-                        disabled={loading}
+                        disabled={isAuditing}
                         onClick={handleAudit}
                         className="btn-primary w-full flex items-center justify-center gap-2"
                     >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                            <>
-                                <Zap className="w-4 h-4 fill-white" />
-                                {t('radar.start_audit')}
-                            </>
-                        )}
+                        {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
+                        {isAuditing ? "Génération par l'IA..." : "Créer un rapport"}
                     </button>
+                ) : (
+                    <>
+                        {status === 'DETECTED' && (
+                            <button
+                                disabled={loading}
+                                onClick={handleConnect}
+                                className="btn-primary w-full flex items-center justify-center gap-2"
+                            >
+                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                    <>
+                                        <MessageSquare className="w-4 h-4 fill-white" />
+                                        {t('radar.connect_btn')}
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </>
                 )}
 
                 {status === 'AUDITED' && (
@@ -142,7 +178,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                                 {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
                             </button>
                             <button
-                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
+                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
                                 className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
                             >
                                 {t('radar.refuse')}
@@ -154,13 +190,13 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
                     <div className="flex gap-2 mt-6">
                         <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
                             className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
                         >
                             {t('radar.ignore')}
                         </button>
                         <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'BLOCKED' }) })}
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'BLOCKED' }) })}
                             className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
                         >
                             {t('radar.block')}
@@ -175,9 +211,9 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 onClose={() => setShowAudit(false)}
                 auditData={auditData}
                 targetName={getAgentName(otherProfile)}
-                opportunityId={opportunity.id}
+                opportunityId={opportunity?.id}
                 status={status}
-                targetId={otherProfile.id}
+                targetId={otherProfile?.id}
                 onInviteSuccess={() => {
                     setStatus('INVITED');
                     setShowAudit(false);

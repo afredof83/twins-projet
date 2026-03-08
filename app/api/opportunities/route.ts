@@ -73,14 +73,26 @@ export async function POST(req: NextRequest) {
             if (!opp || !opp.sourceProfile || !opp.targetProfile) return NextResponse.json({ success: false, error: "Données introuvables" }, { status: 404 });
 
             const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
-            const prompt = `Tu es le Cortex, une IA de renseignement stratégique B2B.\n\nRÈGLES DE SURVIE ABSOLUES :\n1. RÉPOND UNIQUEMENT EN JSON VALIDE.\n2. FORMATAGE : Interdiction astérisques, tirets, dièses.\n3. ACTIONS : 2 ou 3 actions ultra-concises.\n\nFORMAT ATTENDU :\n{"synergies": "[Nom] est [Métier]. Il cherche à [Objectif].", "actions": ["Action 1", "Action 2"]}\n\nCIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) :\nRôle : ${targetProfile.primaryRole || 'Non défini'}\nBio : ${targetProfile.bio || 'Non définie'}`;
+            const prompt = `Tu es le Cortex, une IA de renseignement stratégique B2B.\n\nRÈGLES DE SURVIE ABSOLUES :\n1. RÉPOND UNIQUEMENT EN JSON VALIDE.\n2. FORMATAGE : Interdiction astérisques, tirets, dièses.\n3. ACTIONS : 2 ou 3 actions ultra-concises.\n\nFORMAT ATTENDU :\n{"synergies": "[Nom] est [Métier]. Il cherche à [Objectif].", "actions": ["Action 1", "Action 2"]}\n\nCIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) :\nRôle : ${targetProfile.primaryRole || 'Non défini'}\nBio : ${targetProfile.bio || 'Non définie'}\n\nRÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.`;
 
             const auditResponse = await mistralClient.chat.complete({
                 model: 'mistral-large-latest',
                 messages: [{ role: 'user', content: prompt }]
             });
             const content = auditResponse.choices[0]?.message.content;
-            const auditResult = typeof content === 'string' ? content : "Erreur d'analyse.";
+            let auditResult = "Erreur d'analyse.";
+
+            try {
+                const cleanedJson = typeof content === 'string'
+                    ? content.replace(/```json/gi, '').replace(/```/g, '').trim()
+                    : '{}';
+                auditResult = cleanedJson;
+            } catch (error: any) {
+                console.error("❌ [API-AUDIT] Échec du match... (Score: Inconnu)");
+                console.error("Détail de l'erreur Mistral :", error);
+                console.log("Réponse brute reçue :", content);
+            }
+
             await prismaRLS.opportunity.update({ where: { id: oppId }, data: { audit: auditResult, status: 'AUDITED' } });
 
             const updated = await prismaRLS.opportunity.findUnique({

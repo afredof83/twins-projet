@@ -10,6 +10,7 @@ export default function AcceptConnectionButton({ connectionId, onAccept }: { con
     const [isAccepted, setIsAccepted] = useState(false);
 
     const handleAccept = async () => {
+        if (!connectionId) return;
         setIsAccepting(true);
         const { createClient } = await import('@/lib/supabaseBrowser');
         const supabase = createClient();

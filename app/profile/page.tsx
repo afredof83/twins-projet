@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getApiUrl } from "@/lib/api";
 import { getSessionToken } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseBrowser";
 import { useLanguage } from "@/context/LanguageContext";
 import {
     Cpu, Palette, Briefcase, UserCog, HeartPulse, Hammer, MoreHorizontal,
@@ -54,11 +55,12 @@ function ProfileContent() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<PrismType>('IDENTITY');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const supabase = createClient();
 
-    // --- Global Form State ---
     const [formData, setFormData] = useState({
         // General Identity
         name: "",
@@ -81,6 +83,19 @@ function ProfileContent() {
         hobbyRole: "",
         hobbyBio: "",
     });
+
+    const handleLogout = async () => {
+        setIsSubmitting(true);
+        try {
+            await supabase.auth.signOut();
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = '/login';
+        } catch (e) {
+            console.error("Logout error", e);
+            setIsSubmitting(false);
+        }
+    };
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -431,6 +446,17 @@ function ProfileContent() {
                                         🇺🇸 English
                                     </button>
                                 </div>
+                            </section>
+
+                            {/* --- DÉCONNEXION --- */}
+                            <section className="mt-12">
+                                <button
+                                    onClick={handleLogout}
+                                    disabled={isSubmitting}
+                                    className="w-full py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] bg-red-600 hover:bg-red-500 text-white shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('profile.settings.logout')}
+                                </button>
                             </section>
                         </div>
                     )}

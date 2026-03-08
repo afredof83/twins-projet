@@ -71,6 +71,8 @@ FORMAT ATTENDU :
 CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
 Rôle : ${targetProfile.primaryRole || 'Non défini'}
 Bio : ${targetProfile.bio || 'Non définie'}
+
+RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.
 `;
 
         console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
@@ -82,7 +84,19 @@ Bio : ${targetProfile.bio || 'Non définie'}
         });
 
         const content = auditResponse.choices[0]?.message.content;
-        const auditResult = typeof content === 'string' ? content : "Erreur d'analyse.";
+        let auditResult = "Erreur d'analyse.";
+
+        try {
+            const cleanedContent = typeof content === 'string'
+                ? content.replace(/```json/gi, '').replace(/```/g, '').trim()
+                : '{}';
+            auditResult = cleanedContent; // Or parse it if we need structured data later
+            // result = JSON.parse(cleanedContent); 
+        } catch (error: any) {
+            console.error("❌ [AUDIT] Échec du parsing... (Score: Inconnu)");
+            console.error("Détail de l'erreur Mistral :", error);
+            console.log("Réponse brute reçue :", content);
+        }
 
         // 4. Sauvegarde en BDD
         await prisma.opportunity.update({

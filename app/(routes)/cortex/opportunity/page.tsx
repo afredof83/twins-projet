@@ -145,7 +145,7 @@ function OpportunityContent() {
                         <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
                     </div>
 
-                    <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.summary}</p>
+                    <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>
 
                     <div className="flex flex-col sm:flex-row gap-4 mt-12 relative z-10">
                         <button
