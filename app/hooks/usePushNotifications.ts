@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import { createClient } from '@/lib/supabaseBrowser';
 
 export const usePushNotifications = (profileId: string | null) => {

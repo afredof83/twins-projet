@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, ShieldCheck, UserPlus, X } from 'lucide-react';
 import { getAgentName } from '@/lib/utils';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import { createClient } from '@/lib/supabaseBrowser';
 
 function InvitationContent() {

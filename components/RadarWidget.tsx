@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/radar et /api/memories
 
 export default function RadarWidget({ profileId }: { profileId: string | null }) {

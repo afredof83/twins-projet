@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Flame, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server action supprimée — on utilise fetch vers /api/opportunities
 
 export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId, onInviteSuccess }: any) {

@@ -99,21 +99,21 @@ export async function POST(request: Request) {
         }
 
         if (action === 'updateIdentity') {
-            const { role, customRole, tjm, availability, bio } = body;
+            const { primaryRole, customRole, tjm, availability, bio } = body;
             const tjmParsed = tjm ? parseInt(tjm, 10) : null;
 
             await prismaRLS.profile.update({
                 where: { id: user.id },
                 data: {
-                    role,
-                    customRole: role === 'autre' ? customRole : null,
+                    primaryRole,
+                    customRole: primaryRole === 'OTHER' ? customRole : null,
                     tjm: tjmParsed,
                     availability,
                     bio
                 }
             });
 
-            const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
+            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
             const embedding = await getMistralEmbedding(identityString);
 
             if (embedding) {

@@ -6,183 +6,183 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  extensions = [vector]
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
 }
 
 model Profile {
-  id        String  @id // DOIT être le UUID généré par auth.users de Supabase
-  email     String  @unique
-  name      String?
-  age       Int?
-  gender    String?
-  city      String?
-  country   String?
-  avatarUrl String?
+  id               String                 @id // Mappé sur l'ID Supabase Auth
+  email            String                 @unique
+  name             String?                @default("Agent Furtif")
+  language         String                 @default("fr") // 'fr' ou 'en'
+  avatarUrl        String?
+  publicKey        String?
+  fcmToken         String?
+  unifiedEmbedding Unsupported("vector")?
+  bioEmbedding     Unsupported("vector(1024)")? // Mistral-embed (1024 dimensions)
 
-  // Champs d'Identité
-  role          String?   @default("Nouveau") // Le rôle principal
-  customRole    String?   // Si le rôle est "Autre", on stocke la valeur ici
-  tjm           Int?      @default(0)         // Taux Journalier Moyen
-  availability  String?   // Immédiate, Dans 1 mois, etc.
-  bio           String?   @default("")        // Objectifs et contexte libre
+  // 🧬 G0 : Identité de base
+  age     Int?
+  gender  String?
+  city    String?
+  country String?
 
-  // Identité & Cortex de l'Agent
-  profession      String?
-  thematicProfile Json? // Ce que l'agent sait de toi
+  // 💼 G1 : Prisme Travail (HARD FILTERS)
+  sector       String? // Secteur d'activité Work
+  primaryRole  String? @map("primary_role") // Ex: 'DEVELOPER', 'DESIGNER', 'INVESTOR'
+  customRole   String? @map("custom_role") // Si primaryRole = 'OTHER'
+  tjm          Int? // Taux Journalier en euros
+  availability String? // Ex: 'IMMEDIATE', 'ONE_MONTH', 'UNAVAILABLE'
+  bio          String? @db.Text // Bio pro brute pour alimenter le vecteur Mistral
+
+  // 🤝 G2 : Prisme Social
+  socialSector    String?                @map("social_sector")
+  socialRole      String?                @map("social_role")
+  socialBio       String?                @db.Text @map("social_bio")
+  socialEmbedding Unsupported("vector(1024)")? @map("social_embedding")
+
+  // 🎨 G3 : Prisme Hobbies
+  hobbySector     String?                @map("hobby_sector")
+  hobbyRole       String?                @map("hobby_role")
+  hobbyBio        String?                @db.Text @map("hobby_bio")
+  hobbyEmbedding  Unsupported("vector(1024)")? @map("hobby_embedding")
+
+  // 🧠 IA & Mémoire
+  thematicProfile Json?   @map("thematic_profile") // Seulement pour les "Soft Skills", Ikigai, Objectifs
   unifiedAnalysis String? @db.Text
-  unifiedEmbedding Unsupported("vector(1024)")? // ⚡ ANTIGRAVITY: Le Vecteur Maître (1024 dimensions pour mistral-embed)
-  fcmToken        String?   // Token Firebase Cloud Messaging (mobile uniquement)
-  publicKey       String?   @db.Text // Clé publique ECDH (Format JWK) — l'annuaire public
 
-  // Propriété des données (Isolation)
-  memories Memory[]
-  notes    CortexNote[]
-  radars   RadarResult[]
-  files    FileArchive[]
-  discoveries Discovery[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  // Réseau de connexions (Double Opt-In)
-  initiatedConnections Connection[] @relation("InitiatedConnections")
-  receivedConnections  Connection[] @relation("ReceivedConnections")
-
+  initiatedConnections   Connection[]  @relation("InitiatedConnections")
+  receivedConnections    Connection[]  @relation("ReceivedConnections")
+  notes                  CortexNote[]
+  discoveries            Discovery[]
+  files                  FileArchive[]
+  matchesInitiated       Match[]       @relation("UserA")
+  matchesReceived        Match[]       @relation("UserB")
+  messagesReceived       Message[]     @relation("Receiver")
+  messagesSent           Message[]     @relation("Sender")
   initiatedOpportunities Opportunity[] @relation("InitiatedOpportunities")
   receivedOpportunities  Opportunity[] @relation("ReceivedOpportunities")
+  radars                 RadarResult[]
+  memories               Memory[]
 
-  // Réseau (Agent-to-Agent & Humain-to-Humain)
-  matchesInitiated Match[]   @relation("UserA")
-  matchesReceived  Match[]   @relation("UserB")
-  messagesSent     Message[] @relation("Sender")
-  messagesReceived Message[] @relation("Receiver")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // ⚡ INDEX STRATÉGIQUES POUR LE RADAR (CRUCIAL)
+  @@index([primaryRole])
+  @@index([availability])
+  @@index([tjm])
 }
 
 model FileArchive {
   id         String   @id @default(uuid())
   profileId  String
   fileName   String
-  fileUrl    String // Chemin Supabase Storage
+  fileUrl    String
   mimeType   String
   isAnalyzed Boolean  @default(false)
   createdAt  DateTime @default(now())
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model CortexNote {
-  id        String                       @id @default(uuid())
+  id        String                 @id @default(uuid())
   profileId String
-  content   String                       @db.Text
-  embedding Unsupported("vector(1024)")? // Assure-toi que pgvector est activé
-  createdAt DateTime                     @default(now())
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content   String
+  embedding Unsupported("vector")?
+  createdAt DateTime               @default(now())
+  profile   Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model RadarResult {
   id          String   @id @default(uuid())
   profileId   String
-  opportunity String   @db.Text
+  opportunity String
   sourceUrl   String?
   score       Float
   isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
-
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
-
-// --- NOUVEAUX MODULES : MATCHING & MESSAGERIE ---
 
 model Match {
   id         String      @id @default(uuid())
   userAId    String
   userBId    String
-  matchScore Float // % de synergie calculé par les Agents
-  statusA    MatchStatus @default(PENDING) // PENDING, ACCEPTED, REJECTED
+  matchScore Float
+  statusA    MatchStatus @default(PENDING)
   statusB    MatchStatus @default(PENDING)
   createdAt  DateTime    @default(now())
+  userA      Profile     @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB      Profile     @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
 
-  userA Profile @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
-  userB Profile @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
-
-  @@unique([userAId, userBId]) // Empêche les doublons de match
+  @@unique([userAId, userBId])
 }
 
 model Message {
   id         String   @id @default(uuid())
   senderId   String
   receiverId String
-  content    String   @db.Text
+  content    String
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
-
-  sender   Profile @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver Profile @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver   Profile  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     Profile  @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
 }
 
-enum MatchStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-}
-
-// Garde ton modèle Memory existant, ajoute juste la relation `profileId String`
 model Memory {
-  id               String                       @id @default(uuid())
-  content          String                       @db.Text
+  id               String                 @id @default(uuid())
+  content          String
   encryptedContent String?
-  type             String                       @default("thought")
+  type             String                 @default("thought")
   source           String?
-  embedding        Unsupported("vector(1024)")?
-  tags             Json? // Utilisé dans embedding-service
+  embedding        Unsupported("vector")?
+  tags             Json?
   expires_at       DateTime?
-  createdAt        DateTime                     @default(now()) @map("created_at")
-
-  profileId String  @map("profile_id")
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt        DateTime               @default(now()) @map("created_at")
+  profileId        String                 @map("profile_id")
+  profile          Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@map("memory")
 }
 
 model Discovery {
-  id          String   @id @default(uuid())
-  title       String
-  company     String?
-  score       Int      // Le pourcentage de match
-  reason      String?  // Pourquoi ça match selon Mistral
-  url         String?
-  createdAt   DateTime @default(now())
-  
-  // Relation avec l'utilisateur
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId   String
+  id        String   @id @default(uuid())
+  title     String
+  company   String?
+  score     Int
+  reason    String?
+  url       String?
+  createdAt DateTime @default(now())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
 
 model Connection {
   id          String   @id @default(uuid())
-  initiatorId String   
-  receiverId  String   
-  status      String   @default("PENDING") 
+  initiatorId String
+  receiverId  String
+  status      String   @default("PENDING")
   createdAt   DateTime @default(now())
-
-  // Les "câbles" officiels vers le Profil
   initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id])
   receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id])
 }
 
 model Opportunity {
   id            String   @id @default(cuid())
-  sourceId      String   // Ton ID
-  targetId      String   // L'ID de l'autre agent
-  matchScore    Int      // Le pourcentage
-  summary       String   // Le petit résumé initial
-  audit         String?  // L'audit profond (rempli après clic)
-  status        String   @default("DETECTED") // DETECTED, AUDITED, INVITED, BLOCKED, CANCELLED, ACCEPTED
-  title         String?  // Le titre de l'invitation chat
+  sourceId      String
+  targetId      String
+  matchScore    Int
+  summary       String
+  audit         String?
+  status        String   @default("DETECTED")
+  title         String?
   createdAt     DateTime @default(now())
-
-  // Relations
   sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id])
   targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id])
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }

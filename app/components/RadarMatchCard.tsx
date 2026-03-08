@@ -3,12 +3,14 @@ import { useState } from 'react';
 // Server actions supprimées — on utilise fetch vers /api/opportunities
 import { getAgentName } from '@/lib/utils';
 import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuditPanel from './AuditPanel';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
+    const { t } = useLanguage();
     const router = useRouter();
     const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
     const [loading, setLoading] = useState(false);
@@ -62,7 +64,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
     };
 
     return (
-        <div className="b2b-card p-8 mb-6">
+        <div className="b2b-card p-8 mb-6 transition-all hover:bg-zinc-900/40">
             {/* HEADER : Nom + Score */}
             <div className="flex items-start justify-between mb-6">
                 <div>
@@ -70,7 +72,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     <p className="text-sm text-zinc-500">{otherProfile.role || "Agent"}</p>
                 </div>
                 <span className="badge-status border-blue-500/20 text-blue-400">
-                    {opportunity.matchScore}% Match
+                    {opportunity.matchScore}% {t('radar.match_score')}
                 </span>
             </div>
 
@@ -82,7 +84,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     </p>
                 ) : (
                     <div className="bg-zinc-900/50 p-6 rounded-xl border border-zinc-800 text-center">
-                        <h4 className="text-zinc-300 text-sm font-bold uppercase tracking-widest text-center">Rapport d'Audit Stratégique Prêt</h4>
+                        <h4 className="text-zinc-300 text-sm font-bold uppercase tracking-widest text-center">{t('radar.audit_ready')}</h4>
                     </div>
                 )}
             </div>
@@ -99,7 +101,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                             <>
                                 <Zap className="w-4 h-4 fill-white" />
-                                Lancer l'Audit Stratégique
+                                {t('radar.start_audit')}
                             </>
                         )}
                     </button>
@@ -111,7 +113,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                         className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                     >
                         <Target className="w-4 h-4" />
-                        Lire l'Audit Cortex
+                        {t('radar.read_audit')}
                     </button>
                 )}
 
@@ -120,7 +122,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {status === 'INVITED' && opportunity.sourceId === myId && (
                     <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center mt-6">
                         <p className="text-blue-400 text-xs font-bold">
-                            ⏳ Invitation envoyée. En attente de réponse...
+                            ⏳ {t('radar.invite_sent')}
                         </p>
                     </div>
                 )}
@@ -129,7 +131,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {status === 'INVITED' && opportunity.targetId === myId && (
                     <div className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-xl text-center mt-6">
                         <p className="text-green-400 text-sm font-bold mb-4">
-                            📩 Demande d'ouverture de canal : {opportunity.title || "Nouvelle invitation"}
+                            📩 {t('radar.channel_request')} : {opportunity.title || t('radar.new_invite')}
                         </p>
                         <div className="flex gap-2">
                             <button
@@ -137,13 +139,13 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                                 onClick={handleAccept}
                                 className={`btn-primary flex-1 ${isAccepted ? 'bg-emerald-600/50 cursor-default text-emerald-100' : 'bg-green-600 hover:bg-green-500 text-white'}`}
                             >
-                                {loading ? "CRÉATION..." : isAccepted ? "ACCEPTÉ ✓" : "ACCEPTER"}
+                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
                             </button>
                             <button
                                 onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
                                 className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
                             >
-                                REFUSER
+                                {t('radar.refuse')}
                             </button>
                         </div>
                     </div>
@@ -155,13 +157,13 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                             onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'CANCELLED' }) })}
                             className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
                         >
-                            IGNORER
+                            {t('radar.ignore')}
                         </button>
                         <button
                             onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity.id, status: 'BLOCKED' }) })}
                             className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
                         >
-                            BLOQUER
+                            {t('radar.block')}
                         </button>
                     </div>
                 )}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/generate-opener et /api/connection
 import { createClient } from '@/lib/supabase/client';
 

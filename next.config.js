@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: process.env.BUILD_TARGET === 'mobile' ? 'export' : 'standalone',
     serverExternalPackages: ['@prisma/client', 'bip39'],
-    images: { unoptimized: true }, // Requis pour l'export statique
+    images: {
+        unoptimized: true, // Requis car l'optimisation d'image Next.js a besoin d'un serveur Node
+    },
     async headers() {
         return [
             {

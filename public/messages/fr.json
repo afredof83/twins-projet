@@ -1,0 +1,123 @@
+{
+    "navigation": {
+        "radar": "Radar",
+        "cortex": "Cortex",
+        "identity": "Identité"
+    },
+    "profile": {
+        "title": "Mon Prisme",
+        "subtitle": "Configurez les multiples facettes de votre identité",
+        "tabs": {
+            "identity": "Identité",
+            "work": "Travail",
+            "social": "Cercle",
+            "hobby": "Passions",
+            "settings": "Options"
+        },
+        "identity": {
+            "pseudo": "Pseudo",
+            "age": "Âge",
+            "sex": "Sexe",
+            "sex_placeholder": "Sélectionner",
+            "sex_options": {
+                "male": "Homme",
+                "female": "Femme",
+                "other": "Autre"
+            },
+            "city": "Ville",
+            "country": "Pays",
+            "update_btn": "Mettre à jour l'identité"
+        },
+        "work": {
+            "tjm": "Honoraires (TJM)",
+            "availability": "Disponibilité",
+            "update_btn": "Mettre à jour le Prisme Work"
+        },
+        "social": {
+            "update_btn": "Mettre à jour le Prisme Social"
+        },
+        "hobby": {
+            "update_btn": "Mettre à jour le Prisme Hobby"
+        },
+        "common": {
+            "dimension": "Dimension d'échange",
+            "position": "Positionnement Typologique",
+            "bio": "Bio sémantique (Vecteur Mistral)",
+            "bio_placeholder": "Détaillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
+            "syncing": "Synchronisation...",
+            "encrypt_note": "Les modifications sont cryptées et vectorisées en temps réel."
+        },
+        "sectors": {
+            "TECH": "Tech & Digital",
+            "DESIGN": "Création & Design",
+            "BUSINESS": "Business & Vente",
+            "MANAGEMENT": "Admin & Management",
+            "HEALTH": "Santé & Bien-être",
+            "INDUSTRY": "Artisanat & Industrie",
+            "OTHER": "Autre",
+            "FRIENDSHIP": "Amitié & Social",
+            "DATING": "Rencontres (Soul)",
+            "MENTORING": "Mentorat",
+            "COMMUNITY": "Communauté / Cause",
+            "PROFESSIONAL": "Networking",
+            "SPORT": "Sport & Fitness",
+            "ARTS": "Art & Culture",
+            "GAMING": "Jeux & Gaming",
+            "TRAVEL": "Voyage & Nature",
+            "FOOD": "Gastronomie & Vin"
+        },
+        "availabilities": {
+            "IMMEDIATE": "Immédiate",
+            "ONE_MONTH": "Sous 1 mois",
+            "UNAVAILABLE": "Indisponible"
+        }
+    },
+    "radar": {
+        "title": "Radar Sémantique",
+        "subtitle": "Découvrez les profils qui résonnent avec votre recherche",
+        "search_placeholder": "Que cherchez-vous ? (ex: Mentor en design, Partenaire de tennis...)",
+        "filters": "Filtres",
+        "match_score": "Correspondance",
+        "connect_btn": "Entrer en contact",
+        "empty_state": "Aucune résonance trouvée. Essayez une autre intention.",
+        "incoming_requests": "Requêtes Entrantes",
+        "encrypted_link": "Souhaite établir une liaison chiffrée",
+        "secure_channels": "Canaux Sécurisés",
+        "audit_ready": "Rapport d'Audit Stratégique Prêt",
+        "start_audit": "Lancer l'Audit Stratégique",
+        "read_audit": "Lire l'Audit Cortex",
+        "invite_sent": "Invitation envoyée. En attente de réponse...",
+        "channel_request": "Demande d'ouverture de canal",
+        "new_invite": "Nouvelle invitation",
+        "accept": "Accepter",
+        "accepted": "Accepté",
+        "refuse": "Refuser",
+        "ignore": "Ignorer",
+        "block": "Bloquer",
+        "creating": "Création..."
+    },
+    "cortex": {
+        "title": "Cortex",
+        "subtitle": "Le centre névralgique de votre Agent",
+        "memory_nodes": "Nœuds de mémoire",
+        "system_status": "État du système",
+        "vector_space": "Espace vectoriel",
+        "last_sync": "Dernière synchronisation",
+        "ingest": "Ingérer",
+        "analyzing": "Analyse en cours...",
+        "success": "Mémoire ingérée avec succès",
+        "error_size": "Le fichier dépasse la limite de 5Mo.",
+        "error_format": "Format non supporté. Utilisez PDF, TXT ou MD.",
+        "attach_file": "Joindre un document",
+        "remove_file": "Retirer le fichier",
+        "access_error": "Erreur d'accès aux données du Cortex",
+        "retry": "Réessayer",
+        "back_to_feed": "Retour au Tactical Feed",
+        "no_dataset": "Aucun dataset injecté",
+        "empty_core": "Le noyau mémoriel est vide",
+        "fragment": "Fragment"
+    },
+    "settings": {
+        "language": "Langue"
+    }
+}

@@ -40,20 +40,27 @@ export type ProfileMinAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  language: string | null
+  avatarUrl: string | null
+  publicKey: string | null
+  fcmToken: string | null
   age: number | null
   gender: string | null
   city: string | null
   country: string | null
-  avatarUrl: string | null
-  role: string | null
+  sector: string | null
+  primaryRole: string | null
   customRole: string | null
   tjm: number | null
   availability: string | null
   bio: string | null
-  profession: string | null
+  socialSector: string | null
+  socialRole: string | null
+  socialBio: string | null
+  hobbySector: string | null
+  hobbyRole: string | null
+  hobbyBio: string | null
   unifiedAnalysis: string | null
-  fcmToken: string | null
-  publicKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -62,20 +69,27 @@ export type ProfileMaxAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
+  language: string | null
+  avatarUrl: string | null
+  publicKey: string | null
+  fcmToken: string | null
   age: number | null
   gender: string | null
   city: string | null
   country: string | null
-  avatarUrl: string | null
-  role: string | null
+  sector: string | null
+  primaryRole: string | null
   customRole: string | null
   tjm: number | null
   availability: string | null
   bio: string | null
-  profession: string | null
+  socialSector: string | null
+  socialRole: string | null
+  socialBio: string | null
+  hobbySector: string | null
+  hobbyRole: string | null
+  hobbyBio: string | null
   unifiedAnalysis: string | null
-  fcmToken: string | null
-  publicKey: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -84,21 +98,28 @@ export type ProfileCountAggregateOutputType = {
   id: number
   email: number
   name: number
+  language: number
+  avatarUrl: number
+  publicKey: number
+  fcmToken: number
   age: number
   gender: number
   city: number
   country: number
-  avatarUrl: number
-  role: number
+  sector: number
+  primaryRole: number
   customRole: number
   tjm: number
   availability: number
   bio: number
-  profession: number
+  socialSector: number
+  socialRole: number
+  socialBio: number
+  hobbySector: number
+  hobbyRole: number
+  hobbyBio: number
   thematicProfile: number
   unifiedAnalysis: number
-  fcmToken: number
-  publicKey: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -119,20 +140,27 @@ export type ProfileMinAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  language?: true
+  avatarUrl?: true
+  publicKey?: true
+  fcmToken?: true
   age?: true
   gender?: true
   city?: true
   country?: true
-  avatarUrl?: true
-  role?: true
+  sector?: true
+  primaryRole?: true
   customRole?: true
   tjm?: true
   availability?: true
   bio?: true
-  profession?: true
+  socialSector?: true
+  socialRole?: true
+  socialBio?: true
+  hobbySector?: true
+  hobbyRole?: true
+  hobbyBio?: true
   unifiedAnalysis?: true
-  fcmToken?: true
-  publicKey?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -141,20 +169,27 @@ export type ProfileMaxAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  language?: true
+  avatarUrl?: true
+  publicKey?: true
+  fcmToken?: true
   age?: true
   gender?: true
   city?: true
   country?: true
-  avatarUrl?: true
-  role?: true
+  sector?: true
+  primaryRole?: true
   customRole?: true
   tjm?: true
   availability?: true
   bio?: true
-  profession?: true
+  socialSector?: true
+  socialRole?: true
+  socialBio?: true
+  hobbySector?: true
+  hobbyRole?: true
+  hobbyBio?: true
   unifiedAnalysis?: true
-  fcmToken?: true
-  publicKey?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -163,21 +198,28 @@ export type ProfileCountAggregateInputType = {
   id?: true
   email?: true
   name?: true
+  language?: true
+  avatarUrl?: true
+  publicKey?: true
+  fcmToken?: true
   age?: true
   gender?: true
   city?: true
   country?: true
-  avatarUrl?: true
-  role?: true
+  sector?: true
+  primaryRole?: true
   customRole?: true
   tjm?: true
   availability?: true
   bio?: true
-  profession?: true
+  socialSector?: true
+  socialRole?: true
+  socialBio?: true
+  hobbySector?: true
+  hobbyRole?: true
+  hobbyBio?: true
   thematicProfile?: true
   unifiedAnalysis?: true
-  fcmToken?: true
-  publicKey?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -273,21 +315,28 @@ export type ProfileGroupByOutputType = {
   id: string
   email: string
   name: string | null
+  language: string
+  avatarUrl: string | null
+  publicKey: string | null
+  fcmToken: string | null
   age: number | null
   gender: string | null
   city: string | null
   country: string | null
-  avatarUrl: string | null
-  role: string | null
+  sector: string | null
+  primaryRole: string | null
   customRole: string | null
   tjm: number | null
   availability: string | null
   bio: string | null
-  profession: string | null
+  socialSector: string | null
+  socialRole: string | null
+  socialBio: string | null
+  hobbySector: string | null
+  hobbyRole: string | null
+  hobbyBio: string | null
   thematicProfile: runtime.JsonValue | null
   unifiedAnalysis: string | null
-  fcmToken: string | null
-  publicKey: string | null
   createdAt: Date
   updatedAt: Date
   _count: ProfileCountAggregateOutputType | null
@@ -319,72 +368,86 @@ export type ProfileWhereInput = {
   id?: Prisma.StringFilter<"Profile"> | string
   email?: Prisma.StringFilter<"Profile"> | string
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
+  language?: Prisma.StringFilter<"Profile"> | string
+  avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
+  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
   age?: Prisma.IntNullableFilter<"Profile"> | number | null
   gender?: Prisma.StringNullableFilter<"Profile"> | string | null
   city?: Prisma.StringNullableFilter<"Profile"> | string | null
   country?: Prisma.StringNullableFilter<"Profile"> | string | null
-  avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
-  role?: Prisma.StringNullableFilter<"Profile"> | string | null
+  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
   availability?: Prisma.StringNullableFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  profession?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
-  memories?: Prisma.MemoryListRelationFilter
-  notes?: Prisma.CortexNoteListRelationFilter
-  radars?: Prisma.RadarResultListRelationFilter
-  files?: Prisma.FileArchiveListRelationFilter
-  discoveries?: Prisma.DiscoveryListRelationFilter
   initiatedConnections?: Prisma.ConnectionListRelationFilter
   receivedConnections?: Prisma.ConnectionListRelationFilter
-  initiatedOpportunities?: Prisma.OpportunityListRelationFilter
-  receivedOpportunities?: Prisma.OpportunityListRelationFilter
+  notes?: Prisma.CortexNoteListRelationFilter
+  discoveries?: Prisma.DiscoveryListRelationFilter
+  files?: Prisma.FileArchiveListRelationFilter
   matchesInitiated?: Prisma.MatchListRelationFilter
   matchesReceived?: Prisma.MatchListRelationFilter
-  messagesSent?: Prisma.MessageListRelationFilter
   messagesReceived?: Prisma.MessageListRelationFilter
+  messagesSent?: Prisma.MessageListRelationFilter
+  initiatedOpportunities?: Prisma.OpportunityListRelationFilter
+  receivedOpportunities?: Prisma.OpportunityListRelationFilter
+  radars?: Prisma.RadarResultListRelationFilter
+  memories?: Prisma.MemoryListRelationFilter
 }
 
 export type ProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  role?: Prisma.SortOrderInput | Prisma.SortOrder
+  sector?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
   customRole?: Prisma.SortOrderInput | Prisma.SortOrder
   tjm?: Prisma.SortOrderInput | Prisma.SortOrder
   availability?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
-  profession?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
   thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
-  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  memories?: Prisma.MemoryOrderByRelationAggregateInput
-  notes?: Prisma.CortexNoteOrderByRelationAggregateInput
-  radars?: Prisma.RadarResultOrderByRelationAggregateInput
-  files?: Prisma.FileArchiveOrderByRelationAggregateInput
-  discoveries?: Prisma.DiscoveryOrderByRelationAggregateInput
   initiatedConnections?: Prisma.ConnectionOrderByRelationAggregateInput
   receivedConnections?: Prisma.ConnectionOrderByRelationAggregateInput
-  initiatedOpportunities?: Prisma.OpportunityOrderByRelationAggregateInput
-  receivedOpportunities?: Prisma.OpportunityOrderByRelationAggregateInput
+  notes?: Prisma.CortexNoteOrderByRelationAggregateInput
+  discoveries?: Prisma.DiscoveryOrderByRelationAggregateInput
+  files?: Prisma.FileArchiveOrderByRelationAggregateInput
   matchesInitiated?: Prisma.MatchOrderByRelationAggregateInput
   matchesReceived?: Prisma.MatchOrderByRelationAggregateInput
-  messagesSent?: Prisma.MessageOrderByRelationAggregateInput
   messagesReceived?: Prisma.MessageOrderByRelationAggregateInput
+  messagesSent?: Prisma.MessageOrderByRelationAggregateInput
+  initiatedOpportunities?: Prisma.OpportunityOrderByRelationAggregateInput
+  receivedOpportunities?: Prisma.OpportunityOrderByRelationAggregateInput
+  radars?: Prisma.RadarResultOrderByRelationAggregateInput
+  memories?: Prisma.MemoryOrderByRelationAggregateInput
 }
 
 export type ProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -394,57 +457,71 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ProfileWhereInput[]
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
+  language?: Prisma.StringFilter<"Profile"> | string
+  avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
+  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
   age?: Prisma.IntNullableFilter<"Profile"> | number | null
   gender?: Prisma.StringNullableFilter<"Profile"> | string | null
   city?: Prisma.StringNullableFilter<"Profile"> | string | null
   country?: Prisma.StringNullableFilter<"Profile"> | string | null
-  avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
-  role?: Prisma.StringNullableFilter<"Profile"> | string | null
+  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
   availability?: Prisma.StringNullableFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  profession?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
-  memories?: Prisma.MemoryListRelationFilter
-  notes?: Prisma.CortexNoteListRelationFilter
-  radars?: Prisma.RadarResultListRelationFilter
-  files?: Prisma.FileArchiveListRelationFilter
-  discoveries?: Prisma.DiscoveryListRelationFilter
   initiatedConnections?: Prisma.ConnectionListRelationFilter
   receivedConnections?: Prisma.ConnectionListRelationFilter
-  initiatedOpportunities?: Prisma.OpportunityListRelationFilter
-  receivedOpportunities?: Prisma.OpportunityListRelationFilter
+  notes?: Prisma.CortexNoteListRelationFilter
+  discoveries?: Prisma.DiscoveryListRelationFilter
+  files?: Prisma.FileArchiveListRelationFilter
   matchesInitiated?: Prisma.MatchListRelationFilter
   matchesReceived?: Prisma.MatchListRelationFilter
-  messagesSent?: Prisma.MessageListRelationFilter
   messagesReceived?: Prisma.MessageListRelationFilter
+  messagesSent?: Prisma.MessageListRelationFilter
+  initiatedOpportunities?: Prisma.OpportunityListRelationFilter
+  receivedOpportunities?: Prisma.OpportunityListRelationFilter
+  radars?: Prisma.RadarResultListRelationFilter
+  memories?: Prisma.MemoryListRelationFilter
 }, "id" | "email">
 
 export type ProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   country?: Prisma.SortOrderInput | Prisma.SortOrder
-  avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  role?: Prisma.SortOrderInput | Prisma.SortOrder
+  sector?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
   customRole?: Prisma.SortOrderInput | Prisma.SortOrder
   tjm?: Prisma.SortOrderInput | Prisma.SortOrder
   availability?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
-  profession?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
   thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
-  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ProfileCountOrderByAggregateInput
@@ -461,21 +538,28 @@ export type ProfileScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   email?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  language?: Prisma.StringWithAggregatesFilter<"Profile"> | string
+  avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  fcmToken?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   age?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
   gender?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   city?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   country?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  role?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  sector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   customRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   tjm?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
   availability?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  profession?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableWithAggregatesFilter<"Profile">
   unifiedAnalysis?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
 }
@@ -484,165 +568,200 @@ export type ProfileCreateInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateManyInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -651,21 +770,28 @@ export type ProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -674,21 +800,28 @@ export type ProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -697,21 +830,28 @@ export type ProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
   age?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   city?: Prisma.SortOrder
   country?: Prisma.SortOrder
-  avatarUrl?: Prisma.SortOrder
-  role?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  profession?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
   thematicProfile?: Prisma.SortOrder
   unifiedAnalysis?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -725,20 +865,27 @@ export type ProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
   age?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   city?: Prisma.SortOrder
   country?: Prisma.SortOrder
-  avatarUrl?: Prisma.SortOrder
-  role?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  profession?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
   unifiedAnalysis?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -747,20 +894,27 @@ export type ProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  avatarUrl?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
   age?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   city?: Prisma.SortOrder
   country?: Prisma.SortOrder
-  avatarUrl?: Prisma.SortOrder
-  role?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
   customRole?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  profession?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
   unifiedAnalysis?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -865,24 +1019,16 @@ export type ProfileUpdateOneRequiredWithoutMatchesReceivedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutMatchesReceivedInput, Prisma.ProfileUpdateWithoutMatchesReceivedInput>, Prisma.ProfileUncheckedUpdateWithoutMatchesReceivedInput>
 }
 
-export type ProfileCreateNestedOneWithoutMessagesSentInput = {
-  create?: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
-  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutMessagesSentInput
-  connect?: Prisma.ProfileWhereUniqueInput
-}
-
 export type ProfileCreateNestedOneWithoutMessagesReceivedInput = {
   create?: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesReceivedInput, Prisma.ProfileUncheckedCreateWithoutMessagesReceivedInput>
   connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutMessagesReceivedInput
   connect?: Prisma.ProfileWhereUniqueInput
 }
 
-export type ProfileUpdateOneRequiredWithoutMessagesSentNestedInput = {
+export type ProfileCreateNestedOneWithoutMessagesSentInput = {
   create?: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
   connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutMessagesSentInput
-  upsert?: Prisma.ProfileUpsertWithoutMessagesSentInput
   connect?: Prisma.ProfileWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutMessagesSentInput, Prisma.ProfileUpdateWithoutMessagesSentInput>, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
 }
 
 export type ProfileUpdateOneRequiredWithoutMessagesReceivedNestedInput = {
@@ -891,6 +1037,14 @@ export type ProfileUpdateOneRequiredWithoutMessagesReceivedNestedInput = {
   upsert?: Prisma.ProfileUpsertWithoutMessagesReceivedInput
   connect?: Prisma.ProfileWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutMessagesReceivedInput, Prisma.ProfileUpdateWithoutMessagesReceivedInput>, Prisma.ProfileUncheckedUpdateWithoutMessagesReceivedInput>
+}
+
+export type ProfileUpdateOneRequiredWithoutMessagesSentNestedInput = {
+  create?: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
+  connectOrCreate?: Prisma.ProfileCreateOrConnectWithoutMessagesSentInput
+  upsert?: Prisma.ProfileUpsertWithoutMessagesSentInput
+  connect?: Prisma.ProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProfileUpdateToOneWithWhereWithoutMessagesSentInput, Prisma.ProfileUpdateWithoutMessagesSentInput>, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
 }
 
 export type ProfileCreateNestedOneWithoutMemoriesInput = {
@@ -981,70 +1135,84 @@ export type ProfileCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutFilesInput = {
@@ -1067,140 +1235,168 @@ export type ProfileUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutNotesInput = {
@@ -1223,140 +1419,168 @@ export type ProfileUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutRadarsInput = {
@@ -1379,140 +1603,168 @@ export type ProfileUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
+  matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
+  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
   receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
-  matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
-  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
+  matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
+  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
   receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
-  matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
-  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutMatchesInitiatedInput = {
@@ -1524,70 +1776,84 @@ export type ProfileCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
+  matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
+  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
   receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
-  matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
-  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
+  matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
+  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
   receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
-  matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
-  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutMatchesReceivedInput = {
@@ -1610,70 +1876,84 @@ export type ProfileUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
+  matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
+  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
   receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
-  matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
-  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
+  matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
+  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
   receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
-  matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
-  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUpsertWithoutMatchesReceivedInput = {
@@ -1691,215 +1971,168 @@ export type ProfileUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
+  matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
+  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
   receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
-  matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
-  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
+  matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
+  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
   receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
-  matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
-  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
-}
-
-export type ProfileCreateWithoutMessagesSentInput = {
-  id: string
-  email: string
-  name?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
-  customRole?: string | null
-  tjm?: number | null
-  availability?: string | null
-  bio?: string | null
-  profession?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
-  initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
-  receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
-  matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
-  matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
-}
-
-export type ProfileUncheckedCreateWithoutMessagesSentInput = {
-  id: string
-  email: string
-  name?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
-  customRole?: string | null
-  tjm?: number | null
-  availability?: string | null
-  bio?: string | null
-  profession?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
-  initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
-  receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
-  matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
-  matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
-}
-
-export type ProfileCreateOrConnectWithoutMessagesSentInput = {
-  where: Prisma.ProfileWhereUniqueInput
-  create: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
   messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
   messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutMessagesReceivedInput = {
@@ -1907,85 +2140,93 @@ export type ProfileCreateOrConnectWithoutMessagesReceivedInput = {
   create: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesReceivedInput, Prisma.ProfileUncheckedCreateWithoutMessagesReceivedInput>
 }
 
-export type ProfileUpsertWithoutMessagesSentInput = {
-  update: Prisma.XOR<Prisma.ProfileUpdateWithoutMessagesSentInput, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
+export type ProfileCreateWithoutMessagesSentInput = {
+  id: string
+  email: string
+  name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
+  sector?: string | null
+  primaryRole?: string | null
+  customRole?: string | null
+  tjm?: number | null
+  availability?: string | null
+  bio?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  unifiedAnalysis?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
+  receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
+  matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
+  matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
+  messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileUncheckedCreateWithoutMessagesSentInput = {
+  id: string
+  email: string
+  name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
+  age?: number | null
+  gender?: string | null
+  city?: string | null
+  country?: string | null
+  sector?: string | null
+  primaryRole?: string | null
+  customRole?: string | null
+  tjm?: number | null
+  availability?: string | null
+  bio?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  unifiedAnalysis?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
+  receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
+  matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
+  matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
+  messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type ProfileCreateOrConnectWithoutMessagesSentInput = {
+  where: Prisma.ProfileWhereUniqueInput
   create: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
-  where?: Prisma.ProfileWhereInput
-}
-
-export type ProfileUpdateToOneWithWhereWithoutMessagesSentInput = {
-  where?: Prisma.ProfileWhereInput
-  data: Prisma.XOR<Prisma.ProfileUpdateWithoutMessagesSentInput, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
-}
-
-export type ProfileUpdateWithoutMessagesSentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
-  initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
-  receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
-  matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
-  matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
-}
-
-export type ProfileUncheckedUpdateWithoutMessagesSentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
-  initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
-  receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
-  matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
-  matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
 }
 
 export type ProfileUpsertWithoutMessagesReceivedInput = {
@@ -2003,140 +2244,263 @@ export type ProfileUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
   messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
   messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUpsertWithoutMessagesSentInput = {
+  update: Prisma.XOR<Prisma.ProfileUpdateWithoutMessagesSentInput, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
+  create: Prisma.XOR<Prisma.ProfileCreateWithoutMessagesSentInput, Prisma.ProfileUncheckedCreateWithoutMessagesSentInput>
+  where?: Prisma.ProfileWhereInput
+}
+
+export type ProfileUpdateToOneWithWhereWithoutMessagesSentInput = {
+  where?: Prisma.ProfileWhereInput
+  data: Prisma.XOR<Prisma.ProfileUpdateWithoutMessagesSentInput, Prisma.ProfileUncheckedUpdateWithoutMessagesSentInput>
+}
+
+export type ProfileUpdateWithoutMessagesSentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
+  receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
+  matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
+  matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
+  messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
+}
+
+export type ProfileUncheckedUpdateWithoutMessagesSentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
+  receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
+  matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
+  matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
+  messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutMemoriesInput = {
@@ -2159,140 +2523,168 @@ export type ProfileUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutDiscoveriesInput = {
@@ -2315,140 +2707,168 @@ export type ProfileUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutInitiatedConnectionsInput = {
@@ -2460,70 +2880,84 @@ export type ProfileCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutReceivedConnectionsInput = {
@@ -2546,70 +2980,84 @@ export type ProfileUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUpsertWithoutReceivedConnectionsInput = {
@@ -2627,140 +3075,168 @@ export type ProfileUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  receivedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutTargetProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutInitiatedOpportunitiesInput = {
@@ -2772,70 +3248,84 @@ export type ProfileCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityCreateNestedManyWithoutSourceProfileInput
+  radars?: Prisma.RadarResultCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileUncheckedCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
+  language?: string
+  avatarUrl?: string | null
+  publicKey?: string | null
+  fcmToken?: string | null
   age?: number | null
   gender?: string | null
   city?: string | null
   country?: string | null
-  avatarUrl?: string | null
-  role?: string | null
+  sector?: string | null
+  primaryRole?: string | null
   customRole?: string | null
   tjm?: number | null
   availability?: string | null
   bio?: string | null
-  profession?: string | null
+  socialSector?: string | null
+  socialRole?: string | null
+  socialBio?: string | null
+  hobbySector?: string | null
+  hobbyRole?: string | null
+  hobbyBio?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: string | null
-  fcmToken?: string | null
-  publicKey?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
-  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
-  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
-  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
-  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
+  discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
+  files?: Prisma.FileArchiveUncheckedCreateNestedManyWithoutProfileInput
   matchesInitiated?: Prisma.MatchUncheckedCreateNestedManyWithoutUserAInput
   matchesReceived?: Prisma.MatchUncheckedCreateNestedManyWithoutUserBInput
-  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
   messagesReceived?: Prisma.MessageUncheckedCreateNestedManyWithoutReceiverInput
+  messagesSent?: Prisma.MessageUncheckedCreateNestedManyWithoutSenderInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedCreateNestedManyWithoutSourceProfileInput
+  radars?: Prisma.RadarResultUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.MemoryUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type ProfileCreateOrConnectWithoutReceivedOpportunitiesInput = {
@@ -2858,70 +3348,84 @@ export type ProfileUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  receivedOpportunities?: Prisma.OpportunityUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  receivedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUpsertWithoutReceivedOpportunitiesInput = {
@@ -2939,70 +3443,84 @@ export type ProfileUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUpdateManyWithoutSourceProfileNestedInput
+  radars?: Prisma.RadarResultUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUpdateManyWithoutProfileNestedInput
 }
 
 export type ProfileUncheckedUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profession?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
-  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
-  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
-  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
-  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
-  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
+  discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
+  files?: Prisma.FileArchiveUncheckedUpdateManyWithoutProfileNestedInput
   matchesInitiated?: Prisma.MatchUncheckedUpdateManyWithoutUserANestedInput
   matchesReceived?: Prisma.MatchUncheckedUpdateManyWithoutUserBNestedInput
-  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
   messagesReceived?: Prisma.MessageUncheckedUpdateManyWithoutReceiverNestedInput
+  messagesSent?: Prisma.MessageUncheckedUpdateManyWithoutSenderNestedInput
+  initiatedOpportunities?: Prisma.OpportunityUncheckedUpdateManyWithoutSourceProfileNestedInput
+  radars?: Prisma.RadarResultUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.MemoryUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 
@@ -3011,35 +3529,35 @@ export type ProfileUncheckedUpdateWithoutReceivedOpportunitiesInput = {
  */
 
 export type ProfileCountOutputType = {
-  memories: number
-  notes: number
-  radars: number
-  files: number
-  discoveries: number
   initiatedConnections: number
   receivedConnections: number
-  initiatedOpportunities: number
-  receivedOpportunities: number
+  notes: number
+  discoveries: number
+  files: number
   matchesInitiated: number
   matchesReceived: number
-  messagesSent: number
   messagesReceived: number
+  messagesSent: number
+  initiatedOpportunities: number
+  receivedOpportunities: number
+  radars: number
+  memories: number
 }
 
 export type ProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  memories?: boolean | ProfileCountOutputTypeCountMemoriesArgs
-  notes?: boolean | ProfileCountOutputTypeCountNotesArgs
-  radars?: boolean | ProfileCountOutputTypeCountRadarsArgs
-  files?: boolean | ProfileCountOutputTypeCountFilesArgs
-  discoveries?: boolean | ProfileCountOutputTypeCountDiscoveriesArgs
   initiatedConnections?: boolean | ProfileCountOutputTypeCountInitiatedConnectionsArgs
   receivedConnections?: boolean | ProfileCountOutputTypeCountReceivedConnectionsArgs
-  initiatedOpportunities?: boolean | ProfileCountOutputTypeCountInitiatedOpportunitiesArgs
-  receivedOpportunities?: boolean | ProfileCountOutputTypeCountReceivedOpportunitiesArgs
+  notes?: boolean | ProfileCountOutputTypeCountNotesArgs
+  discoveries?: boolean | ProfileCountOutputTypeCountDiscoveriesArgs
+  files?: boolean | ProfileCountOutputTypeCountFilesArgs
   matchesInitiated?: boolean | ProfileCountOutputTypeCountMatchesInitiatedArgs
   matchesReceived?: boolean | ProfileCountOutputTypeCountMatchesReceivedArgs
-  messagesSent?: boolean | ProfileCountOutputTypeCountMessagesSentArgs
   messagesReceived?: boolean | ProfileCountOutputTypeCountMessagesReceivedArgs
+  messagesSent?: boolean | ProfileCountOutputTypeCountMessagesSentArgs
+  initiatedOpportunities?: boolean | ProfileCountOutputTypeCountInitiatedOpportunitiesArgs
+  receivedOpportunities?: boolean | ProfileCountOutputTypeCountReceivedOpportunitiesArgs
+  radars?: boolean | ProfileCountOutputTypeCountRadarsArgs
+  memories?: boolean | ProfileCountOutputTypeCountMemoriesArgs
 }
 
 /**
@@ -3050,41 +3568,6 @@ export type ProfileCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
    * Select specific fields to fetch from the ProfileCountOutputType
    */
   select?: Prisma.ProfileCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * ProfileCountOutputType without action
- */
-export type ProfileCountOutputTypeCountMemoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.MemoryWhereInput
-}
-
-/**
- * ProfileCountOutputType without action
- */
-export type ProfileCountOutputTypeCountNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CortexNoteWhereInput
-}
-
-/**
- * ProfileCountOutputType without action
- */
-export type ProfileCountOutputTypeCountRadarsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.RadarResultWhereInput
-}
-
-/**
- * ProfileCountOutputType without action
- */
-export type ProfileCountOutputTypeCountFilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.FileArchiveWhereInput
-}
-
-/**
- * ProfileCountOutputType without action
- */
-export type ProfileCountOutputTypeCountDiscoveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.DiscoveryWhereInput
 }
 
 /**
@@ -3104,15 +3587,22 @@ export type ProfileCountOutputTypeCountReceivedConnectionsArgs<ExtArgs extends r
 /**
  * ProfileCountOutputType without action
  */
-export type ProfileCountOutputTypeCountInitiatedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.OpportunityWhereInput
+export type ProfileCountOutputTypeCountNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CortexNoteWhereInput
 }
 
 /**
  * ProfileCountOutputType without action
  */
-export type ProfileCountOutputTypeCountReceivedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.OpportunityWhereInput
+export type ProfileCountOutputTypeCountDiscoveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DiscoveryWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountFilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FileArchiveWhereInput
 }
 
 /**
@@ -3132,6 +3622,13 @@ export type ProfileCountOutputTypeCountMatchesReceivedArgs<ExtArgs extends runti
 /**
  * ProfileCountOutputType without action
  */
+export type ProfileCountOutputTypeCountMessagesReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MessageWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
 export type ProfileCountOutputTypeCountMessagesSentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.MessageWhereInput
 }
@@ -3139,8 +3636,29 @@ export type ProfileCountOutputTypeCountMessagesSentArgs<ExtArgs extends runtime.
 /**
  * ProfileCountOutputType without action
  */
-export type ProfileCountOutputTypeCountMessagesReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.MessageWhereInput
+export type ProfileCountOutputTypeCountInitiatedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OpportunityWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountReceivedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OpportunityWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountRadarsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.RadarResultWhereInput
+}
+
+/**
+ * ProfileCountOutputType without action
+ */
+export type ProfileCountOutputTypeCountMemoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MemoryWhereInput
 }
 
 
@@ -3148,36 +3666,43 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   id?: boolean
   email?: boolean
   name?: boolean
+  language?: boolean
+  avatarUrl?: boolean
+  publicKey?: boolean
+  fcmToken?: boolean
   age?: boolean
   gender?: boolean
   city?: boolean
   country?: boolean
-  avatarUrl?: boolean
-  role?: boolean
+  sector?: boolean
+  primaryRole?: boolean
   customRole?: boolean
   tjm?: boolean
   availability?: boolean
   bio?: boolean
-  profession?: boolean
+  socialSector?: boolean
+  socialRole?: boolean
+  socialBio?: boolean
+  hobbySector?: boolean
+  hobbyRole?: boolean
+  hobbyBio?: boolean
   thematicProfile?: boolean
   unifiedAnalysis?: boolean
-  fcmToken?: boolean
-  publicKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  memories?: boolean | Prisma.Profile$memoriesArgs<ExtArgs>
-  notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
-  radars?: boolean | Prisma.Profile$radarsArgs<ExtArgs>
-  files?: boolean | Prisma.Profile$filesArgs<ExtArgs>
-  discoveries?: boolean | Prisma.Profile$discoveriesArgs<ExtArgs>
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
   receivedConnections?: boolean | Prisma.Profile$receivedConnectionsArgs<ExtArgs>
-  initiatedOpportunities?: boolean | Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>
-  receivedOpportunities?: boolean | Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>
+  notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
+  discoveries?: boolean | Prisma.Profile$discoveriesArgs<ExtArgs>
+  files?: boolean | Prisma.Profile$filesArgs<ExtArgs>
   matchesInitiated?: boolean | Prisma.Profile$matchesInitiatedArgs<ExtArgs>
   matchesReceived?: boolean | Prisma.Profile$matchesReceivedArgs<ExtArgs>
-  messagesSent?: boolean | Prisma.Profile$messagesSentArgs<ExtArgs>
   messagesReceived?: boolean | Prisma.Profile$messagesReceivedArgs<ExtArgs>
+  messagesSent?: boolean | Prisma.Profile$messagesSentArgs<ExtArgs>
+  initiatedOpportunities?: boolean | Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>
+  receivedOpportunities?: boolean | Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>
+  radars?: boolean | Prisma.Profile$radarsArgs<ExtArgs>
+  memories?: boolean | Prisma.Profile$memoriesArgs<ExtArgs>
   _count?: boolean | Prisma.ProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile"]>
 
@@ -3185,21 +3710,28 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   name?: boolean
+  language?: boolean
+  avatarUrl?: boolean
+  publicKey?: boolean
+  fcmToken?: boolean
   age?: boolean
   gender?: boolean
   city?: boolean
   country?: boolean
-  avatarUrl?: boolean
-  role?: boolean
+  sector?: boolean
+  primaryRole?: boolean
   customRole?: boolean
   tjm?: boolean
   availability?: boolean
   bio?: boolean
-  profession?: boolean
+  socialSector?: boolean
+  socialRole?: boolean
+  socialBio?: boolean
+  hobbySector?: boolean
+  hobbyRole?: boolean
+  hobbyBio?: boolean
   thematicProfile?: boolean
   unifiedAnalysis?: boolean
-  fcmToken?: boolean
-  publicKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["profile"]>
@@ -3208,21 +3740,28 @@ export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   name?: boolean
+  language?: boolean
+  avatarUrl?: boolean
+  publicKey?: boolean
+  fcmToken?: boolean
   age?: boolean
   gender?: boolean
   city?: boolean
   country?: boolean
-  avatarUrl?: boolean
-  role?: boolean
+  sector?: boolean
+  primaryRole?: boolean
   customRole?: boolean
   tjm?: boolean
   availability?: boolean
   bio?: boolean
-  profession?: boolean
+  socialSector?: boolean
+  socialRole?: boolean
+  socialBio?: boolean
+  hobbySector?: boolean
+  hobbyRole?: boolean
+  hobbyBio?: boolean
   thematicProfile?: boolean
   unifiedAnalysis?: boolean
-  fcmToken?: boolean
-  publicKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["profile"]>
@@ -3231,40 +3770,47 @@ export type ProfileSelectScalar = {
   id?: boolean
   email?: boolean
   name?: boolean
+  language?: boolean
+  avatarUrl?: boolean
+  publicKey?: boolean
+  fcmToken?: boolean
   age?: boolean
   gender?: boolean
   city?: boolean
   country?: boolean
-  avatarUrl?: boolean
-  role?: boolean
+  sector?: boolean
+  primaryRole?: boolean
   customRole?: boolean
   tjm?: boolean
   availability?: boolean
   bio?: boolean
-  profession?: boolean
+  socialSector?: boolean
+  socialRole?: boolean
+  socialBio?: boolean
+  hobbySector?: boolean
+  hobbyRole?: boolean
+  hobbyBio?: boolean
   thematicProfile?: boolean
   unifiedAnalysis?: boolean
-  fcmToken?: boolean
-  publicKey?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "age" | "gender" | "city" | "country" | "avatarUrl" | "role" | "customRole" | "tjm" | "availability" | "bio" | "profession" | "thematicProfile" | "unifiedAnalysis" | "fcmToken" | "publicKey" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "language" | "avatarUrl" | "publicKey" | "fcmToken" | "age" | "gender" | "city" | "country" | "sector" | "primaryRole" | "customRole" | "tjm" | "availability" | "bio" | "socialSector" | "socialRole" | "socialBio" | "hobbySector" | "hobbyRole" | "hobbyBio" | "thematicProfile" | "unifiedAnalysis" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  memories?: boolean | Prisma.Profile$memoriesArgs<ExtArgs>
-  notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
-  radars?: boolean | Prisma.Profile$radarsArgs<ExtArgs>
-  files?: boolean | Prisma.Profile$filesArgs<ExtArgs>
-  discoveries?: boolean | Prisma.Profile$discoveriesArgs<ExtArgs>
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
   receivedConnections?: boolean | Prisma.Profile$receivedConnectionsArgs<ExtArgs>
-  initiatedOpportunities?: boolean | Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>
-  receivedOpportunities?: boolean | Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>
+  notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
+  discoveries?: boolean | Prisma.Profile$discoveriesArgs<ExtArgs>
+  files?: boolean | Prisma.Profile$filesArgs<ExtArgs>
   matchesInitiated?: boolean | Prisma.Profile$matchesInitiatedArgs<ExtArgs>
   matchesReceived?: boolean | Prisma.Profile$matchesReceivedArgs<ExtArgs>
-  messagesSent?: boolean | Prisma.Profile$messagesSentArgs<ExtArgs>
   messagesReceived?: boolean | Prisma.Profile$messagesReceivedArgs<ExtArgs>
+  messagesSent?: boolean | Prisma.Profile$messagesSentArgs<ExtArgs>
+  initiatedOpportunities?: boolean | Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>
+  receivedOpportunities?: boolean | Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>
+  radars?: boolean | Prisma.Profile$radarsArgs<ExtArgs>
+  memories?: boolean | Prisma.Profile$memoriesArgs<ExtArgs>
   _count?: boolean | Prisma.ProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -3273,39 +3819,46 @@ export type ProfileIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
 export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Profile"
   objects: {
-    memories: Prisma.$MemoryPayload<ExtArgs>[]
-    notes: Prisma.$CortexNotePayload<ExtArgs>[]
-    radars: Prisma.$RadarResultPayload<ExtArgs>[]
-    files: Prisma.$FileArchivePayload<ExtArgs>[]
-    discoveries: Prisma.$DiscoveryPayload<ExtArgs>[]
     initiatedConnections: Prisma.$ConnectionPayload<ExtArgs>[]
     receivedConnections: Prisma.$ConnectionPayload<ExtArgs>[]
-    initiatedOpportunities: Prisma.$OpportunityPayload<ExtArgs>[]
-    receivedOpportunities: Prisma.$OpportunityPayload<ExtArgs>[]
+    notes: Prisma.$CortexNotePayload<ExtArgs>[]
+    discoveries: Prisma.$DiscoveryPayload<ExtArgs>[]
+    files: Prisma.$FileArchivePayload<ExtArgs>[]
     matchesInitiated: Prisma.$MatchPayload<ExtArgs>[]
     matchesReceived: Prisma.$MatchPayload<ExtArgs>[]
-    messagesSent: Prisma.$MessagePayload<ExtArgs>[]
     messagesReceived: Prisma.$MessagePayload<ExtArgs>[]
+    messagesSent: Prisma.$MessagePayload<ExtArgs>[]
+    initiatedOpportunities: Prisma.$OpportunityPayload<ExtArgs>[]
+    receivedOpportunities: Prisma.$OpportunityPayload<ExtArgs>[]
+    radars: Prisma.$RadarResultPayload<ExtArgs>[]
+    memories: Prisma.$MemoryPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     email: string
     name: string | null
+    language: string
+    avatarUrl: string | null
+    publicKey: string | null
+    fcmToken: string | null
     age: number | null
     gender: string | null
     city: string | null
     country: string | null
-    avatarUrl: string | null
-    role: string | null
+    sector: string | null
+    primaryRole: string | null
     customRole: string | null
     tjm: number | null
     availability: string | null
     bio: string | null
-    profession: string | null
+    socialSector: string | null
+    socialRole: string | null
+    socialBio: string | null
+    hobbySector: string | null
+    hobbyRole: string | null
+    hobbyBio: string | null
     thematicProfile: runtime.JsonValue | null
     unifiedAnalysis: string | null
-    fcmToken: string | null
-    publicKey: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["profile"]>
@@ -3702,19 +4255,19 @@ readonly fields: ProfileFieldRefs;
  */
 export interface Prisma__ProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  memories<T extends Prisma.Profile$memoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$memoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  notes<T extends Prisma.Profile$notesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$notesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CortexNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  radars<T extends Prisma.Profile$radarsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$radarsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RadarResultPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  files<T extends Prisma.Profile$filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FileArchivePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  discoveries<T extends Prisma.Profile$discoveriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$discoveriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DiscoveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   initiatedConnections<T extends Prisma.Profile$initiatedConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$initiatedConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   receivedConnections<T extends Prisma.Profile$receivedConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$receivedConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  initiatedOpportunities<T extends Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpportunityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  receivedOpportunities<T extends Prisma.Profile$receivedOpportunitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpportunityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notes<T extends Prisma.Profile$notesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$notesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CortexNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  discoveries<T extends Prisma.Profile$discoveriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$discoveriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DiscoveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  files<T extends Prisma.Profile$filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FileArchivePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   matchesInitiated<T extends Prisma.Profile$matchesInitiatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$matchesInitiatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   matchesReceived<T extends Prisma.Profile$matchesReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$matchesReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  messagesSent<T extends Prisma.Profile$messagesSentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$messagesSentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   messagesReceived<T extends Prisma.Profile$messagesReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$messagesReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  messagesSent<T extends Prisma.Profile$messagesSentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$messagesSentArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  initiatedOpportunities<T extends Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$initiatedOpportunitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpportunityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  receivedOpportunities<T extends Prisma.Profile$receivedOpportunitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$receivedOpportunitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OpportunityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  radars<T extends Prisma.Profile$radarsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$radarsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RadarResultPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  memories<T extends Prisma.Profile$memoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Profile$memoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3747,21 +4300,28 @@ export interface ProfileFieldRefs {
   readonly id: Prisma.FieldRef<"Profile", 'String'>
   readonly email: Prisma.FieldRef<"Profile", 'String'>
   readonly name: Prisma.FieldRef<"Profile", 'String'>
+  readonly language: Prisma.FieldRef<"Profile", 'String'>
+  readonly avatarUrl: Prisma.FieldRef<"Profile", 'String'>
+  readonly publicKey: Prisma.FieldRef<"Profile", 'String'>
+  readonly fcmToken: Prisma.FieldRef<"Profile", 'String'>
   readonly age: Prisma.FieldRef<"Profile", 'Int'>
   readonly gender: Prisma.FieldRef<"Profile", 'String'>
   readonly city: Prisma.FieldRef<"Profile", 'String'>
   readonly country: Prisma.FieldRef<"Profile", 'String'>
-  readonly avatarUrl: Prisma.FieldRef<"Profile", 'String'>
-  readonly role: Prisma.FieldRef<"Profile", 'String'>
+  readonly sector: Prisma.FieldRef<"Profile", 'String'>
+  readonly primaryRole: Prisma.FieldRef<"Profile", 'String'>
   readonly customRole: Prisma.FieldRef<"Profile", 'String'>
   readonly tjm: Prisma.FieldRef<"Profile", 'Int'>
   readonly availability: Prisma.FieldRef<"Profile", 'String'>
   readonly bio: Prisma.FieldRef<"Profile", 'String'>
-  readonly profession: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialSector: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialBio: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbySector: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbyRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbyBio: Prisma.FieldRef<"Profile", 'String'>
   readonly thematicProfile: Prisma.FieldRef<"Profile", 'Json'>
   readonly unifiedAnalysis: Prisma.FieldRef<"Profile", 'String'>
-  readonly fcmToken: Prisma.FieldRef<"Profile", 'String'>
-  readonly publicKey: Prisma.FieldRef<"Profile", 'String'>
   readonly createdAt: Prisma.FieldRef<"Profile", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Profile", 'DateTime'>
 }
@@ -4152,126 +4712,6 @@ export type ProfileDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
- * Profile.memories
- */
-export type Profile$memoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Memory
-   */
-  select?: Prisma.MemorySelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Memory
-   */
-  omit?: Prisma.MemoryOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.MemoryInclude<ExtArgs> | null
-  where?: Prisma.MemoryWhereInput
-  orderBy?: Prisma.MemoryOrderByWithRelationInput | Prisma.MemoryOrderByWithRelationInput[]
-  cursor?: Prisma.MemoryWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.MemoryScalarFieldEnum | Prisma.MemoryScalarFieldEnum[]
-}
-
-/**
- * Profile.notes
- */
-export type Profile$notesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CortexNote
-   */
-  select?: Prisma.CortexNoteSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CortexNote
-   */
-  omit?: Prisma.CortexNoteOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CortexNoteInclude<ExtArgs> | null
-  where?: Prisma.CortexNoteWhereInput
-  orderBy?: Prisma.CortexNoteOrderByWithRelationInput | Prisma.CortexNoteOrderByWithRelationInput[]
-  cursor?: Prisma.CortexNoteWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CortexNoteScalarFieldEnum | Prisma.CortexNoteScalarFieldEnum[]
-}
-
-/**
- * Profile.radars
- */
-export type Profile$radarsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the RadarResult
-   */
-  select?: Prisma.RadarResultSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the RadarResult
-   */
-  omit?: Prisma.RadarResultOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.RadarResultInclude<ExtArgs> | null
-  where?: Prisma.RadarResultWhereInput
-  orderBy?: Prisma.RadarResultOrderByWithRelationInput | Prisma.RadarResultOrderByWithRelationInput[]
-  cursor?: Prisma.RadarResultWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.RadarResultScalarFieldEnum | Prisma.RadarResultScalarFieldEnum[]
-}
-
-/**
- * Profile.files
- */
-export type Profile$filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the FileArchive
-   */
-  select?: Prisma.FileArchiveSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the FileArchive
-   */
-  omit?: Prisma.FileArchiveOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.FileArchiveInclude<ExtArgs> | null
-  where?: Prisma.FileArchiveWhereInput
-  orderBy?: Prisma.FileArchiveOrderByWithRelationInput | Prisma.FileArchiveOrderByWithRelationInput[]
-  cursor?: Prisma.FileArchiveWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.FileArchiveScalarFieldEnum | Prisma.FileArchiveScalarFieldEnum[]
-}
-
-/**
- * Profile.discoveries
- */
-export type Profile$discoveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Discovery
-   */
-  select?: Prisma.DiscoverySelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Discovery
-   */
-  omit?: Prisma.DiscoveryOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.DiscoveryInclude<ExtArgs> | null
-  where?: Prisma.DiscoveryWhereInput
-  orderBy?: Prisma.DiscoveryOrderByWithRelationInput | Prisma.DiscoveryOrderByWithRelationInput[]
-  cursor?: Prisma.DiscoveryWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.DiscoveryScalarFieldEnum | Prisma.DiscoveryScalarFieldEnum[]
-}
-
-/**
  * Profile.initiatedConnections
  */
 export type Profile$initiatedConnectionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4320,51 +4760,75 @@ export type Profile$receivedConnectionsArgs<ExtArgs extends runtime.Types.Extens
 }
 
 /**
- * Profile.initiatedOpportunities
+ * Profile.notes
  */
-export type Profile$initiatedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Profile$notesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Opportunity
+   * Select specific fields to fetch from the CortexNote
    */
-  select?: Prisma.OpportunitySelect<ExtArgs> | null
+  select?: Prisma.CortexNoteSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Opportunity
+   * Omit specific fields from the CortexNote
    */
-  omit?: Prisma.OpportunityOmit<ExtArgs> | null
+  omit?: Prisma.CortexNoteOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.OpportunityInclude<ExtArgs> | null
-  where?: Prisma.OpportunityWhereInput
-  orderBy?: Prisma.OpportunityOrderByWithRelationInput | Prisma.OpportunityOrderByWithRelationInput[]
-  cursor?: Prisma.OpportunityWhereUniqueInput
+  include?: Prisma.CortexNoteInclude<ExtArgs> | null
+  where?: Prisma.CortexNoteWhereInput
+  orderBy?: Prisma.CortexNoteOrderByWithRelationInput | Prisma.CortexNoteOrderByWithRelationInput[]
+  cursor?: Prisma.CortexNoteWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.OpportunityScalarFieldEnum | Prisma.OpportunityScalarFieldEnum[]
+  distinct?: Prisma.CortexNoteScalarFieldEnum | Prisma.CortexNoteScalarFieldEnum[]
 }
 
 /**
- * Profile.receivedOpportunities
+ * Profile.discoveries
  */
-export type Profile$receivedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Profile$discoveriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Opportunity
+   * Select specific fields to fetch from the Discovery
    */
-  select?: Prisma.OpportunitySelect<ExtArgs> | null
+  select?: Prisma.DiscoverySelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Opportunity
+   * Omit specific fields from the Discovery
    */
-  omit?: Prisma.OpportunityOmit<ExtArgs> | null
+  omit?: Prisma.DiscoveryOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.OpportunityInclude<ExtArgs> | null
-  where?: Prisma.OpportunityWhereInput
-  orderBy?: Prisma.OpportunityOrderByWithRelationInput | Prisma.OpportunityOrderByWithRelationInput[]
-  cursor?: Prisma.OpportunityWhereUniqueInput
+  include?: Prisma.DiscoveryInclude<ExtArgs> | null
+  where?: Prisma.DiscoveryWhereInput
+  orderBy?: Prisma.DiscoveryOrderByWithRelationInput | Prisma.DiscoveryOrderByWithRelationInput[]
+  cursor?: Prisma.DiscoveryWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.OpportunityScalarFieldEnum | Prisma.OpportunityScalarFieldEnum[]
+  distinct?: Prisma.DiscoveryScalarFieldEnum | Prisma.DiscoveryScalarFieldEnum[]
+}
+
+/**
+ * Profile.files
+ */
+export type Profile$filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FileArchive
+   */
+  select?: Prisma.FileArchiveSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FileArchive
+   */
+  omit?: Prisma.FileArchiveOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FileArchiveInclude<ExtArgs> | null
+  where?: Prisma.FileArchiveWhereInput
+  orderBy?: Prisma.FileArchiveOrderByWithRelationInput | Prisma.FileArchiveOrderByWithRelationInput[]
+  cursor?: Prisma.FileArchiveWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FileArchiveScalarFieldEnum | Prisma.FileArchiveScalarFieldEnum[]
 }
 
 /**
@@ -4416,6 +4880,30 @@ export type Profile$matchesReceivedArgs<ExtArgs extends runtime.Types.Extensions
 }
 
 /**
+ * Profile.messagesReceived
+ */
+export type Profile$messagesReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Message
+   */
+  select?: Prisma.MessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Message
+   */
+  omit?: Prisma.MessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MessageInclude<ExtArgs> | null
+  where?: Prisma.MessageWhereInput
+  orderBy?: Prisma.MessageOrderByWithRelationInput | Prisma.MessageOrderByWithRelationInput[]
+  cursor?: Prisma.MessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MessageScalarFieldEnum | Prisma.MessageScalarFieldEnum[]
+}
+
+/**
  * Profile.messagesSent
  */
 export type Profile$messagesSentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4440,27 +4928,99 @@ export type Profile$messagesSentArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 /**
- * Profile.messagesReceived
+ * Profile.initiatedOpportunities
  */
-export type Profile$messagesReceivedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Profile$initiatedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Message
+   * Select specific fields to fetch from the Opportunity
    */
-  select?: Prisma.MessageSelect<ExtArgs> | null
+  select?: Prisma.OpportunitySelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Message
+   * Omit specific fields from the Opportunity
    */
-  omit?: Prisma.MessageOmit<ExtArgs> | null
+  omit?: Prisma.OpportunityOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.MessageInclude<ExtArgs> | null
-  where?: Prisma.MessageWhereInput
-  orderBy?: Prisma.MessageOrderByWithRelationInput | Prisma.MessageOrderByWithRelationInput[]
-  cursor?: Prisma.MessageWhereUniqueInput
+  include?: Prisma.OpportunityInclude<ExtArgs> | null
+  where?: Prisma.OpportunityWhereInput
+  orderBy?: Prisma.OpportunityOrderByWithRelationInput | Prisma.OpportunityOrderByWithRelationInput[]
+  cursor?: Prisma.OpportunityWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.MessageScalarFieldEnum | Prisma.MessageScalarFieldEnum[]
+  distinct?: Prisma.OpportunityScalarFieldEnum | Prisma.OpportunityScalarFieldEnum[]
+}
+
+/**
+ * Profile.receivedOpportunities
+ */
+export type Profile$receivedOpportunitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Opportunity
+   */
+  select?: Prisma.OpportunitySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Opportunity
+   */
+  omit?: Prisma.OpportunityOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OpportunityInclude<ExtArgs> | null
+  where?: Prisma.OpportunityWhereInput
+  orderBy?: Prisma.OpportunityOrderByWithRelationInput | Prisma.OpportunityOrderByWithRelationInput[]
+  cursor?: Prisma.OpportunityWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OpportunityScalarFieldEnum | Prisma.OpportunityScalarFieldEnum[]
+}
+
+/**
+ * Profile.radars
+ */
+export type Profile$radarsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RadarResult
+   */
+  select?: Prisma.RadarResultSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RadarResult
+   */
+  omit?: Prisma.RadarResultOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RadarResultInclude<ExtArgs> | null
+  where?: Prisma.RadarResultWhereInput
+  orderBy?: Prisma.RadarResultOrderByWithRelationInput | Prisma.RadarResultOrderByWithRelationInput[]
+  cursor?: Prisma.RadarResultWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.RadarResultScalarFieldEnum | Prisma.RadarResultScalarFieldEnum[]
+}
+
+/**
+ * Profile.memories
+ */
+export type Profile$memoriesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Memory
+   */
+  select?: Prisma.MemorySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Memory
+   */
+  omit?: Prisma.MemoryOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MemoryInclude<ExtArgs> | null
+  where?: Prisma.MemoryWhereInput
+  orderBy?: Prisma.MemoryOrderByWithRelationInput | Prisma.MemoryOrderByWithRelationInput[]
+  cursor?: Prisma.MemoryWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MemoryScalarFieldEnum | Prisma.MemoryScalarFieldEnum[]
 }
 
 /**

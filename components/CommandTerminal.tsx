@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/terminal et /api/sync-cortex
 
 interface WebResult {

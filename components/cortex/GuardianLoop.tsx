@@ -1,7 +1,7 @@
 ﻿'use client';
 import { useState } from 'react';
 import { ShieldCheck, UserCheck } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server action supprimée — on utilise fetch vers /api/guardian
 
 export default function GuardianLoop({ profileId }: { profileId: string }) {

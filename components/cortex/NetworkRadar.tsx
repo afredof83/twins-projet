@@ -1,7 +1,7 @@
 ﻿'use client';
 import { useState } from 'react';
 import { Radar, Target, UserPlus, ShieldAlert } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server action supprimée — on utilise fetch vers /api/scan-network
 
 export default function NetworkRadar({ profileId }: { profileId: string }) {

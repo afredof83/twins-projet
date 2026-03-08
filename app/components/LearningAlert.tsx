@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { BrainCircuit } from "lucide-react";
 import { useCortexGaps } from "@/app/hooks/useCortexGaps";
-import { getApiUrl } from "@/lib/api-config";
+import { getApiUrl } from "@/lib/api";
 
 export default function LearningAlert() {
     const { gaps, isLoading, mutate } = useCortexGaps();

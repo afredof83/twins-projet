@@ -57,17 +57,17 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
 
         // --- 4. SYNTHÈSE MISTRAL ---
         const aiPrompt = `
-Tu es l'unité de ciblage d'un système radar Deep Tech.
-Ta mission est d'analyser les résultats de la base (RAG) et d'extraire la cible la plus pertinente.
+Je suis Ipse, l'unité de ciblage tactique.
+Ma mission est d'analyser les résultats de ma base de connaissances et d'extraire la cible la plus pertinente.
 Ordre utilisateur : "${prompt}"
 CAPTEURS INTERNES :
 """${internalContext}"""
 CAPTEURS EXTERNES (Web) :
 """${externalContext}"""
 RÈGLES DE CIBLAGE :
-1. Identifie la localisation EXACTE.
-2. Convertis en coordonnées GPS. Pas de valeurs par défaut (ex: Paris).
-3. Utilise le vrai nom de la cible.
+1. J'identifie la localisation EXACTE.
+2. Je convertis en coordonnées GPS précises.
+3. J'utilise le nom réel de la cible.
 FORMAT OBLIGATOIRE (Tag caché à la fin) :
 [TARGETS: [{"name": "Nom Réel", "lat": 48.6493, "lng": -2.0257}]]
 `;

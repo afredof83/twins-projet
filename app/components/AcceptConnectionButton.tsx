@@ -3,7 +3,7 @@
 import { useState } from 'react';
 // Server action supprimée — on utilise fetch vers /api/connection
 import { Check, Loader2, CheckCircle2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 export default function AcceptConnectionButton({ connectionId, onAccept }: { connectionId: string, onAccept?: () => void }) {
     const [isAccepting, setIsAccepting] = useState(false);

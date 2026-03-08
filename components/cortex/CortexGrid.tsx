@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/memories
 import { createClient } from '@/lib/supabaseBrowser';
 

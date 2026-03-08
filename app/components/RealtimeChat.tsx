@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 // Server actions supprimées — on utilise fetch vers /api/chat
 import { deriveSharedKey, encryptLocal, decryptLocal } from '@/lib/crypto-client';
 import { Send, AlertCircle, Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
 import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
 

@@ -9,7 +9,7 @@ import { useKeyStore } from '@/store/keyStore';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 export default function Gatekeeper({ children }: { children: React.ReactNode }) {
     const isVerifying = useRef(false);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Radar, ExternalLink, Zap, Trash2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/opportunities
 
 export default function OpportunityRadar({ profileId }: { profileId: string }) {

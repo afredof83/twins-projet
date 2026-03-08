@@ -3,7 +3,7 @@
 import { useState } from 'react';
 // Server action supprimée — on utilise fetch vers /api/ipse-advisor
 import { Brain, Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 export function TacticalEarpiece({
     getDecryptedContext

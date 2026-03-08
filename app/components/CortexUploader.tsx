@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Paperclip, Send, Loader2, CheckCircle, AlertCircle, X, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 // Server action supprimée — on utilise fetch vers /api/memories
 
 type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
@@ -12,6 +13,7 @@ type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function CortexUploader({ onUploadComplete }: { onUploadComplete?: () => void }) {
+    const { t } = useLanguage();
     const [uploadState, setUploadState] = useState<UploadState>('IDLE');
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [textContext, setTextContext] = useState<string>('');
@@ -34,7 +36,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
 
             // Validation: Size
             if (file.size > MAX_FILE_SIZE) {
-                setErrorMsg('Le fichier dépasse la limite de 5Mo.');
+                setErrorMsg(t('cortex.error_size') || 'Le fichier dépasse la limite de 5Mo.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -43,7 +45,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             // Validation: Type
             const allowedTypes = ['text/plain', 'text/markdown', 'application/pdf'];
             if (!allowedTypes.includes(file.type)) {
-                setErrorMsg('Format non supporté. Utilisez PDF, TXT ou MD.');
+                setErrorMsg(t('cortex.error_format') || 'Format non supporté. Utilisez PDF, TXT ou MD.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -118,7 +120,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                 body: formData
             }).then(r => r.json());
 
-            if (!data.success) throw new Error(data.error || "Erreur lors de l'envoi");
+            if (!data.success) throw new Error(data.error || t('profile.common.error') || "Erreur lors de l'envoi");
 
             setUploadState('SUCCESS');
             if (onUploadComplete) onUploadComplete();
@@ -134,7 +136,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             }, 3000);
 
         } catch (err: any) {
-            setErrorMsg(err.message || 'Une erreur est survenue');
+            setErrorMsg(err.message || t('profile.common.error') || 'Une erreur est survenue');
             setUploadState('ERROR');
             setTimeout(() => setUploadState('IDLE'), 4000);
         }
@@ -171,7 +173,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             {uploadState === 'UPLOADING' && (
                                 <div className="flex flex-col items-center gap-3">
                                     <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                                    <span className="text-sm font-medium text-white/90">Préparation des données...</span>
+                                    <span className="text-sm font-medium text-white/90">{t('profile.common.syncing') || 'Préparation des données...'}</span>
                                 </div>
                             )}
                             {uploadState === 'ANALYZING' && (
@@ -181,7 +183,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                         <Brain className="w-8 h-8 text-blue-400 animate-pulse relative z-10" />
                                     </div>
                                     <span className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-300 animate-pulse">
-                                        L'Agent Ipse analyse le contenu...
+                                        {t('cortex.analyzing') || "L'Agent Ipse analyse le contenu..."}
                                     </span>
                                 </div>
                             )}
@@ -189,7 +191,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                 <div className="flex flex-col items-center gap-3">
                                     <CheckCircle className="w-10 h-10 text-green-400" />
                                     <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-400 text-center">
-                                        Mémoire ingérée avec succès
+                                        {t('cortex.success') || "Mémoire ingérée avec succès"}
                                     </span>
                                 </div>
                             )}
@@ -210,7 +212,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             onChange={(e) => setTextContext(e.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isBusy}
-                            placeholder="Collez une URL à scraper, tapez une note, ou décrivez un contexte..."
+                            placeholder={t('radar.search_placeholder') || "Collez une URL à scraper, tapez une note, ou décrivez un contexte..."}
                             className="w-full min-h-[60px] max-h-[200px] bg-transparent text-gray-200 placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed"
                         />
                     </div>
@@ -219,7 +221,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                     <AnimatePresence>
                         {selectedFile && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                initial={{ opacity: 0, height: 0, marginTop: 8 }}
                                 animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
                                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                                 className="px-4 pb-2"
@@ -233,7 +235,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                         type="button"
                                         onClick={removeFile}
                                         className="ml-1 p-1 hover:bg-white/10 rounded-full text-gray-500 hover:text-red-400 transition-colors shrink-0"
-                                        title="Retirer le fichier"
+                                        title={t('cortex.remove_file') || "Retirer le fichier"}
                                     >
                                         <X className="w-3.5 h-3.5" />
                                     </button>
@@ -280,7 +282,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                 <Paperclip className="w-5 h-5" />
                                 {/* Tooltip basique */}
                                 <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                    Joindre un document
+                                    {t('cortex.attach_file') || "Joindre un document"}
                                 </span>
                             </button>
                         </div>
@@ -298,7 +300,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                     }
                                 `}
                             >
-                                <span>Ingérer</span>
+                                <span>{t('cortex.ingest') || "Ingérer"}</span>
                                 <Send className="w-4 h-4 ml-1" />
                             </button>
                         </div>

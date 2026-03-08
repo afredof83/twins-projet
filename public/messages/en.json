@@ -1,0 +1,123 @@
+{
+    "navigation": {
+        "radar": "Radar",
+        "cortex": "Cortex",
+        "identity": "Identity"
+    },
+    "profile": {
+        "title": "My Prism",
+        "subtitle": "Configure the multiple facets of your identity",
+        "tabs": {
+            "identity": "Identity",
+            "work": "Work",
+            "social": "Circle",
+            "hobby": "Passions",
+            "settings": "Settings"
+        },
+        "identity": {
+            "pseudo": "Username",
+            "age": "Age",
+            "sex": "Gender",
+            "sex_placeholder": "Select",
+            "sex_options": {
+                "male": "Male",
+                "female": "Female",
+                "other": "Other"
+            },
+            "city": "City",
+            "country": "Country",
+            "update_btn": "Update Identity"
+        },
+        "work": {
+            "tjm": "Daily Rate (TJM)",
+            "availability": "Availability",
+            "update_btn": "Update Work Prism"
+        },
+        "social": {
+            "update_btn": "Update Social Prism"
+        },
+        "hobby": {
+            "update_btn": "Update Hobby Prism"
+        },
+        "common": {
+            "dimension": "Exchange Dimension",
+            "position": "Typological Positioning",
+            "bio": "Semantic Bio (Mistral Vector)",
+            "bio_placeholder": "Detail your nuances here... Our Mistral AI will analyze this text to find the best matches for you.",
+            "syncing": "Syncing...",
+            "encrypt_note": "Changes are encrypted and vectorized in real time."
+        },
+        "sectors": {
+            "TECH": "Tech & Digital",
+            "DESIGN": "Design & Creative",
+            "BUSINESS": "Business & Sales",
+            "MANAGEMENT": "Admin & Management",
+            "HEALTH": "Health & Welness",
+            "INDUSTRY": "Craft & Industry",
+            "OTHER": "Other",
+            "FRIENDSHIP": "Friendship & Social",
+            "DATING": "Dating (Soul)",
+            "MENTORING": "Mentoring",
+            "COMMUNITY": "Community / Cause",
+            "PROFESSIONAL": "Networking",
+            "SPORT": "Sport & Fitness",
+            "ARTS": "Art & Culture",
+            "GAMING": "Gaming",
+            "TRAVEL": "Travel & Nature",
+            "FOOD": "Food & Wine"
+        },
+        "availabilities": {
+            "IMMEDIATE": "Immediate",
+            "ONE_MONTH": "Within 1 month",
+            "UNAVAILABLE": "Unavailable"
+        }
+    },
+    "radar": {
+        "title": "Semantic Radar",
+        "subtitle": "Discover profiles that resonate with your intent",
+        "search_placeholder": "What are you looking for? (e.g., Design mentor, Tennis partner...)",
+        "filters": "Filters",
+        "match_score": "Match",
+        "connect_btn": "Get in touch",
+        "empty_state": "No resonance found. Try another intention.",
+        "incoming_requests": "Incoming Requests",
+        "encrypted_link": "Wishes to establish an encrypted link",
+        "secure_channels": "Secure Channels",
+        "audit_ready": "Strategic Audit Report Ready",
+        "start_audit": "Start Strategic Audit",
+        "read_audit": "Read Cortex Audit",
+        "invite_sent": "Invitation sent. Waiting for response...",
+        "channel_request": "Channel opening request",
+        "new_invite": "New invitation",
+        "accept": "Accept",
+        "accepted": "Accepted",
+        "refuse": "Refuse",
+        "ignore": "Ignore",
+        "block": "Block",
+        "creating": "Creating..."
+    },
+    "cortex": {
+        "title": "Cortex",
+        "subtitle": "The neural center of your Agent",
+        "memory_nodes": "Memory Nodes",
+        "system_status": "System Status",
+        "vector_space": "Vector Space",
+        "last_sync": "Last Sync",
+        "ingest": "Ingest",
+        "analyzing": "Analyzing content...",
+        "success": "Memory successfully ingested",
+        "error_size": "File exceeds 5MB limit.",
+        "error_format": "Unsupported format. Use PDF, TXT or MD.",
+        "attach_file": "Attach a document",
+        "remove_file": "Remove file",
+        "access_error": "Error accessing Cortex data",
+        "retry": "Retry",
+        "back_to_feed": "Back to Tactical Feed",
+        "no_dataset": "No dataset injected",
+        "empty_core": "Memory core is empty",
+        "fragment": "Fragment"
+    },
+    "settings": {
+        "language": "Language"
+    }
+}

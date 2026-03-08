@@ -8,7 +8,7 @@ import {
     Globe, ChevronRight, ArrowLeft, Trash2, Loader2,
     CheckCircle2, AlertTriangle, Wifi
 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 import CortexGrid from '@/components/cortex/CortexGrid';
 // Server actions supprimées — on utilise fetch vers /api/memories et /api/guardian

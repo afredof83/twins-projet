@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -49,29 +49,21 @@ export default function LoginPage() {
       try {
         console.log("🔍 Vérification du profil côté client...");
 
-        // On génère la date au format ISO pour la base de données
-        const now = new Date().toISOString();
+        const response = await fetch(getApiUrl('/api/auth/sync-profile'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authData.session.access_token}`
+          }
+        });
 
-        // On utilise UPSERT : Si le profil n'existe pas il est créé, s'il existe il est mis à jour en douceur.
-        // Cela évite l'erreur fatale de l'INSERT sur une clé déjà existante.
-        const { error: upsertError } = await supabase
-          .from('Profile')
-          .upsert({
-            id: authData.user.id,
-            email: authData.user.email || 'inconnu@email.com',
-            name: "Agent Furtif",
-            updatedAt: now
-          });
-
-        if (upsertError) {
-          console.error("🚨 Erreur d'Upsert Supabase :", upsertError.message || upsertError.details || JSON.stringify(upsertError));
-          setError(`Erreur BDD : Le profil n'a pas pu être validé.`);
-          setLoading(false);
-        } else {
-          console.log("✅ Agent Ipse validé avec succès !");
-          router.push('/');
-          router.refresh();
+        if (!response.ok) {
+          setError(`Alerte Ipse : La synchronisation du profil a échoué.`);
         }
+
+        console.log("✅ Agent Ipse validé avec succès !");
+        router.push('/');
+        router.refresh();
       } catch (err) {
         console.error("Erreur inattendue:", err);
         setError("Erreur inattendue lors de la vérification.");

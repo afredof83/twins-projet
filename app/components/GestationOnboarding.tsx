@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 // Server actions supprimées — on utilise fetch vers /api/auto-ingest
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 export default function GestationOnboarding({ userId }: { userId: string }) {
     const [isProcessing, setIsProcessing] = useState(false);

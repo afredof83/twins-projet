@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getApiUrl } from "@/lib/api-config";
+import { getApiUrl } from "@/lib/api";
 
 interface CortexDeleteButtonProps {
     action: "deleteMemory" | "deleteNote" | "deleteCortexMemory" | "deleteDiscovery";

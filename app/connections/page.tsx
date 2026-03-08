@@ -9,7 +9,7 @@ import {
     Music, Video, Activity, Globe, Lock
 } from 'lucide-react';
 import { createClient } from '@/lib/supabaseBrowser';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server action supprimée — on utilise fetch vers /api/auth-guard
 
 // --- CONFIGURATION DES MODULES ---

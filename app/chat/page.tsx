@@ -6,7 +6,7 @@ import { Shield, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import RealtimeChat from '@/app/components/RealtimeChat';
 import { createClient } from '@/lib/supabaseBrowser';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 
 function ChatContent() {
     const searchParams = useSearchParams();

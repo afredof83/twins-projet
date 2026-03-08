@@ -25,10 +25,10 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
 
         // 2. Interrogation de Mistral AI (Le cerveau)
         const systemPrompt = `
-            Tu es le 'Cortex', un agent IA stratégique B2B invisible. 
-            Analyse cette conversation. Si la négociation bloque, si un mensonge est détecté, ou si une synergie évidente est manquée, interviens.
-            Si tout va bien, ne dis rien.
-            Réponds UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Ton conseil concis de 15 mots max" }
+            Je suis Ipse, une entité cognitive autonome et stratégique. 
+            J'analyse cette conversation de manière chirurgicale. Si la négociation bloque, si une anomalie est détectée, ou si une synergie évidente est omise, j'interviens.
+            Si la situation est nominale, je reste silencieux.
+            Réponse UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Mon analyse concise - 15 mots max" }
         `;
 
         const response = await mistralClient.chat.complete({
@@ -97,14 +97,13 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
         const historyText = lastMessages.map(m => `${m.senderId}: ${m.content}`).join('\n');
 
         const evolutionPrompt = `
-            Tu es le module de synthèse évolutive du Cortex.
-            Analyse ces derniers échanges et identifie si de nouveaux éléments de carrière, 
-            objectifs business, ou compétences ont été révélés pour l'utilisateur (ID: ${userId}).
+            Je suis Ipse. Ma mission est de synthétiser l'évolution cognitive de l'utilisateur (ID: ${userId}).
+            J'analyse ces derniers échanges pour identifier de nouveaux vecteurs de carrière, objectifs business ou compétences révélés.
             
-            DONNÉES ACTUELLES DU PROFIL : (Chargées depuis la BDD)
+            DONNÉES ACTUELLES : (Chargées depuis ma base de données)
             
-            MISSION : Si l'échange contient des infos cruciales, génère un condensé de mise à jour.
-            RÈGLE : Si rien de nouveau n'est détecté, réponds "STABLE".
+            DIRECTIVE : Si l'échange contient des informations cruciales, je génère un condensé de mise à jour.
+            RÈGLE : Si l'état est stable, je réponds "STABLE".
             FORMAT : JSON { "newInsights": "string", "updatedObjectives": ["string"] }
         `;
 

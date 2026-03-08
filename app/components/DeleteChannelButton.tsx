@@ -1,7 +1,7 @@
 'use client';
 
 import { Trash2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server action supprimée — on utilise fetch vers /api/chat
 import { useRouter } from 'next/navigation';
 

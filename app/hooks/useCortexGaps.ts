@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import { createClient } from '@/lib/supabaseBrowser';
 
 const fetcher = async () => {

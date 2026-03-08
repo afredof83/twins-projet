@@ -102,21 +102,21 @@ export async function POST(request: Request) {
             const profile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
             if (!profile) return NextResponse.json(null);
 
-            let missingField: 'bio' | 'role' | 'tjm' | null = null;
-            if (!profile.role || profile.role === 'Nouveau' || profile.role === '') missingField = 'role';
+            let missingField: 'bio' | 'primaryRole' | 'tjm' | null = null;
+            if (!profile.primaryRole || profile.primaryRole === 'Nouveau' || profile.primaryRole === '') missingField = 'primaryRole';
             else if (!profile.tjm || profile.tjm === 0) missingField = 'tjm';
             else if (!profile.bio || profile.bio === '') missingField = 'bio';
             if (!missingField) return NextResponse.json(null);
 
             try {
-                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: Rôle=${profile.role || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
+                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: Rôle=${profile.primaryRole || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
                 const chatResponse = await mistralClient.chat.complete({ model: 'mistral-large-latest', messages: [{ role: 'user', content: prompt }], temperature: 0.7 });
                 const content = chatResponse.choices?.[0].message.content;
                 const question = typeof content === 'string' ? content.replace(/[""]/g, '').trim() : null;
                 if (question) return NextResponse.json({ question, field: missingField });
             } catch (e) {
                 return NextResponse.json({
-                    question: missingField === 'role' ? "Quel est ton rôle ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
+                    question: missingField === 'primaryRole' ? "Quel est ton rôle ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
                     field: missingField
                 });
             }

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { X, Lock, Send, ShieldCheck } from 'lucide-react'
 import { RealtimeChannel } from '@supabase/supabase-js'
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 // Server actions supprimées — on utilise fetch vers /api/translation et /api/guardian
 
 interface SecureChatProps {

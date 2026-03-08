@@ -4,14 +4,16 @@ import { useState, useEffect, Suspense } from 'react';
 import { Loader2, Target, Zap, ShieldCheck, LockOpen, RefreshCw } from 'lucide-react';
 import { getAgentName } from '@/lib/utils';
 import { createClient } from '@/lib/supabaseBrowser';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import RadarPoller from '@/app/components/RadarPoller';
 import LearningAlert from '@/app/components/LearningAlert';
 import RadarMatchCard from '@/app/components/RadarMatchCard';
 import AcceptConnectionButton from '@/app/components/AcceptConnectionButton';
 import ActiveChannelsList from '@/app/components/ActiveChannelsList';
+import { useLanguage } from '@/context/LanguageContext';
 
 function RadarContent() {
+  const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [discoveries, setDiscoveries] = useState<any[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
@@ -80,7 +82,7 @@ function RadarContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono">
+      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
         <Loader2 className="w-8 h-8 animate-spin mr-2" />
         INIT RADAR...
       </div>
@@ -98,7 +100,7 @@ function RadarContent() {
             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]" />
             <span className="text-[10px] font-black uppercase tracking-[0.3em]">Live Intelligence</span>
           </div>
-          <h1 className="text-3xl font-black italic tracking-tighter text-white">RADAR</h1>
+          <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">{t('radar.title')}</h1>
         </div>
 
         <button
@@ -108,7 +110,7 @@ function RadarContent() {
         >
           <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
           <span className="text-[10px] font-bold uppercase tracking-widest">
-            {syncing ? 'SYNCING...' : 'Sync'}
+            {syncing ? t('profile.common.syncing') : 'Sync'}
           </span>
         </button>
       </header>
@@ -120,14 +122,14 @@ function RadarContent() {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-emerald-400">
             <ShieldCheck className="w-4 h-4" />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Requêtes Entrantes</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest">{t('radar.incoming_requests')}</h2>
           </div>
           <div className="grid gap-4">
             {incomingRequests.map((req: any) => (
               <div key={req.id} className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex justify-between items-center backdrop-blur-sm">
                 <div>
                   <p className="text-sm text-emerald-300 font-mono">Agent: {getAgentName(req.initiator)}</p>
-                  <p className="text-xs text-slate-400 mt-1">Souhaite établir une liaison chiffrée</p>
+                  <p className="text-xs text-slate-400 mt-1">{t('radar.encrypted_link')}</p>
                 </div>
                 <AcceptConnectionButton connectionId={req.id} onAccept={fetchData} />
               </div>
@@ -141,7 +143,7 @@ function RadarContent() {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-blue-400">
             <LockOpen className="w-4 h-4" />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Canaux Sécurisés</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest">{t('radar.secure_channels')}</h2>
           </div>
           <ActiveChannelsList activeChannels={activeChannels} currentUserId={user.id} />
         </section>
@@ -151,12 +153,12 @@ function RadarContent() {
       <section className="space-y-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 text-slate-400">
           <Target className="w-4 h-4" />
-          <h2 className="text-sm font-bold uppercase tracking-widest">Synergies détectées par votre Agent</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest">{t('radar.subtitle')}</h2>
         </div>
 
         {discoveries.length === 0 ? (
           <div className="p-12 text-center border border-dashed border-white/10 rounded-2xl">
-            <p className="text-gray-500">Aucune opportunité critique détectée pour le moment.</p>
+            <p className="text-gray-500">{t('radar.empty_state')}</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -171,11 +173,12 @@ function RadarContent() {
 }
 
 export default function RadarPage() {
+  const { t } = useLanguage();
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono">
+      <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500 font-mono text-xs uppercase tracking-widest">
         <Loader2 className="w-8 h-8 animate-spin mr-2" />
-        LOADING...
+        {t('profile.common.loading') || 'LOADING...'}
       </div>
     }>
       <RadarContent />

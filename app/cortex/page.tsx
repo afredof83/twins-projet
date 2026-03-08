@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import CortexUploader from '@/app/components/CortexUploader';
 import CortexDeleteButton from '@/app/components/CortexDeleteButton';
-import { getApiUrl } from '@/lib/api-config';
+import { getApiUrl } from '@/lib/api';
 import { createClient } from '@/lib/supabaseBrowser';
+import { useLanguage } from '@/context/LanguageContext';
 
 function CortexContent() {
+    const { t } = useLanguage();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -50,9 +52,9 @@ function CortexContent() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs uppercase tracking-widest">
                 <Loader2 className="w-8 h-8 animate-spin mr-2" />
-                LOADING CORTEX...
+                {t('profile.common.loading') || 'LOADING CORTEX...'}
             </div>
         );
     }
@@ -60,9 +62,9 @@ function CortexContent() {
     if (!profile) {
         return (
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-red-500 font-mono">
-                <p className="mb-4">⚠️ Erreur d'accès aux données du Cortex.</p>
+                <p className="mb-4">⚠️ {t('cortex.access_error')}</p>
                 <button onClick={fetchData} className="px-4 py-2 border border-red-500 rounded hover:bg-red-500/20">
-                    Réessayer
+                    {t('cortex.retry')}
                 </button>
             </div>
         );
@@ -74,12 +76,12 @@ function CortexContent() {
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <Link href="/" className="text-purple-400 hover:text-purple-300 text-sm mb-2 inline-flex items-center gap-2">
-                            ← Retour au Tactical Feed
+                            ← {t('cortex.back_to_feed')}
                         </Link>
-                        <h1 className="text-3xl font-black italic tracking-tighter text-purple-400 flex items-center gap-3">
-                            <span className="material-symbols-outlined">memory</span> CORTEX
+                        <h1 className="text-3xl font-black italic tracking-tighter text-purple-400 flex items-center gap-3 uppercase">
+                            <span className="material-symbols-outlined">memory</span> {t('cortex.title')}
                         </h1>
-                        <p className="text-slate-500 text-sm font-mono uppercase tracking-widest mt-1">Neural Data Ingestion</p>
+                        <p className="text-slate-500 text-sm font-mono uppercase tracking-widest mt-1">{t('cortex.subtitle')}</p>
                     </div>
                 </header>
 
@@ -91,11 +93,11 @@ function CortexContent() {
 
                 <div className="space-y-6">
                     <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[1rem]">database</span> Source Code
+                        <span className="material-symbols-outlined text-[1rem]">database</span> {t('cortex.memory_nodes')}
                     </h2>
 
                     {profile.files.length === 0 ? (
-                        <p className="text-slate-600 text-sm italic">Aucun dataset injecté.</p>
+                        <p className="text-slate-600 text-sm italic">{t('cortex.no_dataset')}</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {profile.files.map((file: any) => (
@@ -119,12 +121,12 @@ function CortexContent() {
 
                 <div className="space-y-6">
                     <h2 className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[1rem]">history</span> Mémoires Extraites
+                        <span className="material-symbols-outlined text-[1rem]">history</span> {t('cortex.memory_nodes')}
                     </h2>
 
                     {(!profile.memories || profile.memories.length === 0) ? (
                         <div className="p-8 text-center border border-dashed border-purple-500/10 rounded-2xl">
-                            <p className="text-slate-600 italic">Le noyau mémoriel est vide.</p>
+                            <p className="text-slate-600 italic">{t('cortex.empty_core')}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4">
@@ -133,7 +135,7 @@ function CortexContent() {
                                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                                         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                                            Fragment #{memory.id.split('-')[0]}
+                                            {t('cortex.fragment')} #{memory.id.split('-')[0]}
                                         </span>
                                         <div className="flex items-center gap-3">
                                             <span className="text-[10px] text-slate-600 font-mono">
@@ -164,7 +166,7 @@ function CortexContent() {
 export default function CortexPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500 font-mono text-xs uppercase tracking-widest">
                 <Loader2 className="w-8 h-8 animate-spin mr-2" />
                 LOADING...
             </div>
