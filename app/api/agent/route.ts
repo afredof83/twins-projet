@@ -59,7 +59,7 @@ export async function POST(request: Request) {
             const professionalStatus = thematicProfile?.travail?.professionalStatus || null;
             await prisma.profile.update({
                 where: { id: profileId },
-                data: { thematicProfile, profession: professionalStatus }
+                data: { thematicProfile, primaryRole: professionalStatus }
             });
             return NextResponse.json({ success: true });
         }

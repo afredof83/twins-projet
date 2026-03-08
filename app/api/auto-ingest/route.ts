@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
         if (action === 'extractProfileData') {
             const { rawData } = body;
-            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÉES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"profession":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
+            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÉES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"primaryRole":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
             const chatResponse = await mistralClient.chat.complete({
                 model: 'mistral-large-latest',
                 messages: [{ role: 'user', content: prompt }],
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
             await prisma.profile.update({
                 where: { id: userId },
                 data: {
-                    profession: validatedData.profession,
+                    primaryRole: validatedData.primaryRole,
                     thematicProfile: {
                         industry: validatedData.industry,
                         seniority: validatedData.seniority,
@@ -50,10 +50,10 @@ export async function POST(request: Request) {
                     },
                 }
             });
-            const textToEmbed = `Profil: ${validatedData.profession}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
+            const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
             const embeddingsResponse = await mistralClient.embeddings.create({ model: 'mistral-embed', inputs: [textToEmbed] });
             const embeddingVector = embeddingsResponse.data[0].embedding;
-            await prisma.$executeRaw`UPDATE "Profile" SET embedding = ${embeddingVector}::vector WHERE id = ${userId}`;
+            await prisma.$executeRaw`UPDATE "Profile" SET "unifiedEmbedding" = ${embeddingVector}::vector WHERE id = ${userId}`;
             return NextResponse.json({ success: true });
         }
 

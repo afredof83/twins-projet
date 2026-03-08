@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
             if (!opp || !opp.sourceProfile || !opp.targetProfile) return NextResponse.json({ success: false, error: "Données introuvables" }, { status: 404 });
 
             const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
-            const prompt = `Tu es le Cortex, une IA de renseignement stratégique B2B.\n\nRÈGLES DE SURVIE ABSOLUES :\n1. RÉPOND UNIQUEMENT EN JSON VALIDE.\n2. FORMATAGE : Interdiction astérisques, tirets, dièses.\n3. ACTIONS : 2 ou 3 actions ultra-concises.\n\nFORMAT ATTENDU :\n{"synergies": "[Nom] est [Métier]. Il cherche à [Objectif].", "actions": ["Action 1", "Action 2"]}\n\nCIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) :\nRôle : ${targetProfile.role || 'Non défini'}\nBio : ${targetProfile.bio || 'Non définie'}`;
+            const prompt = `Tu es le Cortex, une IA de renseignement stratégique B2B.\n\nRÈGLES DE SURVIE ABSOLUES :\n1. RÉPOND UNIQUEMENT EN JSON VALIDE.\n2. FORMATAGE : Interdiction astérisques, tirets, dièses.\n3. ACTIONS : 2 ou 3 actions ultra-concises.\n\nFORMAT ATTENDU :\n{"synergies": "[Nom] est [Métier]. Il cherche à [Objectif].", "actions": ["Action 1", "Action 2"]}\n\nCIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) :\nRôle : ${targetProfile.primaryRole || 'Non défini'}\nBio : ${targetProfile.bio || 'Non définie'}`;
 
             const auditResponse = await mistralClient.chat.complete({
                 model: 'mistral-large-latest',

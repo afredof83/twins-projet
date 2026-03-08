@@ -23,7 +23,7 @@ export async function extractProfileData(rawData: string) {
     
     FORMAT JSON ATTENDU STRICT :
     {
-      "profession": "Titre du poste (Texte)",
+      "primaryRole": "Titre du poste (Texte)",
       "industry": "Tech & Data|Commerce & Vente|Marketing & Design|Finance & Crypto",
       "seniority": "Junior (0-2 ans)|Confirmé (3-5 ans)|Senior (6-10 ans)|Expert (+10 ans)",
       "objectives": ["Objectif 1", "Objectif 2"],
@@ -63,7 +63,7 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
         await prisma.profile.update({
             where: { id: userId },
             data: {
-                profession: validatedData.profession,
+                primaryRole: validatedData.primaryRole,
                 thematicProfile: {
                     industry: validatedData.industry,
                     seniority: validatedData.seniority,
@@ -76,7 +76,7 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
 
         // 2. ⚡ GÉNÉRATION DE L'EMBEDDING (Le moteur du Radar)
         // On crée un texte riche qui représente parfaitement l'utilisateur pour le Radar
-        const textToEmbed = `Profil: ${validatedData.profession}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
+        const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
 
         const embeddingsResponse = await mistralClient.embeddings.create({
             model: 'mistral-embed', // Modèle obligatoire pour les vecteurs
@@ -89,7 +89,7 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
         // Note: Mistral génère des vecteurs à 1024 dimensions.
         await prisma.$executeRaw`
             UPDATE "Profile" 
-            SET embedding = ${embeddingVector}::vector 
+            SET "unifiedEmbedding" = ${embeddingVector}::vector 
             WHERE id = ${userId}
         `;
 

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
         const target = await prisma.profile.findUnique({ where: { id: targetId } });
         if (!user || !target) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
-        const prompt = `Tu es Agent, un proxy tactique d'ingénierie sociale.\nTa mission : Rédiger l'approche PARFAITE.\n\nADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}\nADN CIBLE : ${target.profession || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}\n\nRÈGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
+        const prompt = `Tu es Agent, un proxy tactique d'ingénierie sociale.\nTa mission : Rédiger l'approche PARFAITE.\n\nADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}\nADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}\n\nRÈGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",

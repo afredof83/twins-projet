@@ -69,7 +69,7 @@ FORMAT ATTENDU :
 }
 
 CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
-Rôle : ${targetProfile.role || 'Non défini'}
+Rôle : ${targetProfile.primaryRole || 'Non défini'}
 Bio : ${targetProfile.bio || 'Non définie'}
 `;
 

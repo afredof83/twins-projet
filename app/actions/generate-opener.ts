@@ -24,8 +24,8 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
 Tu es Agent, un proxy tactique d'ingénierie sociale.
 Ta mission : Rédiger l'approche PARFAITE.
 
-ADN EXPÉDITEUR : ${user.profession || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
-ADN CIBLE : ${target.profession || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}
+ADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
+ADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}
 
 RÈGLES D'ENGAGEMENT :
 Tu dois générer DEUX éléments distincts.

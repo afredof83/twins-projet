@@ -50,7 +50,7 @@ export async function forceHuntSync(formData?: FormData) {
                   SELECT 
                     id, 
                     name, 
-                    role, 
+                    primary_role as role, 
                     bio, 
                     1 - ("unifiedEmbedding" <=> $1::vector) as similarity
                   FROM "Profile"
@@ -104,7 +104,7 @@ export async function forceHuntSync(formData?: FormData) {
 
             // APPEL MISTRAL
             const prompt = `Tu es Cortex. Compare ces deux profils pour évaluer une synergie.
-        UTILISATEUR COURANT: ${myProfile?.bio} | Role: ${myProfile?.role}
+        UTILISATEUR COURANT: ${myProfile?.bio} | Role: ${myProfile?.primaryRole}
         CIBLE DÉTECTÉE (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
         
         Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).

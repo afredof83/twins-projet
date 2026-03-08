@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         if (error) throw new Error(error.message);
 
         await trackAgentActivity(user.id, 'memory');
-        const updatedProfile = await prisma.profile.findUnique({ where: { id: user.id }, select: { name: true, role: true } });
+        const updatedProfile = await prisma.profile.findUnique({ where: { id: user.id }, select: { name: true, primaryRole: true } });
 
         return NextResponse.json({ success: true, newStats: updatedProfile });
     } catch (e: any) {

@@ -1,5 +1,5 @@
 import { Network } from '@capacitor/network';
-import { getApiUrl } from '../api-config';
+import { getApiUrl } from '@/lib/api';
 import { createClient } from '../supabaseBrowser';
 // ⚡ Correction du chemin relatif
 import { getLocalDb } from '../local-db/init';

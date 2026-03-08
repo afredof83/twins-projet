@@ -76,7 +76,7 @@ export async function updateIdentity(formData: FormData) {
         await prisma.profile.update({
             where: { id: user.id },
             data: {
-                role,
+                primaryRole: role,
                 customRole: role === 'autre' ? customRole : null,
                 tjm,
                 availability,
@@ -113,3 +113,4 @@ export async function updateIdentity(formData: FormData) {
         throw new Error("Erreur lors de la sauvegarde.");
     }
 }
+
