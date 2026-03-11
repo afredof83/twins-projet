@@ -36,17 +36,30 @@ export async function POST(request: Request) {
     try {
         // 1. Parsing strict du payload
         const body = await request.json();
-        const { content, receiverId } = body;
+        const { content, receiverId, action } = body;
+
+        // 2. Vérification de l'identité via Supabase Auth
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        if (action === 'read' && receiverId) {
+            await prismaRLS.message.updateMany({
+                where: {
+                    senderId: receiverId,
+                    receiverId: user.id,
+                    isRead: false
+                },
+                data: { isRead: true }
+            });
+            return NextResponse.json({ success: true });
+        }
 
         if (!content || !receiverId) {
             return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
         }
 
-        // 2. Vérification de l'identité via Supabase Auth
-        const user = await getAuthUser(request);
-
         // 3. ⚡ Instanciation du Prisma avec RLS ⚡
-        const prismaRLS = getPrismaForUser(user.id);
+        // prismaRLS est déjà déclaré en haut pour le action === 'read'
 
         // Vérification d'association si besoin, mais RLS gère les accès de base.
         // On s'assure qu'une connexion ACCEPTED existe.

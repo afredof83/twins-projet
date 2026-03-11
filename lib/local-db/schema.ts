@@ -18,6 +18,7 @@ export const LOCAL_SCHEMA = `
     method TEXT NOT NULL,            -- 'POST', 'PATCH'
     payload TEXT NOT NULL,           -- JSON stringifié des données
     status TEXT DEFAULT 'PENDING',   -- 'PENDING', 'SYNCED', 'FAILED'
+    idempotencyKey TEXT UNIQUE,      -- 🛡️ Clé d'idempotence UUID v4
     createdAt TEXT NOT NULL
   );
 `;

@@ -58,25 +58,31 @@ export async function POST(request: Request) {
         if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
+        const idempotencyKey = request.headers.get('x-idempotency-key');
         const body = await request.json();
         const { action } = body;
 
         if (action === 'request') {
             const { targetId } = body;
-            if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing' }, { status: 400 });
+            if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
             if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
 
-            const existing = await prismaRLS.connection.findFirst({
+            // On utilise prisma (global) pour bypasser RLS sur la vérification de l'existence
+            // (car on peut vouloir savoir si on est déjà connecté à quelqu'un d'autre)
+            const existing = await prisma.connection.findFirst({
                 where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
             });
-            if (existing) return NextResponse.json({ success: false, error: 'Connexion déjà existante' });
+            if (existing) {
+                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
+                return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
+            }
 
-            await prismaRLS.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
+            await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
 
             // Si on vient d'un Radar, on met à jour le statut de l'opportunité
             const { oppId } = body;
             if (oppId) {
-                await prismaRLS.opportunity.update({
+                await prisma.opportunity.update({
                     where: { id: oppId },
                     data: { status: 'INVITED' }
                 });
@@ -89,26 +95,60 @@ export async function POST(request: Request) {
             const { connectionId, oppId } = body;
 
             if (oppId) {
-                const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
-                if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+                // 🛡️ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
+                const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
+                if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
+                    return NextResponse.json({ success: false, error: 'Opportunité introuvable ou non autorisée pour acceptation' }, { status: 404 });
+                }
 
-                await prismaRLS.connection.create({
-                    data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: "ACCEPTED" }
+                // Check if opportunity is already accepted
+                if (opp.status === 'ACCEPTED') {
+                    console.log(`🛡️ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
+                    return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
+                }
+
+                // Acceptation idempotente : on cherche si une connexion existe déjà
+                const existing = await prisma.connection.findFirst({
+                    where: {
+                        OR: [
+                            { initiatorId: opp.sourceId, receiverId: opp.targetId },
+                            { initiatorId: opp.targetId, receiverId: opp.sourceId }
+                        ]
+                    }
                 });
-                await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: "ACCEPTED" } });
+
+                if (existing) {
+                    await prisma.connection.update({
+                        where: { id: existing.id },
+                        data: { status: "ACCEPTED" }
+                    });
+                } else {
+                    await prisma.connection.create({
+                        data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: "ACCEPTED" }
+                    });
+                }
+
+                await prisma.opportunity.update({ where: { id: oppId }, data: { status: "ACCEPTED" } });
                 return NextResponse.json({ success: true });
             }
 
-            if (!connectionId) return NextResponse.json({ success: false, error: 'connectionId manquant' }, { status: 400 });
-            const result = await prismaRLS.connection.updateMany({
+            const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
+            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
+            
+            if (conn.status === 'ACCEPTED') {
+                console.log(`🛡️ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
+                return NextResponse.json({ success: true, message: 'Already accepted' });
+            }
+
+            const result = await prisma.connection.updateMany({
                 where: { id: connectionId, receiverId: user.id, status: "PENDING" },
                 data: { status: "ACCEPTED" }
             });
-            if (result.count === 0) return NextResponse.json({ success: false, error: 'Non trouvé ou non autorisé' }, { status: 404 });
+            if (result.count === 0) return NextResponse.json({ success: false, error: 'Accès refusé ou statut invalide' }, { status: 403 });
             return NextResponse.json({ success: true });
         }
 
-        return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
+        return NextResponse.json({ success: false, error: `Action non reconnue: ${action}` }, { status: 400 });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
@@ -165,7 +165,8 @@ function ProfileContent() {
                 age: formData.age,
                 gender: formData.gender,
                 city: formData.city,
-                country: formData.country
+                country: formData.country,
+                activePrism: 'WORK' // Default to WORK for identity
             };
         } else if (type === 'WORK') {
             endpoint = '/api/profile/work';
@@ -174,21 +175,24 @@ function ProfileContent() {
                 primaryRole: formData.workRole,
                 tjm: formData.workTjm,
                 availability: formData.workAvailability,
-                bio: formData.workBio
+                bio: formData.workBio,
+                activePrism: 'WORK'
             };
         } else if (type === 'SOCIAL') {
             endpoint = '/api/profile/social';
             body = {
                 sector: formData.socialSector,
                 role: formData.socialRole,
-                bio: formData.socialBio
+                bio: formData.socialBio,
+                activePrism: 'SOCIAL'
             };
         } else if (type === 'HOBBY') {
             endpoint = '/api/profile/hobby';
             body = {
                 sector: formData.hobbySector,
                 role: formData.hobbyRole,
-                bio: formData.hobbyBio
+                bio: formData.hobbyBio,
+                activePrism: 'HOBBY'
             };
         }
 

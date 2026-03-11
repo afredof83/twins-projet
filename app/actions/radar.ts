@@ -56,14 +56,14 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
             FROM "Profile" 
             WHERE id = $1
         `, userId);
+        
         const userEmbedding = currentUserRaw[0]?.embedding;
-
         if (!userEmbedding) {
             console.log(`⚠️ [RADAR] Aucun vecteur trouvé pour ${userId} sur le thème ${theme}.`);
             return;
         }
 
-        // 2. Recherche Cosinus
+        // 2. Recherche Cosinus (Stricte Ségrégation Contextuelle)
         const others: any[] = await prisma.$queryRawUnsafe(`
             SELECT 
                 id, name, bio, sector,
@@ -73,48 +73,54 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
                 1 - ("${embeddingField}" <=> $1::vector) as similarity
             FROM "Profile"
             WHERE id::text != $2::text 
+            AND active_prism = $3
             AND "${embeddingField}" IS NOT NULL
             AND 1 - ("${embeddingField}" <=> $1::vector) > 0.65
             ORDER BY similarity DESC
             LIMIT 5;
-        `, userEmbedding, userId);
+        `, userEmbedding, userId, theme.toUpperCase());
 
         for (const target of others) {
-            const existing = await prisma.opportunity.findFirst({
-                where: {
-                    OR: [
-                        { sourceId: userId, targetId: target.id },
-                        { sourceId: target.id, targetId: userId }
-                    ]
-                }
-            });
-            if (existing) continue;
-
-            const prompt = `Tu es Cortex, une IA de renseignement sémantique. Compare ces deux profils pour évaluer une synergie stratégique.
-        
-        [MON PROFIL (Utilisateur Courant)]:
-        Rôle : ${myRole || 'Non défini'}
-        Secteur : ${mySector || 'Non défini'}
-        Bio : ${myBio || 'Non spécifié'}
-
-        [CIBLE DÉTECTÉE (${target.name || 'Cible'})]:
-        Rôle : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non défini'}
-        Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non défini'}
-        Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spécifié'}
-        
-        Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
-        Directive : Décris la cible. Format JSON: { "score": number, "synergies": "string" }
-        RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
-
-            const res = await mistralClient.chat.complete({
-                model: 'mistral-small-latest',
-                messages: [{ role: 'user', content: prompt }],
-                responseFormat: { type: 'json_object' }
-            });
-
-            const rawContent = res.choices?.[0]?.message.content;
             try {
-                const cleanedContent = typeof rawContent === 'string' ? rawContent.replace(/```json/gi, '').replace(/```/g, '').trim() : '{}';
+                const existing = await prisma.opportunity.findFirst({
+                    where: {
+                        OR: [
+                            { sourceId: userId, targetId: target.id },
+                            { sourceId: target.id, targetId: userId }
+                        ],
+                        context: theme.toUpperCase()
+                    }
+                });
+                
+                if (existing) continue;
+
+                const prompt = `Tu es Cortex, une IA de renseignement sémantique. Compare ces deux profils pour évaluer une synergie stratégique.
+        
+[MON PROFIL (Utilisateur Courant)]:
+Rôle : ${myRole || 'Non défini'}
+Secteur : ${mySector || 'Non défini'}
+Bio : ${myBio || 'Non spécifié'}
+
+[CIBLE DÉTECTÉE (${target.name || 'Cible'})]:
+Rôle : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non défini'}
+Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non défini'}
+Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spécifié'}
+
+Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
+Directive : Décris la cible. Format JSON: { "score": number, "synergies": "string" }
+RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
+
+                const res = await mistralClient.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [{ role: 'user', content: prompt }],
+                    responseFormat: { type: 'json_object' }
+                });
+
+                const rawContent = res.choices?.[0]?.message.content;
+                const cleanedContent = typeof rawContent === 'string' 
+                    ? rawContent.replace(/```json/gi, '').replace(/```/g, '').trim() 
+                    : '{}';
+                
                 const result = JSON.parse(cleanedContent);
 
                 if (result.score && result.score > 60) {
@@ -124,11 +130,14 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
                             targetId: target.id,
                             matchScore: result.score,
                             synergies: result.synergies || "Compatibilité détectée.",
-                            status: 'DETECTED'
+                            status: 'DETECTED',
+                            context: theme.toUpperCase()
                         }
                     });
                 }
-            } catch (e) { continue; }
+            } catch (innerError) {
+                console.error("error processing target", innerError);
+            }
         }
     } catch (error: any) {
         console.error(`❌ [RADAR-EXEC] Error for ${userId}:`, error.message);
@@ -154,6 +163,5 @@ export async function getRadarResults(profileId: string) {
 }
 
 export async function getGlobalRadarNews() {
-    // Bouchon pour remplacer l'ancienne route /api/radar
     return { success: true, news: [] };
 }

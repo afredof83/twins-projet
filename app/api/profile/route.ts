@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         const { action } = body;
 
         if (action === 'updateGeneralIdentity') {
-            const { name, age, gender, city, country } = body;
+            const { name, age, gender, city, country, activePrism } = body;
             const ageParsed = age ? parseInt(age, 10) : null;
 
             await prismaRLS.profile.update({
@@ -68,7 +68,8 @@ export async function POST(request: Request) {
                     age: ageParsed,
                     gender,
                     city,
-                    country
+                    country,
+                    activePrism: activePrism || 'WORK'
                 }
             });
 
@@ -89,13 +90,36 @@ export async function POST(request: Request) {
 
         // Garder les anciennes actions si nécessaire (Optionnel mais sécurisé)
         if (action === 'create') {
-            const { name } = body;
-            const profile = await prismaRLS.profile.upsert({
-                where: { id: user.id },
-                update: { name },
-                create: { id: user.id, email: user.email!, name }
-            });
-            return NextResponse.json({ success: true, profileId: profile.id });
+            const { name, publicKey } = body;
+            
+            if (!publicKey) {
+                return NextResponse.json({ success: false, error: "Clé publique (publicKey) manquante ou invalide. L'onboarding a été interrompu." }, { status: 400 });
+            }
+
+            try {
+                const profile = await prismaRLS.profile.upsert({
+                    where: { id: user.id },
+                    update: { 
+                        name,
+                        publicKey
+                    },
+                    create: { 
+                        id: user.id, 
+                        email: user.email!, 
+                        name,
+                        publicKey
+                    }
+                });
+                
+                if (publicKey) {
+                    console.log(`✅ [API-PROFILE] Clé publique synchronisée pour l'utilisateur ${user.id}`);
+                }
+                
+                return NextResponse.json({ success: true, profileId: profile.id });
+            } catch (error: any) {
+                console.error("❌ [API-PROFILE] Échec critique de la persistance de la clé publique:", error.message);
+                throw error;
+            }
         }
 
         if (action === 'updateIdentity') {

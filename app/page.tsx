@@ -5,25 +5,24 @@ import { Loader2, Target, Zap, ShieldCheck, LockOpen, RefreshCw } from 'lucide-r
 import { getAgentName } from '@/lib/utils';
 import { createClient } from '@/lib/supabaseBrowser';
 import { getApiUrl } from '@/lib/api';
-import RadarPoller from '@/app/components/RadarPoller';
+import RadarRealtimeListener from '@/app/components/RadarRealtimeListener';
 import LearningAlert from '@/app/components/LearningAlert';
 import RadarMatchCard from '@/app/components/RadarMatchCard';
 import AcceptConnectionButton from '@/app/components/AcceptConnectionButton';
-import ActiveChannelsList from '@/app/components/ActiveChannelsList';
 import { useLanguage } from '@/context/LanguageContext';
+import { useCallback } from 'react';
 
 function RadarContent() {
   const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [discoveries, setDiscoveries] = useState<any[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
-  const [activeChannels, setActiveChannels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
   const supabase = createClient();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -44,14 +43,13 @@ function RadarContent() {
       const connRes = await fetch(getApiUrl('/api/connection'), { headers }).then(r => r.json());
       if (connRes.success) {
         setIncomingRequests(connRes.incoming);
-        setActiveChannels(connRes.active);
       }
     } catch (e) {
       console.error("fetchData error", e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     fetchData();
@@ -93,7 +91,7 @@ function RadarContent() {
 
   return (
     <div className="p-4 md:p-8 space-y-8">
-      <RadarPoller />
+      <RadarRealtimeListener onUpdate={fetchData} currentUserId={user.id} />
       <header className="flex justify-between items-end">
         <div>
           <div className="flex items-center gap-2 text-blue-400 mb-1 font-mono">
@@ -140,16 +138,7 @@ function RadarContent() {
         </section>
       )}
 
-      {/* SECTION 2: Canaux Actifs */}
-      {activeChannels.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 text-blue-400">
-            <LockOpen className="w-4 h-4" />
-            <h2 className="text-sm font-bold uppercase tracking-widest">{t('radar.secure_channels')}</h2>
-          </div>
-          <ActiveChannelsList activeChannels={activeChannels} currentUserId={user.id} />
-        </section>
-      )}
+
 
       {/* SECTION 3: Découvertes Radar */}
       <section className="space-y-4 pt-4 border-t border-white/5">

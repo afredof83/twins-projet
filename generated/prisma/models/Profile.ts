@@ -27,201 +27,207 @@ export type AggregateProfile = {
 }
 
 export type ProfileAvgAggregateOutputType = {
-  age: number | null
   tjm: number | null
+  age: number | null
 }
 
 export type ProfileSumAggregateOutputType = {
-  age: number | null
   tjm: number | null
+  age: number | null
 }
 
 export type ProfileMinAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
-  language: string | null
   avatarUrl: string | null
-  publicKey: string | null
-  fcmToken: string | null
-  age: number | null
-  gender: string | null
-  city: string | null
-  country: string | null
-  sector: string | null
-  primaryRole: string | null
-  customRole: string | null
-  tjm: number | null
+  unifiedAnalysis: string | null
   availability: string | null
   bio: string | null
-  socialSector: string | null
-  socialRole: string | null
-  socialBio: string | null
-  hobbySector: string | null
-  hobbyRole: string | null
-  hobbyBio: string | null
-  unifiedAnalysis: string | null
+  tjm: number | null
+  fcmToken: string | null
+  publicKey: string | null
+  age: number | null
+  city: string | null
+  country: string | null
+  gender: string | null
   createdAt: Date | null
+  customRole: string | null
+  primaryRole: string | null
   updatedAt: Date | null
+  sector: string | null
+  hobbyBio: string | null
+  hobbyRole: string | null
+  hobbySector: string | null
+  socialBio: string | null
+  socialRole: string | null
+  socialSector: string | null
+  language: string | null
+  activePrism: string | null
 }
 
 export type ProfileMaxAggregateOutputType = {
   id: string | null
   email: string | null
   name: string | null
-  language: string | null
   avatarUrl: string | null
-  publicKey: string | null
-  fcmToken: string | null
-  age: number | null
-  gender: string | null
-  city: string | null
-  country: string | null
-  sector: string | null
-  primaryRole: string | null
-  customRole: string | null
-  tjm: number | null
+  unifiedAnalysis: string | null
   availability: string | null
   bio: string | null
-  socialSector: string | null
-  socialRole: string | null
-  socialBio: string | null
-  hobbySector: string | null
-  hobbyRole: string | null
-  hobbyBio: string | null
-  unifiedAnalysis: string | null
+  tjm: number | null
+  fcmToken: string | null
+  publicKey: string | null
+  age: number | null
+  city: string | null
+  country: string | null
+  gender: string | null
   createdAt: Date | null
+  customRole: string | null
+  primaryRole: string | null
   updatedAt: Date | null
+  sector: string | null
+  hobbyBio: string | null
+  hobbyRole: string | null
+  hobbySector: string | null
+  socialBio: string | null
+  socialRole: string | null
+  socialSector: string | null
+  language: string | null
+  activePrism: string | null
 }
 
 export type ProfileCountAggregateOutputType = {
   id: number
   email: number
   name: number
-  language: number
   avatarUrl: number
-  publicKey: number
-  fcmToken: number
-  age: number
-  gender: number
-  city: number
-  country: number
-  sector: number
-  primaryRole: number
-  customRole: number
-  tjm: number
+  unifiedAnalysis: number
   availability: number
   bio: number
-  socialSector: number
-  socialRole: number
-  socialBio: number
-  hobbySector: number
-  hobbyRole: number
-  hobbyBio: number
-  thematicProfile: number
-  unifiedAnalysis: number
+  tjm: number
+  fcmToken: number
+  publicKey: number
+  age: number
+  city: number
+  country: number
+  gender: number
   createdAt: number
+  customRole: number
+  primaryRole: number
+  thematicProfile: number
   updatedAt: number
+  sector: number
+  hobbyBio: number
+  hobbyRole: number
+  hobbySector: number
+  socialBio: number
+  socialRole: number
+  socialSector: number
+  language: number
+  activePrism: number
   _all: number
 }
 
 
 export type ProfileAvgAggregateInputType = {
-  age?: true
   tjm?: true
+  age?: true
 }
 
 export type ProfileSumAggregateInputType = {
-  age?: true
   tjm?: true
+  age?: true
 }
 
 export type ProfileMinAggregateInputType = {
   id?: true
   email?: true
   name?: true
-  language?: true
   avatarUrl?: true
-  publicKey?: true
-  fcmToken?: true
-  age?: true
-  gender?: true
-  city?: true
-  country?: true
-  sector?: true
-  primaryRole?: true
-  customRole?: true
-  tjm?: true
+  unifiedAnalysis?: true
   availability?: true
   bio?: true
-  socialSector?: true
-  socialRole?: true
-  socialBio?: true
-  hobbySector?: true
-  hobbyRole?: true
-  hobbyBio?: true
-  unifiedAnalysis?: true
+  tjm?: true
+  fcmToken?: true
+  publicKey?: true
+  age?: true
+  city?: true
+  country?: true
+  gender?: true
   createdAt?: true
+  customRole?: true
+  primaryRole?: true
   updatedAt?: true
+  sector?: true
+  hobbyBio?: true
+  hobbyRole?: true
+  hobbySector?: true
+  socialBio?: true
+  socialRole?: true
+  socialSector?: true
+  language?: true
+  activePrism?: true
 }
 
 export type ProfileMaxAggregateInputType = {
   id?: true
   email?: true
   name?: true
-  language?: true
   avatarUrl?: true
-  publicKey?: true
-  fcmToken?: true
-  age?: true
-  gender?: true
-  city?: true
-  country?: true
-  sector?: true
-  primaryRole?: true
-  customRole?: true
-  tjm?: true
+  unifiedAnalysis?: true
   availability?: true
   bio?: true
-  socialSector?: true
-  socialRole?: true
-  socialBio?: true
-  hobbySector?: true
-  hobbyRole?: true
-  hobbyBio?: true
-  unifiedAnalysis?: true
+  tjm?: true
+  fcmToken?: true
+  publicKey?: true
+  age?: true
+  city?: true
+  country?: true
+  gender?: true
   createdAt?: true
+  customRole?: true
+  primaryRole?: true
   updatedAt?: true
+  sector?: true
+  hobbyBio?: true
+  hobbyRole?: true
+  hobbySector?: true
+  socialBio?: true
+  socialRole?: true
+  socialSector?: true
+  language?: true
+  activePrism?: true
 }
 
 export type ProfileCountAggregateInputType = {
   id?: true
   email?: true
   name?: true
-  language?: true
   avatarUrl?: true
-  publicKey?: true
-  fcmToken?: true
-  age?: true
-  gender?: true
-  city?: true
-  country?: true
-  sector?: true
-  primaryRole?: true
-  customRole?: true
-  tjm?: true
+  unifiedAnalysis?: true
   availability?: true
   bio?: true
-  socialSector?: true
-  socialRole?: true
-  socialBio?: true
-  hobbySector?: true
-  hobbyRole?: true
-  hobbyBio?: true
-  thematicProfile?: true
-  unifiedAnalysis?: true
+  tjm?: true
+  fcmToken?: true
+  publicKey?: true
+  age?: true
+  city?: true
+  country?: true
+  gender?: true
   createdAt?: true
+  customRole?: true
+  primaryRole?: true
+  thematicProfile?: true
   updatedAt?: true
+  sector?: true
+  hobbyBio?: true
+  hobbyRole?: true
+  hobbySector?: true
+  socialBio?: true
+  socialRole?: true
+  socialSector?: true
+  language?: true
+  activePrism?: true
   _all?: true
 }
 
@@ -315,30 +321,31 @@ export type ProfileGroupByOutputType = {
   id: string
   email: string
   name: string | null
-  language: string
   avatarUrl: string | null
-  publicKey: string | null
-  fcmToken: string | null
-  age: number | null
-  gender: string | null
-  city: string | null
-  country: string | null
-  sector: string | null
-  primaryRole: string | null
-  customRole: string | null
-  tjm: number | null
+  unifiedAnalysis: string | null
   availability: string | null
   bio: string | null
-  socialSector: string | null
-  socialRole: string | null
-  socialBio: string | null
-  hobbySector: string | null
-  hobbyRole: string | null
-  hobbyBio: string | null
-  thematicProfile: runtime.JsonValue | null
-  unifiedAnalysis: string | null
+  tjm: number | null
+  fcmToken: string | null
+  publicKey: string | null
+  age: number | null
+  city: string | null
+  country: string | null
+  gender: string | null
   createdAt: Date
+  customRole: string | null
+  primaryRole: string | null
+  thematicProfile: runtime.JsonValue | null
   updatedAt: Date
+  sector: string | null
+  hobbyBio: string | null
+  hobbyRole: string | null
+  hobbySector: string | null
+  socialBio: string | null
+  socialRole: string | null
+  socialSector: string | null
+  language: string
+  activePrism: string | null
   _count: ProfileCountAggregateOutputType | null
   _avg: ProfileAvgAggregateOutputType | null
   _sum: ProfileSumAggregateOutputType | null
@@ -368,30 +375,31 @@ export type ProfileWhereInput = {
   id?: Prisma.StringFilter<"Profile"> | string
   email?: Prisma.StringFilter<"Profile"> | string
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
-  language?: Prisma.StringFilter<"Profile"> | string
   avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
-  age?: Prisma.IntNullableFilter<"Profile"> | number | null
-  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
-  city?: Prisma.StringNullableFilter<"Profile"> | string | null
-  country?: Prisma.StringNullableFilter<"Profile"> | string | null
-  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
+  unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
   availability?: Prisma.StringNullableFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  thematicProfile?: Prisma.JsonNullableFilter<"Profile">
-  unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
+  tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
+  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableFilter<"Profile"> | number | null
+  city?: Prisma.StringNullableFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableFilter<"Profile"> | string | null
+  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  language?: Prisma.StringFilter<"Profile"> | string
+  activePrism?: Prisma.StringNullableFilter<"Profile"> | string | null
   initiatedConnections?: Prisma.ConnectionListRelationFilter
   receivedConnections?: Prisma.ConnectionListRelationFilter
   notes?: Prisma.CortexNoteListRelationFilter
@@ -411,30 +419,31 @@ export type ProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  language?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
-  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  age?: Prisma.SortOrderInput | Prisma.SortOrder
-  gender?: Prisma.SortOrderInput | Prisma.SortOrder
-  city?: Prisma.SortOrderInput | Prisma.SortOrder
-  country?: Prisma.SortOrderInput | Prisma.SortOrder
-  sector?: Prisma.SortOrderInput | Prisma.SortOrder
-  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  customRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  tjm?: Prisma.SortOrderInput | Prisma.SortOrder
+  unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
   availability?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
-  unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
+  tjm?: Prisma.SortOrderInput | Prisma.SortOrder
+  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  customRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sector?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrder
+  activePrism?: Prisma.SortOrderInput | Prisma.SortOrder
   initiatedConnections?: Prisma.ConnectionOrderByRelationAggregateInput
   receivedConnections?: Prisma.ConnectionOrderByRelationAggregateInput
   notes?: Prisma.CortexNoteOrderByRelationAggregateInput
@@ -457,30 +466,31 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.ProfileWhereInput[]
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   name?: Prisma.StringNullableFilter<"Profile"> | string | null
-  language?: Prisma.StringFilter<"Profile"> | string
   avatarUrl?: Prisma.StringNullableFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
-  age?: Prisma.IntNullableFilter<"Profile"> | number | null
-  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
-  city?: Prisma.StringNullableFilter<"Profile"> | string | null
-  country?: Prisma.StringNullableFilter<"Profile"> | string | null
-  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
+  unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
   availability?: Prisma.StringNullableFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  thematicProfile?: Prisma.JsonNullableFilter<"Profile">
-  unifiedAnalysis?: Prisma.StringNullableFilter<"Profile"> | string | null
+  tjm?: Prisma.IntNullableFilter<"Profile"> | number | null
+  fcmToken?: Prisma.StringNullableFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableFilter<"Profile"> | number | null
+  city?: Prisma.StringNullableFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableFilter<"Profile"> | string | null
+  gender?: Prisma.StringNullableFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  customRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  sector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
+  language?: Prisma.StringFilter<"Profile"> | string
+  activePrism?: Prisma.StringNullableFilter<"Profile"> | string | null
   initiatedConnections?: Prisma.ConnectionListRelationFilter
   receivedConnections?: Prisma.ConnectionListRelationFilter
   notes?: Prisma.CortexNoteListRelationFilter
@@ -500,30 +510,31 @@ export type ProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
-  language?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
-  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
-  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
-  age?: Prisma.SortOrderInput | Prisma.SortOrder
-  gender?: Prisma.SortOrderInput | Prisma.SortOrder
-  city?: Prisma.SortOrderInput | Prisma.SortOrder
-  country?: Prisma.SortOrderInput | Prisma.SortOrder
-  sector?: Prisma.SortOrderInput | Prisma.SortOrder
-  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  customRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  tjm?: Prisma.SortOrderInput | Prisma.SortOrder
+  unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
   availability?: Prisma.SortOrderInput | Prisma.SortOrder
   bio?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
-  unifiedAnalysis?: Prisma.SortOrderInput | Prisma.SortOrder
+  tjm?: Prisma.SortOrderInput | Prisma.SortOrder
+  fcmToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  publicKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  country?: Prisma.SortOrderInput | Prisma.SortOrder
+  gender?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  customRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sector?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrder
+  activePrism?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ProfileCountOrderByAggregateInput
   _avg?: Prisma.ProfileAvgOrderByAggregateInput
   _max?: Prisma.ProfileMaxOrderByAggregateInput
@@ -538,60 +549,62 @@ export type ProfileScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   email?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  language?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  publicKey?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  fcmToken?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  age?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
-  gender?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  city?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  country?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  sector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  primaryRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  customRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  tjm?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
+  unifiedAnalysis?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   availability?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   bio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  hobbyBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  thematicProfile?: Prisma.JsonNullableWithAggregatesFilter<"Profile">
-  unifiedAnalysis?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  tjm?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
+  fcmToken?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  publicKey?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  age?: Prisma.IntNullableWithAggregatesFilter<"Profile"> | number | null
+  city?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  country?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  gender?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
+  customRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  primaryRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  thematicProfile?: Prisma.JsonNullableWithAggregatesFilter<"Profile">
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
+  sector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbyBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbyRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  hobbySector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  socialSector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  language?: Prisma.StringWithAggregatesFilter<"Profile"> | string
+  activePrism?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
 }
 
 export type ProfileCreateInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -611,30 +624,31 @@ export type ProfileUncheckedCreateInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -654,30 +668,31 @@ export type ProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -697,30 +712,31 @@ export type ProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -740,188 +756,194 @@ export type ProfileCreateManyInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
 }
 
 export type ProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  language?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  age?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  city?: Prisma.SortOrder
-  country?: Prisma.SortOrder
-  sector?: Prisma.SortOrder
-  primaryRole?: Prisma.SortOrder
-  customRole?: Prisma.SortOrder
-  tjm?: Prisma.SortOrder
+  unifiedAnalysis?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbyBio?: Prisma.SortOrder
-  thematicProfile?: Prisma.SortOrder
-  unifiedAnalysis?: Prisma.SortOrder
+  tjm?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  customRole?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
+  thematicProfile?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  activePrism?: Prisma.SortOrder
 }
 
 export type ProfileAvgOrderByAggregateInput = {
-  age?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
+  age?: Prisma.SortOrder
 }
 
 export type ProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  language?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  age?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  city?: Prisma.SortOrder
-  country?: Prisma.SortOrder
-  sector?: Prisma.SortOrder
-  primaryRole?: Prisma.SortOrder
-  customRole?: Prisma.SortOrder
-  tjm?: Prisma.SortOrder
+  unifiedAnalysis?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbyBio?: Prisma.SortOrder
-  unifiedAnalysis?: Prisma.SortOrder
+  tjm?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  customRole?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  activePrism?: Prisma.SortOrder
 }
 
 export type ProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   email?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  language?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrder
-  publicKey?: Prisma.SortOrder
-  fcmToken?: Prisma.SortOrder
-  age?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  city?: Prisma.SortOrder
-  country?: Prisma.SortOrder
-  sector?: Prisma.SortOrder
-  primaryRole?: Prisma.SortOrder
-  customRole?: Prisma.SortOrder
-  tjm?: Prisma.SortOrder
+  unifiedAnalysis?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   bio?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbyBio?: Prisma.SortOrder
-  unifiedAnalysis?: Prisma.SortOrder
+  tjm?: Prisma.SortOrder
+  fcmToken?: Prisma.SortOrder
+  publicKey?: Prisma.SortOrder
+  age?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  country?: Prisma.SortOrder
+  gender?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  customRole?: Prisma.SortOrder
+  primaryRole?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sector?: Prisma.SortOrder
+  hobbyBio?: Prisma.SortOrder
+  hobbyRole?: Prisma.SortOrder
+  hobbySector?: Prisma.SortOrder
+  socialBio?: Prisma.SortOrder
+  socialRole?: Prisma.SortOrder
+  socialSector?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  activePrism?: Prisma.SortOrder
 }
 
 export type ProfileSumOrderByAggregateInput = {
-  age?: Prisma.SortOrder
   tjm?: Prisma.SortOrder
+  age?: Prisma.SortOrder
 }
 
 export type ProfileScalarRelationFilter = {
@@ -1135,30 +1157,31 @@ export type ProfileCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -1177,30 +1200,31 @@ export type ProfileUncheckedCreateWithoutFilesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -1235,30 +1259,31 @@ export type ProfileUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -1277,30 +1302,31 @@ export type ProfileUncheckedUpdateWithoutFilesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -1319,30 +1345,31 @@ export type ProfileCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
@@ -1361,30 +1388,31 @@ export type ProfileUncheckedCreateWithoutNotesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
@@ -1419,30 +1447,31 @@ export type ProfileUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
@@ -1461,30 +1490,31 @@ export type ProfileUncheckedUpdateWithoutNotesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
@@ -1503,30 +1533,31 @@ export type ProfileCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -1545,30 +1576,31 @@ export type ProfileUncheckedCreateWithoutRadarsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -1603,30 +1635,31 @@ export type ProfileUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -1645,30 +1678,31 @@ export type ProfileUncheckedUpdateWithoutRadarsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -1687,30 +1721,31 @@ export type ProfileCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -1729,30 +1764,31 @@ export type ProfileUncheckedCreateWithoutMatchesInitiatedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -1776,30 +1812,31 @@ export type ProfileCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -1818,30 +1855,31 @@ export type ProfileUncheckedCreateWithoutMatchesReceivedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -1876,30 +1914,31 @@ export type ProfileUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -1918,30 +1957,31 @@ export type ProfileUncheckedUpdateWithoutMatchesInitiatedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -1971,30 +2011,31 @@ export type ProfileUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -2013,30 +2054,31 @@ export type ProfileUncheckedUpdateWithoutMatchesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -2055,30 +2097,31 @@ export type ProfileCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -2097,30 +2140,31 @@ export type ProfileUncheckedCreateWithoutMessagesReceivedInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -2144,30 +2188,31 @@ export type ProfileCreateWithoutMessagesSentInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -2186,30 +2231,31 @@ export type ProfileUncheckedCreateWithoutMessagesSentInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -2244,30 +2290,31 @@ export type ProfileUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -2286,30 +2333,31 @@ export type ProfileUncheckedUpdateWithoutMessagesReceivedInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -2339,30 +2387,31 @@ export type ProfileUpdateWithoutMessagesSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -2381,30 +2430,31 @@ export type ProfileUncheckedUpdateWithoutMessagesSentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -2423,30 +2473,31 @@ export type ProfileCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -2465,30 +2516,31 @@ export type ProfileUncheckedCreateWithoutMemoriesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -2523,30 +2575,31 @@ export type ProfileUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -2565,30 +2618,31 @@ export type ProfileUncheckedUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -2607,30 +2661,31 @@ export type ProfileCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -2649,30 +2704,31 @@ export type ProfileUncheckedCreateWithoutDiscoveriesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -2707,30 +2763,31 @@ export type ProfileUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -2749,30 +2806,31 @@ export type ProfileUncheckedUpdateWithoutDiscoveriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -2791,30 +2849,31 @@ export type ProfileCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
   discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
@@ -2833,30 +2892,31 @@ export type ProfileUncheckedCreateWithoutInitiatedConnectionsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
   discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
@@ -2880,30 +2940,31 @@ export type ProfileCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
   discoveries?: Prisma.DiscoveryCreateNestedManyWithoutProfileInput
@@ -2922,30 +2983,31 @@ export type ProfileUncheckedCreateWithoutReceivedConnectionsInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
   discoveries?: Prisma.DiscoveryUncheckedCreateNestedManyWithoutProfileInput
@@ -2980,30 +3042,31 @@ export type ProfileUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
   discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
@@ -3022,30 +3085,31 @@ export type ProfileUncheckedUpdateWithoutInitiatedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
   discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
@@ -3075,30 +3139,31 @@ export type ProfileUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
   discoveries?: Prisma.DiscoveryUpdateManyWithoutProfileNestedInput
@@ -3117,30 +3182,31 @@ export type ProfileUncheckedUpdateWithoutReceivedConnectionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
   discoveries?: Prisma.DiscoveryUncheckedUpdateManyWithoutProfileNestedInput
@@ -3159,30 +3225,31 @@ export type ProfileCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -3201,30 +3268,31 @@ export type ProfileUncheckedCreateWithoutInitiatedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -3248,30 +3316,31 @@ export type ProfileCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteCreateNestedManyWithoutProfileInput
@@ -3290,30 +3359,31 @@ export type ProfileUncheckedCreateWithoutReceivedOpportunitiesInput = {
   id: string
   email: string
   name?: string | null
-  language?: string
   avatarUrl?: string | null
-  publicKey?: string | null
-  fcmToken?: string | null
-  age?: number | null
-  gender?: string | null
-  city?: string | null
-  country?: string | null
-  sector?: string | null
-  primaryRole?: string | null
-  customRole?: string | null
-  tjm?: number | null
+  unifiedAnalysis?: string | null
   availability?: string | null
   bio?: string | null
-  socialSector?: string | null
-  socialRole?: string | null
-  socialBio?: string | null
-  hobbySector?: string | null
-  hobbyRole?: string | null
-  hobbyBio?: string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: string | null
+  tjm?: number | null
+  fcmToken?: string | null
+  publicKey?: string | null
+  age?: number | null
+  city?: string | null
+  country?: string | null
+  gender?: string | null
   createdAt?: Date | string
+  customRole?: string | null
+  primaryRole?: string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  sector?: string | null
+  hobbyBio?: string | null
+  hobbyRole?: string | null
+  hobbySector?: string | null
+  socialBio?: string | null
+  socialRole?: string | null
+  socialSector?: string | null
+  language?: string
+  activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
   notes?: Prisma.CortexNoteUncheckedCreateNestedManyWithoutProfileInput
@@ -3348,30 +3418,31 @@ export type ProfileUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -3390,30 +3461,31 @@ export type ProfileUncheckedUpdateWithoutInitiatedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -3443,30 +3515,31 @@ export type ProfileUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUpdateManyWithoutProfileNestedInput
@@ -3485,30 +3558,31 @@ export type ProfileUncheckedUpdateWithoutReceivedOpportunitiesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   email?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   availability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  unifiedAnalysis?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tjm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  fcmToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  publicKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
   notes?: Prisma.CortexNoteUncheckedUpdateManyWithoutProfileNestedInput
@@ -3666,30 +3740,31 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   id?: boolean
   email?: boolean
   name?: boolean
-  language?: boolean
   avatarUrl?: boolean
-  publicKey?: boolean
-  fcmToken?: boolean
-  age?: boolean
-  gender?: boolean
-  city?: boolean
-  country?: boolean
-  sector?: boolean
-  primaryRole?: boolean
-  customRole?: boolean
-  tjm?: boolean
+  unifiedAnalysis?: boolean
   availability?: boolean
   bio?: boolean
-  socialSector?: boolean
-  socialRole?: boolean
-  socialBio?: boolean
-  hobbySector?: boolean
-  hobbyRole?: boolean
-  hobbyBio?: boolean
-  thematicProfile?: boolean
-  unifiedAnalysis?: boolean
+  tjm?: boolean
+  fcmToken?: boolean
+  publicKey?: boolean
+  age?: boolean
+  city?: boolean
+  country?: boolean
+  gender?: boolean
   createdAt?: boolean
+  customRole?: boolean
+  primaryRole?: boolean
+  thematicProfile?: boolean
   updatedAt?: boolean
+  sector?: boolean
+  hobbyBio?: boolean
+  hobbyRole?: boolean
+  hobbySector?: boolean
+  socialBio?: boolean
+  socialRole?: boolean
+  socialSector?: boolean
+  language?: boolean
+  activePrism?: boolean
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
   receivedConnections?: boolean | Prisma.Profile$receivedConnectionsArgs<ExtArgs>
   notes?: boolean | Prisma.Profile$notesArgs<ExtArgs>
@@ -3710,93 +3785,96 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   id?: boolean
   email?: boolean
   name?: boolean
-  language?: boolean
   avatarUrl?: boolean
-  publicKey?: boolean
-  fcmToken?: boolean
-  age?: boolean
-  gender?: boolean
-  city?: boolean
-  country?: boolean
-  sector?: boolean
-  primaryRole?: boolean
-  customRole?: boolean
-  tjm?: boolean
+  unifiedAnalysis?: boolean
   availability?: boolean
   bio?: boolean
-  socialSector?: boolean
-  socialRole?: boolean
-  socialBio?: boolean
-  hobbySector?: boolean
-  hobbyRole?: boolean
-  hobbyBio?: boolean
-  thematicProfile?: boolean
-  unifiedAnalysis?: boolean
+  tjm?: boolean
+  fcmToken?: boolean
+  publicKey?: boolean
+  age?: boolean
+  city?: boolean
+  country?: boolean
+  gender?: boolean
   createdAt?: boolean
+  customRole?: boolean
+  primaryRole?: boolean
+  thematicProfile?: boolean
   updatedAt?: boolean
+  sector?: boolean
+  hobbyBio?: boolean
+  hobbyRole?: boolean
+  hobbySector?: boolean
+  socialBio?: boolean
+  socialRole?: boolean
+  socialSector?: boolean
+  language?: boolean
+  activePrism?: boolean
 }, ExtArgs["result"]["profile"]>
 
 export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   email?: boolean
   name?: boolean
-  language?: boolean
   avatarUrl?: boolean
-  publicKey?: boolean
-  fcmToken?: boolean
-  age?: boolean
-  gender?: boolean
-  city?: boolean
-  country?: boolean
-  sector?: boolean
-  primaryRole?: boolean
-  customRole?: boolean
-  tjm?: boolean
+  unifiedAnalysis?: boolean
   availability?: boolean
   bio?: boolean
-  socialSector?: boolean
-  socialRole?: boolean
-  socialBio?: boolean
-  hobbySector?: boolean
-  hobbyRole?: boolean
-  hobbyBio?: boolean
-  thematicProfile?: boolean
-  unifiedAnalysis?: boolean
+  tjm?: boolean
+  fcmToken?: boolean
+  publicKey?: boolean
+  age?: boolean
+  city?: boolean
+  country?: boolean
+  gender?: boolean
   createdAt?: boolean
+  customRole?: boolean
+  primaryRole?: boolean
+  thematicProfile?: boolean
   updatedAt?: boolean
+  sector?: boolean
+  hobbyBio?: boolean
+  hobbyRole?: boolean
+  hobbySector?: boolean
+  socialBio?: boolean
+  socialRole?: boolean
+  socialSector?: boolean
+  language?: boolean
+  activePrism?: boolean
 }, ExtArgs["result"]["profile"]>
 
 export type ProfileSelectScalar = {
   id?: boolean
   email?: boolean
   name?: boolean
-  language?: boolean
   avatarUrl?: boolean
-  publicKey?: boolean
-  fcmToken?: boolean
-  age?: boolean
-  gender?: boolean
-  city?: boolean
-  country?: boolean
-  sector?: boolean
-  primaryRole?: boolean
-  customRole?: boolean
-  tjm?: boolean
+  unifiedAnalysis?: boolean
   availability?: boolean
   bio?: boolean
-  socialSector?: boolean
-  socialRole?: boolean
-  socialBio?: boolean
-  hobbySector?: boolean
-  hobbyRole?: boolean
-  hobbyBio?: boolean
-  thematicProfile?: boolean
-  unifiedAnalysis?: boolean
+  tjm?: boolean
+  fcmToken?: boolean
+  publicKey?: boolean
+  age?: boolean
+  city?: boolean
+  country?: boolean
+  gender?: boolean
   createdAt?: boolean
+  customRole?: boolean
+  primaryRole?: boolean
+  thematicProfile?: boolean
   updatedAt?: boolean
+  sector?: boolean
+  hobbyBio?: boolean
+  hobbyRole?: boolean
+  hobbySector?: boolean
+  socialBio?: boolean
+  socialRole?: boolean
+  socialSector?: boolean
+  language?: boolean
+  activePrism?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "language" | "avatarUrl" | "publicKey" | "fcmToken" | "age" | "gender" | "city" | "country" | "sector" | "primaryRole" | "customRole" | "tjm" | "availability" | "bio" | "socialSector" | "socialRole" | "socialBio" | "hobbySector" | "hobbyRole" | "hobbyBio" | "thematicProfile" | "unifiedAnalysis" | "createdAt" | "updatedAt", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "avatarUrl" | "unifiedAnalysis" | "availability" | "bio" | "tjm" | "fcmToken" | "publicKey" | "age" | "city" | "country" | "gender" | "createdAt" | "customRole" | "primaryRole" | "thematicProfile" | "updatedAt" | "sector" | "hobbyBio" | "hobbyRole" | "hobbySector" | "socialBio" | "socialRole" | "socialSector" | "language" | "activePrism", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
   receivedConnections?: boolean | Prisma.Profile$receivedConnectionsArgs<ExtArgs>
@@ -3837,30 +3915,31 @@ export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     id: string
     email: string
     name: string | null
-    language: string
     avatarUrl: string | null
-    publicKey: string | null
-    fcmToken: string | null
-    age: number | null
-    gender: string | null
-    city: string | null
-    country: string | null
-    sector: string | null
-    primaryRole: string | null
-    customRole: string | null
-    tjm: number | null
+    unifiedAnalysis: string | null
     availability: string | null
     bio: string | null
-    socialSector: string | null
-    socialRole: string | null
-    socialBio: string | null
-    hobbySector: string | null
-    hobbyRole: string | null
-    hobbyBio: string | null
-    thematicProfile: runtime.JsonValue | null
-    unifiedAnalysis: string | null
+    tjm: number | null
+    fcmToken: string | null
+    publicKey: string | null
+    age: number | null
+    city: string | null
+    country: string | null
+    gender: string | null
     createdAt: Date
+    customRole: string | null
+    primaryRole: string | null
+    thematicProfile: runtime.JsonValue | null
     updatedAt: Date
+    sector: string | null
+    hobbyBio: string | null
+    hobbyRole: string | null
+    hobbySector: string | null
+    socialBio: string | null
+    socialRole: string | null
+    socialSector: string | null
+    language: string
+    activePrism: string | null
   }, ExtArgs["result"]["profile"]>
   composites: {}
 }
@@ -4300,30 +4379,31 @@ export interface ProfileFieldRefs {
   readonly id: Prisma.FieldRef<"Profile", 'String'>
   readonly email: Prisma.FieldRef<"Profile", 'String'>
   readonly name: Prisma.FieldRef<"Profile", 'String'>
-  readonly language: Prisma.FieldRef<"Profile", 'String'>
   readonly avatarUrl: Prisma.FieldRef<"Profile", 'String'>
-  readonly publicKey: Prisma.FieldRef<"Profile", 'String'>
-  readonly fcmToken: Prisma.FieldRef<"Profile", 'String'>
-  readonly age: Prisma.FieldRef<"Profile", 'Int'>
-  readonly gender: Prisma.FieldRef<"Profile", 'String'>
-  readonly city: Prisma.FieldRef<"Profile", 'String'>
-  readonly country: Prisma.FieldRef<"Profile", 'String'>
-  readonly sector: Prisma.FieldRef<"Profile", 'String'>
-  readonly primaryRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly customRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly tjm: Prisma.FieldRef<"Profile", 'Int'>
+  readonly unifiedAnalysis: Prisma.FieldRef<"Profile", 'String'>
   readonly availability: Prisma.FieldRef<"Profile", 'String'>
   readonly bio: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialSector: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialBio: Prisma.FieldRef<"Profile", 'String'>
-  readonly hobbySector: Prisma.FieldRef<"Profile", 'String'>
-  readonly hobbyRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly hobbyBio: Prisma.FieldRef<"Profile", 'String'>
-  readonly thematicProfile: Prisma.FieldRef<"Profile", 'Json'>
-  readonly unifiedAnalysis: Prisma.FieldRef<"Profile", 'String'>
+  readonly tjm: Prisma.FieldRef<"Profile", 'Int'>
+  readonly fcmToken: Prisma.FieldRef<"Profile", 'String'>
+  readonly publicKey: Prisma.FieldRef<"Profile", 'String'>
+  readonly age: Prisma.FieldRef<"Profile", 'Int'>
+  readonly city: Prisma.FieldRef<"Profile", 'String'>
+  readonly country: Prisma.FieldRef<"Profile", 'String'>
+  readonly gender: Prisma.FieldRef<"Profile", 'String'>
   readonly createdAt: Prisma.FieldRef<"Profile", 'DateTime'>
+  readonly customRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly primaryRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly thematicProfile: Prisma.FieldRef<"Profile", 'Json'>
   readonly updatedAt: Prisma.FieldRef<"Profile", 'DateTime'>
+  readonly sector: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbyBio: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbyRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly hobbySector: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialBio: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialRole: Prisma.FieldRef<"Profile", 'String'>
+  readonly socialSector: Prisma.FieldRef<"Profile", 'String'>
+  readonly language: Prisma.FieldRef<"Profile", 'String'>
+  readonly activePrism: Prisma.FieldRef<"Profile", 'String'>
 }
     
 

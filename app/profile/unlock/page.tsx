@@ -1,10 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { performBiometricVaultUnlock } from '@/lib/biometrics';
+import { VaultManager, VaultKey } from '@/lib/vault-manager';
 import { useKeyStore } from '@/store/keyStore';
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
 export default function UnlockPage() {
     const router = useRouter();
@@ -17,25 +16,21 @@ export default function UnlockPage() {
         setError('');
 
         try {
-            // 1. Déclenchement du scan natif
-            const isVerified = await performBiometricVaultUnlock();
+            // 🔒 One-step Unlock: Biometric Challenge + Hardware Retrieval
+            const masterKey = await VaultManager.unlockAndLoad(
+                VaultKey.MASTER_KEY,
+                "Déverrouillage de l'Agent Ipse - Déchiffrement du MasterKey"
+            );
 
-            if (isVerified) {
-                // 2. Récupération de la clé depuis l'enclave sécurisée (Hardware)
-                const { value: encryptedKey } = await SecureStoragePlugin.get({ key: 'master_key_secret' });
-
-                if (encryptedKey) {
-                    // 3. Injection dans la RAM pour SQLite (Phase 2 & 4)
-                    setMasterKey(encryptedKey);
-                    router.push('/cortex');
-                } else {
-                    setError("Clé de coffre-fort introuvable sur cet appareil.");
-                }
+            if (masterKey) {
+                // 3. Injection into RAM for SQLite & Crypto workers
+                setMasterKey(masterKey);
+                router.push('/cortex');
             } else {
-                setError("Accès refusé. Identité non reconnue.");
+                setError("Coffre-fort vide. Veuillez réinitialiser votre compte.");
             }
         } catch (err: any) {
-            setError(err.message || "Erreur technique lors du déverrouillage.");
+            setError(err.message || "Échec de l'authentification biométrique.");
         } finally {
             setLoading(false);
         }

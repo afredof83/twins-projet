@@ -10,64 +10,52 @@ datasource db {
 }
 
 model Profile {
-  id               String                 @id // Mappé sur l'ID Supabase Auth
-  email            String                 @unique
-  name             String?                @default("Agent Furtif")
-  language         String                 @default("fr") // 'fr' ou 'en'
-  avatarUrl        String?
-  publicKey        String?
-  fcmToken         String?
-  unifiedEmbedding Unsupported("vector")?
-  bioEmbedding     Unsupported("vector(1024)")? // Mistral-embed (1024 dimensions)
-
-  // 🧬 G0 : Identité de base
-  age     Int?
-  gender  String?
-  city    String?
-  country String?
-
-  // 💼 G1 : Prisme Travail (HARD FILTERS)
-  sector       String? // Secteur d'activité Work
-  primaryRole  String? @map("primary_role") // Ex: 'DEVELOPER', 'DESIGNER', 'INVESTOR'
-  customRole   String? @map("custom_role") // Si primaryRole = 'OTHER'
-  tjm          Int? // Taux Journalier en euros
-  availability String? // Ex: 'IMMEDIATE', 'ONE_MONTH', 'UNAVAILABLE'
-  bio          String? @db.Text // Bio pro brute pour alimenter le vecteur Mistral
-
-  // 🤝 G2 : Prisme Social
-  socialSector    String?                @map("social_sector")
-  socialRole      String?                @map("social_role")
-  socialBio       String?                @db.Text @map("social_bio")
-  socialEmbedding Unsupported("vector(1024)")? @map("social_embedding")
-
-  // 🎨 G3 : Prisme Hobbies
-  hobbySector     String?                @map("hobby_sector")
-  hobbyRole       String?                @map("hobby_role")
-  hobbyBio        String?                @db.Text @map("hobby_bio")
-  hobbyEmbedding  Unsupported("vector(1024)")? @map("hobby_embedding")
-
-  // 🧠 IA & Mémoire
-  thematicProfile Json?   @map("thematic_profile") // Seulement pour les "Soft Skills", Ikigai, Objectifs
-  unifiedAnalysis String? @db.Text
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-
-  initiatedConnections   Connection[]  @relation("InitiatedConnections")
-  receivedConnections    Connection[]  @relation("ReceivedConnections")
+  id                     String                 @id
+  email                  String                 @unique
+  name                   String?                @default("Agent Furtif")
+  avatarUrl              String?
+  unifiedAnalysis        String?
+  availability           String?
+  bio                    String?
+  tjm                    Int?
+  fcmToken               String?
+  publicKey              String?
+  unifiedEmbedding       Unsupported("vector")?
+  age                    Int?
+  city                   String?
+  country                String?
+  gender                 String?
+  createdAt              DateTime               @default(now()) @map("created_at")
+  customRole             String?                @map("custom_role")
+  primaryRole            String?                @map("primary_role")
+  thematicProfile        Json?                  @map("thematic_profile")
+  updatedAt              DateTime               @default(now()) @updatedAt @map("updated_at")
+  bioEmbedding           Unsupported("vector")?
+  sector                 String?
+  hobbyBio               String?                @map("hobby_bio")
+  hobbyEmbedding         Unsupported("vector")? @map("hobby_embedding")
+  hobbyRole              String?                @map("hobby_role")
+  hobbySector            String?                @map("hobby_sector")
+  socialBio              String?                @map("social_bio")
+  socialEmbedding        Unsupported("vector")? @map("social_embedding")
+  socialRole             String?                @map("social_role")
+  socialSector           String?                @map("social_sector")
+  language               String                 @default("fr")
+  activePrism            String?                @default("WORK") @map("active_prism")
+  initiatedConnections   Connection[]           @relation("InitiatedConnections")
+  receivedConnections    Connection[]           @relation("ReceivedConnections")
   notes                  CortexNote[]
   discoveries            Discovery[]
   files                  FileArchive[]
-  matchesInitiated       Match[]       @relation("UserA")
-  matchesReceived        Match[]       @relation("UserB")
-  messagesReceived       Message[]     @relation("Receiver")
-  messagesSent           Message[]     @relation("Sender")
-  initiatedOpportunities Opportunity[] @relation("InitiatedOpportunities")
-  receivedOpportunities  Opportunity[] @relation("ReceivedOpportunities")
+  matchesInitiated       Match[]                @relation("UserA")
+  matchesReceived        Match[]                @relation("UserB")
+  messagesReceived       Message[]              @relation("Receiver")
+  messagesSent           Message[]              @relation("Sender")
+  initiatedOpportunities Opportunity[]          @relation("InitiatedOpportunities")
+  receivedOpportunities  Opportunity[]          @relation("ReceivedOpportunities")
   radars                 RadarResult[]
   memories               Memory[]
 
-  // ⚡ INDEX STRATÉGIQUES POUR LE RADAR (CRUCIAL)
   @@index([primaryRole])
   @@index([availability])
   @@index([tjm])
@@ -163,8 +151,8 @@ model Connection {
   receiverId  String
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
-  initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id])
-  receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id])
+  initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 model Opportunity {
@@ -172,13 +160,14 @@ model Opportunity {
   sourceId      String
   targetId      String
   matchScore    Int
-  synergies     String
   audit         String?
   status        String   @default("DETECTED")
+  context       String?  @default("WORK")
   title         String?
   createdAt     DateTime @default(now())
-  sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id])
-  targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id])
+  synergies     String
+  sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id], onDelete: Cascade)
 }
 
 enum MatchStatus {

@@ -33,7 +33,7 @@ export async function PATCH(req: Request) {
         }
 
         const body = await req.json();
-        const { sector, role, bio } = body;
+        const { sector, role, bio, activePrism } = body;
 
         const prismaRLS = getPrismaForUser(user.id);
 
@@ -43,7 +43,8 @@ export async function PATCH(req: Request) {
             data: {
                 hobbySector: sector,
                 hobbyRole: role,
-                hobbyBio: bio
+                hobbyBio: bio,
+                activePrism: activePrism || 'HOBBY'
             }
         });
 

@@ -1,12 +1,6 @@
-// lib/crypto-client.ts
-// ⚡ ANTIGRAVITY: Chiffrement E2E + Identité Cryptographique (BIP39 + ECDH + AES-GCM)
-// Règle absolue : Zéro localStorage. La clé privée ne quitte JAMAIS le Keystore/Keychain natif.
-
 import { Capacitor } from '@capacitor/core';
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+import { VaultManager, VaultKey } from './vault-manager';
 import * as bip39 from 'bip39';
-
-const SEED_ALIAS = 'ipse_private_key';
 
 // =====================================================
 // 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
@@ -15,7 +9,7 @@ const SEED_ALIAS = 'ipse_private_key';
 /**
  * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
  * Ne retourne QUE la clé publique à envoyer au serveur.
- * La clé privée est séquestrée dans la puce matérielle.
+ * La clé privée est séquestrée dans la puce matérielle via VaultManager.
  */
 export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
     try {
@@ -29,16 +23,14 @@ export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWeb
             ["deriveKey", "deriveBits"]
         );
 
-        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
-        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
 
         // C. Le Bouclier Matériel (Zero-Tolerance)
         if (Capacitor.isNativePlatform()) {
-            await SecureStoragePlugin.set({
-                key: SEED_ALIAS,
-                value: JSON.stringify(privateKeyJwk)
-            });
-            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif.");
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
         } else {
             // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
             throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
@@ -60,21 +52,11 @@ export const generateIdentity = generateAndStoreKeyPair;
  * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
  */
 export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
-    if (!Capacitor.isNativePlatform()) {
-        console.warn("⚠️ [CRYPTO] Tentative de lecture de clé hors environnement natif.");
-        return null;
+    const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
+    if (value) {
+        return JSON.parse(value) as JsonWebKey;
     }
-
-    try {
-        const result = await SecureStoragePlugin.get({ key: SEED_ALIAS });
-        if (result.value) {
-            return JSON.parse(result.value);
-        }
-        return null;
-    } catch (error) {
-        // SecureStorage throw une erreur si la clé n'existe pas
-        return null;
-    }
+    return null;
 }
 
 // Rétrocompatibilité : alias pour l'ancien nom
@@ -85,8 +67,7 @@ export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
 }
 
 /**
- * Restauration depuis la Seed Phrase (changement d'appareil).
- * Même règle : stockage natif uniquement.
+ * Restauration depuis la Phrase Secrète (BIP39).
  */
 export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
     if (!bip39.validateMnemonic(mnemonic)) {
@@ -99,18 +80,15 @@ export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKey
         ["deriveKey", "deriveBits"]
     );
 
-    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
-    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
 
-    // Le Bouclier Matériel (Zero-Tolerance)
     if (Capacitor.isNativePlatform()) {
-        await SecureStoragePlugin.set({
-            key: SEED_ALIAS,
-            value: JSON.stringify(privateKeyJwk)
-        });
-        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain natif.");
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain via VaultManager.");
     } else {
-        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
+        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté.");
     }
 
     return { publicKeyJwk };

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Target, Zap, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Flame, Loader2 } from 'lucide-react';
+import { X, Target, ChevronRight, ShieldCheck, MessageSquare, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/opportunities
+import ReactMarkdown from 'react-markdown';
 
 export default function AuditPanel({ isOpen, onClose, auditData, targetName, opportunityId, status, targetId, onInviteSuccess }: any) {
     const [mounted, setMounted] = useState(false);
@@ -21,27 +21,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
 
     if (!isOpen || !mounted) return null;
 
-    let synergies = "Analyse en cours...";
-    let actions: string[] = [];
-
-    // 🧠 NETTOYEUR ULTRA-AGRESSIF
-    try {
-        let parsedData = auditData;
-        if (typeof auditData === 'string') {
-            let cleanString = auditData.replace(/```json/gi, '').replace(/```/g, '').trim();
-            if (cleanString.startsWith('{')) parsedData = JSON.parse(cleanString);
-            else parsedData = cleanString;
-        }
-
-        if (parsedData && typeof parsedData === 'object') {
-            synergies = parsedData.synergies || parsedData.summary || synergies;
-            actions = parsedData.actions || actions;
-        } else if (typeof parsedData === 'string') {
-            synergies = parsedData.replace(/[*#_]/g, '').trim();
-        }
-    } catch (e) {
-        if (typeof auditData === 'string') synergies = auditData.replace(/[*#_]/g, '').trim();
-    }
+    const content = auditData || "Analyse en cours par le Cortex...";
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex justify-end overflow-hidden">
@@ -49,7 +29,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
 
             <div className="relative w-full sm:max-w-lg h-[100dvh] bg-zinc-950 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 ease-out">
 
-                {/* HEADER (Fixe : flex-none) */}
+                {/* HEADER */}
                 <div className="flex-none p-6 border-b border-white/5 flex items-center justify-between bg-zinc-900/40">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -65,54 +45,57 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                     </button>
                 </div>
 
-                {/* BODY (Scrollable : flex-1 overflow-y-auto) */}
-                {/* overscroll-contain empêche le "rebond" de la page derrière sur mobile */}
-                <div className="flex-1 overflow-y-auto overscroll-contain">
-                    <div className="p-6 space-y-8 pb-12"> {/* pb-12 = marge vitale pour le scroll mobile */}
-
-                        {/* SECTION SYNERGIES (Couleur : Émeraude) */}
+                {/* BODY */}
+                <div className="flex-1 overflow-y-auto overscroll-contain bg-zinc-950/50">
+                    <div className="p-6 space-y-8 pb-12">
+                        
+                        {/* STREAMED MARKDOWN CONTENT */}
                         <section className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                                    <Target className="w-4 h-4 text-emerald-400" />
+                                <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                    <Target className="w-4 h-4 text-blue-400" />
                                 </div>
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-400">Match Stratégique</h3>
+                                <h3 className="text-sm font-bold uppercase tracking-widest text-blue-400">Analyse de Synergie</h3>
                             </div>
-                            <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/5 leading-relaxed text-zinc-200 text-sm whitespace-pre-wrap shadow-inner">
-                                {synergies}
+                            
+                            <div className="bg-zinc-900/50 border border-white/10 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
+                                <article className="prose prose-invert max-w-none text-zinc-200">
+                                    <ReactMarkdown
+                                        components={{
+                                            p: ({node, ...props}) => <p className="text-zinc-300 text-sm leading-relaxed mb-4" {...props} />,
+                                            strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
+                                            ul: ({node, ...props}) => <ul className="space-y-2 mb-6" {...props} />,
+                                            li: ({node, ...props}) => (
+                                                <li className="text-sm text-zinc-400 flex items-start gap-2" {...props}>
+                                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500/50 flex-none" />
+                                                    {props.children}
+                                                </li>
+                                            ),
+                                            h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
+                                        }}
+                                    >
+                                        {content}
+                                    </ReactMarkdown>
+                                    {!auditData && (
+                                        <div className="flex items-center gap-3 mt-4 text-zinc-500 italic text-xs animate-pulse">
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            Décryptage des flux Cortex...
+                                        </div>
+                                    )}
+                                </article>
                             </div>
                         </section>
-
-                        {/* SECTION ACTIONS (Couleur : Ambre/Orange) */}
-                        {actions && actions.length > 0 && (
-                            <section className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                        <Flame className="w-4 h-4 text-amber-400" />
-                                    </div>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-amber-400">Plan d'Action (ROI)</h3>
-                                </div>
-                                <div className="grid gap-3">
-                                    {actions.map((action: string, i: number) => (
-                                        <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-zinc-900/60 to-zinc-900/20 border border-white/5">
-                                            <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                            <p className="text-sm text-zinc-300 font-medium">{action}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
 
                         <div className="pt-4 flex items-center justify-center">
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/5 shadow-sm">
                                 <ShieldCheck className="w-3 h-3 text-blue-500" />
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Synthèse certifiée par l'IA</span>
+                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Synthèse certifiée par l'IA Edge</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* FOOTER (Fixe : flex-none) */}
+                {/* FOOTER */}
                 <div className="flex-none p-6 border-t border-white/5 bg-zinc-950/80 backdrop-blur-md">
                     {status === 'ACCEPTED' ? (
                         <Link href={`/chat?id=${targetId}`} className="w-full btn-primary py-4 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
@@ -140,18 +123,18 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                                     if (onInviteSuccess) onInviteSuccess();
                                 }
                             }}
-                            disabled={isSending || isSent}
+                            disabled={isSending || isSent || !auditData}
                             className={`w-full py-4 flex items-center justify-center gap-2 transition-all ${isSent
                                 ? 'bg-emerald-600/50 text-emerald-100 cursor-default border border-emerald-500/50 rounded-xl font-bold'
-                                : 'btn-primary shadow-[0_0_15px_rgba(37,99,235,0.3)]'
+                                : 'btn-primary shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50 disabled:cursor-not-allowed'
                                 }`}
                         >
                             {isSending && <Loader2 className="w-4 h-4 animate-spin" />}
                             {isSent && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
 
-                            {isSending ? "Négociation en cours..." :
-                                isSent ? "✓ Signal transmis au Gardien adverse" :
-                                    "Ouvrir un Canal Sécurisé - Envoyer l'Invitation"}
+                            {isSending ? "Négocations..." :
+                                isSent ? "✓ Signal transmis" :
+                                    "Ouvrir un Canal Sécurisé"}
 
                             {!isSending && !isSent && <ChevronRight className="w-4 h-4" />}
                         </button>

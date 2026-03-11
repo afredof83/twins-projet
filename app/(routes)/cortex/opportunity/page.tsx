@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
+import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
 
@@ -45,6 +46,8 @@ function OpportunityContent() {
     const handleAudit = async () => {
         if (!oppId) return;
         setActionLoading(true);
+        setOpp((prev: any) => ({ ...prev, audit: '' })); // Reset for typewriter effect
+        
         try {
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabase = createClient();
@@ -52,17 +55,39 @@ function OpportunityContent() {
             const headers: any = { 'Content-Type': 'application/json' };
             if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-            const res = await fetch(getApiUrl(`/api/opportunities`), {
+            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ action: 'audit', oppId })
-            }).then(r => r.json());
+                body: JSON.stringify({ opportunityId: oppId })
+            });
 
-            if (res.success) {
-                setOpp(res.opportunity); // API returns updated op
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
             }
-        } catch (e) { console.error(e) }
-        setActionLoading(false);
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            if (!reader) throw new Error('No stream reader available');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                setOpp((prev: any) => ({ 
+                    ...prev, 
+                    audit: (prev.audit || '') + chunk 
+                }));
+            }
+
+            setOpp((prev: any) => ({ ...prev, status: 'AUDITED' }));
+        } catch (e: any) {
+            console.error("❌ [STREAM ERROR]:", e);
+            alert(`Erreur Cortex: ${e.message}`);
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handleCancel = async () => {
@@ -189,9 +214,24 @@ function OpportunityContent() {
                         <h2 className="text-xl font-bold tracking-widest uppercase">Rapport d'Audit</h2>
                     </div>
 
-                    <div className="mt-8 prose prose-invert prose-green mb-12">
-                        <div className="whitespace-pre-wrap text-zinc-300 leading-relaxed font-mono text-sm mix-blend-lighten">
-                            {opp.audit}
+                    <div className="mt-8 bg-zinc-900/50 border border-white/10 rounded-xl p-8 shadow-2xl backdrop-blur-sm mb-12 max-w-none">
+                        <div className="text-zinc-300 font-mono text-sm">
+                            <ReactMarkdown
+                                components={{
+                                    p: ({node, ...props}) => <p className="text-zinc-300 text-sm leading-relaxed mb-4" {...props} />,
+                                    strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="space-y-2 mb-6" {...props} />,
+                                    li: ({node, ...props}) => (
+                                        <li className="text-sm text-zinc-400 flex items-start gap-2" {...props}>
+                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500/50 flex-none" />
+                                            {props.children}
+                                        </li>
+                                    ),
+                                    h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
+                                }}
+                            >
+                                {opp.audit || "Génération du rapport de synergie..."}
+                            </ReactMarkdown>
                         </div>
                     </div>
 

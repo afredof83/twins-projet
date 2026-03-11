@@ -32,24 +32,43 @@ export async function GET(req: NextRequest) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(req);
-        const prismaRLS = getPrismaForUser(user.id);
+        const myId = user.id;
         const searchParams = req.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            const opp = await prismaRLS.opportunity.findUnique({
+            // 🛡️ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
+            const opp = await prisma.opportunity.findUnique({
                 where: { id },
                 include: { sourceProfile: true, targetProfile: true }
             });
-            if (!opp) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+            // Vérification manuelle (L'utilisateur doit être source ou cible)
+            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
+                return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+            }
             return NextResponse.json({ success: true, opportunity: opp });
         }
 
-        const opportunities = await prismaRLS.opportunity.findMany({
-            where: { OR: [{ sourceId: user.id }, { targetId: user.id }] },
+        // 🛡️ SECURITY BYPASS pour les joins Profile
+        const rawOpportunities = await prisma.opportunity.findMany({
+            where: { OR: [{ sourceId: myId }, { targetId: myId }] },
             include: { sourceProfile: true, targetProfile: true },
             orderBy: { createdAt: 'desc' }
         });
+
+        // Calculer les messages non lus pour chaque opportunité
+        const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
+            const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
+            const unreadCount = await prisma.message.count({
+                where: {
+                    senderId: otherId,
+                    receiverId: myId,
+                    isRead: false
+                }
+            });
+            return { ...opp, unreadCount };
+        }));
+
         return NextResponse.json({ success: true, opportunities });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
@@ -65,52 +84,25 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { action, oppId, customTitle, status } = body;
 
-        if (action === 'audit' && oppId) {
-            const opp = await prismaRLS.opportunity.findUnique({
-                where: { id: oppId },
-                include: { sourceProfile: true, targetProfile: true }
-            });
-            if (!opp || !opp.sourceProfile || !opp.targetProfile) return NextResponse.json({ success: false, error: "Données introuvables" }, { status: 404 });
-
-            const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
-            const prompt = `Tu es le Cortex, une IA de renseignement stratégique B2B.\n\nRÈGLES DE SURVIE ABSOLUES :\n1. RÉPOND UNIQUEMENT EN JSON VALIDE.\n2. FORMATAGE : Interdiction astérisques, tirets, dièses.\n3. ACTIONS : 2 ou 3 actions ultra-concises.\n\nFORMAT ATTENDU :\n{"synergies": "[Nom] est [Métier]. Il cherche à [Objectif].", "actions": ["Action 1", "Action 2"]}\n\nCIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) :\nRôle : ${targetProfile.primaryRole || 'Non défini'}\nBio : ${targetProfile.bio || 'Non définie'}\n\nRÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.`;
-
-            const auditResponse = await mistralClient.chat.complete({
-                model: 'mistral-large-latest',
-                messages: [{ role: 'user', content: prompt }]
-            });
-            const content = auditResponse.choices[0]?.message.content;
-            let auditResult = "Erreur d'analyse.";
-
-            try {
-                const cleanedJson = typeof content === 'string'
-                    ? content.replace(/```json/gi, '').replace(/```/g, '').trim()
-                    : '{}';
-                auditResult = cleanedJson;
-            } catch (error: any) {
-                console.error("❌ [API-AUDIT] Échec du match... (Score: Inconnu)");
-                console.error("Détail de l'erreur Mistral :", error);
-                console.log("Réponse brute reçue :", content);
-            }
-
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { audit: auditResult, status: 'AUDITED' } });
-
-            const updated = await prismaRLS.opportunity.findUnique({
-                where: { id: oppId },
-                include: { sourceProfile: true, targetProfile: true }
-            });
-
-            return NextResponse.json({ success: true, audit: auditResult, opportunity: updated });
+        if (action === 'audit') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Deprecated: Use /api/opportunities/evaluate instead' 
+            }, { status: 400 });
         }
 
         if (action === 'sendChatInvite' || action === 'sendInvite') {
             const id = oppId;
-            const opp = await prismaRLS.opportunity.findUnique({
+            const opp = await prisma.opportunity.findUnique({
                 where: { id },
                 include: { targetProfile: true, sourceProfile: true }
             });
-            if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
-            await prismaRLS.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
+
+            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
+                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            }
+
+            await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
             return NextResponse.json({ success: true });
         }
 

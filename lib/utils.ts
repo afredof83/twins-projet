@@ -8,7 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 // Nettoyage final : "Profil à définir"
 export function getAgentName(profile: any) {
     // Adaptation à notre schéma : "name" au lieu de "fullName"
-    if (profile?.name) return profile.name;
-    if (profile?.id) return `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
-    return "AGENT_FURTIF";
+    let name = "AGENT_FURTIF";
+    if (profile?.name) name = profile.name;
+    else if (profile?.id) name = `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
+
+    if (typeof name === 'object') return JSON.stringify(name);
+    return name;
 }

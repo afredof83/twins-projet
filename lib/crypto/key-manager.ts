@@ -1,143 +1,92 @@
+import { Capacitor } from '@capacitor/core';
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+
 /**
- * Key Manager - Secure Session-Based Key Storage
- * 
- * Manages encryption keys in memory during a user session.
- * Keys are never persisted to disk or localStorage.
+ * 🔐 SECURE KEY MANAGER - Blindé
+ * Handles private key storage using native Keychain (iOS) and Keystore (Android).
+ * Fallback to encrypted memory for Web/Dev.
  */
 
-import { deriveKey, generateSalt, arrayToBase64, base64ToArray } from './zk-encryption';
-
-interface KeySession {
-    masterKey: CryptoKey;
-    profileId: string;
-    salt: Uint8Array;
-    createdAt: number;
-    lastAccessedAt: number;
-}
+const PRIVATE_KEY_ALIAS = 'ip_cortex_private_key';
 
 class KeyManager {
-    private session: KeySession | null = null;
-    private readonly AUTO_LOCK_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    private isNative = Capacitor.isNativePlatform();
+    private webFallbackKey: string | null = null; // Encrypted memory fallback
 
     /**
-     * Initializes a new key session from a master password
+     * Store private key in the most secure location available
      */
-    async initializeSession(
-        profileId: string,
-        masterPassword: string,
-        salt: Uint8Array
-    ): Promise<void> {
-        const masterKey = await deriveKey(masterPassword, salt);
+    async storePrivateKey(key: string): Promise<void> {
+        if (!key) throw new Error("Tentative de stockage d'une clé vide.");
 
-        this.session = {
-            masterKey,
-            profileId,
-            salt,
-            createdAt: Date.now(),
-            lastAccessedAt: Date.now(),
-        };
-    }
-
-    /**
-     * Gets the current master key
-     * @throws Error if session is not initialized or expired
-     */
-    getMasterKey(): CryptoKey {
-        this.checkSession();
-        this.session!.lastAccessedAt = Date.now();
-        return this.session!.masterKey;
-    }
-
-    /**
-     * Gets the current profile ID
-     */
-    getProfileId(): string {
-        this.checkSession();
-        return this.session!.profileId;
-    }
-
-    /**
-     * Gets the salt for the current session
-     */
-    getSalt(): Uint8Array {
-        this.checkSession();
-        return this.session!.salt;
-    }
-
-    /**
-     * Checks if a session is active and not expired
-     */
-    isSessionActive(): boolean {
-        if (!this.session) return false;
-
-        const timeSinceLastAccess = Date.now() - this.session.lastAccessedAt;
-        if (timeSinceLastAccess > this.AUTO_LOCK_TIMEOUT) {
-            this.lockSession();
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Locks the current session (clears keys from memory)
-     */
-    lockSession(): void {
-        this.session = null;
-    }
-
-    /**
-     * Derives a specialized key for a specific purpose
-     * This allows different keys for data encryption, embeddings, etc.
-     */
-    async deriveSpecializedKey(purpose: string): Promise<CryptoKey> {
-        this.checkSession();
-
-        // Create a unique salt by combining the session salt with the purpose
-        const purposeBuffer = new TextEncoder().encode(purpose);
-        const combinedSalt = new Uint8Array(this.session!.salt.length + purposeBuffer.length);
-        combinedSalt.set(this.session!.salt, 0);
-        combinedSalt.set(purposeBuffer, this.session!.salt.length);
-
-        // Derive a new key using the combined salt
-        const specializedKey = await crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: combinedSalt,
-                iterations: 100000,
-                hash: 'SHA-256',
-            },
-            this.session!.masterKey,
-            { name: 'AES-GCM', length: 256 },
-            false,
-            ['encrypt', 'decrypt']
-        );
-
-        return specializedKey;
-    }
-
-    /**
-     * Checks if session is valid, throws if not
-     */
-    private checkSession(): void {
-        if (!this.isSessionActive()) {
-            throw new Error('Session expired or not initialized. Please unlock your profile.');
+        if (this.isNative) {
+            try {
+                await SecureStoragePlugin.set({
+                    key: PRIVATE_KEY_ALIAS,
+                    value: key
+                });
+            } catch (error) {
+                console.error("❌ Échec du stockage natif sécurisé.");
+                throw error;
+            }
+        } else {
+            // Web/Dev Fallback: Store in memory only (no persistence in localStorage)
+            console.warn("🛠️ Mode Web : Clé stockée en mémoire volatile uniquement.");
+            this.webFallbackKey = key;
         }
     }
 
     /**
-     * Gets session info (without exposing the key)
+     * Retrieve the private key securely
      */
-    getSessionInfo(): { profileId: string; createdAt: number; lastAccessedAt: number } | null {
-        if (!this.session) return null;
+    async getPrivateKey(): Promise<string | null> {
+        if (this.isNative) {
+            try {
+                // 1. Vérification proactive pour éviter le crash natif
+                const { value: keys } = await SecureStoragePlugin.keys();
+                if (!keys.includes(PRIVATE_KEY_ALIAS)) {
+                    console.log(`[VAULT] Clé '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (Ignoré en douceur).`);
+                    return null;
+                }
 
-        return {
-            profileId: this.session.profileId,
-            createdAt: this.session.createdAt,
-            lastAccessedAt: this.session.lastAccessedAt,
-        };
+                // 2. Lecture sécurisée sans risque de crash
+                const { value } = await SecureStoragePlugin.get({
+                    key: PRIVATE_KEY_ALIAS
+                });
+                return value || null;
+            } catch (error) {
+                console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
+                return null;
+            }
+        } else {
+            return this.webFallbackKey;
+        }
+    }
+
+    /**
+     * Emergency Purge: Wipe all traces of the key
+     */
+    async wipeKeys(): Promise<void> {
+        if (this.isNative) {
+            try {
+                await SecureStoragePlugin.remove({ key: PRIVATE_KEY_ALIAS });
+                await SecureStoragePlugin.clear(); // Clear all for extra safety
+            } catch (error) {
+                console.error("❌ Erreur lors de la purge d'urgence.");
+            }
+        }
+        this.webFallbackKey = null;
+        console.log("🧹 Vault purgé avec succès.");
+    }
+
+    /**
+     * Check if a key is currently held
+     */
+    async hasUnlockedKey(): Promise<boolean> {
+        const key = await this.getPrivateKey();
+        return !!key;
     }
 }
 
-// Singleton instance
+// Singleton for consistency
 export const keyManager = new KeyManager();

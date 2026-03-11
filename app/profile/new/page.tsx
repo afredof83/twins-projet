@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * New Profile Creation Page
@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { generateMnemonic } from 'bip39';
 import { getApiUrl } from '@/lib/api';
+import { Capacitor } from '@capacitor/core';
+import { VaultManager, VaultKey } from '@/lib/vault-manager';
 import {
     generateSalt,
     hashPassword,
@@ -57,36 +59,10 @@ export default function NewProfilePage() {
         try {
             // ===== CLIENT-SIDE CRYPTOGRAPHY (Zero-Knowledge) =====
 
-            // 1. Generate cryptographic salt
-            const salt = generateSalt();
-            const saltBase64 = arrayToBase64(salt);
-
-            // 2. Generate BIP39 recovery phrase (12 words)
-            const generatedRecoveryPhrase = generateMnemonic(128); // 128 bits = 12 words
-
-            // 3. Hash the password for verification (not for encryption!)
-            const passwordHash = hashPassword(formData.masterPassword, salt);
-
-            // 4. Generate unique vector namespace for this profile
-            const vectorNamespace = `profile_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-
-            // 5. Derive master key from password
-            const masterKey = await deriveKey(formData.masterPassword, salt);
-
-            // 6. Create and encrypt initial metadata
-            const metadata = {
-                preferences: {},
-                settings: {},
-                createdBy: 'digital-twin-profile-system',
-                version: '1.0.0',
-            };
-            const encryptedMetadata = await encryptObject(metadata, masterKey);
-
-            // 7. Encrypt recovery phrase
-            const encryptedPhrase = await encryptObject(
-                { phrase: generatedRecoveryPhrase },
-                masterKey
-            );
+            const { generateAndStoreKeyPair } = await import('@/lib/crypto-client');
+            console.log("🧬 [ONBOARDING] Démarrage de la génération d'identité E2EE...");
+            const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair();
+            const publicKeyString = btoa(JSON.stringify(publicKeyJwk)); // Format base64 as requested
 
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabase = createClient();
@@ -94,17 +70,29 @@ export default function NewProfilePage() {
             const headers: any = { 'Content-Type': 'application/json' };
             if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-            // ===== SEND ONLY REQUIRED DATA TO SERVER =====
-            // Les champs ZK ne sont plus stockés en base selon le nouveau schéma
+            // ===== SEND DATA TO SERVER (Mandatory Public Key Sync) =====
             const r = await fetch(getApiUrl('/api/profile'), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ action: 'create', name: formData.name })
+                body: JSON.stringify({ 
+                    action: 'create', 
+                    name: formData.name,
+                    publicKey: publicKeyString
+                })
             });
             const response = await r.json();
 
             if (!response.success) {
-                throw new Error(response.error || 'Échec de la création du profil');
+                console.error("❌ [ONBOARDING] Échec de la synchronisation de la clé publique avec Supabase.");
+                throw new Error(response.error || 'Erreur de sécurité : Impossible de synchroniser votre clé publique.');
+            }
+
+            console.log("✅ [ONBOARDING] Identité E2EE créée et synchronisée.");
+
+            // 8. Securely Persist to Hardware Vault
+            if (Capacitor.isNativePlatform()) {
+                await VaultManager.saveSecret(VaultKey.MASTER_KEY, formData.masterPassword);
+                console.log("✅ [ONBOARDING] Master Key sécurisée dans l'enclave matérielle.");
             }
 
             // Store recovery phrase (generated client-side, never sent to server)

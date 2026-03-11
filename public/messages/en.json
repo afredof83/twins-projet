@@ -81,7 +81,7 @@
         "search_placeholder": "What are you looking for? (e.g., Design mentor, Tennis partner...)",
         "filters": "Filters",
         "match_score": "Match",
-        "connect_btn": "Get in touch",
+        "connect_btn": "Create Report",
         "empty_state": "No resonance found. Try another intention.",
         "incoming_requests": "Incoming Requests",
         "encrypted_link": "Wishes to establish an encrypted link",
@@ -97,7 +97,8 @@
         "refuse": "Refuse",
         "ignore": "Ignore",
         "block": "Block",
-        "creating": "Creating..."
+        "creating": "Creating...",
+        "join_chat": "Join Discussion"
     },
     "cortex": {
         "title": "Cortex",

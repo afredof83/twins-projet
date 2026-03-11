@@ -39,11 +39,12 @@ export type OpportunityMinAggregateOutputType = {
   sourceId: string | null
   targetId: string | null
   matchScore: number | null
-  synergies: string | null
   audit: string | null
   status: string | null
+  context: string | null
   title: string | null
   createdAt: Date | null
+  synergies: string | null
 }
 
 export type OpportunityMaxAggregateOutputType = {
@@ -51,11 +52,12 @@ export type OpportunityMaxAggregateOutputType = {
   sourceId: string | null
   targetId: string | null
   matchScore: number | null
-  synergies: string | null
   audit: string | null
   status: string | null
+  context: string | null
   title: string | null
   createdAt: Date | null
+  synergies: string | null
 }
 
 export type OpportunityCountAggregateOutputType = {
@@ -63,11 +65,12 @@ export type OpportunityCountAggregateOutputType = {
   sourceId: number
   targetId: number
   matchScore: number
-  synergies: number
   audit: number
   status: number
+  context: number
   title: number
   createdAt: number
+  synergies: number
   _all: number
 }
 
@@ -85,11 +88,12 @@ export type OpportunityMinAggregateInputType = {
   sourceId?: true
   targetId?: true
   matchScore?: true
-  synergies?: true
   audit?: true
   status?: true
+  context?: true
   title?: true
   createdAt?: true
+  synergies?: true
 }
 
 export type OpportunityMaxAggregateInputType = {
@@ -97,11 +101,12 @@ export type OpportunityMaxAggregateInputType = {
   sourceId?: true
   targetId?: true
   matchScore?: true
-  synergies?: true
   audit?: true
   status?: true
+  context?: true
   title?: true
   createdAt?: true
+  synergies?: true
 }
 
 export type OpportunityCountAggregateInputType = {
@@ -109,11 +114,12 @@ export type OpportunityCountAggregateInputType = {
   sourceId?: true
   targetId?: true
   matchScore?: true
-  synergies?: true
   audit?: true
   status?: true
+  context?: true
   title?: true
   createdAt?: true
+  synergies?: true
   _all?: true
 }
 
@@ -208,11 +214,12 @@ export type OpportunityGroupByOutputType = {
   sourceId: string
   targetId: string
   matchScore: number
-  synergies: string
   audit: string | null
   status: string
+  context: string | null
   title: string | null
   createdAt: Date
+  synergies: string
   _count: OpportunityCountAggregateOutputType | null
   _avg: OpportunityAvgAggregateOutputType | null
   _sum: OpportunitySumAggregateOutputType | null
@@ -243,11 +250,12 @@ export type OpportunityWhereInput = {
   sourceId?: Prisma.StringFilter<"Opportunity"> | string
   targetId?: Prisma.StringFilter<"Opportunity"> | string
   matchScore?: Prisma.IntFilter<"Opportunity"> | number
-  synergies?: Prisma.StringFilter<"Opportunity"> | string
   audit?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   status?: Prisma.StringFilter<"Opportunity"> | string
+  context?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   title?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Opportunity"> | Date | string
+  synergies?: Prisma.StringFilter<"Opportunity"> | string
   sourceProfile?: Prisma.XOR<Prisma.ProfileScalarRelationFilter, Prisma.ProfileWhereInput>
   targetProfile?: Prisma.XOR<Prisma.ProfileScalarRelationFilter, Prisma.ProfileWhereInput>
 }
@@ -257,11 +265,12 @@ export type OpportunityOrderByWithRelationInput = {
   sourceId?: Prisma.SortOrder
   targetId?: Prisma.SortOrder
   matchScore?: Prisma.SortOrder
-  synergies?: Prisma.SortOrder
   audit?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  context?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  synergies?: Prisma.SortOrder
   sourceProfile?: Prisma.ProfileOrderByWithRelationInput
   targetProfile?: Prisma.ProfileOrderByWithRelationInput
 }
@@ -274,11 +283,12 @@ export type OpportunityWhereUniqueInput = Prisma.AtLeast<{
   sourceId?: Prisma.StringFilter<"Opportunity"> | string
   targetId?: Prisma.StringFilter<"Opportunity"> | string
   matchScore?: Prisma.IntFilter<"Opportunity"> | number
-  synergies?: Prisma.StringFilter<"Opportunity"> | string
   audit?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   status?: Prisma.StringFilter<"Opportunity"> | string
+  context?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   title?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Opportunity"> | Date | string
+  synergies?: Prisma.StringFilter<"Opportunity"> | string
   sourceProfile?: Prisma.XOR<Prisma.ProfileScalarRelationFilter, Prisma.ProfileWhereInput>
   targetProfile?: Prisma.XOR<Prisma.ProfileScalarRelationFilter, Prisma.ProfileWhereInput>
 }, "id">
@@ -288,11 +298,12 @@ export type OpportunityOrderByWithAggregationInput = {
   sourceId?: Prisma.SortOrder
   targetId?: Prisma.SortOrder
   matchScore?: Prisma.SortOrder
-  synergies?: Prisma.SortOrder
   audit?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
+  context?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  synergies?: Prisma.SortOrder
   _count?: Prisma.OpportunityCountOrderByAggregateInput
   _avg?: Prisma.OpportunityAvgOrderByAggregateInput
   _max?: Prisma.OpportunityMaxOrderByAggregateInput
@@ -308,21 +319,23 @@ export type OpportunityScalarWhereWithAggregatesInput = {
   sourceId?: Prisma.StringWithAggregatesFilter<"Opportunity"> | string
   targetId?: Prisma.StringWithAggregatesFilter<"Opportunity"> | string
   matchScore?: Prisma.IntWithAggregatesFilter<"Opportunity"> | number
-  synergies?: Prisma.StringWithAggregatesFilter<"Opportunity"> | string
   audit?: Prisma.StringNullableWithAggregatesFilter<"Opportunity"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"Opportunity"> | string
+  context?: Prisma.StringNullableWithAggregatesFilter<"Opportunity"> | string | null
   title?: Prisma.StringNullableWithAggregatesFilter<"Opportunity"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Opportunity"> | Date | string
+  synergies?: Prisma.StringWithAggregatesFilter<"Opportunity"> | string
 }
 
 export type OpportunityCreateInput = {
   id?: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
   sourceProfile: Prisma.ProfileCreateNestedOneWithoutInitiatedOpportunitiesInput
   targetProfile: Prisma.ProfileCreateNestedOneWithoutReceivedOpportunitiesInput
 }
@@ -332,21 +345,23 @@ export type OpportunityUncheckedCreateInput = {
   sourceId: string
   targetId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   sourceProfile?: Prisma.ProfileUpdateOneRequiredWithoutInitiatedOpportunitiesNestedInput
   targetProfile?: Prisma.ProfileUpdateOneRequiredWithoutReceivedOpportunitiesNestedInput
 }
@@ -356,11 +371,12 @@ export type OpportunityUncheckedUpdateInput = {
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityCreateManyInput = {
@@ -368,21 +384,23 @@ export type OpportunityCreateManyInput = {
   sourceId: string
   targetId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityUncheckedUpdateManyInput = {
@@ -390,11 +408,12 @@ export type OpportunityUncheckedUpdateManyInput = {
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityListRelationFilter = {
@@ -412,11 +431,12 @@ export type OpportunityCountOrderByAggregateInput = {
   sourceId?: Prisma.SortOrder
   targetId?: Prisma.SortOrder
   matchScore?: Prisma.SortOrder
-  synergies?: Prisma.SortOrder
   audit?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  context?: Prisma.SortOrder
   title?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  synergies?: Prisma.SortOrder
 }
 
 export type OpportunityAvgOrderByAggregateInput = {
@@ -428,11 +448,12 @@ export type OpportunityMaxOrderByAggregateInput = {
   sourceId?: Prisma.SortOrder
   targetId?: Prisma.SortOrder
   matchScore?: Prisma.SortOrder
-  synergies?: Prisma.SortOrder
   audit?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  context?: Prisma.SortOrder
   title?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  synergies?: Prisma.SortOrder
 }
 
 export type OpportunityMinOrderByAggregateInput = {
@@ -440,11 +461,12 @@ export type OpportunityMinOrderByAggregateInput = {
   sourceId?: Prisma.SortOrder
   targetId?: Prisma.SortOrder
   matchScore?: Prisma.SortOrder
-  synergies?: Prisma.SortOrder
   audit?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  context?: Prisma.SortOrder
   title?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  synergies?: Prisma.SortOrder
 }
 
 export type OpportunitySumOrderByAggregateInput = {
@@ -538,11 +560,12 @@ export type OpportunityUncheckedUpdateManyWithoutTargetProfileNestedInput = {
 export type OpportunityCreateWithoutSourceProfileInput = {
   id?: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
   targetProfile: Prisma.ProfileCreateNestedOneWithoutReceivedOpportunitiesInput
 }
 
@@ -550,11 +573,12 @@ export type OpportunityUncheckedCreateWithoutSourceProfileInput = {
   id?: string
   targetId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityCreateOrConnectWithoutSourceProfileInput = {
@@ -570,11 +594,12 @@ export type OpportunityCreateManySourceProfileInputEnvelope = {
 export type OpportunityCreateWithoutTargetProfileInput = {
   id?: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
   sourceProfile: Prisma.ProfileCreateNestedOneWithoutInitiatedOpportunitiesInput
 }
 
@@ -582,11 +607,12 @@ export type OpportunityUncheckedCreateWithoutTargetProfileInput = {
   id?: string
   sourceId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityCreateOrConnectWithoutTargetProfileInput = {
@@ -623,11 +649,12 @@ export type OpportunityScalarWhereInput = {
   sourceId?: Prisma.StringFilter<"Opportunity"> | string
   targetId?: Prisma.StringFilter<"Opportunity"> | string
   matchScore?: Prisma.IntFilter<"Opportunity"> | number
-  synergies?: Prisma.StringFilter<"Opportunity"> | string
   audit?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   status?: Prisma.StringFilter<"Opportunity"> | string
+  context?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   title?: Prisma.StringNullableFilter<"Opportunity"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Opportunity"> | Date | string
+  synergies?: Prisma.StringFilter<"Opportunity"> | string
 }
 
 export type OpportunityUpsertWithWhereUniqueWithoutTargetProfileInput = {
@@ -650,32 +677,35 @@ export type OpportunityCreateManySourceProfileInput = {
   id?: string
   targetId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityCreateManyTargetProfileInput = {
   id?: string
   sourceId: string
   matchScore: number
-  synergies: string
   audit?: string | null
   status?: string
+  context?: string | null
   title?: string | null
   createdAt?: Date | string
+  synergies: string
 }
 
 export type OpportunityUpdateWithoutSourceProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   targetProfile?: Prisma.ProfileUpdateOneRequiredWithoutReceivedOpportunitiesNestedInput
 }
 
@@ -683,32 +713,35 @@ export type OpportunityUncheckedUpdateWithoutSourceProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityUncheckedUpdateManyWithoutSourceProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   targetId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityUpdateWithoutTargetProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   sourceProfile?: Prisma.ProfileUpdateOneRequiredWithoutInitiatedOpportunitiesNestedInput
 }
 
@@ -716,22 +749,24 @@ export type OpportunityUncheckedUpdateWithoutTargetProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 export type OpportunityUncheckedUpdateManyWithoutTargetProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   sourceId?: Prisma.StringFieldUpdateOperationsInput | string
   matchScore?: Prisma.IntFieldUpdateOperationsInput | number
-  synergies?: Prisma.StringFieldUpdateOperationsInput | string
   audit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  context?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  synergies?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
 
@@ -741,11 +776,12 @@ export type OpportunitySelect<ExtArgs extends runtime.Types.Extensions.InternalA
   sourceId?: boolean
   targetId?: boolean
   matchScore?: boolean
-  synergies?: boolean
   audit?: boolean
   status?: boolean
+  context?: boolean
   title?: boolean
   createdAt?: boolean
+  synergies?: boolean
   sourceProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
   targetProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["opportunity"]>
@@ -755,11 +791,12 @@ export type OpportunitySelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   sourceId?: boolean
   targetId?: boolean
   matchScore?: boolean
-  synergies?: boolean
   audit?: boolean
   status?: boolean
+  context?: boolean
   title?: boolean
   createdAt?: boolean
+  synergies?: boolean
   sourceProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
   targetProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["opportunity"]>
@@ -769,11 +806,12 @@ export type OpportunitySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   sourceId?: boolean
   targetId?: boolean
   matchScore?: boolean
-  synergies?: boolean
   audit?: boolean
   status?: boolean
+  context?: boolean
   title?: boolean
   createdAt?: boolean
+  synergies?: boolean
   sourceProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
   targetProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["opportunity"]>
@@ -783,14 +821,15 @@ export type OpportunitySelectScalar = {
   sourceId?: boolean
   targetId?: boolean
   matchScore?: boolean
-  synergies?: boolean
   audit?: boolean
   status?: boolean
+  context?: boolean
   title?: boolean
   createdAt?: boolean
+  synergies?: boolean
 }
 
-export type OpportunityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceId" | "targetId" | "matchScore" | "synergies" | "audit" | "status" | "title" | "createdAt", ExtArgs["result"]["opportunity"]>
+export type OpportunityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sourceId" | "targetId" | "matchScore" | "audit" | "status" | "context" | "title" | "createdAt" | "synergies", ExtArgs["result"]["opportunity"]>
 export type OpportunityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sourceProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
   targetProfile?: boolean | Prisma.ProfileDefaultArgs<ExtArgs>
@@ -815,11 +854,12 @@ export type $OpportunityPayload<ExtArgs extends runtime.Types.Extensions.Interna
     sourceId: string
     targetId: string
     matchScore: number
-    synergies: string
     audit: string | null
     status: string
+    context: string | null
     title: string | null
     createdAt: Date
+    synergies: string
   }, ExtArgs["result"]["opportunity"]>
   composites: {}
 }
@@ -1249,11 +1289,12 @@ export interface OpportunityFieldRefs {
   readonly sourceId: Prisma.FieldRef<"Opportunity", 'String'>
   readonly targetId: Prisma.FieldRef<"Opportunity", 'String'>
   readonly matchScore: Prisma.FieldRef<"Opportunity", 'Int'>
-  readonly synergies: Prisma.FieldRef<"Opportunity", 'String'>
   readonly audit: Prisma.FieldRef<"Opportunity", 'String'>
   readonly status: Prisma.FieldRef<"Opportunity", 'String'>
+  readonly context: Prisma.FieldRef<"Opportunity", 'String'>
   readonly title: Prisma.FieldRef<"Opportunity", 'String'>
   readonly createdAt: Prisma.FieldRef<"Opportunity", 'DateTime'>
+  readonly synergies: Prisma.FieldRef<"Opportunity", 'String'>
 }
     
 

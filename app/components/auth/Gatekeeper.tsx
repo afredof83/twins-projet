@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabaseBrowser';
-import { NativeBiometric } from 'capacitor-native-biometric';
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+import { VaultManager, VaultKey } from '@/lib/vault-manager';
 import { useKeyStore } from '@/store/keyStore';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -59,7 +58,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 return;
             }
 
-            // 3. BIOMÉTRIE (On ne touche pas à cette partie, elle fonctionne)
+            // 3. BIOMÉTRIE (Refactored to use VaultManager)
             if (Capacitor.isNativePlatform()) {
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
@@ -69,40 +68,30 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 }
 
                 if ((!isKeyLoaded || isWakeUp) && !isPromptOpen) {
-                    const available = await NativeBiometric.isAvailable();
-                    if (available.isAvailable) {
-                        sessionStorage.setItem('ipse_bio_prompt', 'true');
-                        try {
-                            await NativeBiometric.verifyIdentity({
-                                reason: "Accès à l'Agent Ipse",
-                                title: "Authentification Neurale",
-                            });
+                    sessionStorage.setItem('ipse_bio_prompt', 'true');
+                    try {
+                        // 🔒 Secure Unlock via VaultManager
+                        const privateKey = await VaultManager.unlockAndLoad(
+                            VaultKey.MASTER_KEY,
+                            "Accès à l'Agent Ipse - Authentification Neurale"
+                        );
 
-                            // ⚡ LA CORRECTION EST ICI ⚡
-                            let privateKey;
-                            try {
-                                // On tente de lire le coffre-fort
-                                const { value } = await SecureStoragePlugin.get({ key: 'ipse_master_key' });
-                                privateKey = value;
-                            } catch (storageError) {
-                                // Si le cache a été vidé, on crée une clé de secours pour le développement
-                                console.warn("⚠️ Clé introuvable (Cache vidé). Création d'une clé de secours.");
-                                privateKey = "cle_de_secours_dev_12345";
-                                await SecureStoragePlugin.set({ key: 'ipse_master_key', value: privateKey });
-                            }
-
-                            if (!privateKey) throw new Error("No private key found.");
-                            setMasterKey(privateKey);
-
-                        } catch (bioError) {
-                            console.error("Échec Biométrique ou Annulation", bioError);
-                            router.replace('/login');
+                        if (!privateKey) {
+                            console.warn("⚠️ Clé introuvable dans le coffre-fort sécurisé. Redirection vers onboarding.");
+                            router.replace('/profile/new');
                             return;
-                        } finally {
-                            setTimeout(() => {
-                                sessionStorage.setItem('ipse_bio_prompt', 'false');
-                            }, 1000);
+                        } else {
+                            setMasterKey(privateKey);
                         }
+
+                    } catch (bioError) {
+                        console.error("❌ Échec Biométrique ou Coffre-fort verrouillé", bioError);
+                        router.replace('/login');
+                        return;
+                    } finally {
+                        setTimeout(() => {
+                            sessionStorage.setItem('ipse_bio_prompt', 'false');
+                        }, 1000);
                     }
                 }
             }

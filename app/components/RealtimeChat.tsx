@@ -63,8 +63,17 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     return;
                 }
 
+                let parsedJwk;
+                try {
+                    // Les nouvelles clés sont encodées en base64
+                    parsedJwk = JSON.parse(atob(receiverPublicKeyJwk));
+                } catch (e) {
+                    // Rétrocompatibilité avec les anciennes clés en clair (JSON)
+                    parsedJwk = JSON.parse(receiverPublicKeyJwk);
+                }
+
                 // Dérivation de la clé partagée (récupère auto la clé privée du coffre-fort)
-                const derived = await deriveSharedKey(JSON.parse(receiverPublicKeyJwk));
+                const derived = await deriveSharedKey(parsedJwk);
                 setSharedKey(derived);
 
                 // On ne déchiffre pas les messages lors du chargement : SecureMessageBubble s'en chargera
@@ -130,24 +139,98 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         return () => observer.disconnect();
     }, [hasMore, isLoadingOlder, messages, receiverId, sharedKey]);
 
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const channelRef = useRef<any>(null);
+
     // Écoute des WebSockets Supabase
     useEffect(() => {
+        // ID de canal déterministe (toujours le même pour les deux utilisateurs)
+        const channelId = [currentUserId, receiverId].sort().join('_');
+
+        // Nettoyage si le destinataire change
+        if (channelRef.current) {
+            supabase.removeChannel(channelRef.current);
+        }
+
         const channel = supabase
-            .channel(`chat_${receiverId}`)
+            .channel(`chat_${channelId}`, {
+                config: { broadcast: { self: true } } // On veut recevoir nos propres broadcasts pour confirmation si besoin
+            })
+            // Écoute des nouveaux messages (Tous les messages du canal, le RLS filtre l'accès)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
-                table: 'Message',
-                filter: `receiverId=eq.${currentUserId}`
+                table: 'Message'
             }, async (payload) => {
                 const incoming = payload.new as Message;
-                // Le déchiffrement est délégué au composant graphique
-                setMessages((prev) => [...prev, incoming]);
-            })
-            .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
-    }, [currentUserId, receiverId, supabase, sharedKey]);
+                // Si c'est un message du canal actuel
+                if ((incoming.senderId === currentUserId && incoming.receiverId === receiverId) ||
+                    (incoming.senderId === receiverId && incoming.receiverId === currentUserId)) {
+
+                    setMessages((prev) => {
+                        // Éviter les doublons (si le message est déjà là via fetch ou optimisme)
+                        if (prev.some(m => m.id === incoming.id)) return prev;
+                        return [...prev, incoming];
+                    });
+
+                    // Si on est le destinataire, on marque comme lu
+                    if (incoming.receiverId === currentUserId) {
+                        fetch(getApiUrl('/api/chat'), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'read', receiverId })
+                        });
+                    }
+                }
+            })
+            // 🎙️ ÉCOUTE DU BROADCAST "TYPING"
+            .on('broadcast', { event: 'typing' }, ({ payload }) => {
+                // On ignore nos propres événements de frappe (handled localement si besoin, mais ici on veut l'autre)
+                if (payload.userId !== currentUserId) {
+                    setIsTyping(payload.isTyping);
+                    if (payload.isTyping) {
+                        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+                    }
+                }
+            })
+            .subscribe((status) => {
+                console.log(`📡 [Chat-Realtime] Channel status: ${status}`);
+            });
+
+        channelRef.current = channel;
+
+        // Mark as read on mount
+        fetch(getApiUrl('/api/chat'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'read', receiverId })
+        });
+
+        return () => {
+            if (channelRef.current) supabase.removeChannel(channelRef.current);
+        };
+    }, [currentUserId, receiverId, supabase]);
+
+    const broadcastTyping = (typing: boolean) => {
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { isTyping: typing, userId: currentUserId },
+            });
+        }
+    };
+
+    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        broadcastTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            broadcastTyping(false);
+        }, 2000);
+    };
 
     // Auto-scroll intelligent
     const prevMessagesLen = useRef(optimisticMessages.length);
@@ -174,12 +257,13 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             createdAt: new Date(),
         });
 
-        // CHIFFREMENT CÔTÉ CLIENT puis envoi au serveur aveugle
+        // CHIFFREMENT STRICT CÔTÉ CLIENT
         try {
-            let payload = content;
-            if (sharedKey) {
-                payload = await encryptLocal(content, sharedKey);
+            if (!sharedKey || !receiverPublicKeyJwk) {
+                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé du destinataire introuvable.");
             }
+
+            const payload = await encryptLocal(content, sharedKey);
 
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabaseClient = createClient();
@@ -195,15 +279,22 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             const result = await res.json();
             if (!result?.success) throw new Error(result?.error || "Refus du serveur");
 
-        } catch (error) {
-            console.error("Échec de transmission:", error);
+        } catch (error: any) {
+            console.error("🔒 [E2E-SECURITY] Échec critique:", error.message);
             setIsError(true);
+            
+            // On remet le contenu pour que l'utilisateur ne perde pas son message
             if (formRef.current) {
                 const input = formRef.current.elements.namedItem('content') as HTMLInputElement;
                 if (input) {
                     input.value = content;
                     input.focus();
                 }
+            }
+
+            // Message spécifique si c'est une erreur de clé
+            if (error.message.includes("Erreur de sécurité")) {
+                alert(error.message); // On utilise une alerte système ou on pourrait passer par un toast contextuel
             }
         }
     };
@@ -280,6 +371,11 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
             {/* FORMULAIRE */}
             <div className="shrink-0 p-4 border-t border-white/10 bg-black/50 backdrop-blur-md">
+                {isTyping && (
+                    <div className="mb-2 text-[10px] text-emerald-400 font-mono animate-pulse uppercase tracking-widest">
+                        📡 L'agent adverse est en train d'écrire...
+                    </div>
+                )}
                 {isError && (
                     <div className="mb-2 flex items-center gap-2 text-red-400 text-xs font-semibold animate-pulse">
                         <AlertCircle className="w-4 h-4" />
@@ -291,6 +387,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     <input
                         type="text"
                         name="content"
+                        onChange={handleInput}
                         placeholder="Message chiffré de bout en bout..."
                         autoComplete="off"
                         className={`flex-1 bg-black/40 border ${isError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-blue-500/50'} rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors`}

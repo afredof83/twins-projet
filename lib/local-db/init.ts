@@ -23,6 +23,13 @@ export const initLocalDatabase = async () => {
         await db.open();
         await db.execute(LOCAL_SCHEMA);
 
+        // 🛠️ Migration tactique : ajout de la colonne idempotencyKey si absente
+        try {
+            await db.execute("ALTER TABLE mutation_queue ADD COLUMN idempotencyKey TEXT UNIQUE");
+        } catch (e) {
+            // La colonne existe déjà probablement, on ignore silencieusement
+        }
+
         // On sauvegarde la connexion pour le reste de l'application
         dbInstance = db;
 

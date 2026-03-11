@@ -24,6 +24,7 @@
     "@capacitor/network": "^8.0.1",
     "@capacitor/push-notifications": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
+    "@huggingface/transformers": "^3.8.1",
     "@mistralai/mistralai": "^1.14.0",
     "@noble/hashes": "^2.0.1",
     "@prisma/adapter-pg": "^7.4.2",

@@ -36,7 +36,7 @@ export async function PATCH(req: Request) {
 
         // 4. Validation du Payload (Hard Filters)
         const body = await req.json();
-        const { sector, primaryRole, tjm, availability, bio } = body;
+        const { sector, primaryRole, tjm, availability, bio, activePrism } = body;
 
         if (!primaryRole || !availability) {
             return NextResponse.json({ error: 'Hard filters missing (Role/Availability)' }, { status: 400 });
@@ -53,7 +53,8 @@ export async function PATCH(req: Request) {
                 primaryRole,
                 tjm: tjmValue,
                 availability,
-                bio
+                bio,
+                activePrism: activePrism || 'WORK'
             }
         });
 

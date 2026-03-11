@@ -1,23 +1,12 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.ipse.agent',
+  appId: 'com.twins.app',
   appName: 'Ipse',
-  webDir: 'public', // Peu importe pour l'instant
-  // @ts-ignore
-  bundledWebRuntime: false,
+  webDir: 'public',
   server: {
-    url: 'http://192.168.1.22:3000', // ⚠️ INJECTE TON IP ICI
-    cleartext: true,
-  },
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 0,
-      launchAutoHide: false,
-      backgroundColor: "#050a0c",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP"
-    }
+    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // 🚀 CORRECTION : https://
+    cleartext: true
   }
 };
 
