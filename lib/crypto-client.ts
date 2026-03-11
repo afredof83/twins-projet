@@ -7,11 +7,42 @@ import * as bip39 from 'bip39';
 // =====================================================
 
 /**
+ * Dérive une clé AES-GCM 256 bits à partir d'un PIN utilisateur en utilisant PBKDF2.
+ */
+export async function deriveKeyFromPin(pin: string, salt: Uint8Array): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(pin),
+        { name: "PBKDF2" },
+        false,
+        ["deriveBits", "deriveKey"]
+    );
+
+    return crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt as any,
+            iterations: 100000, // Standard de sécurité pour contrer le brute-force
+            hash: "SHA-256",
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+/**
  * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
  * Ne retourne QUE la clé publique à envoyer au serveur.
- * La clé privée est séquestrée dans la puce matérielle via VaultManager.
+ * La clé privée est séquestrée dans la puce matérielle via VaultManager ou chiffrée sur le Web.
  */
-export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
+export async function generateAndStoreKeyPair(userPin: string): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
+    if (!userPin || userPin.length < 4) {
+        throw new Error("Un PIN robuste est requis pour sécuriser le coffre local.");
+    }
+
     try {
         // A. Génération des 12 mots
         const mnemonic = bip39.generateMnemonic();
@@ -32,8 +63,27 @@ export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWeb
             await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
             console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
         } else {
-            // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
-            throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
+            // 🚨 Web Fallback: Chiffrement de la clé privée avec le PIN
+            const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const aesKey = await deriveKeyFromPin(userPin, salt);
+            
+            const encryptedPrivateKey = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                aesKey,
+                exportedPrivateKey
+            );
+
+            const vaultData = {
+                encryptedPrivateKey: arrayBufferToBase64(new Uint8Array(encryptedPrivateKey)),
+                salt: arrayBufferToBase64(salt),
+                iv: arrayBufferToBase64(iv)
+            };
+            
+            localStorage.setItem('ipse_web_vault', JSON.stringify(vaultData));
+            cachedPrivateKey = keyPair.privateKey;
+            console.log("🔒 Clé privée chiffrée, sauvegardée localement, et chargée en RAM avec succès.");
         }
 
         // D. On ne renvoie que ce qui est publiable
@@ -59,11 +109,72 @@ export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
     return null;
 }
 
+let cachedPrivateKey: CryptoKey | null = null;
+
 // Rétrocompatibilité : alias pour l'ancien nom
 export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
-    const key = await getLocalPrivateKey();
-    if (!key) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
-    return key;
+    try {
+        if (Capacitor.isNativePlatform()) {
+            const key = await getLocalPrivateKey();
+            if (!key) throw new Error("Clé native introuvable.");
+            return key;
+        } else {
+            if (cachedPrivateKey) {
+                console.log("⚡️ Clé récupérée depuis la RAM");
+                return await crypto.subtle.exportKey("jwk", cachedPrivateKey) as JsonWebKey;
+            }
+            throw new Error("Clé non chargée en RAM. Reconnexion requise.");
+        }
+    } catch (e) {
+        console.error(e);
+        throw e;
+    }
+}
+
+/**
+ * Ouvre le coffre local, déchiffre la clé privée avec le mot de passe fourni, et la place en RAM.
+ */
+export async function unlockLocalVault(secret: string): Promise<CryptoKey> {
+    const vaultString = localStorage.getItem('ipse_web_vault');
+    if (!vaultString) {
+        throw new Error("Clé introuvable. Aucun coffre local détecté.");
+    }
+
+    const vaultData = JSON.parse(vaultString);
+
+    // Reconstruction des buffers (base64ToArrayBuffer renvoie un Uint8Array)
+    const salt = base64ToArrayBuffer(vaultData.salt);
+    const iv = base64ToArrayBuffer(vaultData.iv);
+    const encryptedPrivateKey = base64ToArrayBuffer(vaultData.encryptedPrivateKey);
+
+    try {
+        // 1. Recréer la clé AES à partir du mot de passe saisi
+        const aesKey = await deriveKeyFromPin(secret, salt);
+
+        // 2. Déchiffrer la clé privée ECDH
+        const decryptedPrivateKeyBuffer = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv as any },
+            aesKey,
+            encryptedPrivateKey as any
+        );
+
+        // 3. Réimporter le buffer déchiffré en tant que CryptoKey utilisable
+        const privateKey = await crypto.subtle.importKey(
+            "pkcs8",
+            decryptedPrivateKeyBuffer,
+            { name: "ECDH", namedCurve: "P-256" },
+            true, // extractable
+            ["deriveKey", "deriveBits"]
+        );
+
+        console.log("🔓 Coffre déverrouillé avec succès ! Clé chargée en RAM.");
+        cachedPrivateKey = privateKey;
+        return privateKey;
+
+    } catch (error) {
+        console.error("Échec du déchiffrement. PIN incorrect ou données corrompues.", error);
+        throw new Error("Code PIN incorrect.");
+    }
 }
 
 /**

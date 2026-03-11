@@ -219,552 +219,6 @@ vercel.json
 <files>
 This section contains the contents of the repository's files.
 
-<file path="app/api/opportunities/evaluate/route.ts">
-import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabaseServer';
-import { mistralClient } from '@/lib/mistral';
-
-export const runtime = 'edge';
-
-/**
- * 🔥 [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
- * Purpose: High-performance streaming synergy analysis using Edge Runtime.
- * Flow: Mistral Stream -> ReadableStream -> Post-stream Update (WaitUntil).
- */
-export async function POST(req: NextRequest) {
-    try {
-        // 1. Auth & Request
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-        }
-
-        const { opportunityId } = await req.json();
-        if (!opportunityId) {
-            return new Response(JSON.stringify({ error: 'Missing opportunityId' }), { status: 400 });
-        }
-
-        // 2. Data Retrieval (Direct Supabase for Edge compatibility)
-        // Fetch opportunity + profiles in parallel
-        const { data: opportunity, error: oppError } = await supabase
-            .from('Opportunity')
-            .select(`
-                *,
-                sourceProfile:sourceId (*),
-                targetProfile:targetId (*)
-            `)
-            .eq('id', opportunityId)
-            .single();
-
-        if (oppError || !opportunity) {
-            return new Response(JSON.stringify({ error: 'Opportunity not found' }), { status: 404 });
-        }
-
-        if (opportunity.sourceId !== user.id && opportunity.targetId !== user.id) {
-            return new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 });
-        }
-
-        const source = opportunity.sourceProfile;
-        const target = opportunity.targetProfile;
-
-        // Fetch Cortex data (Memories & Notes)
-        const [sourceCortex, targetCortex] = await Promise.all([
-            fetchCortexData(supabase, source.id),
-            fetchCortexData(supabase, target.id)
-        ]);
-
-        console.log(`📡 [EDGE-STREAM] Starting stream for ${opportunityId}`);
-
-        // 3. Hermetic Prompt with Markdown Constraint & Contextual Tone
-        const isWork = (opportunity.context || 'WORK') === 'WORK';
-        const toneDirective = isWork 
-            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratégiques."
-            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagées.";
-
-        const prompt = `Tu es Cortex, une IA de renseignement sémantique spécialisée dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
-        ${toneDirective}
-        Analyse la synergie ENTRE deux entités distinctes. 
-
-        <Profil_A>
-        [INITIATEUR]
-        Nom: ${source.name || 'Agent Furtif'}
-        Rôle: ${source.primaryRole || 'Non défini'}
-        Secteur: ${source.sector || 'Non défini'}
-        Bio: ${source.bio || 'Non spécifiée'}
-        Cortex Data: ${sourceCortex || 'Aucune donnée.'}
-        </Profil_A>
-
-        <Profil_B>
-        [CIBLE / TOI]
-        Nom: ${target.name || 'Agent Furtif'}
-        Rôle: ${target.primaryRole || 'Non défini'}
-        Secteur: ${target.sector || 'Non défini'}
-        Bio: ${target.bio || 'Non spécifiée'}
-        Cortex Data: ${targetCortex || 'Aucune donnée.'}
-        </Profil_B>
-
-        INSTRUCTION: Génère un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
-
-        🎯 QUI EST ${source.name || 'Profil A'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
-
-        🎯 QUI EST ${target.name || 'Profil B'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
-
-        ⚡ POTENTIEL DE SYNERGIE
-        [1 seul paragraphe très direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
-
-        🚀 CE QUE ${source.name || 'Profil A'} APPORTE À ${target.name || 'Profil B'}
-
-        🔹 [Atout clé 1] : [Bénéfice direct, très court]
-
-        🔹 [Atout clé 2] : [Bénéfice direct, très court]
-
-        💎 CE QUE ${target.name || 'Profil B'} APPORTE À ${source.name || 'Profil A'}
-
-        🔸 [Atout clé 1] : [Bénéfice direct, très court]
-
-        🔸 [Atout clé 2] : [Bénéfice direct, très court]
-
-        RÉPOND UNIQUEMENT EN MARKDOWN.`;
-
-        // 4. Mistral Streaming
-        const responseStream = await mistralClient.chat.stream({
-            model: 'mistral-small-latest',
-            messages: [{ role: 'user', content: prompt }],
-        });
-
-        const encoder = new TextEncoder();
-        let fullAudit = '';
-
-        const stream = new ReadableStream({
-            async start(controller) {
-                for await (const chunk of responseStream) {
-                    // @ts-ignore - Mistral SDK typing can be tricky in Edge
-                    const contentDelta = chunk.data?.choices?.[0]?.delta?.content;
-                    
-                    let contentString = '';
-                    if (typeof contentDelta === 'string') {
-                        contentString = contentDelta;
-                    } else if (Array.isArray(contentDelta)) {
-                        contentString = contentDelta.map((c: any) => c.text || '').join('');
-                    }
-
-                    if (contentString) {
-                        fullAudit += contentString;
-                        controller.enqueue(encoder.encode(contentString));
-                    }
-                }
-                controller.close();
-
-                // 5. Post-stream Update (Database)
-                // In Edge runtime, we perform the update after the stream finishes within the generator
-                // to avoid blocking the initial response.
-                await updateAuditDatabase(supabase, opportunityId, fullAudit);
-            },
-        });
-
-        return new Response(stream, {
-            headers: {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            },
-        });
-
-    } catch (error: any) {
-        console.error("🔥 [EDGE-FAILURE]:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    }
-}
-
-async function fetchCortexData(supabase: any, profileId: string): Promise<string> {
-    const [memories, notes] = await Promise.all([
-        supabase.from('memory').select('content').eq('profile_id', profileId).order('created_at', { ascending: false }).limit(10),
-        supabase.from('CortexNote').select('content').eq('profileId', profileId).order('createdAt', { ascending: false }).limit(5)
-    ]);
-
-    const mText = (memories.data || []).map((m: any) => m.content).join('; ');
-    const nText = (notes.data || []).map((n: any) => n.content).join('; ');
-
-    return `${mText} ${nText}`.trim();
-}
-
-async function updateAuditDatabase(supabase: any, opportunityId: string, audit: string) {
-    try {
-        const { error } = await supabase
-            .from('Opportunity')
-            .update({ audit, status: 'ANALYZED' })
-            .eq('id', opportunityId);
-        
-        if (error) console.error("❌ [DB-UPDATE] Failed:", error.message);
-        else console.log(`✅ [DB-UPDATE] Opportunity ${opportunityId} persists.`);
-    } catch (e) {
-        console.error("❌ [DB-UPDATE] Critical Error:", e);
-    }
-}
-</file>
-
-<file path="app/components/opportunities/AuditStreamer.tsx">
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Loader2, Zap, AlertCircle } from 'lucide-react';
-
-interface AuditStreamerProps {
-    opportunityId: string;
-    onComplete?: (finalAudit: string) => void;
-}
-
-/**
- * 🛰️ AuditStreamer
- * Consumes the Edge-streamed Markdown audit from Mistral AI.
- */
-export default function AuditStreamer({ opportunityId, onComplete }: AuditStreamerProps) {
-    const [streamedText, setStreamedText] = useState('');
-    const [status, setStatus] = useState<'idle' | 'streaming' | 'completed' | 'error'>('idle');
-    const [error, setError] = useState<string | null>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const startStream = async () => {
-            setStatus('streaming');
-            setError(null);
-            setStreamedText('');
-
-            try {
-                const response = await fetch('/api/opportunities/evaluate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ opportunityId }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to start evaluation');
-                }
-
-                const reader = response.body?.getReader();
-                const decoder = new TextDecoder();
-
-                if (!reader) throw new Error('No stream reader available');
-
-                let accumulatedText = '';
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    accumulatedText += chunk;
-                    setStreamedText(accumulatedText);
-                    
-                    // Auto-scroll to bottom
-                    if (scrollRef.current) {
-                        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-                    }
-                }
-
-                setStatus('completed');
-                if (onComplete) onComplete(accumulatedText);
-
-            } catch (err: any) {
-                console.error("❌ [STREAM ERROR]:", err);
-                setError(err.message);
-                setStatus('error');
-            }
-        };
-
-        startStream();
-    }, [opportunityId, onComplete]);
-
-    return (
-        <div className="flex flex-col h-full bg-slate-950 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-yellow-400 animate-pulse' : 'text-blue-400'}`} />
-                    <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                        Analyse Cortex en temps réel
-                    </span>
-                </div>
-                {status === 'streaming' && (
-                    <div className="flex items-center gap-2 text-[10px] text-yellow-400 font-mono">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        STREAMING_ACTIVE
-                    </div>
-                )}
-            </div>
-
-            {/* Content Area */}
-            <div 
-                ref={scrollRef}
-                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-blue-500/30"
-            >
-                {status === 'error' ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-                        <AlertCircle className="w-8 h-8 text-red-500" />
-                        <p className="text-sm text-red-200 font-medium">{error}</p>
-                    </div>
-                ) : streamedText ? (
-                    <article className="prose prose-invert prose-blue max-w-none">
-                        <ReactMarkdown 
-                            components={{
-                                h3: ({node, ...props}) => <h3 className="text-blue-400 border-l-2 border-blue-500 pl-4 mt-8 mb-4 tracking-tight" {...props} />,
-                                p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />,
-                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-blue-500" {...props} />,
-                            }}
-                        >
-                            {streamedText}
-                        </ReactMarkdown>
-                        {status === 'streaming' && (
-                            <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1 align-middle" />
-                        )}
-                    </article>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full space-y-4">
-                        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                        <p className="text-xs text-blue-400 font-mono animate-pulse">
-                            Initialisation du moteur de synergie...
-                        </p>
-                    </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-4 py-2 bg-black/40 border-t border-white/5 text-[10px] text-slate-500 font-mono flex justify-between">
-                <span>Mistral-Small-Latest</span>
-                <span>{streamedText.length} bytes received</span>
-            </div>
-        </div>
-    );
-}
-</file>
-
-<file path="app/components/RadarRealtimeListener.tsx">
-'use client';
-
-import { useEffect } from 'react';
-import { createClient } from '@/lib/supabaseBrowser';
-
-interface RadarRealtimeListenerProps {
-    onUpdate: () => void;
-    currentUserId: string;
-}
-
-export default function RadarRealtimeListener({ onUpdate, currentUserId }: RadarRealtimeListenerProps) {
-    useEffect(() => {
-        const supabase = createClient();
-
-        // On écoute tout changement sur Connection et Opportunity 
-        // Le filtrage se fera par l'accès RLS (l'utilisateur ne reçoit que ce qu'il peut voir)
-        const channel = supabase
-            .channel(`radar_realtime_${currentUserId}`)
-            .on('postgres_changes', {
-                event: '*', // INSERT, UPDATE, DELETE
-                schema: 'public',
-                table: 'Connection'
-            }, (payload: any) => {
-                console.log('🔔 [Realtime] Connection update detected', payload);
-                onUpdate();
-            })
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'Opportunity'
-            }, (payload: any) => {
-                console.log('🔔 [Realtime] Opportunity update detected', payload);
-                onUpdate();
-            })
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'Message',
-                filter: `receiverId=eq.${currentUserId}`
-            }, (payload: any) => {
-                console.log('🔔 [Realtime] New message detected for Radar', payload);
-                onUpdate();
-            })
-            .subscribe((status: any) => {
-                console.log(`📡 [Realtime] Status for ${currentUserId}:`, status);
-            });
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [currentUserId, onUpdate]);
-
-    return null;
-}
-</file>
-
-<file path="app/workers/translation.worker.ts">
-import { pipeline, env } from '@huggingface/transformers';
-
-// Configuration pour le Web Worker
-env.allowLocalModels = false;
-env.useBrowserCache = true;
-
-let translationPipeline: any = null;
-
-// Modèle léger pour la traduction
-const MODEL_NAME = 'Xenova/t5-small';
-
-async function getPipeline(progressCallback: (data: any) => void) {
-    if (translationPipeline) return translationPipeline;
-
-    console.log('[WORKER] Initialisation du pipeline de traduction...');
-    try {
-        translationPipeline = await pipeline('translation', MODEL_NAME, {
-            progress_callback: progressCallback,
-        });
-        console.log('[WORKER] Modèle chargé et prêt.');
-        return translationPipeline;
-    } catch (err) {
-        console.error('[WORKER] Erreur lors du chargement du modèle:', err);
-        throw err;
-    }
-}
-
-self.onmessage = async (event) => {
-    const { text, targetLanguage, sourceLanguage } = event.data;
-    console.log(`[WORKER] Message reçu pour traduction vers ${targetLanguage}`);
-
-    try {
-        const pipe = await getPipeline((data: any) => {
-            if (data.status === 'progress') {
-                console.log(`[WORKER] Téléchargement du modèle: ${Math.round(data.progress * 100)}% (${data.file})`);
-                self.postMessage({
-                    type: 'progress',
-                    status: 'loading',
-                    progress: data.progress,
-                    file: data.file
-                });
-            }
-        });
-
-        const task = `translate ${sourceLanguage || 'auto'} to ${targetLanguage}`;
-        
-        console.log(`[WORKER] Démarrage de l'inférence...`);
-        const result = await pipe(text, {
-            src_lang: sourceLanguage,
-            tgt_lang: targetLanguage,
-        });
-        console.log(`[WORKER] Inférence terminée avec succès.`);
-
-        self.postMessage({
-            type: 'result',
-            translation: result[0].translation_text
-        });
-
-    } catch (error: any) {
-        console.error('[WORKER] Erreur de traduction:', error.message);
-        self.postMessage({
-            type: 'error',
-            error: error.message
-        });
-    }
-};
-</file>
-
-<file path="lib/crypto/key-manager.ts">
-import { Capacitor } from '@capacitor/core';
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
-
-/**
- * 🔐 SECURE KEY MANAGER - Blindé
- * Handles private key storage using native Keychain (iOS) and Keystore (Android).
- * Fallback to encrypted memory for Web/Dev.
- */
-
-const PRIVATE_KEY_ALIAS = 'ip_cortex_private_key';
-
-class KeyManager {
-    private isNative = Capacitor.isNativePlatform();
-    private webFallbackKey: string | null = null; // Encrypted memory fallback
-
-    /**
-     * Store private key in the most secure location available
-     */
-    async storePrivateKey(key: string): Promise<void> {
-        if (!key) throw new Error("Tentative de stockage d'une clé vide.");
-
-        if (this.isNative) {
-            try {
-                await SecureStoragePlugin.set({
-                    key: PRIVATE_KEY_ALIAS,
-                    value: key
-                });
-            } catch (error) {
-                console.error("❌ Échec du stockage natif sécurisé.");
-                throw error;
-            }
-        } else {
-            // Web/Dev Fallback: Store in memory only (no persistence in localStorage)
-            console.warn("🛠️ Mode Web : Clé stockée en mémoire volatile uniquement.");
-            this.webFallbackKey = key;
-        }
-    }
-
-    /**
-     * Retrieve the private key securely
-     */
-    async getPrivateKey(): Promise<string | null> {
-        if (this.isNative) {
-            try {
-                // 1. Vérification proactive pour éviter le crash natif
-                const { value: keys } = await SecureStoragePlugin.keys();
-                if (!keys.includes(PRIVATE_KEY_ALIAS)) {
-                    console.log(`[VAULT] Clé '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (Ignoré en douceur).`);
-                    return null;
-                }
-
-                // 2. Lecture sécurisée sans risque de crash
-                const { value } = await SecureStoragePlugin.get({
-                    key: PRIVATE_KEY_ALIAS
-                });
-                return value || null;
-            } catch (error) {
-                console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
-                return null;
-            }
-        } else {
-            return this.webFallbackKey;
-        }
-    }
-
-    /**
-     * Emergency Purge: Wipe all traces of the key
-     */
-    async wipeKeys(): Promise<void> {
-        if (this.isNative) {
-            try {
-                await SecureStoragePlugin.remove({ key: PRIVATE_KEY_ALIAS });
-                await SecureStoragePlugin.clear(); // Clear all for extra safety
-            } catch (error) {
-                console.error("❌ Erreur lors de la purge d'urgence.");
-            }
-        }
-        this.webFallbackKey = null;
-        console.log("🧹 Vault purgé avec succès.");
-    }
-
-    /**
-     * Check if a key is currently held
-     */
-    async hasUnlockedKey(): Promise<boolean> {
-        const key = await this.getPrivateKey();
-        return !!key;
-    }
-}
-
-// Singleton for consistency
-export const keyManager = new KeyManager();
-</file>
-
 <file path="lib/crypto/zk-encryption.ts">
 // Fix build dependencies Vercel
 /**
@@ -1392,176 +846,6 @@ export async function readUrlContent(url: string): Promise<string | null> {
 }
 </file>
 
-<file path="lib/translation-client.ts">
-/**
- * Local Translation Manager
- * Manages the Web Worker lifecycle and provides a clean API for components.
- */
-
-export class TranslationManager {
-    private static worker: Worker | null = null;
-    private static progressCallback: ((progress: number, status: string) => void) | null = null;
-
-    static init(onProgress?: (progress: number, status: string) => void) {
-        if (this.worker) return;
-        console.log('[TRADUCTION-CLIENT] Initialisation du Web Worker...');
-        this.progressCallback = onProgress || null;
-
-        this.worker = new Worker(new URL('../app/workers/translation.worker.ts', import.meta.url));
-        
-        this.worker.onmessage = (event) => {
-            const { type, status, progress, translation, error } = event.data;
-            
-            if (type === 'progress' && this.progressCallback) {
-                console.log(`[TRADUCTION-CLIENT] Progrès: ${Math.round(progress * 100)}% (${status})`);
-                this.progressCallback(progress * 100, status);
-            }
-        };
-
-        this.worker.onerror = (err) => {
-            console.error("[TRADUCTION-CLIENT] Erreur Worker fatale:", err);
-        };
-    }
-
-    static async translate(text: string, targetLang: string, sourceLang?: string): Promise<string> {
-        console.log(`[TRADUCTION-CLIENT] Requête de traduction envoyée au worker (${targetLang})`);
-        return new Promise((resolve, reject) => {
-            if (!this.worker) this.init();
-
-            const handleMessage = (event: MessageEvent) => {
-                const { type, translation, error } = event.data;
-                if (type === 'result') {
-                    this.worker?.removeEventListener('message', handleMessage);
-                    resolve(translation);
-                } else if (type === 'error') {
-                    this.worker?.removeEventListener('message', handleMessage);
-                    reject(new Error(error));
-                }
-            };
-
-            this.worker?.addEventListener('message', handleMessage);
-            this.worker?.postMessage({ text, targetLanguage: targetLang, sourceLanguage: sourceLang });
-        });
-    }
-
-    static getTargetLanguage(): string {
-        const code = (navigator.language || 'en-US').split('-')[0].toLowerCase();
-        const mapping: Record<string, string> = {
-            'fr': 'french',
-            'en': 'english',
-            'es': 'spanish',
-            'de': 'german',
-            'it': 'italian',
-            'pt': 'portuguese',
-        };
-        return mapping[code] || 'english';
-    }
-}
-</file>
-
-<file path="lib/vault-manager.ts">
-import { Capacitor } from '@capacitor/core';
-import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
-import { NativeBiometric } from 'capacitor-native-biometric';
-
-/**
- * 🔒 VAULT MANAGER
- * Centralized security layer for native hardware-protected key storage.
- * Ensures private keys never touch localStorage or non-secure memory.
- */
-
-export enum VaultKey {
-    MASTER_KEY = 'master_key_secret',
-    IDENTITY_PRIVATE = 'ipse_private_key',
-    IDENTITY_PUBLIC = 'ipse_public_key'
-}
-
-export const VaultManager = {
-    /**
-     * 🔐 Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
-     */
-    async saveSecret(key: VaultKey, value: string): Promise<void> {
-        if (!Capacitor.isNativePlatform()) {
-            console.warn(`⚠️ [VAULT] Platform non-native. Le stockage de ${key} est simulé (NON SÉCURISÉ).`);
-            // En dev/web, on pourrait utiliser SessionStorage ou autre, mais ici on reste strict.
-            return;
-        }
-
-        await SecureStoragePlugin.set({ key, value });
-        console.log(`✅ [VAULT] Secret '${key}' verrouillé dans l'enclave matérielle.`);
-    },
-
-    /**
-     * 🔓 Load a secret from the vault.
-     */
-    async loadSecret(key: VaultKey): Promise<string | null> {
-        if (!Capacitor.isNativePlatform()) return null;
-
-        try {
-            // 1. Vérification proactive pour éviter le crash natif
-            const { value: keys } = await SecureStoragePlugin.keys();
-            if (!keys.includes(key)) {
-                console.log(`[VAULT] Clé '${key}' introuvable dans l'enclave (Ignoré en douceur).`);
-                return null;
-            }
-
-            // 2. Lecture sécurisée sans risque de crash
-            const result = await SecureStoragePlugin.get({ key });
-            return result.value || null;
-        } catch (error) {
-            console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
-            return null;
-        }
-    },
-
-    /**
-     * 🧬 Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
-     * Use this whenever highly sensitive keys are needed.
-     */
-    async unlockAndLoad(key: VaultKey, reason: string = "Accès sécurisé requis"): Promise<string | null> {
-        try {
-            // 1. Biometric Challenge
-            const available = await NativeBiometric.isAvailable();
-            if (available.isAvailable) {
-                await NativeBiometric.verifyIdentity({
-                    reason,
-                    title: "Authentification Cyber-Sécurité",
-                    subtitle: "Déverrouillage de l'enclave biométrique",
-                    description: "Accès requis pour le déchiffrement des données.",
-                    negativeButtonText: "Annuler"
-                });
-            } else {
-                console.warn("⚠️ Biométrie indisponible. Tentative de lecture directe (Mode dégradé).");
-            }
-
-            // 2. Retrieval
-            return await this.loadSecret(key);
-        } catch (error) {
-            console.error("❌ [VAULT] Échec du déverrouillage :", error);
-            throw new Error("Authentification échouée. Accès au coffre-fort refusé.");
-        }
-    },
-
-    /**
-     * 🧹 Emergency Purge: Wipe ALL keys from the vault.
-     * To be called on logout or security breach detection.
-     */
-    async wipeKeys(): Promise<void> {
-        if (!Capacitor.isNativePlatform()) return;
-
-        try {
-            const keys = Object.values(VaultKey);
-            for (const key of keys) {
-                await SecureStoragePlugin.remove({ key });
-            }
-            console.log("🧨 [VAULT] Purge d'urgence effectuée. Toutes les clés supprimées.");
-        } catch (error) {
-            console.error("❌ [VAULT] Erreur lors de la purge :", error);
-        }
-    }
-};
-</file>
-
 <file path="lib/vector/embedding-service.ts">
 /**
  * Embedding Service
@@ -2130,90 +1414,6 @@ export async function GET(req: NextRequest) {
 }
 </file>
 
-<file path="app/api/cron/radar/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-
-/**
- * Radar CRON API Route - Optimized Refactoring
- * Focus: High-performance vector matching (O(N log N)) without expensive Mistral AI calls.
- */
-export async function GET(req: NextRequest) {
-    // 1. Security Check
-    const authHeader = req.headers.get('Authorization');
-    const secret = process.env.CRON_SECRET;
-
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-        console.error("🚨 [CRON-RADAR] Unauthorized access blocked.");
-        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // 2. Theme Selection & Embedding Mapping
-    const theme = req.nextUrl.searchParams.get('theme') || 'work';
-    const embeddingField = theme === 'dating' ? 'social_embedding' : (theme === 'hobby' ? 'hobby_embedding' : 'unifiedEmbedding');
-
-    console.log(`🚀 [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
-
-    try {
-        // 3. Optimized Vector Cross-Matching
-        // Find all pairs (p1, p2) with similarity > 0.8 that don't already have an opportunity record.
-        // Similarity formula: 1 - (vector_distance)
-        const newMatches: any[] = await prisma.$queryRawUnsafe(`
-            SELECT 
-                p1.id as "sourceId",
-                p2.id as "targetId",
-                1 - (p1."${embeddingField}" <=> p2."${embeddingField}") as similarity
-            FROM "Profile" p1
-            JOIN "Profile" p2 ON p1.id < p2.id
-            WHERE p1."${embeddingField}" IS NOT NULL
-            AND p2."${embeddingField}" IS NOT NULL
-            AND 1 - (p1."${embeddingField}" <=> p2."${embeddingField}") > 0.8
-            AND NOT EXISTS (
-                SELECT 1 FROM "Opportunity" o 
-                WHERE (o."sourceId" = p1.id AND o."targetId" = p2.id)
-                OR (o."sourceId" = p2.id AND o."targetId" = p1.id)
-            )
-            LIMIT 250;
-        `);
-
-        if (newMatches.length === 0) {
-            return NextResponse.json({ success: true, message: "No new opportunities found.", created: 0 });
-        }
-
-        // 4. Batch Preparing & Insertion
-        const opportunitiesData = newMatches.map(m => ({
-            sourceId: m.sourceId,
-            targetId: m.targetId,
-            matchScore: Math.round(m.similarity * 100),
-            synergies: "Synergie sémantique détectée par le Radar (Auto-Detection).",
-            status: 'DETECTED',
-            audit: null,
-            title: `Opportunité ${theme.toUpperCase()}`
-        }));
-
-        // Efficient batch insert to minimize DB roundtrips
-        const result = await prisma.opportunity.createMany({
-            data: opportunitiesData,
-            skipDuplicates: true
-        });
-
-        console.log(`✅ [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
-
-        return NextResponse.json({
-            success: true,
-            created: result.count,
-            found: newMatches.length,
-            theme
-        });
-
-    } catch (error: any) {
-        console.error("🔥 [CRON-RADAR] Critical Failure:", error.message);
-        return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
-    }
-}
-</file>
-
 <file path="app/api/ipse-advisor/route.ts">
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
@@ -2239,95 +1439,192 @@ export async function POST(request: Request) {
 }
 </file>
 
-<file path="app/api/profile/hobby/route.ts">
-export const dynamic = 'force-dynamic';
+<file path="app/api/opportunities/evaluate/route.ts">
+import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabaseServer';
+import { mistralClient } from '@/lib/mistral';
 
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
-
-// 1. Initialisation du Client Mistral
-const mistral = new Mistral({
-    apiKey: process.env.MISTRAL_API_KEY || '',
-});
+export const runtime = 'edge';
 
 /**
- * Hobby Prism API - Profile Hobby Module
- * Handles JWT authentication and real-time AI Vectorization for Hobbies.
+ * 🔥 [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
+ * Purpose: High-performance streaming synergy analysis using Edge Runtime.
+ * Flow: Mistral Stream -> ReadableStream -> Post-stream Update (WaitUntil).
  */
-export async function PATCH(req: Request) {
+export async function POST(req: NextRequest) {
     try {
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
+        // 1. Auth & Request
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!user) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
 
-        const body = await req.json();
-        const { sector, role, bio, activePrism } = body;
+        const { opportunityId } = await req.json();
+        if (!opportunityId) {
+            return new Response(JSON.stringify({ error: 'Missing opportunityId' }), { status: 400 });
+        }
 
-        const prismaRLS = getPrismaForUser(user.id);
+        // 2. Data Retrieval (Direct Supabase for Edge compatibility)
+        // Fetch opportunity + profiles in parallel
+        const { data: opportunity, error: oppError } = await supabase
+            .from('Opportunity')
+            .select(`
+                *,
+                sourceProfile:sourceId (*),
+                targetProfile:targetId (*)
+            `)
+            .eq('id', opportunityId)
+            .single();
 
-        // 5. Étape A : Mise à jour des données classiques
-        await prismaRLS.profile.update({
-            where: { id: user.id },
-            data: {
-                hobbySector: sector,
-                hobbyRole: role,
-                hobbyBio: bio,
-                activePrism: activePrism || 'HOBBY'
-            }
+        if (oppError || !opportunity) {
+            return new Response(JSON.stringify({ error: 'Opportunity not found' }), { status: 404 });
+        }
+
+        if (opportunity.sourceId !== user.id && opportunity.targetId !== user.id) {
+            return new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 });
+        }
+
+        const source = opportunity.sourceProfile;
+        const target = opportunity.targetProfile;
+
+        // Fetch Cortex data (Memories & Notes)
+        const [sourceCortex, targetCortex] = await Promise.all([
+            fetchCortexData(supabase, source.id),
+            fetchCortexData(supabase, target.id)
+        ]);
+
+        console.log(`📡 [EDGE-STREAM] Starting stream for ${opportunityId}`);
+
+        // 3. Hermetic Prompt with Markdown Constraint & Contextual Tone
+        const isWork = (opportunity.context || 'WORK') === 'WORK';
+        const toneDirective = isWork 
+            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratégiques."
+            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagées.";
+
+        const prompt = `Tu es Cortex, une IA de renseignement sémantique spécialisée dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
+        ${toneDirective}
+        Analyse la synergie ENTRE deux entités distinctes. 
+
+        <Profil_A>
+        [INITIATEUR]
+        Nom: ${source.name || 'Agent Furtif'}
+        Rôle: ${source.primaryRole || 'Non défini'}
+        Secteur: ${source.sector || 'Non défini'}
+        Bio: ${source.bio || 'Non spécifiée'}
+        Cortex Data: ${sourceCortex || 'Aucune donnée.'}
+        </Profil_A>
+
+        <Profil_B>
+        [CIBLE / TOI]
+        Nom: ${target.name || 'Agent Furtif'}
+        Rôle: ${target.primaryRole || 'Non défini'}
+        Secteur: ${target.sector || 'Non défini'}
+        Bio: ${target.bio || 'Non spécifiée'}
+        Cortex Data: ${targetCortex || 'Aucune donnée.'}
+        </Profil_B>
+
+        INSTRUCTION: Génère un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
+
+        🎯 QUI EST ${source.name || 'Profil A'} ?
+        [1 phrase impactante résumant son rôle et son expertise]
+
+        🎯 QUI EST ${target.name || 'Profil B'} ?
+        [1 phrase impactante résumant son rôle et son expertise]
+
+        ⚡ POTENTIEL DE SYNERGIE
+        [1 seul paragraphe très direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
+
+        🚀 CE QUE ${source.name || 'Profil A'} APPORTE À ${target.name || 'Profil B'}
+
+        🔹 [Atout clé 1] : [Bénéfice direct, très court]
+
+        🔹 [Atout clé 2] : [Bénéfice direct, très court]
+
+        💎 CE QUE ${target.name || 'Profil B'} APPORTE À ${source.name || 'Profil A'}
+
+        🔸 [Atout clé 1] : [Bénéfice direct, très court]
+
+        🔸 [Atout clé 2] : [Bénéfice direct, très court]
+
+        RÉPOND UNIQUEMENT EN MARKDOWN.`;
+
+        // 4. Mistral Streaming
+        const responseStream = await mistralClient.chat.stream({
+            model: 'mistral-small-latest',
+            messages: [{ role: 'user', content: prompt }],
         });
 
-        // 6. Étape B : Vectorisation Mistral
-        let vectorized = false;
-        if (bio && bio.trim().length > 10) {
-            try {
-                const embeddingResponse = await mistral.embeddings.create({
-                    model: 'mistral-embed',
-                    inputs: [bio],
-                });
+        const encoder = new TextEncoder();
+        let fullAudit = '';
 
-                const vector = embeddingResponse.data[0].embedding;
+        const stream = new ReadableStream({
+            async start(controller) {
+                for await (const chunk of responseStream) {
+                    // @ts-ignore - Mistral SDK typing can be tricky in Edge
+                    const contentDelta = chunk.data?.choices?.[0]?.delta?.content;
+                    
+                    let contentString = '';
+                    if (typeof contentDelta === 'string') {
+                        contentString = contentDelta;
+                    } else if (Array.isArray(contentDelta)) {
+                        contentString = contentDelta.map((c: any) => c.text || '').join('');
+                    }
 
-                if (vector && vector.length === 1024) {
-                    const vectorString = `[${vector.join(',')}]`;
-
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "hobby_embedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
-                    vectorized = true;
+                    if (contentString) {
+                        fullAudit += contentString;
+                        controller.enqueue(encoder.encode(contentString));
+                    }
                 }
-            } catch (iaError) {
-                console.error('[MISTRAL_HOBBY_ERROR] Vectorization skipped:', iaError);
-            }
-        }
+                controller.close();
 
-        return NextResponse.json({
-            success: true,
-            vectorized,
-            message: 'Profil Hobbies synchronisé'
+                // 5. Post-stream Update (Database)
+                // In Edge runtime, we perform the update after the stream finishes within the generator
+                // to avoid blocking the initial response.
+                await updateAuditDatabase(supabase, opportunityId, fullAudit);
+            },
+        });
+
+        return new Response(stream, {
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            },
         });
 
     } catch (error: any) {
-        console.error('[HOBBY_PROFILE_ERROR]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error("🔥 [EDGE-FAILURE]:", error.message);
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }
-export const POST = PATCH;
+
+async function fetchCortexData(supabase: any, profileId: string): Promise<string> {
+    const [memories, notes] = await Promise.all([
+        supabase.from('memory').select('content').eq('profile_id', profileId).order('created_at', { ascending: false }).limit(10),
+        supabase.from('CortexNote').select('content').eq('profileId', profileId).order('createdAt', { ascending: false }).limit(5)
+    ]);
+
+    const mText = (memories.data || []).map((m: any) => m.content).join('; ');
+    const nText = (notes.data || []).map((n: any) => n.content).join('; ');
+
+    return `${mText} ${nText}`.trim();
+}
+
+async function updateAuditDatabase(supabase: any, opportunityId: string, audit: string) {
+    try {
+        const { error } = await supabase
+            .from('Opportunity')
+            .update({ audit, status: 'ANALYZED' })
+            .eq('id', opportunityId);
+        
+        if (error) console.error("❌ [DB-UPDATE] Failed:", error.message);
+        else console.log(`✅ [DB-UPDATE] Opportunity ${opportunityId} persists.`);
+    } catch (e) {
+        console.error("❌ [DB-UPDATE] Critical Error:", e);
+    }
+}
 </file>
 
 <file path="app/api/profile/settings/route.ts">
@@ -2370,202 +1667,6 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
-</file>
-
-<file path="app/api/profile/social/route.ts">
-export const dynamic = 'force-dynamic';
-
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
-
-// 1. Initialisation du Client Mistral
-const mistral = new Mistral({
-    apiKey: process.env.MISTRAL_API_KEY || '',
-});
-
-/**
- * Social Prism API - Profile Social Module
- * Handles JWT authentication and real-time AI Vectorization for Social goals.
- */
-export async function PATCH(req: Request) {
-    try {
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
-
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const body = await req.json();
-        const { sector, role, bio, activePrism } = body;
-
-        const prismaRLS = getPrismaForUser(user.id);
-
-        // 5. Étape A : Mise à jour des données classiques
-        await prismaRLS.profile.update({
-            where: { id: user.id },
-            data: {
-                socialSector: sector,
-                socialRole: role,
-                socialBio: bio,
-                activePrism: activePrism || 'SOCIAL'
-            }
-        });
-
-        // 6. Étape B : Vectorisation Mistral
-        let vectorized = false;
-        if (bio && bio.trim().length > 10) {
-            try {
-                const embeddingResponse = await mistral.embeddings.create({
-                    model: 'mistral-embed',
-                    inputs: [bio],
-                });
-
-                const vector = embeddingResponse.data[0].embedding;
-
-                if (vector && vector.length === 1024) {
-                    const vectorString = `[${vector.join(',')}]`;
-
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "social_embedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
-                    vectorized = true;
-                }
-            } catch (iaError) {
-                console.error('[MISTRAL_SOCIAL_ERROR] Vectorization skipped:', iaError);
-            }
-        }
-
-        return NextResponse.json({
-            success: true,
-            vectorized,
-            message: vectorized ? 'Profil Social synchronisé et vectorisé' : 'Profil Social synchronisé (Vecteur ignoré ou erreur AI)'
-        });
-
-    } catch (error: any) {
-        console.error('[SOCIAL_PROFILE_ERROR]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
-}
-export const POST = PATCH;
-</file>
-
-<file path="app/api/profile/work/route.ts">
-export const dynamic = 'force-dynamic';
-
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Mistral } from '@mistralai/mistralai';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
-
-// 1. Initialisation du Client Mistral (Senior Backend Standard)
-const mistral = new Mistral({
-    apiKey: process.env.MISTRAL_API_KEY || '',
-});
-
-/**
- * Senior Production API - Profile Work Module (The Fortress)
- * Handles strict JWT authentication and real-time AI Vectorization (Mistral 1024d)
- */
-export async function PATCH(req: Request) {
-    try {
-        // 2. Extraction stricte du Bearer Token (Mobile-First)
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
-
-        // 3. Validation Supabase
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        // 4. Validation du Payload (Hard Filters)
-        const body = await req.json();
-        const { sector, primaryRole, tjm, availability, bio, activePrism } = body;
-
-        if (!primaryRole || !availability) {
-            return NextResponse.json({ error: 'Hard filters missing (Role/Availability)' }, { status: 400 });
-        }
-
-        const prismaRLS = getPrismaForUser(user.id);
-        const tjmValue = typeof tjm === 'number' ? tjm : parseInt(tjm, 10) || 0;
-
-        // 5. Étape A : Mise à jour des données classiques (Prisma)
-        await prismaRLS.profile.update({
-            where: { id: user.id },
-            data: {
-                sector,
-                primaryRole,
-                tjm: tjmValue,
-                availability,
-                bio,
-                activePrism: activePrism || 'WORK'
-            }
-        });
-
-        // 6. Étape B : Vectorisation Mistral (pgvector 1024d)
-        let vectorized = false;
-        if (bio && bio.trim().length > 10) {
-            try {
-                // Appel au modèle mistral-embed (Optimisé pour RAG)
-                const embeddingResponse = await mistral.embeddings.create({
-                    model: 'mistral-embed',
-                    inputs: [bio],
-                });
-
-                const vector = embeddingResponse.data[0].embedding;
-
-                if (vector && vector.length === 1024) {
-                    // Injection SQL brute sécurisée pour le type 'vector' de pgvector
-                    // On utilise format standard [x,y,z] pour pgvector
-                    const vectorString = `[${vector.join(',')}]`;
-
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "bioEmbedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
-                    vectorized = true;
-                }
-            } catch (iaError) {
-                // L'IA est optionnelle : on ne bloque pas l'expérience utilisateur si Mistral est offline
-                console.error('[MISTRAL_AI_ERROR] Vectorization skipped:', iaError);
-            }
-        }
-
-        return NextResponse.json({
-            success: true,
-            vectorized,
-            message: vectorized ? 'Profil synchronisé et vectorisé' : 'Profil synchronisé (Vecteur ignoré ou erreur AI)'
-        });
-
-    } catch (error: any) {
-        console.error('[WORK_PROFILE_ERROR]', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
-}
-export const POST = PATCH;
 </file>
 
 <file path="app/api/radar/route.ts">
@@ -2926,6 +2027,143 @@ export default function LogoutButton() {
 }
 </file>
 
+<file path="app/components/opportunities/AuditStreamer.tsx">
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Loader2, Zap, AlertCircle } from 'lucide-react';
+
+interface AuditStreamerProps {
+    opportunityId: string;
+    onComplete?: (finalAudit: string) => void;
+}
+
+/**
+ * 🛰️ AuditStreamer
+ * Consumes the Edge-streamed Markdown audit from Mistral AI.
+ */
+export default function AuditStreamer({ opportunityId, onComplete }: AuditStreamerProps) {
+    const [streamedText, setStreamedText] = useState('');
+    const [status, setStatus] = useState<'idle' | 'streaming' | 'completed' | 'error'>('idle');
+    const [error, setError] = useState<string | null>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const startStream = async () => {
+            setStatus('streaming');
+            setError(null);
+            setStreamedText('');
+
+            try {
+                const response = await fetch('/api/opportunities/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ opportunityId }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to start evaluation');
+                }
+
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+
+                if (!reader) throw new Error('No stream reader available');
+
+                let accumulatedText = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    accumulatedText += chunk;
+                    setStreamedText(accumulatedText);
+                    
+                    // Auto-scroll to bottom
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                    }
+                }
+
+                setStatus('completed');
+                if (onComplete) onComplete(accumulatedText);
+
+            } catch (err: any) {
+                console.error("❌ [STREAM ERROR]:", err);
+                setError(err.message);
+                setStatus('error');
+            }
+        };
+
+        startStream();
+    }, [opportunityId, onComplete]);
+
+    return (
+        <div className="flex flex-col h-full bg-slate-950 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-yellow-400 animate-pulse' : 'text-blue-400'}`} />
+                    <span className="text-xs font-bold uppercase tracking-widest text-white/70">
+                        Analyse Cortex en temps réel
+                    </span>
+                </div>
+                {status === 'streaming' && (
+                    <div className="flex items-center gap-2 text-[10px] text-yellow-400 font-mono">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        STREAMING_ACTIVE
+                    </div>
+                )}
+            </div>
+
+            {/* Content Area */}
+            <div 
+                ref={scrollRef}
+                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-blue-500/30"
+            >
+                {status === 'error' ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+                        <AlertCircle className="w-8 h-8 text-red-500" />
+                        <p className="text-sm text-red-200 font-medium">{error}</p>
+                    </div>
+                ) : streamedText ? (
+                    <article className="prose prose-invert prose-blue max-w-none">
+                        <ReactMarkdown 
+                            components={{
+                                h3: ({node, ...props}) => <h3 className="text-blue-400 border-l-2 border-blue-500 pl-4 mt-8 mb-4 tracking-tight" {...props} />,
+                                p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />,
+                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-blue-500" {...props} />,
+                            }}
+                        >
+                            {streamedText}
+                        </ReactMarkdown>
+                        {status === 'streaming' && (
+                            <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1 align-middle" />
+                        )}
+                    </article>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full space-y-4">
+                        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                        <p className="text-xs text-blue-400 font-mono animate-pulse">
+                            Initialisation du moteur de synergie...
+                        </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-2 bg-black/40 border-t border-white/5 text-[10px] text-slate-500 font-mono flex justify-between">
+                <span>Mistral-Small-Latest</span>
+                <span>{streamedText.length} bytes received</span>
+            </div>
+        </div>
+    );
+}
+</file>
+
 <file path="app/components/PushNotifInit.tsx">
 'use client';
 
@@ -2959,154 +2197,60 @@ export default function RadarPoller() {
 }
 </file>
 
-<file path="app/components/SecureMessageBubble.tsx">
+<file path="app/components/RadarRealtimeListener.tsx">
 'use client';
 
-import { useState, useEffect } from 'react';
-import { decryptLocal } from '@/lib/crypto-client';
-import { TranslationManager } from '@/lib/translation-client';
-import { Loader2, Lock, Languages } from 'lucide-react';
+import { useEffect } from 'react';
+import { createClient } from '@/lib/supabaseBrowser';
 
-export function SecureMessageBubble({
-    id,
-    encryptedPayload,
-    sharedKey,
-    isSender,
-    onDecrypted
-}: {
-    id: string,
-    encryptedPayload: string,
-    sharedKey: CryptoKey | null,
-    isSender: boolean,
-    onDecrypted?: (id: string, clearText: string, isSender: boolean) => void
-}) {
-    const [clearText, setClearText] = useState<string | null>(null);
-    const [translatedText, setTranslatedText] = useState<string | null>(null);
-    const [isTranslating, setIsTranslating] = useState(false);
-    const [translationProgress, setTranslationProgress] = useState(0);
-    const [error, setError] = useState(false);
+interface RadarRealtimeListenerProps {
+    onUpdate: () => void;
+    currentUserId: string;
+}
 
+export default function RadarRealtimeListener({ onUpdate, currentUserId }: RadarRealtimeListenerProps) {
     useEffect(() => {
-        let isMounted = true;
+        const supabase = createClient();
 
-        async function decode() {
-            if (!encryptedPayload.startsWith('🧠')) {
-                if (isMounted) {
-                    setClearText(encryptedPayload);
-                    if (onDecrypted) onDecrypted(id, encryptedPayload, isSender);
-                }
-                return;
-            }
+        // On écoute tout changement sur Connection et Opportunity 
+        // Le filtrage se fera par l'accès RLS (l'utilisateur ne reçoit que ce qu'il peut voir)
+        const channel = supabase
+            .channel(`radar_realtime_${currentUserId}`)
+            .on('postgres_changes', {
+                event: '*', // INSERT, UPDATE, DELETE
+                schema: 'public',
+                table: 'Connection'
+            }, (payload: any) => {
+                console.log('🔔 [Realtime] Connection update detected', payload);
+                onUpdate();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'Opportunity'
+            }, (payload: any) => {
+                console.log('🔔 [Realtime] Opportunity update detected', payload);
+                onUpdate();
+            })
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'Message',
+                filter: `receiverId=eq.${currentUserId}`
+            }, (payload: any) => {
+                console.log('🔔 [Realtime] New message detected for Radar', payload);
+                onUpdate();
+            })
+            .subscribe((status: any) => {
+                console.log(`📡 [Realtime] Status for ${currentUserId}:`, status);
+            });
 
-            if (!sharedKey) return;
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUserId, onUpdate]);
 
-            try {
-                const decrypted = await decryptLocal(encryptedPayload, sharedKey);
-                console.log(`[TRADUCTION] Texte déchiffré: "${decrypted.substring(0, 30)}..."`);
-                console.log(`[TRADUCTION] Langue cible: ${TranslationManager.getTargetLanguage()}`);
-
-                if (isMounted) {
-                    setClearText(decrypted);
-                    if (onDecrypted) onDecrypted(id, decrypted, isSender);
-
-                    if (!isSender) {
-                        tryAutoTranslate(decrypted);
-                    }
-                }
-            } catch (err) {
-                console.error("Échec du déchiffrement", err);
-                if (isMounted) setError(true);
-            }
-        }
-
-        async function tryAutoTranslate(text: string) {
-            const targetLang = TranslationManager.getTargetLanguage();
-            
-            if (text.length > 3) {
-                console.log(`[TRADUCTION] Tentative de traduction vers: ${targetLang}`);
-                
-                setIsTranslating(true);
-                TranslationManager.init((progress) => {
-                    if (isMounted) setTranslationProgress(progress);
-                });
-
-                try {
-                    const result = await TranslationManager.translate(text, targetLang);
-                    
-                    if (isMounted) {
-                        if (result.trim().toLowerCase() === text.trim().toLowerCase()) {
-                            console.log('[TRADUCTION] Ignorée: Langue source = Langue cible');
-                            setTranslatedText(null);
-                        } else {
-                            console.log(`[TRADUCTION] Succès: "${result.substring(0, 30)}..."`);
-                            setTranslatedText(result);
-                        }
-                    }
-                } catch (e) {
-                    console.error("[TRADUCTION] Erreur critique:", e);
-                } finally {
-                    if (isMounted) setIsTranslating(false);
-                }
-            } else {
-                console.log('[TRADUCTION] Texte trop court, ignoré.');
-            }
-        }
-
-        decode();
-        return () => { isMounted = false; };
-    }, [encryptedPayload, sharedKey, isSender]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const bubbleAlignClass = isSender ? 'self-end items-end' : 'self-start items-start';
-    const bubbleColorClass = isSender
-        ? 'bg-blue-600/20 border-blue-500/30 text-blue-100'
-        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300';
-
-    return (
-        <div className={`flex flex-col max-w-[80%] mb-4 ${bubbleAlignClass}`}>
-            <div className={`px-4 py-3 rounded-2xl shadow-lg border relative group ${bubbleColorClass}`}>
-                {error ? (
-                    <span className="text-red-400 text-sm flex items-center gap-2">
-                        <Lock className="w-4 h-4" /> <i>Verrouillé (Clé manquante)</i>
-                    </span>
-                ) : clearText === null ? (
-                    <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                        <span className="text-xs text-zinc-400">Déchiffrement...</span>
-                    </div>
-                ) : (
-                    <>
-                        <p className="text-sm md:text-base whitespace-pre-wrap">{clearText}</p>
-                        
-                        {/* Affichage de la traduction si disponible */}
-                        {translatedText && (
-                            <div className="mt-2 pt-2 border-t border-white/5 animate-in fade-in duration-500">
-                                <p className="text-sm text-zinc-400 italic font-light">{translatedText}</p>
-                                <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1 uppercase tracking-widest font-bold opacity-60">
-                                    <Languages className="w-3 h-3" /> (traduit)
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Barre de progression du téléchargement de modèle */}
-                        {isTranslating && !translatedText && translationProgress > 0 && translationProgress < 100 && (
-                            <div className="mt-2 text-[9px] text-emerald-500 uppercase font-mono tracking-tighter flex flex-col gap-1">
-                                <div className="flex justify-between">
-                                    <span>Téléchargement module IA...</span>
-                                    <span>{Math.round(translationProgress)}%</span>
-                                </div>
-                                <div className="w-full h-0.5 bg-zinc-900 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-emerald-500 transition-all duration-300" 
-                                        style={{ width: `${translationProgress}%` }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
-    );
+    return null;
 }
 </file>
 
@@ -3171,6 +2315,75 @@ export default function Loading() {
         </div>
     );
 }
+</file>
+
+<file path="app/workers/translation.worker.ts">
+import { pipeline, env } from '@huggingface/transformers';
+
+// Configuration pour le Web Worker
+env.allowLocalModels = false;
+env.useBrowserCache = true;
+
+let translationPipeline: any = null;
+
+// Modèle léger pour la traduction
+const MODEL_NAME = 'Xenova/t5-small';
+
+async function getPipeline(progressCallback: (data: any) => void) {
+    if (translationPipeline) return translationPipeline;
+
+    console.log('[WORKER] Initialisation du pipeline de traduction...');
+    try {
+        translationPipeline = await pipeline('translation', MODEL_NAME, {
+            progress_callback: progressCallback,
+        });
+        console.log('[WORKER] Modèle chargé et prêt.');
+        return translationPipeline;
+    } catch (err) {
+        console.error('[WORKER] Erreur lors du chargement du modèle:', err);
+        throw err;
+    }
+}
+
+self.onmessage = async (event) => {
+    const { text, targetLanguage, sourceLanguage } = event.data;
+    console.log(`[WORKER] Message reçu pour traduction vers ${targetLanguage}`);
+
+    try {
+        const pipe = await getPipeline((data: any) => {
+            if (data.status === 'progress') {
+                console.log(`[WORKER] Téléchargement du modèle: ${Math.round(data.progress * 100)}% (${data.file})`);
+                self.postMessage({
+                    type: 'progress',
+                    status: 'loading',
+                    progress: data.progress,
+                    file: data.file
+                });
+            }
+        });
+
+        const task = `translate ${sourceLanguage || 'auto'} to ${targetLanguage}`;
+        
+        console.log(`[WORKER] Démarrage de l'inférence...`);
+        const result = await pipe(text, {
+            src_lang: sourceLanguage,
+            tgt_lang: targetLanguage,
+        });
+        console.log(`[WORKER] Inférence terminée avec succès.`);
+
+        self.postMessage({
+            type: 'result',
+            translation: result[0].translation_text
+        });
+
+    } catch (error: any) {
+        console.error('[WORKER] Erreur de traduction:', error.message);
+        self.postMessage({
+            type: 'error',
+            error: error.message
+        });
+    }
+};
 </file>
 
 <file path="components/CommlinkButton.tsx">
@@ -3359,6 +2572,101 @@ export function decryptMessage(encryptedData: string) {
 }
 </file>
 
+<file path="lib/crypto/key-manager.ts">
+import { Capacitor } from '@capacitor/core';
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+
+/**
+ * 🔐 SECURE KEY MANAGER - Blindé
+ * Handles private key storage using native Keychain (iOS) and Keystore (Android).
+ * Fallback to encrypted memory for Web/Dev.
+ */
+
+const PRIVATE_KEY_ALIAS = 'ip_cortex_private_key';
+
+class KeyManager {
+    private isNative = Capacitor.isNativePlatform();
+    private webFallbackKey: string | null = null; // Encrypted memory fallback
+
+    /**
+     * Store private key in the most secure location available
+     */
+    async storePrivateKey(key: string): Promise<void> {
+        if (!key) throw new Error("Tentative de stockage d'une clé vide.");
+
+        if (this.isNative) {
+            try {
+                await SecureStoragePlugin.set({
+                    key: PRIVATE_KEY_ALIAS,
+                    value: key
+                });
+            } catch (error) {
+                console.error("❌ Échec du stockage natif sécurisé.");
+                throw error;
+            }
+        } else {
+            // Web/Dev Fallback: Store in memory only (no persistence in localStorage)
+            console.warn("🛠️ Mode Web : Clé stockée en mémoire volatile uniquement.");
+            this.webFallbackKey = key;
+        }
+    }
+
+    /**
+     * Retrieve the private key securely
+     */
+    async getPrivateKey(): Promise<string | null> {
+        if (this.isNative) {
+            try {
+                // 1. Vérification proactive pour éviter le crash natif
+                const { value: keys } = await SecureStoragePlugin.keys();
+                if (!keys.includes(PRIVATE_KEY_ALIAS)) {
+                    console.log(`[VAULT] Clé '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (Ignoré en douceur).`);
+                    return null;
+                }
+
+                // 2. Lecture sécurisée sans risque de crash
+                const { value } = await SecureStoragePlugin.get({
+                    key: PRIVATE_KEY_ALIAS
+                });
+                return value || null;
+            } catch (error) {
+                console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
+                return null;
+            }
+        } else {
+            return this.webFallbackKey;
+        }
+    }
+
+    /**
+     * Emergency Purge: Wipe all traces of the key
+     */
+    async wipeKeys(): Promise<void> {
+        if (this.isNative) {
+            try {
+                await SecureStoragePlugin.remove({ key: PRIVATE_KEY_ALIAS });
+                await SecureStoragePlugin.clear(); // Clear all for extra safety
+            } catch (error) {
+                console.error("❌ Erreur lors de la purge d'urgence.");
+            }
+        }
+        this.webFallbackKey = null;
+        console.log("🧹 Vault purgé avec succès.");
+    }
+
+    /**
+     * Check if a key is currently held
+     */
+    async hasUnlockedKey(): Promise<boolean> {
+        const key = await this.getPrivateKey();
+        return !!key;
+    }
+}
+
+// Singleton for consistency
+export const keyManager = new KeyManager();
+</file>
+
 <file path="lib/guardian/discovery.ts">
 import { createClient } from '@supabase/supabase-js';
 
@@ -3380,86 +2688,6 @@ export async function findInternalAgent(myProfileId: string) {
     if (error) return null;
     return partner;
 }
-</file>
-
-<file path="lib/local-db/init.ts">
-import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
-import { useKeyStore } from '@/store/keyStore';
-import { LOCAL_SCHEMA } from './schema';
-
-const sqlite = new SQLiteConnection(CapacitorSQLite);
-
-// ⚡ LE SINGLETON : Il garde la base de données active en mémoire
-let dbInstance: SQLiteDBConnection | null = null;
-
-export const initLocalDatabase = async () => {
-    try {
-        const secretKey = useKeyStore.getState().masterKey;
-        if (!secretKey) throw new Error("Accès refusé : Clé biométrique manquante.");
-
-        const db = await sqlite.createConnection(
-            'ipse_twin_db',
-            false,
-            'no-encryption', // À remplacer par 'encryption' avec le secret en prod
-            1,
-            false
-        );
-
-        await db.open();
-        await db.execute(LOCAL_SCHEMA);
-
-        // 🛠️ Migration tactique : ajout de la colonne idempotencyKey si absente
-        try {
-            await db.execute("ALTER TABLE mutation_queue ADD COLUMN idempotencyKey TEXT UNIQUE");
-        } catch (e) {
-            // La colonne existe déjà probablement, on ignore silencieusement
-        }
-
-        // On sauvegarde la connexion pour le reste de l'application
-        dbInstance = db;
-
-        console.log("🟢 Bunker Local Initialisé");
-        return db;
-    } catch (error) {
-        console.error("🔴 Échec de l'initialisation locale", error);
-        throw error;
-    }
-};
-
-// ⚡ L'EXTRACTEUR : Utilisé par ton Sync Engine pour faire des requêtes
-export const getLocalDb = (): SQLiteDBConnection => {
-    if (!dbInstance) {
-        throw new Error("FATAL: Tentative d'accès à la DB locale avant son initialisation par le Gatekeeper.");
-    }
-    return dbInstance;
-};
-</file>
-
-<file path="lib/local-db/schema.ts">
-export const LOCAL_SCHEMA = `
-  -- Table pour stocker les alertes et opportunités hors-ligne
-  CREATE TABLE IF NOT EXISTS opportunities (
-    id TEXT PRIMARY KEY,
-    sourceId TEXT,
-    targetId TEXT,
-    matchScore INTEGER,
-    summary TEXT,
-    status TEXT,
-    createdAt TEXT
-  );
-
-  -- ⚡ LE CŒUR DU MODE HORS-LIGNE ⚡
-  -- Toute action faite sans internet va ici
-  CREATE TABLE IF NOT EXISTS mutation_queue (
-    id TEXT PRIMARY KEY,
-    endpoint TEXT NOT NULL,          -- ex: '/api/opportunities/accept'
-    method TEXT NOT NULL,            -- 'POST', 'PATCH'
-    payload TEXT NOT NULL,           -- JSON stringifié des données
-    status TEXT DEFAULT 'PENDING',   -- 'PENDING', 'SYNCED', 'FAILED'
-    idempotencyKey TEXT UNIQUE,      -- 🛡️ Clé d'idempotence UUID v4
-    createdAt TEXT NOT NULL
-  );
-`;
 </file>
 
 <file path="lib/mistral.ts">
@@ -3546,24 +2774,174 @@ export function createClient() {
 }
 </file>
 
-<file path="lib/utils.ts">
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+<file path="lib/translation-client.ts">
+/**
+ * Local Translation Manager
+ * Manages the Web Worker lifecycle and provides a clean API for components.
+ */
 
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
+export class TranslationManager {
+    private static worker: Worker | null = null;
+    private static progressCallback: ((progress: number, status: string) => void) | null = null;
+
+    static init(onProgress?: (progress: number, status: string) => void) {
+        if (this.worker) return;
+        console.log('[TRADUCTION-CLIENT] Initialisation du Web Worker...');
+        this.progressCallback = onProgress || null;
+
+        this.worker = new Worker(new URL('../app/workers/translation.worker.ts', import.meta.url));
+        
+        this.worker.onmessage = (event) => {
+            const { type, status, progress, translation, error } = event.data;
+            
+            if (type === 'progress' && this.progressCallback) {
+                console.log(`[TRADUCTION-CLIENT] Progrès: ${Math.round(progress * 100)}% (${status})`);
+                this.progressCallback(progress * 100, status);
+            }
+        };
+
+        this.worker.onerror = (err) => {
+            console.error("[TRADUCTION-CLIENT] Erreur Worker fatale:", err);
+        };
+    }
+
+    static async translate(text: string, targetLang: string, sourceLang?: string): Promise<string> {
+        console.log(`[TRADUCTION-CLIENT] Requête de traduction envoyée au worker (${targetLang})`);
+        return new Promise((resolve, reject) => {
+            if (!this.worker) this.init();
+
+            const handleMessage = (event: MessageEvent) => {
+                const { type, translation, error } = event.data;
+                if (type === 'result') {
+                    this.worker?.removeEventListener('message', handleMessage);
+                    resolve(translation);
+                } else if (type === 'error') {
+                    this.worker?.removeEventListener('message', handleMessage);
+                    reject(new Error(error));
+                }
+            };
+
+            this.worker?.addEventListener('message', handleMessage);
+            this.worker?.postMessage({ text, targetLanguage: targetLang, sourceLanguage: sourceLang });
+        });
+    }
+
+    static getTargetLanguage(): string {
+        const code = (navigator.language || 'en-US').split('-')[0].toLowerCase();
+        const mapping: Record<string, string> = {
+            'fr': 'french',
+            'en': 'english',
+            'es': 'spanish',
+            'de': 'german',
+            'it': 'italian',
+            'pt': 'portuguese',
+        };
+        return mapping[code] || 'english';
+    }
+}
+</file>
+
+<file path="lib/vault-manager.ts">
+import { Capacitor } from '@capacitor/core';
+import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
+import { NativeBiometric } from 'capacitor-native-biometric';
+
+/**
+ * 🔒 VAULT MANAGER
+ * Centralized security layer for native hardware-protected key storage.
+ * Ensures private keys never touch localStorage or non-secure memory.
+ */
+
+export enum VaultKey {
+    MASTER_KEY = 'master_key_secret',
+    IDENTITY_PRIVATE = 'ipse_private_key',
+    IDENTITY_PUBLIC = 'ipse_public_key'
 }
 
-// Nettoyage final : "Profil à définir"
-export function getAgentName(profile: any) {
-    // Adaptation à notre schéma : "name" au lieu de "fullName"
-    let name = "AGENT_FURTIF";
-    if (profile?.name) name = profile.name;
-    else if (profile?.id) name = `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
+export const VaultManager = {
+    /**
+     * 🔐 Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
+     */
+    async saveSecret(key: VaultKey, value: string): Promise<void> {
+        if (!Capacitor.isNativePlatform()) {
+            console.warn(`⚠️ [VAULT] Platform non-native. Le stockage de ${key} est simulé (NON SÉCURISÉ).`);
+            // En dev/web, on pourrait utiliser SessionStorage ou autre, mais ici on reste strict.
+            return;
+        }
 
-    if (typeof name === 'object') return JSON.stringify(name);
-    return name;
-}
+        await SecureStoragePlugin.set({ key, value });
+        console.log(`✅ [VAULT] Secret '${key}' verrouillé dans l'enclave matérielle.`);
+    },
+
+    /**
+     * 🔓 Load a secret from the vault.
+     */
+    async loadSecret(key: VaultKey): Promise<string | null> {
+        if (!Capacitor.isNativePlatform()) return null;
+
+        try {
+            // 1. Vérification proactive pour éviter le crash natif
+            const { value: keys } = await SecureStoragePlugin.keys();
+            if (!keys.includes(key)) {
+                console.log(`[VAULT] Clé '${key}' introuvable dans l'enclave (Ignoré en douceur).`);
+                return null;
+            }
+
+            // 2. Lecture sécurisée sans risque de crash
+            const result = await SecureStoragePlugin.get({ key });
+            return result.value || null;
+        } catch (error) {
+            console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
+            return null;
+        }
+    },
+
+    /**
+     * 🧬 Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
+     * Use this whenever highly sensitive keys are needed.
+     */
+    async unlockAndLoad(key: VaultKey, reason: string = "Accès sécurisé requis"): Promise<string | null> {
+        try {
+            // 1. Biometric Challenge
+            const available = await NativeBiometric.isAvailable();
+            if (available.isAvailable) {
+                await NativeBiometric.verifyIdentity({
+                    reason,
+                    title: "Authentification Cyber-Sécurité",
+                    subtitle: "Déverrouillage de l'enclave biométrique",
+                    description: "Accès requis pour le déchiffrement des données.",
+                    negativeButtonText: "Annuler"
+                });
+            } else {
+                console.warn("⚠️ Biométrie indisponible. Tentative de lecture directe (Mode dégradé).");
+            }
+
+            // 2. Retrieval
+            return await this.loadSecret(key);
+        } catch (error) {
+            console.error("❌ [VAULT] Échec du déverrouillage :", error);
+            throw new Error("Authentification échouée. Accès au coffre-fort refusé.");
+        }
+    },
+
+    /**
+     * 🧹 Emergency Purge: Wipe ALL keys from the vault.
+     * To be called on logout or security breach detection.
+     */
+    async wipeKeys(): Promise<void> {
+        if (!Capacitor.isNativePlatform()) return;
+
+        try {
+            const keys = Object.values(VaultKey);
+            for (const key of keys) {
+                await SecureStoragePlugin.remove({ key });
+            }
+            console.log("🧨 [VAULT] Purge d'urgence effectuée. Toutes les clés supprimées.");
+        } catch (error) {
+            console.error("❌ [VAULT] Erreur lors de la purge :", error);
+        }
+    }
+};
 </file>
 
 <file path="app/(routes)/cortex/invitation/page.tsx">
@@ -4112,164 +3490,6 @@ export async function POST(request: Request) {
 }
 </file>
 
-<file path="app/api/connection/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
-
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) return null;
-    return user;
-}
-
-export async function GET(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, incoming: [], active: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const prismaRLS = getPrismaForUser(user.id);
-        const incoming = await prismaRLS.connection.findMany({
-            where: { receiverId: user.id, status: "PENDING" },
-            include: { initiator: true },
-            orderBy: { createdAt: 'desc' }
-        });
-        const active = await prismaRLS.connection.findMany({
-            where: { OR: [{ initiatorId: user.id }, { receiverId: user.id }], status: "ACCEPTED" },
-            include: { initiator: true, receiver: true },
-            orderBy: { createdAt: 'desc' }
-        });
-
-        return NextResponse.json({ success: true, incoming, active });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-export async function POST(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const prismaRLS = getPrismaForUser(user.id);
-        const idempotencyKey = request.headers.get('x-idempotency-key');
-        const body = await request.json();
-        const { action } = body;
-
-        if (action === 'request') {
-            const { targetId } = body;
-            if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
-            if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
-
-            // On utilise prisma (global) pour bypasser RLS sur la vérification de l'existence
-            // (car on peut vouloir savoir si on est déjà connecté à quelqu'un d'autre)
-            const existing = await prisma.connection.findFirst({
-                where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
-            });
-            if (existing) {
-                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
-                return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
-            }
-
-            await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
-
-            // Si on vient d'un Radar, on met à jour le statut de l'opportunité
-            const { oppId } = body;
-            if (oppId) {
-                await prisma.opportunity.update({
-                    where: { id: oppId },
-                    data: { status: 'INVITED' }
-                });
-            }
-
-            return NextResponse.json({ success: true });
-        }
-
-        if (action === 'accept') {
-            const { connectionId, oppId } = body;
-
-            if (oppId) {
-                // 🛡️ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
-                const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
-                if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
-                    return NextResponse.json({ success: false, error: 'Opportunité introuvable ou non autorisée pour acceptation' }, { status: 404 });
-                }
-
-                // Check if opportunity is already accepted
-                if (opp.status === 'ACCEPTED') {
-                    console.log(`🛡️ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
-                    return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
-                }
-
-                // Acceptation idempotente : on cherche si une connexion existe déjà
-                const existing = await prisma.connection.findFirst({
-                    where: {
-                        OR: [
-                            { initiatorId: opp.sourceId, receiverId: opp.targetId },
-                            { initiatorId: opp.targetId, receiverId: opp.sourceId }
-                        ]
-                    }
-                });
-
-                if (existing) {
-                    await prisma.connection.update({
-                        where: { id: existing.id },
-                        data: { status: "ACCEPTED" }
-                    });
-                } else {
-                    await prisma.connection.create({
-                        data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: "ACCEPTED" }
-                    });
-                }
-
-                await prisma.opportunity.update({ where: { id: oppId }, data: { status: "ACCEPTED" } });
-                return NextResponse.json({ success: true });
-            }
-
-            const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
-            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
-            
-            if (conn.status === 'ACCEPTED') {
-                console.log(`🛡️ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
-                return NextResponse.json({ success: true, message: 'Already accepted' });
-            }
-
-            const result = await prisma.connection.updateMany({
-                where: { id: connectionId, receiverId: user.id, status: "PENDING" },
-                data: { status: "ACCEPTED" }
-            });
-            if (result.count === 0) return NextResponse.json({ success: false, error: 'Accès refusé ou statut invalide' }, { status: 403 });
-            return NextResponse.json({ success: true });
-        }
-
-        return NextResponse.json({ success: false, error: `Action non reconnue: ${action}` }, { status: 400 });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-</file>
-
 <file path="app/api/cron/daily-report/route.ts">
 export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
@@ -4299,6 +3519,90 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, processed: topMatches.length });
     } catch (e) {
         return NextResponse.json({ success: false, error: e }, { status: 500 });
+    }
+}
+</file>
+
+<file path="app/api/cron/radar/route.ts">
+export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+/**
+ * Radar CRON API Route - Optimized Refactoring
+ * Focus: High-performance vector matching (O(N log N)) without expensive Mistral AI calls.
+ */
+export async function GET(req: NextRequest) {
+    // 1. Security Check
+    const authHeader = req.headers.get('Authorization');
+    const secret = process.env.CRON_SECRET;
+
+    if (!secret || authHeader !== `Bearer ${secret}`) {
+        console.error("🚨 [CRON-RADAR] Unauthorized access blocked.");
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Theme Selection & Embedding Mapping
+    const theme = req.nextUrl.searchParams.get('theme') || 'work';
+    const embeddingField = theme === 'dating' ? 'social_embedding' : (theme === 'hobby' ? 'hobby_embedding' : 'unifiedEmbedding');
+
+    console.log(`🚀 [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
+
+    try {
+        // 3. Optimized Vector Cross-Matching
+        // Find all pairs (p1, p2) with similarity > 0.8 that don't already have an opportunity record.
+        // Similarity formula: 1 - (vector_distance)
+        const newMatches: any[] = await prisma.$queryRawUnsafe(`
+            SELECT 
+                p1.id as "sourceId",
+                p2.id as "targetId",
+                1 - (p1."${embeddingField}" <=> p2."${embeddingField}") as similarity
+            FROM "Profile" p1
+            JOIN "Profile" p2 ON p1.id < p2.id
+            WHERE p1."${embeddingField}" IS NOT NULL
+            AND p2."${embeddingField}" IS NOT NULL
+            AND 1 - (p1."${embeddingField}" <=> p2."${embeddingField}") > 0.8
+            AND NOT EXISTS (
+                SELECT 1 FROM "Opportunity" o 
+                WHERE (o."sourceId" = p1.id AND o."targetId" = p2.id)
+                OR (o."sourceId" = p2.id AND o."targetId" = p1.id)
+            )
+            LIMIT 250;
+        `);
+
+        if (newMatches.length === 0) {
+            return NextResponse.json({ success: true, message: "No new opportunities found.", created: 0 });
+        }
+
+        // 4. Batch Preparing & Insertion
+        const opportunitiesData = newMatches.map(m => ({
+            sourceId: m.sourceId,
+            targetId: m.targetId,
+            matchScore: Math.round(m.similarity * 100),
+            synergies: "Synergie sémantique détectée par le Radar (Auto-Detection).",
+            status: 'DETECTED',
+            audit: null,
+            title: `Opportunité ${theme.toUpperCase()}`
+        }));
+
+        // Efficient batch insert to minimize DB roundtrips
+        const result = await prisma.opportunity.createMany({
+            data: opportunitiesData,
+            skipDuplicates: true
+        });
+
+        console.log(`✅ [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
+
+        return NextResponse.json({
+            success: true,
+            created: result.count,
+            found: newMatches.length,
+            theme
+        });
+
+    } catch (error: any) {
+        console.error("🔥 [CRON-RADAR] Critical Failure:", error.message);
+        return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
 </file>
@@ -4350,6 +3654,293 @@ export const { GET, POST, PUT } = serve({
         processRadarMatch,
     ],
 });
+</file>
+
+<file path="app/api/profile/hobby/route.ts">
+export const dynamic = 'force-dynamic';
+
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
+import { getPrismaForUser, prisma } from '@/lib/prisma';
+
+// 1. Initialisation du Client Mistral
+const mistral = new Mistral({
+    apiKey: process.env.MISTRAL_API_KEY || '',
+});
+
+/**
+ * Hobby Prism API - Profile Hobby Module
+ * Handles JWT authentication and real-time AI Vectorization for Hobbies.
+ */
+export async function PATCH(req: Request) {
+    try {
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
+        }
+        const token = authHeader.split(' ')[1];
+
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { sector, role, bio, activePrism } = body;
+
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // 5. Étape A : Mise à jour des données classiques
+        await prismaRLS.profile.update({
+            where: { id: user.id },
+            data: {
+                hobbySector: sector,
+                hobbyRole: role,
+                hobbyBio: bio,
+                activePrism: activePrism || 'HOBBY'
+            }
+        });
+
+        // 6. Étape B : Vectorisation Mistral
+        let vectorized = false;
+        if (bio && bio.trim().length > 10) {
+            try {
+                const embeddingResponse = await mistral.embeddings.create({
+                    model: 'mistral-embed',
+                    inputs: [bio],
+                });
+
+                const vector = embeddingResponse.data[0].embedding;
+
+                if (vector && vector.length === 1024) {
+                    const vectorString = `[${vector.join(',')}]`;
+
+                    await prisma.$executeRaw`
+                        UPDATE "Profile" 
+                        SET "hobby_embedding" = ${vectorString}::vector 
+                        WHERE id = ${user.id}
+                    `;
+                    vectorized = true;
+                }
+            } catch (iaError) {
+                console.error('[MISTRAL_HOBBY_ERROR] Vectorization skipped:', iaError);
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            vectorized,
+            message: 'Profil Hobbies synchronisé'
+        });
+
+    } catch (error: any) {
+        console.error('[HOBBY_PROFILE_ERROR]', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+export const POST = PATCH;
+</file>
+
+<file path="app/api/profile/social/route.ts">
+export const dynamic = 'force-dynamic';
+
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
+import { getPrismaForUser, prisma } from '@/lib/prisma';
+
+// 1. Initialisation du Client Mistral
+const mistral = new Mistral({
+    apiKey: process.env.MISTRAL_API_KEY || '',
+});
+
+/**
+ * Social Prism API - Profile Social Module
+ * Handles JWT authentication and real-time AI Vectorization for Social goals.
+ */
+export async function PATCH(req: Request) {
+    try {
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
+        }
+        const token = authHeader.split(' ')[1];
+
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await req.json();
+        const { sector, role, bio, activePrism } = body;
+
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // 5. Étape A : Mise à jour des données classiques
+        await prismaRLS.profile.update({
+            where: { id: user.id },
+            data: {
+                socialSector: sector,
+                socialRole: role,
+                socialBio: bio,
+                activePrism: activePrism || 'SOCIAL'
+            }
+        });
+
+        // 6. Étape B : Vectorisation Mistral
+        let vectorized = false;
+        if (bio && bio.trim().length > 10) {
+            try {
+                const embeddingResponse = await mistral.embeddings.create({
+                    model: 'mistral-embed',
+                    inputs: [bio],
+                });
+
+                const vector = embeddingResponse.data[0].embedding;
+
+                if (vector && vector.length === 1024) {
+                    const vectorString = `[${vector.join(',')}]`;
+
+                    await prisma.$executeRaw`
+                        UPDATE "Profile" 
+                        SET "social_embedding" = ${vectorString}::vector 
+                        WHERE id = ${user.id}
+                    `;
+                    vectorized = true;
+                }
+            } catch (iaError) {
+                console.error('[MISTRAL_SOCIAL_ERROR] Vectorization skipped:', iaError);
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            vectorized,
+            message: vectorized ? 'Profil Social synchronisé et vectorisé' : 'Profil Social synchronisé (Vecteur ignoré ou erreur AI)'
+        });
+
+    } catch (error: any) {
+        console.error('[SOCIAL_PROFILE_ERROR]', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+export const POST = PATCH;
+</file>
+
+<file path="app/api/profile/work/route.ts">
+export const dynamic = 'force-dynamic';
+
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { Mistral } from '@mistralai/mistralai';
+import { getPrismaForUser, prisma } from '@/lib/prisma';
+
+// 1. Initialisation du Client Mistral (Senior Backend Standard)
+const mistral = new Mistral({
+    apiKey: process.env.MISTRAL_API_KEY || '',
+});
+
+/**
+ * Senior Production API - Profile Work Module (The Fortress)
+ * Handles strict JWT authentication and real-time AI Vectorization (Mistral 1024d)
+ */
+export async function PATCH(req: Request) {
+    try {
+        // 2. Extraction stricte du Bearer Token (Mobile-First)
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Missing or invalid Bearer token' }, { status: 401 });
+        }
+        const token = authHeader.split(' ')[1];
+
+        // 3. Validation Supabase
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // 4. Validation du Payload (Hard Filters)
+        const body = await req.json();
+        const { sector, primaryRole, tjm, availability, bio, activePrism } = body;
+
+        if (!primaryRole || !availability) {
+            return NextResponse.json({ error: 'Hard filters missing (Role/Availability)' }, { status: 400 });
+        }
+
+        const prismaRLS = getPrismaForUser(user.id);
+        const tjmValue = typeof tjm === 'number' ? tjm : parseInt(tjm, 10) || 0;
+
+        // 5. Étape A : Mise à jour des données classiques (Prisma)
+        await prismaRLS.profile.update({
+            where: { id: user.id },
+            data: {
+                sector,
+                primaryRole,
+                tjm: tjmValue,
+                availability,
+                bio,
+                activePrism: activePrism || 'WORK'
+            }
+        });
+
+        // 6. Étape B : Vectorisation Mistral (pgvector 1024d)
+        let vectorized = false;
+        if (bio && bio.trim().length > 10) {
+            try {
+                // Appel au modèle mistral-embed (Optimisé pour RAG)
+                const embeddingResponse = await mistral.embeddings.create({
+                    model: 'mistral-embed',
+                    inputs: [bio],
+                });
+
+                const vector = embeddingResponse.data[0].embedding;
+
+                if (vector && vector.length === 1024) {
+                    // Injection SQL brute sécurisée pour le type 'vector' de pgvector
+                    // On utilise format standard [x,y,z] pour pgvector
+                    const vectorString = `[${vector.join(',')}]`;
+
+                    await prisma.$executeRaw`
+                        UPDATE "Profile" 
+                        SET "bioEmbedding" = ${vectorString}::vector 
+                        WHERE id = ${user.id}
+                    `;
+                    vectorized = true;
+                }
+            } catch (iaError) {
+                // L'IA est optionnelle : on ne bloque pas l'expérience utilisateur si Mistral est offline
+                console.error('[MISTRAL_AI_ERROR] Vectorization skipped:', iaError);
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            vectorized,
+            message: vectorized ? 'Profil synchronisé et vectorisé' : 'Profil synchronisé (Vecteur ignoré ou erreur AI)'
+        });
+
+    } catch (error: any) {
+        console.error('[WORK_PROFILE_ERROR]', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+export const POST = PATCH;
 </file>
 
 <file path="app/api/sync-cortex/route.ts">
@@ -4681,6 +4272,157 @@ export default function NavBadge() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
         </span>
+    );
+}
+</file>
+
+<file path="app/components/SecureMessageBubble.tsx">
+'use client';
+
+import { useState, useEffect } from 'react';
+import { decryptLocal } from '@/lib/crypto-client';
+import { TranslationManager } from '@/lib/translation-client';
+import { Loader2, Lock, Languages } from 'lucide-react';
+
+export function SecureMessageBubble({
+    id,
+    encryptedPayload,
+    sharedKey,
+    isSender,
+    onDecrypted
+}: {
+    id: string,
+    encryptedPayload: string,
+    sharedKey: CryptoKey | null,
+    isSender: boolean,
+    onDecrypted?: (id: string, clearText: string, isSender: boolean) => void
+}) {
+    const [clearText, setClearText] = useState<string | null>(null);
+    const [translatedText, setTranslatedText] = useState<string | null>(null);
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translationProgress, setTranslationProgress] = useState(0);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function decode() {
+            if (!encryptedPayload.startsWith('🧠')) {
+                if (isMounted) {
+                    setClearText(encryptedPayload);
+                    if (onDecrypted) onDecrypted(id, encryptedPayload, isSender);
+                }
+                return;
+            }
+
+            if (!sharedKey) return;
+
+            try {
+                const decrypted = await decryptLocal(encryptedPayload, sharedKey);
+                console.log(`[TRADUCTION] Texte déchiffré: "${decrypted.substring(0, 30)}..."`);
+                console.log(`[TRADUCTION] Langue cible: ${TranslationManager.getTargetLanguage()}`);
+
+                if (isMounted) {
+                    setClearText(decrypted);
+                    if (onDecrypted) onDecrypted(id, decrypted, isSender);
+
+                    if (!isSender) {
+                        tryAutoTranslate(decrypted);
+                    }
+                }
+            } catch (err) {
+                console.error("Échec du déchiffrement", err);
+                if (isMounted) setError(true);
+            }
+        }
+
+        async function tryAutoTranslate(text: string) {
+            const targetLang = TranslationManager.getTargetLanguage();
+            
+            if (text.length > 3) {
+                console.log(`[TRADUCTION] Tentative de traduction vers: ${targetLang}`);
+                
+                setIsTranslating(true);
+                TranslationManager.init((progress) => {
+                    if (isMounted) setTranslationProgress(progress);
+                });
+
+                try {
+                    const result = await TranslationManager.translate(text, targetLang);
+                    
+                    if (isMounted) {
+                        if (result.trim().toLowerCase() === text.trim().toLowerCase()) {
+                            console.log('[TRADUCTION] Ignorée: Langue source = Langue cible');
+                            setTranslatedText(null);
+                        } else {
+                            console.log(`[TRADUCTION] Succès: "${result.substring(0, 30)}..."`);
+                            setTranslatedText(result);
+                        }
+                    }
+                } catch (e) {
+                    console.error("[TRADUCTION] Erreur critique:", e);
+                } finally {
+                    if (isMounted) setIsTranslating(false);
+                }
+            } else {
+                console.log('[TRADUCTION] Texte trop court, ignoré.');
+            }
+        }
+
+        decode();
+        return () => { isMounted = false; };
+    }, [encryptedPayload, sharedKey, isSender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const bubbleAlignClass = isSender ? 'self-end items-end' : 'self-start items-start';
+    const bubbleColorClass = isSender
+        ? 'bg-blue-600/20 border-blue-500/30 text-blue-100'
+        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300';
+
+    return (
+        <div className={`flex flex-col max-w-[80%] mb-4 ${bubbleAlignClass}`}>
+            <div className={`px-4 py-3 rounded-2xl shadow-lg border relative group ${bubbleColorClass}`}>
+                {error ? (
+                    <span className="text-red-400 text-sm flex items-center gap-2">
+                        <Lock className="w-4 h-4" /> <i>Verrouillé (Clé manquante)</i>
+                    </span>
+                ) : clearText === null ? (
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                        <span className="text-xs text-zinc-400">Déchiffrement...</span>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-sm md:text-base whitespace-pre-wrap">{clearText}</p>
+                        
+                        {/* Affichage de la traduction si disponible */}
+                        {translatedText && (
+                            <div className="mt-2 pt-2 border-t border-white/5 animate-in fade-in duration-500">
+                                <p className="text-sm text-zinc-400 italic font-light">{translatedText}</p>
+                                <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1 uppercase tracking-widest font-bold opacity-60">
+                                    <Languages className="w-3 h-3" /> (traduit)
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Barre de progression du téléchargement de modèle */}
+                        {isTranslating && !translatedText && translationProgress > 0 && translationProgress < 100 && (
+                            <div className="mt-2 text-[9px] text-emerald-500 uppercase font-mono tracking-tighter flex flex-col gap-1">
+                                <div className="flex justify-between">
+                                    <span>Téléchargement module IA...</span>
+                                    <span>{Math.round(translationProgress)}%</span>
+                                </div>
+                                <div className="w-full h-0.5 bg-zinc-900 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-emerald-500 transition-all duration-300" 
+                                        style={{ width: `${translationProgress}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
     );
 }
 </file>
@@ -5490,215 +5232,6 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
 }
 </file>
 
-<file path="lib/crypto-client.ts">
-import { Capacitor } from '@capacitor/core';
-import { VaultManager, VaultKey } from './vault-manager';
-import * as bip39 from 'bip39';
-
-// =====================================================
-// 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
-// =====================================================
-
-/**
- * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
- * Ne retourne QUE la clé publique à envoyer au serveur.
- * La clé privée est séquestrée dans la puce matérielle via VaultManager.
- */
-export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
-    try {
-        // A. Génération des 12 mots
-        const mnemonic = bip39.generateMnemonic();
-
-        // B. Génération Mathématique de la paire ECDH
-        const keyPair = await crypto.subtle.generateKey(
-            { name: "ECDH", namedCurve: "P-256" },
-            true,
-            ["deriveKey", "deriveBits"]
-        );
-
-        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
-        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
-
-        // C. Le Bouclier Matériel (Zero-Tolerance)
-        if (Capacitor.isNativePlatform()) {
-            await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
-            await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
-        } else {
-            // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
-            throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
-        }
-
-        // D. On ne renvoie que ce qui est publiable
-        return { publicKeyJwk, mnemonic };
-
-    } catch (error: any) {
-        console.error("❌ [CRYPTO FATAL ERROR]:", error.message);
-        throw error;
-    }
-}
-
-// Rétrocompatibilité : alias pour l'ancien nom
-export const generateIdentity = generateAndStoreKeyPair;
-
-/**
- * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
- */
-export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
-    const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
-    if (value) {
-        return JSON.parse(value) as JsonWebKey;
-    }
-    return null;
-}
-
-// Rétrocompatibilité : alias pour l'ancien nom
-export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
-    const key = await getLocalPrivateKey();
-    if (!key) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
-    return key;
-}
-
-/**
- * Restauration depuis la Phrase Secrète (BIP39).
- */
-export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
-    if (!bip39.validateMnemonic(mnemonic)) {
-        throw new Error("Phrase secrète invalide.");
-    }
-
-    const keyPair = await crypto.subtle.generateKey(
-        { name: "ECDH", namedCurve: "P-256" },
-        true,
-        ["deriveKey", "deriveBits"]
-    );
-
-    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
-    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
-
-    if (Capacitor.isNativePlatform()) {
-        await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
-        await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain via VaultManager.");
-    } else {
-        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté.");
-    }
-
-    return { publicKeyJwk };
-}
-
-// =====================================================
-// 🔑 ECDH KEY EXCHANGE
-// =====================================================
-
-/**
- * Calculer la clé partagée AES-GCM (quand tu ouvres un chat).
- */
-export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
-    const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
-
-    const privateKey = await crypto.subtle.importKey(
-        "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
-    );
-
-    const publicKey = await crypto.subtle.importKey(
-        "jwk", otherPersonPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []
-    );
-
-    const sharedKey = await crypto.subtle.deriveKey(
-        { name: "ECDH", public: publicKey },
-        privateKey,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-    );
-
-    return sharedKey;
-}
-
-// =====================================================
-// 🔒 CHIFFREMENT / DÉCHIFFREMENT AES-GCM
-// =====================================================
-
-export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encoded = new TextEncoder().encode(plaintext);
-
-    const cipherBuffer = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        sharedKey,
-        encoded
-    );
-
-    const ivB64 = arrayBufferToBase64(iv);
-    const cipherB64 = arrayBufferToBase64(new Uint8Array(cipherBuffer));
-
-    return `${ivB64}:${cipherB64}`;
-}
-
-const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
-
-export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
-    try {
-        const cleanPayload = encryptedPayload.replace('🧠 ', '').trim();
-
-        if (!cleanPayload.includes(':')) {
-            return encryptedPayload;
-        }
-
-        const parts = cleanPayload.split(':');
-        let iv: Uint8Array;
-        let cipherData: Uint8Array;
-
-        if (parts.length === 3) {
-            iv = hexToBuffer(parts[0]);
-            const authTag = hexToBuffer(parts[1]);
-            const ciphertext = hexToBuffer(parts[2]);
-            cipherData = new Uint8Array(ciphertext.length + authTag.length);
-            cipherData.set(ciphertext);
-            cipherData.set(authTag, ciphertext.length);
-        } else if (parts.length === 2) {
-            iv = base64ToArrayBuffer(parts[0]);
-            cipherData = base64ToArrayBuffer(parts[1]);
-        } else {
-            return encryptedPayload;
-        }
-
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv as BufferSource },
-            sharedKey,
-            cipherData as BufferSource
-        );
-
-        return new TextDecoder().decode(decrypted);
-    } catch (e) {
-        console.error("Échec déchiffrement:", e);
-        return "🔒 Message chiffré illisible";
-    }
-}
-
-// =====================================================
-// 🛠️ UTILITAIRES
-// =====================================================
-
-function arrayBufferToBase64(buffer: Uint8Array): string {
-    let binary = '';
-    for (let i = 0; i < buffer.byteLength; i++) {
-        binary += String.fromCharCode(buffer[i]);
-    }
-    return btoa(binary);
-}
-
-function base64ToArrayBuffer(base64: string): Uint8Array {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-}
-</file>
-
 <file path="lib/firebase-admin.ts">
 import * as admin from 'firebase-admin';
 
@@ -5957,6 +5490,86 @@ export async function processDeepNegotiation(negotiationId: string) {
 }
 </file>
 
+<file path="lib/local-db/init.ts">
+import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { useKeyStore } from '@/store/keyStore';
+import { LOCAL_SCHEMA } from './schema';
+
+const sqlite = new SQLiteConnection(CapacitorSQLite);
+
+// ⚡ LE SINGLETON : Il garde la base de données active en mémoire
+let dbInstance: SQLiteDBConnection | null = null;
+
+export const initLocalDatabase = async () => {
+    try {
+        const secretKey = useKeyStore.getState().masterKey;
+        if (!secretKey) throw new Error("Accès refusé : Clé biométrique manquante.");
+
+        const db = await sqlite.createConnection(
+            'ipse_twin_db',
+            false,
+            'no-encryption', // À remplacer par 'encryption' avec le secret en prod
+            1,
+            false
+        );
+
+        await db.open();
+        await db.execute(LOCAL_SCHEMA);
+
+        // 🛠️ Migration tactique : ajout de la colonne idempotencyKey si absente
+        try {
+            await db.execute("ALTER TABLE mutation_queue ADD COLUMN idempotencyKey TEXT UNIQUE");
+        } catch (e) {
+            // La colonne existe déjà probablement, on ignore silencieusement
+        }
+
+        // On sauvegarde la connexion pour le reste de l'application
+        dbInstance = db;
+
+        console.log("🟢 Bunker Local Initialisé");
+        return db;
+    } catch (error) {
+        console.error("🔴 Échec de l'initialisation locale", error);
+        throw error;
+    }
+};
+
+// ⚡ L'EXTRACTEUR : Utilisé par ton Sync Engine pour faire des requêtes
+export const getLocalDb = (): SQLiteDBConnection => {
+    if (!dbInstance) {
+        throw new Error("FATAL: Tentative d'accès à la DB locale avant son initialisation par le Gatekeeper.");
+    }
+    return dbInstance;
+};
+</file>
+
+<file path="lib/local-db/schema.ts">
+export const LOCAL_SCHEMA = `
+  -- Table pour stocker les alertes et opportunités hors-ligne
+  CREATE TABLE IF NOT EXISTS opportunities (
+    id TEXT PRIMARY KEY,
+    sourceId TEXT,
+    targetId TEXT,
+    matchScore INTEGER,
+    summary TEXT,
+    status TEXT,
+    createdAt TEXT
+  );
+
+  -- ⚡ LE CŒUR DU MODE HORS-LIGNE ⚡
+  -- Toute action faite sans internet va ici
+  CREATE TABLE IF NOT EXISTS mutation_queue (
+    id TEXT PRIMARY KEY,
+    endpoint TEXT NOT NULL,          -- ex: '/api/opportunities/accept'
+    method TEXT NOT NULL,            -- 'POST', 'PATCH'
+    payload TEXT NOT NULL,           -- JSON stringifié des données
+    status TEXT DEFAULT 'PENDING',   -- 'PENDING', 'SYNCED', 'FAILED'
+    idempotencyKey TEXT UNIQUE,      -- 🛡️ Clé d'idempotence UUID v4
+    createdAt TEXT NOT NULL
+  );
+`;
+</file>
+
 <file path="lib/supabase/client.ts">
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -5973,427 +5586,23 @@ export const createClient = () => {
 }
 </file>
 
-<file path="lib/sync/engine.ts">
-import { Network } from '@capacitor/network';
-import { getApiUrl } from '@/lib/api';
-import { createClient } from '../supabaseBrowser';
-import { getLocalDb } from '../local-db/init';
+<file path="lib/utils.ts">
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-/**
- * 🛠️ SYNC ENGINE - Idempotent & Offline-First
- * Implements UUID v4 Idempotency, 401 Auth Recovery, and Exponential Backoff.
- */
-
-const MAX_RETRY_DELAY = 60000; // 1 minute
-const INITIAL_RETRY_DELAY = 1000; // 1 second
-let isSyncing = false;
-
-export const performAction = async (endpoint: string, method: string, payload: any) => {
-    const status = await Network.getStatus();
-    const idempotencyKey = crypto.randomUUID(); // Mandatory UUID v4
-
-    if (status.connected) {
-        try {
-            const response = await fetchWithAuth(endpoint, method, payload, idempotencyKey);
-            
-            if (response.ok) return await response.json();
-            
-            // If 401, it's better to queue and let the flush handle the refresh logic
-            if (response.status === 401) {
-                console.warn("🔐 401 detected in immediate action. Queuing for background recovery.");
-            }
-            
-            return await queueMutation(endpoint, method, payload, idempotencyKey);
-        } catch (e) {
-            console.error("⚠️ Immediate fetch failed, queuing:", e);
-            return await queueMutation(endpoint, method, payload, idempotencyKey);
-        }
-    } else {
-        return await queueMutation(endpoint, method, payload, idempotencyKey);
-    }
-};
-
-const fetchWithAuth = async (endpoint: string, method: string, payload: any, idempotencyKey: string) => {
-    const supabase = createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const headers: any = { 
-        'Content-Type': 'application/json',
-        'x-idempotency-key': idempotencyKey 
-    };
-    
-    if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-    return await fetch(getApiUrl(endpoint), {
-        method,
-        headers,
-        body: JSON.stringify(payload)
-    });
-};
-
-const queueMutation = async (endpoint: string, method: string, payload: any, idempotencyKey: string) => {
-    const db = await getLocalDb();
-    const id = crypto.randomUUID();
-
-    const query = `INSERT INTO mutation_queue (id, endpoint, method, payload, idempotencyKey, createdAt, status) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-
-    await db.run(query, [
-        id, 
-        endpoint, 
-        method, 
-        JSON.stringify(payload), 
-        idempotencyKey, 
-        new Date().toISOString(),
-        'PENDING'
-    ]);
-
-    // Proactively trigger flush if online
-    const status = await Network.getStatus();
-    if (status.connected) flushMutationQueue();
-
-    return { success: true, offline: true, idempotencyKey };
-};
-
-export const setupBackgroundSync = () => {
-    Network.addListener('networkStatusChange', async (status) => {
-        if (status.connected) {
-            console.log("🌐 Network Restored: Triggering Flush.");
-            await flushMutationQueue();
-        }
-    });
-};
-
-export const flushMutationQueue = async () => {
-    if (isSyncing) return;
-    isSyncing = true;
-
-    try {
-        const db = await getLocalDb();
-        const result = await db.query("SELECT * FROM mutation_queue WHERE status = 'PENDING' ORDER BY createdAt ASC");
-        const mutations = result.values || [];
-
-        if (mutations.length === 0) {
-            isSyncing = false;
-            return;
-        }
-
-        console.log(`📡 [SYNC] Processing ${mutations.length} mutations...`);
-
-        for (const mutation of mutations) {
-            let success = false;
-            let retryDelay = INITIAL_RETRY_DELAY;
-            let attempts = 0;
-
-            while (!success && attempts < 8) {
-                try {
-                    const response = await fetchWithAuth(
-                        mutation.endpoint, 
-                        mutation.method, 
-                        JSON.parse(mutation.payload), 
-                        mutation.idempotencyKey
-                    );
-
-                    if (response.ok) {
-                        await db.run("UPDATE mutation_queue SET status = 'SYNCED' WHERE id = ?", [mutation.id]);
-                        success = true;
-                    } else if (response.status === 401) {
-                        // 🔐 Session recovery logic
-                        console.warn("🔐 401: Attempting session refresh...");
-                        const supabase = createClient();
-                        const { error } = await supabase.auth.refreshSession();
-                        
-                        if (error) {
-                            console.error("❌ Refresh failed. Sync paused until next trigger.");
-                            isSyncing = false;
-                            return; 
-                        }
-                        // Continue loop to retry with fresh token
-                        console.log("✅ Session refreshed. Retrying mutation.");
-                    } else if (response.status >= 500) {
-                        throw new Error(`Server Error: ${response.status}`);
-                    } else {
-                        // 4xx other than 401: Definitive failure
-                        console.error(`❌ Mutation ${mutation.id} failed with ${response.status}`);
-                        await db.run("UPDATE mutation_queue SET status = 'FAILED' WHERE id = ?", [mutation.id]);
-                        success = true;
-                    }
-                } catch (error) {
-                    attempts++;
-                    if (attempts >= 8) {
-                        console.error(`🔥 Max retries for ${mutation.id}. Giving up.`);
-                        break;
-                    }
-                    console.warn(`⏳ Network retry ${attempts} in ${retryDelay}ms...`);
-                    await new Promise(r => setTimeout(r, retryDelay));
-                    retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
-                }
-            }
-        }
-    } catch (err) {
-        console.error("🔥 Sync Engine Critical:", err);
-    } finally {
-        isSyncing = false;
-    }
-};
-</file>
-
-<file path="public/messages/en.json">
-{
-    "navigation": {
-        "radar": "Radar",
-        "cortex": "Cortex",
-        "identity": "Identity"
-    },
-    "profile": {
-        "title": "My Prism",
-        "subtitle": "Configure the multiple facets of your identity",
-        "tabs": {
-            "identity": "Identity",
-            "work": "Work",
-            "social": "Circle",
-            "hobby": "Passions",
-            "settings": "Settings"
-        },
-        "identity": {
-            "pseudo": "Username",
-            "age": "Age",
-            "sex": "Gender",
-            "sex_placeholder": "Select",
-            "sex_options": {
-                "male": "Male",
-                "female": "Female",
-                "other": "Other"
-            },
-            "city": "City",
-            "country": "Country",
-            "update_btn": "Update Identity"
-        },
-        "work": {
-            "tjm": "Daily Rate (TJM)",
-            "availability": "Availability",
-            "update_btn": "Update Work Prism"
-        },
-        "social": {
-            "update_btn": "Update Social Prism"
-        },
-        "hobby": {
-            "update_btn": "Update Hobby Prism"
-        },
-        "common": {
-            "dimension": "Exchange Dimension",
-            "position": "Typological Positioning",
-            "bio": "Semantic Bio (Mistral Vector)",
-            "bio_placeholder": "Detail your nuances here... Our Mistral AI will analyze this text to find the best matches for you.",
-            "syncing": "Syncing...",
-            "encrypt_note": "Changes are encrypted and vectorized in real time."
-        },
-        "sectors": {
-            "TECH": "Tech & Digital",
-            "DESIGN": "Design & Creative",
-            "BUSINESS": "Business & Sales",
-            "MANAGEMENT": "Admin & Management",
-            "HEALTH": "Health & Welness",
-            "INDUSTRY": "Craft & Industry",
-            "OTHER": "Other",
-            "FRIENDSHIP": "Friendship & Social",
-            "DATING": "Dating (Soul)",
-            "MENTORING": "Mentoring",
-            "COMMUNITY": "Community / Cause",
-            "PROFESSIONAL": "Networking",
-            "SPORT": "Sport & Fitness",
-            "ARTS": "Art & Culture",
-            "GAMING": "Gaming",
-            "TRAVEL": "Travel & Nature",
-            "FOOD": "Food & Wine"
-        },
-        "availabilities": {
-            "IMMEDIATE": "Immediate",
-            "ONE_MONTH": "Within 1 month",
-            "UNAVAILABLE": "Unavailable"
-        },
-        "settings": {
-            "logout": "Logout"
-        }
-    },
-    "radar": {
-        "title": "Semantic Radar",
-        "subtitle": "Discover profiles that resonate with your intent",
-        "search_placeholder": "What are you looking for? (e.g., Design mentor, Tennis partner...)",
-        "filters": "Filters",
-        "match_score": "Match",
-        "connect_btn": "Create Report",
-        "empty_state": "No resonance found. Try another intention.",
-        "incoming_requests": "Incoming Requests",
-        "encrypted_link": "Wishes to establish an encrypted link",
-        "secure_channels": "Secure Channels",
-        "audit_ready": "Strategic Audit Report Ready",
-        "start_audit": "Start Strategic Audit",
-        "read_audit": "Read Cortex Audit",
-        "invite_sent": "Invitation sent. Waiting for response...",
-        "channel_request": "Channel opening request",
-        "new_invite": "New invitation",
-        "accept": "Accept",
-        "accepted": "Accepted",
-        "refuse": "Refuse",
-        "ignore": "Ignore",
-        "block": "Block",
-        "creating": "Creating...",
-        "join_chat": "Join Discussion"
-    },
-    "cortex": {
-        "title": "Cortex",
-        "subtitle": "The neural center of your Agent",
-        "memory_nodes": "Memory Nodes",
-        "system_status": "System Status",
-        "vector_space": "Vector Space",
-        "last_sync": "Last Sync",
-        "ingest": "Ingest",
-        "analyzing": "Analyzing content...",
-        "success": "Memory successfully ingested",
-        "error_size": "File exceeds 5MB limit.",
-        "error_format": "Unsupported format. Use PDF, TXT or MD.",
-        "attach_file": "Attach a document",
-        "remove_file": "Remove file",
-        "access_error": "Error accessing Cortex data",
-        "retry": "Retry",
-        "back_to_feed": "Back to Tactical Feed",
-        "no_dataset": "No dataset injected",
-        "empty_core": "Memory core is empty",
-        "fragment": "Fragment"
-    },
-    "settings": {
-        "language": "Language"
-    }
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
 }
-</file>
 
-<file path="public/messages/fr.json">
-{
-    "navigation": {
-        "radar": "Radar",
-        "cortex": "Cortex",
-        "identity": "Identité"
-    },
-    "profile": {
-        "title": "Mon Prisme",
-        "subtitle": "Configurez les multiples facettes de votre identité",
-        "tabs": {
-            "identity": "Identité",
-            "work": "Travail",
-            "social": "Cercle",
-            "hobby": "Passions",
-            "settings": "Options"
-        },
-        "identity": {
-            "pseudo": "Pseudo",
-            "age": "Âge",
-            "sex": "Sexe",
-            "sex_placeholder": "Sélectionner",
-            "sex_options": {
-                "male": "Homme",
-                "female": "Femme",
-                "other": "Autre"
-            },
-            "city": "Ville",
-            "country": "Pays",
-            "update_btn": "Mettre à jour l'identité"
-        },
-        "work": {
-            "tjm": "Honoraires (TJM)",
-            "availability": "Disponibilité",
-            "update_btn": "Mettre à jour le Prisme Work"
-        },
-        "social": {
-            "update_btn": "Mettre à jour le Prisme Social"
-        },
-        "hobby": {
-            "update_btn": "Mettre à jour le Prisme Hobby"
-        },
-        "common": {
-            "dimension": "Dimension d'échange",
-            "position": "Positionnement Typologique",
-            "bio": "Bio sémantique (Vecteur Mistral)",
-            "bio_placeholder": "Détaillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
-            "syncing": "Synchronisation...",
-            "encrypt_note": "Les modifications sont cryptées et vectorisées en temps réel."
-        },
-        "sectors": {
-            "TECH": "Tech & Digital",
-            "DESIGN": "Création & Design",
-            "BUSINESS": "Business & Vente",
-            "MANAGEMENT": "Admin & Management",
-            "HEALTH": "Santé & Bien-être",
-            "INDUSTRY": "Artisanat & Industrie",
-            "OTHER": "Autre",
-            "FRIENDSHIP": "Amitié & Social",
-            "DATING": "Rencontres (Soul)",
-            "MENTORING": "Mentorat",
-            "COMMUNITY": "Communauté / Cause",
-            "PROFESSIONAL": "Networking",
-            "SPORT": "Sport & Fitness",
-            "ARTS": "Art & Culture",
-            "GAMING": "Jeux & Gaming",
-            "TRAVEL": "Voyage & Nature",
-            "FOOD": "Gastronomie & Vin"
-        },
-        "availabilities": {
-            "IMMEDIATE": "Immédiate",
-            "ONE_MONTH": "Sous 1 mois",
-            "UNAVAILABLE": "Indisponible"
-        },
-        "settings": {
-            "logout": "Déconnexion"
-        }
-    },
-    "radar": {
-        "title": "Radar Sémantique",
-        "subtitle": "Découvrez les profils qui résonnent avec votre recherche",
-        "search_placeholder": "Que cherchez-vous ? (ex: Mentor en design, Partenaire de tennis...)",
-        "filters": "Filtres",
-        "match_score": "Correspondance",
-        "connect_btn": "Créer le rapport",
-        "empty_state": "Aucune résonance trouvée. Essayez une autre intention.",
-        "incoming_requests": "Requêtes Entrantes",
-        "encrypted_link": "Souhaite établir une liaison chiffrée",
-        "secure_channels": "Canaux Sécurisés",
-        "audit_ready": "Rapport d'Audit Stratégique Prêt",
-        "start_audit": "Lancer l'Audit Stratégique",
-        "read_audit": "Lire l'Audit Cortex",
-        "invite_sent": "Invitation envoyée. En attente de réponse...",
-        "channel_request": "Demande d'ouverture de canal",
-        "new_invite": "Nouvelle invitation",
-        "accept": "Accepter",
-        "accepted": "Accepté",
-        "refuse": "Refuser",
-        "ignore": "Ignorer",
-        "block": "Bloquer",
-        "creating": "Création...",
-        "join_chat": "Rejoindre la Discussion"
-    },
-    "cortex": {
-        "title": "Cortex",
-        "subtitle": "Le centre névralgique de votre Agent",
-        "memory_nodes": "Nœuds de mémoire",
-        "system_status": "État du système",
-        "vector_space": "Espace vectoriel",
-        "last_sync": "Dernière synchronisation",
-        "ingest": "Ingérer",
-        "analyzing": "Analyse en cours...",
-        "success": "Mémoire ingérée avec succès",
-        "error_size": "Le fichier dépasse la limite de 5Mo.",
-        "error_format": "Format non supporté. Utilisez PDF, TXT ou MD.",
-        "attach_file": "Joindre un document",
-        "remove_file": "Retirer le fichier",
-        "access_error": "Erreur d'accès aux données du Cortex",
-        "retry": "Réessayer",
-        "back_to_feed": "Retour au Tactical Feed",
-        "no_dataset": "Aucun dataset injecté",
-        "empty_core": "Le noyau mémoriel est vide",
-        "fragment": "Fragment"
-    },
-    "settings": {
-        "language": "Langue"
-    }
+// Nettoyage final : "Profil à définir"
+export function getAgentName(profile: any) {
+    // Adaptation à notre schéma : "name" au lieu de "fullName"
+    let name = "AGENT_FURTIF";
+    if (profile?.name) name = profile.name;
+    else if (profile?.id) name = `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
+
+    if (typeof name === 'object') return JSON.stringify(name);
+    return name;
 }
 </file>
 
@@ -6456,294 +5665,6 @@ next-env.d.ts
 google-services.json
 GoogleService-Info.plist
 .vercel
-</file>
-
-<file path="app/(routes)/cortex/opportunity/page.tsx">
-'use client';
-
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
-import ReactMarkdown from 'react-markdown';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
-
-function OpportunityContent() {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const oppId = searchParams.get('id');
-
-    const [opp, setOpp] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState(false);
-    const [inviteTitle, setInviteTitle] = useState('');
-
-    useEffect(() => {
-        if (!oppId) {
-            setLoading(false);
-            return;
-        }
-        const fetchOpp = async () => {
-            try {
-                const { createClient } = await import('@/lib/supabaseBrowser');
-                const supabase = createClient();
-                const { data: { session } } = await supabase.auth.getSession();
-                const headers: any = { 'Content-Type': 'application/json' };
-                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-                const res = await fetch(getApiUrl(`/api/opportunities?id=${oppId}`), { headers }).then(r => r.json());
-                if (res.success && res.opportunity) {
-                    setOpp(res.opportunity);
-                }
-            } catch (e) {
-                console.error("fetchOpp error", e);
-            }
-            setLoading(false);
-        };
-        fetchOpp();
-    }, [oppId]);
-
-    const handleAudit = async () => {
-        if (!oppId) return;
-        setActionLoading(true);
-        setOpp((prev: any) => ({ ...prev, audit: '' })); // Reset for typewriter effect
-        
-        try {
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ opportunityId: oppId })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
-                throw new Error(errorData.error || `HTTP ${response.status}`);
-            }
-
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            if (!reader) throw new Error('No stream reader available');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                setOpp((prev: any) => ({ 
-                    ...prev, 
-                    audit: (prev.audit || '') + chunk 
-                }));
-            }
-
-            setOpp((prev: any) => ({ ...prev, status: 'AUDITED' }));
-        } catch (e: any) {
-            console.error("❌ [STREAM ERROR]:", e);
-            alert(`Erreur Cortex: ${e.message}`);
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    const handleCancel = async () => {
-        if (!oppId) return;
-        setActionLoading(true);
-        try {
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            await fetch(getApiUrl(`/api/opportunities`), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'CANCELLED' })
-            });
-            router.push('/cortex');
-        } catch (e) { console.error(e) }
-    };
-
-    const handleBlock = async () => {
-        if (!oppId) return;
-        if (!confirm("Voulez-vous bloquer cet agent définitivement ?")) return;
-        setActionLoading(true);
-        try {
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            await fetch(getApiUrl(`/api/opportunities`), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'BLOCKED' })
-            });
-            router.push('/cortex');
-        } catch (e) { console.error(e) }
-    };
-
-    const handleInvite = async () => {
-        if (!oppId) return;
-        if (!inviteTitle.trim()) return alert("Veuillez saisir un titre");
-        setActionLoading(true);
-        try {
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            await fetch(getApiUrl(`/api/opportunities`), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ action: 'sendInvite', oppId, customTitle: inviteTitle })
-            });
-            router.push('/cortex');
-        } catch (e) { console.error(e) }
-    };
-
-    if (loading) return <div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
-    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
-
-    // Vue Initiale : Résumé + Match %
-    if (opp.status === "DETECTED") {
-        return (
-            <div className="max-w-xl mx-auto p-4 md:p-8 space-y-8">
-                <Link href="/cortex" className="inline-flex items-center text-zinc-400 hover:text-white mb-4">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Radar
-                </Link>
-
-                <div className="p-8 rounded-2xl bg-black border border-green-500/30 text-green-500 font-mono relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Zap className="w-32 h-32" />
-                    </div>
-
-                    <div className="flex items-center gap-3 mb-6">
-                        <Zap className="w-8 h-8 text-green-400" />
-                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
-                    </div>
-
-                    <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 mt-12 relative z-10">
-                        <button
-                            onClick={handleAudit}
-                            disabled={actionLoading}
-                            className="flex-1 bg-green-600 hover:bg-green-500 text-black font-bold py-3 px-6 rounded-lg transition-colors flex justify-center items-center"
-                        >
-                            {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "LANCER AUDIT PROFOND"}
-                        </button>
-                        <button
-                            onClick={handleCancel}
-                            disabled={actionLoading}
-                            className="bg-transparent hover:bg-zinc-800 border border-zinc-600 text-zinc-300 font-bold py-3 px-6 rounded-lg transition-colors uppercase"
-                        >
-                            Ignorer
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleBlock}
-                        className="mt-6 flex items-center text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
-                    >
-                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer cet agent
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Vue Audit : Audit Complet + Invitation
-    if (opp.status === "AUDITED") {
-        return (
-            <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8">
-                <Link href="/cortex" className="inline-flex items-center text-zinc-400 hover:text-white mb-4">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Radar
-                </Link>
-
-                <div className="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 text-white">
-                    <div className="flex items-center gap-3 border-b border-green-500/50 pb-4">
-                        <ShieldCheck className="w-6 h-6 text-green-400" />
-                        <h2 className="text-xl font-bold tracking-widest uppercase">Rapport d'Audit</h2>
-                    </div>
-
-                    <div className="mt-8 bg-zinc-900/50 border border-white/10 rounded-xl p-8 shadow-2xl backdrop-blur-sm mb-12 max-w-none">
-                        <div className="text-zinc-300 font-mono text-sm">
-                            <ReactMarkdown
-                                components={{
-                                    p: ({node, ...props}) => <p className="text-zinc-300 text-sm leading-relaxed mb-4" {...props} />,
-                                    strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
-                                    ul: ({node, ...props}) => <ul className="space-y-2 mb-6" {...props} />,
-                                    li: ({node, ...props}) => (
-                                        <li className="text-sm text-zinc-400 flex items-start gap-2" {...props}>
-                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500/50 flex-none" />
-                                            {props.children}
-                                        </li>
-                                    ),
-                                    h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
-                                }}
-                            >
-                                {opp.audit || "Génération du rapport de synergie..."}
-                            </ReactMarkdown>
-                        </div>
-                    </div>
-
-                    <div className="bg-black/50 p-6 rounded-xl border border-blue-500/20">
-                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal Sécurisé</h3>
-                        <input
-                            type="text"
-                            value={inviteTitle}
-                            onChange={(e) => setInviteTitle(e.target.value)}
-                            placeholder="Ex: Projet IA & Crypto..."
-                            className="bg-zinc-900 w-full p-4 rounded-lg border border-zinc-700 text-white focus:outline-none focus:border-blue-500 mb-4 font-mono"
-                        />
-                        <button
-                            onClick={handleInvite}
-                            disabled={actionLoading || !inviteTitle.trim()}
-                            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-lg transition-colors flex justify-center items-center uppercase tracking-wider"
-                        >
-                            {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Envoyer l'Invitation"}
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleBlock}
-                        className="mt-8 flex items-center justify-center w-full text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
-                    >
-                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer définitivement
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Vue autres états (INVITED, BLOCKED, CANCELLED)
-    return (
-        <div className="max-w-xl mx-auto p-4 md:p-8 text-center space-y-4">
-            <h1 className="text-xl font-bold text-white uppercase">Dossier Classé</h1>
-            <p className="text-zinc-400 font-mono">Statut de l'opportunité : {opp.status}</p>
-            <Link href="/cortex" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
-                Retour au Radar
-            </Link>
-        </div>
-    );
-}
-
-export default function OpportunityPage() {
-    return (
-        <Suspense fallback={<div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>}>
-            <OpportunityContent />
-        </Suspense>
-    );
-}
 </file>
 
 <file path="app/actions/connection.ts">
@@ -6883,6 +5804,164 @@ export async function deleteMemoryFragment(memoryId: string) {
     revalidatePath('/memories');
 
     return { success: true };
+}
+</file>
+
+<file path="app/api/connection/route.ts">
+export const dynamic = 'force-dynamic';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { prisma, getPrismaForUser } from '@/lib/prisma';
+
+async function getAuthUser(request: Request) {
+    const authHeader = request.headers.get('Authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set() { }, remove() { }
+            }
+        }
+    );
+    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
+    if (!user) return null;
+    return user;
+}
+
+export async function GET(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, incoming: [], active: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(request);
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+
+        const prismaRLS = getPrismaForUser(user.id);
+        const incoming = await prismaRLS.connection.findMany({
+            where: { receiverId: user.id, status: "PENDING" },
+            include: { initiator: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        const active = await prismaRLS.connection.findMany({
+            where: { OR: [{ initiatorId: user.id }, { receiverId: user.id }], status: "ACCEPTED" },
+            include: { initiator: true, receiver: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return NextResponse.json({ success: true, incoming, active });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+export async function POST(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(request);
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+
+        const prismaRLS = getPrismaForUser(user.id);
+        const idempotencyKey = request.headers.get('x-idempotency-key');
+        const body = await request.json();
+        const { action } = body;
+
+        if (action === 'request') {
+            const { targetId } = body;
+            if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
+            if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
+
+            // On utilise prisma (global) pour bypasser RLS sur la vérification de l'existence
+            // (car on peut vouloir savoir si on est déjà connecté à quelqu'un d'autre)
+            const existing = await prisma.connection.findFirst({
+                where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
+            });
+            if (existing) {
+                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
+                return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
+            }
+
+            await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
+
+            // Si on vient d'un Radar, on met à jour le statut de l'opportunité
+            const { oppId } = body;
+            if (oppId) {
+                await prisma.opportunity.update({
+                    where: { id: oppId },
+                    data: { status: 'INVITED' }
+                });
+            }
+
+            return NextResponse.json({ success: true });
+        }
+
+        if (action === 'accept') {
+            const { connectionId, oppId } = body;
+
+            if (oppId) {
+                // 🛡️ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
+                const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
+                if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
+                    return NextResponse.json({ success: false, error: 'Opportunité introuvable ou non autorisée pour acceptation' }, { status: 404 });
+                }
+
+                // Check if opportunity is already accepted
+                if (opp.status === 'ACCEPTED') {
+                    console.log(`🛡️ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
+                    return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
+                }
+
+                // Acceptation idempotente : on cherche si une connexion existe déjà
+                const existing = await prisma.connection.findFirst({
+                    where: {
+                        OR: [
+                            { initiatorId: opp.sourceId, receiverId: opp.targetId },
+                            { initiatorId: opp.targetId, receiverId: opp.sourceId }
+                        ]
+                    }
+                });
+
+                if (existing) {
+                    await prisma.connection.update({
+                        where: { id: existing.id },
+                        data: { status: "ACCEPTED" }
+                    });
+                } else {
+                    await prisma.connection.create({
+                        data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: "ACCEPTED" }
+                    });
+                }
+
+                await prisma.opportunity.update({ where: { id: oppId }, data: { status: "ACCEPTED" } });
+                return NextResponse.json({ success: true });
+            }
+
+            const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
+            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
+            
+            if (conn.status === 'ACCEPTED') {
+                console.log(`🛡️ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
+                return NextResponse.json({ success: true, message: 'Already accepted' });
+            }
+
+            const result = await prisma.connection.updateMany({
+                where: { id: connectionId, receiverId: user.id, status: "PENDING" },
+                data: { status: "ACCEPTED" }
+            });
+            if (result.count === 0) return NextResponse.json({ success: false, error: 'Accès refusé ou statut invalide' }, { status: 403 });
+            return NextResponse.json({ success: true });
+        }
+
+        return NextResponse.json({ success: false, error: `Action non reconnue: ${action}` }, { status: 400 });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
 }
 </file>
 
@@ -7602,6 +6681,215 @@ Format JSON strict: { "score": number, "synergies": "string" }`;
 );
 </file>
 
+<file path="lib/crypto-client.ts">
+import { Capacitor } from '@capacitor/core';
+import { VaultManager, VaultKey } from './vault-manager';
+import * as bip39 from 'bip39';
+
+// =====================================================
+// 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
+// =====================================================
+
+/**
+ * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
+ * Ne retourne QUE la clé publique à envoyer au serveur.
+ * La clé privée est séquestrée dans la puce matérielle via VaultManager.
+ */
+export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
+    try {
+        // A. Génération des 12 mots
+        const mnemonic = bip39.generateMnemonic();
+
+        // B. Génération Mathématique de la paire ECDH
+        const keyPair = await crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" },
+            true,
+            ["deriveKey", "deriveBits"]
+        );
+
+        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
+
+        // C. Le Bouclier Matériel (Zero-Tolerance)
+        if (Capacitor.isNativePlatform()) {
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
+        } else {
+            // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
+            throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
+        }
+
+        // D. On ne renvoie que ce qui est publiable
+        return { publicKeyJwk, mnemonic };
+
+    } catch (error: any) {
+        console.error("❌ [CRYPTO FATAL ERROR]:", error.message);
+        throw error;
+    }
+}
+
+// Rétrocompatibilité : alias pour l'ancien nom
+export const generateIdentity = generateAndStoreKeyPair;
+
+/**
+ * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
+ */
+export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
+    const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
+    if (value) {
+        return JSON.parse(value) as JsonWebKey;
+    }
+    return null;
+}
+
+// Rétrocompatibilité : alias pour l'ancien nom
+export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
+    const key = await getLocalPrivateKey();
+    if (!key) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
+    return key;
+}
+
+/**
+ * Restauration depuis la Phrase Secrète (BIP39).
+ */
+export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
+    if (!bip39.validateMnemonic(mnemonic)) {
+        throw new Error("Phrase secrète invalide.");
+    }
+
+    const keyPair = await crypto.subtle.generateKey(
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey", "deriveBits"]
+    );
+
+    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
+
+    if (Capacitor.isNativePlatform()) {
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain via VaultManager.");
+    } else {
+        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté.");
+    }
+
+    return { publicKeyJwk };
+}
+
+// =====================================================
+// 🔑 ECDH KEY EXCHANGE
+// =====================================================
+
+/**
+ * Calculer la clé partagée AES-GCM (quand tu ouvres un chat).
+ */
+export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
+    const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+
+    const privateKey = await crypto.subtle.importKey(
+        "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
+    );
+
+    const publicKey = await crypto.subtle.importKey(
+        "jwk", otherPersonPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []
+    );
+
+    const sharedKey = await crypto.subtle.deriveKey(
+        { name: "ECDH", public: publicKey },
+        privateKey,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+
+    return sharedKey;
+}
+
+// =====================================================
+// 🔒 CHIFFREMENT / DÉCHIFFREMENT AES-GCM
+// =====================================================
+
+export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(plaintext);
+
+    const cipherBuffer = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        sharedKey,
+        encoded
+    );
+
+    const ivB64 = arrayBufferToBase64(iv);
+    const cipherB64 = arrayBufferToBase64(new Uint8Array(cipherBuffer));
+
+    return `${ivB64}:${cipherB64}`;
+}
+
+const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
+
+export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
+    try {
+        const cleanPayload = encryptedPayload.replace('🧠 ', '').trim();
+
+        if (!cleanPayload.includes(':')) {
+            return encryptedPayload;
+        }
+
+        const parts = cleanPayload.split(':');
+        let iv: Uint8Array;
+        let cipherData: Uint8Array;
+
+        if (parts.length === 3) {
+            iv = hexToBuffer(parts[0]);
+            const authTag = hexToBuffer(parts[1]);
+            const ciphertext = hexToBuffer(parts[2]);
+            cipherData = new Uint8Array(ciphertext.length + authTag.length);
+            cipherData.set(ciphertext);
+            cipherData.set(authTag, ciphertext.length);
+        } else if (parts.length === 2) {
+            iv = base64ToArrayBuffer(parts[0]);
+            cipherData = base64ToArrayBuffer(parts[1]);
+        } else {
+            return encryptedPayload;
+        }
+
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv as BufferSource },
+            sharedKey,
+            cipherData as BufferSource
+        );
+
+        return new TextDecoder().decode(decrypted);
+    } catch (e) {
+        console.error("Échec déchiffrement:", e);
+        return "🔒 Message chiffré illisible";
+    }
+}
+
+// =====================================================
+// 🛠️ UTILITAIRES
+// =====================================================
+
+function arrayBufferToBase64(buffer: Uint8Array): string {
+    let binary = '';
+    for (let i = 0; i < buffer.byteLength; i++) {
+        binary += String.fromCharCode(buffer[i]);
+    }
+    return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+</file>
+
 <file path="lib/pushSender.ts">
 import { prisma } from "@/lib/prisma";
 import admin from 'firebase-admin';
@@ -7668,6 +6956,718 @@ export async function sendOpportunityNotif(userId: string, oppId: string, score:
     };
 
     return await admin.messaging().send(message);
+}
+</file>
+
+<file path="lib/sync/engine.ts">
+import { Network } from '@capacitor/network';
+import { getApiUrl } from '@/lib/api';
+import { createClient } from '../supabaseBrowser';
+import { getLocalDb } from '../local-db/init';
+
+/**
+ * 🛠️ SYNC ENGINE - Idempotent & Offline-First
+ * Implements UUID v4 Idempotency, 401 Auth Recovery, and Exponential Backoff.
+ */
+
+const MAX_RETRY_DELAY = 60000; // 1 minute
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+let isSyncing = false;
+
+export const performAction = async (endpoint: string, method: string, payload: any) => {
+    const status = await Network.getStatus();
+    const idempotencyKey = crypto.randomUUID(); // Mandatory UUID v4
+
+    if (status.connected) {
+        try {
+            const response = await fetchWithAuth(endpoint, method, payload, idempotencyKey);
+            
+            if (response.ok) return await response.json();
+            
+            // If 401, it's better to queue and let the flush handle the refresh logic
+            if (response.status === 401) {
+                console.warn("🔐 401 detected in immediate action. Queuing for background recovery.");
+            }
+            
+            return await queueMutation(endpoint, method, payload, idempotencyKey);
+        } catch (e) {
+            console.error("⚠️ Immediate fetch failed, queuing:", e);
+            return await queueMutation(endpoint, method, payload, idempotencyKey);
+        }
+    } else {
+        return await queueMutation(endpoint, method, payload, idempotencyKey);
+    }
+};
+
+const fetchWithAuth = async (endpoint: string, method: string, payload: any, idempotencyKey: string) => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const headers: any = { 
+        'Content-Type': 'application/json',
+        'x-idempotency-key': idempotencyKey 
+    };
+    
+    if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+    return await fetch(getApiUrl(endpoint), {
+        method,
+        headers,
+        body: JSON.stringify(payload)
+    });
+};
+
+const queueMutation = async (endpoint: string, method: string, payload: any, idempotencyKey: string) => {
+    const db = await getLocalDb();
+    const id = crypto.randomUUID();
+
+    const query = `INSERT INTO mutation_queue (id, endpoint, method, payload, idempotencyKey, createdAt, status) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+    await db.run(query, [
+        id, 
+        endpoint, 
+        method, 
+        JSON.stringify(payload), 
+        idempotencyKey, 
+        new Date().toISOString(),
+        'PENDING'
+    ]);
+
+    // Proactively trigger flush if online
+    const status = await Network.getStatus();
+    if (status.connected) flushMutationQueue();
+
+    return { success: true, offline: true, idempotencyKey };
+};
+
+export const setupBackgroundSync = () => {
+    Network.addListener('networkStatusChange', async (status) => {
+        if (status.connected) {
+            console.log("🌐 Network Restored: Triggering Flush.");
+            await flushMutationQueue();
+        }
+    });
+};
+
+export const flushMutationQueue = async () => {
+    if (isSyncing) return;
+    isSyncing = true;
+
+    try {
+        const db = await getLocalDb();
+        const result = await db.query("SELECT * FROM mutation_queue WHERE status = 'PENDING' ORDER BY createdAt ASC");
+        const mutations = result.values || [];
+
+        if (mutations.length === 0) {
+            isSyncing = false;
+            return;
+        }
+
+        console.log(`📡 [SYNC] Processing ${mutations.length} mutations...`);
+
+        for (const mutation of mutations) {
+            let success = false;
+            let retryDelay = INITIAL_RETRY_DELAY;
+            let attempts = 0;
+
+            while (!success && attempts < 8) {
+                try {
+                    const response = await fetchWithAuth(
+                        mutation.endpoint, 
+                        mutation.method, 
+                        JSON.parse(mutation.payload), 
+                        mutation.idempotencyKey
+                    );
+
+                    if (response.ok) {
+                        await db.run("UPDATE mutation_queue SET status = 'SYNCED' WHERE id = ?", [mutation.id]);
+                        success = true;
+                    } else if (response.status === 401) {
+                        // 🔐 Session recovery logic
+                        console.warn("🔐 401: Attempting session refresh...");
+                        const supabase = createClient();
+                        const { error } = await supabase.auth.refreshSession();
+                        
+                        if (error) {
+                            console.error("❌ Refresh failed. Sync paused until next trigger.");
+                            isSyncing = false;
+                            return; 
+                        }
+                        // Continue loop to retry with fresh token
+                        console.log("✅ Session refreshed. Retrying mutation.");
+                    } else if (response.status >= 500) {
+                        throw new Error(`Server Error: ${response.status}`);
+                    } else {
+                        // 4xx other than 401: Definitive failure
+                        console.error(`❌ Mutation ${mutation.id} failed with ${response.status}`);
+                        await db.run("UPDATE mutation_queue SET status = 'FAILED' WHERE id = ?", [mutation.id]);
+                        success = true;
+                    }
+                } catch (error) {
+                    attempts++;
+                    if (attempts >= 8) {
+                        console.error(`🔥 Max retries for ${mutation.id}. Giving up.`);
+                        break;
+                    }
+                    console.warn(`⏳ Network retry ${attempts} in ${retryDelay}ms...`);
+                    await new Promise(r => setTimeout(r, retryDelay));
+                    retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
+                }
+            }
+        }
+    } catch (err) {
+        console.error("🔥 Sync Engine Critical:", err);
+    } finally {
+        isSyncing = false;
+    }
+};
+</file>
+
+<file path="public/messages/en.json">
+{
+    "navigation": {
+        "radar": "Radar",
+        "cortex": "Cortex",
+        "identity": "Identity"
+    },
+    "profile": {
+        "title": "My Prism",
+        "subtitle": "Configure the multiple facets of your identity",
+        "tabs": {
+            "identity": "Identity",
+            "work": "Work",
+            "social": "Circle",
+            "hobby": "Passions",
+            "settings": "Settings"
+        },
+        "identity": {
+            "pseudo": "Username",
+            "age": "Age",
+            "sex": "Gender",
+            "sex_placeholder": "Select",
+            "sex_options": {
+                "male": "Male",
+                "female": "Female",
+                "other": "Other"
+            },
+            "city": "City",
+            "country": "Country",
+            "update_btn": "Update Identity"
+        },
+        "work": {
+            "tjm": "Daily Rate (TJM)",
+            "availability": "Availability",
+            "update_btn": "Update Work Prism"
+        },
+        "social": {
+            "update_btn": "Update Social Prism"
+        },
+        "hobby": {
+            "update_btn": "Update Hobby Prism"
+        },
+        "common": {
+            "dimension": "Exchange Dimension",
+            "position": "Typological Positioning",
+            "bio": "Semantic Bio (Mistral Vector)",
+            "bio_placeholder": "Detail your nuances here... Our Mistral AI will analyze this text to find the best matches for you.",
+            "syncing": "Syncing...",
+            "encrypt_note": "Changes are encrypted and vectorized in real time."
+        },
+        "sectors": {
+            "TECH": "Tech & Digital",
+            "DESIGN": "Design & Creative",
+            "BUSINESS": "Business & Sales",
+            "MANAGEMENT": "Admin & Management",
+            "HEALTH": "Health & Welness",
+            "INDUSTRY": "Craft & Industry",
+            "OTHER": "Other",
+            "FRIENDSHIP": "Friendship & Social",
+            "DATING": "Dating (Soul)",
+            "MENTORING": "Mentoring",
+            "COMMUNITY": "Community / Cause",
+            "PROFESSIONAL": "Networking",
+            "SPORT": "Sport & Fitness",
+            "ARTS": "Art & Culture",
+            "GAMING": "Gaming",
+            "TRAVEL": "Travel & Nature",
+            "FOOD": "Food & Wine"
+        },
+        "availabilities": {
+            "IMMEDIATE": "Immediate",
+            "ONE_MONTH": "Within 1 month",
+            "UNAVAILABLE": "Unavailable"
+        },
+        "settings": {
+            "logout": "Logout"
+        }
+    },
+    "radar": {
+        "title": "Semantic Radar",
+        "subtitle": "Discover profiles that resonate with your intent",
+        "search_placeholder": "What are you looking for? (e.g., Design mentor, Tennis partner...)",
+        "filters": "Filters",
+        "match_score": "Match",
+        "connect_btn": "Create Report",
+        "empty_state": "No resonance found. Try another intention.",
+        "incoming_requests": "Incoming Requests",
+        "encrypted_link": "Wishes to establish an encrypted link",
+        "secure_channels": "Secure Channels",
+        "audit_ready": "Strategic Audit Report Ready",
+        "start_audit": "Start Strategic Audit",
+        "read_audit": "Read Cortex Audit",
+        "invite_sent": "Invitation sent. Waiting for response...",
+        "channel_request": "Channel opening request",
+        "new_invite": "New invitation",
+        "accept": "Accept",
+        "accepted": "Accepted",
+        "refuse": "Refuse",
+        "ignore": "Ignore",
+        "block": "Block",
+        "creating": "Creating...",
+        "join_chat": "Join Discussion"
+    },
+    "cortex": {
+        "title": "Cortex",
+        "subtitle": "The neural center of your Agent",
+        "memory_nodes": "Memory Nodes",
+        "system_status": "System Status",
+        "vector_space": "Vector Space",
+        "last_sync": "Last Sync",
+        "ingest": "Ingest",
+        "analyzing": "Analyzing content...",
+        "success": "Memory successfully ingested",
+        "error_size": "File exceeds 5MB limit.",
+        "error_format": "Unsupported format. Use PDF, TXT or MD.",
+        "attach_file": "Attach a document",
+        "remove_file": "Remove file",
+        "access_error": "Error accessing Cortex data",
+        "retry": "Retry",
+        "back_to_feed": "Back to Tactical Feed",
+        "no_dataset": "No dataset injected",
+        "empty_core": "Memory core is empty",
+        "fragment": "Fragment"
+    },
+    "settings": {
+        "language": "Language"
+    }
+}
+</file>
+
+<file path="public/messages/fr.json">
+{
+    "navigation": {
+        "radar": "Radar",
+        "cortex": "Cortex",
+        "identity": "Identité"
+    },
+    "profile": {
+        "title": "Mon Prisme",
+        "subtitle": "Configurez les multiples facettes de votre identité",
+        "tabs": {
+            "identity": "Identité",
+            "work": "Travail",
+            "social": "Cercle",
+            "hobby": "Passions",
+            "settings": "Options"
+        },
+        "identity": {
+            "pseudo": "Pseudo",
+            "age": "Âge",
+            "sex": "Sexe",
+            "sex_placeholder": "Sélectionner",
+            "sex_options": {
+                "male": "Homme",
+                "female": "Femme",
+                "other": "Autre"
+            },
+            "city": "Ville",
+            "country": "Pays",
+            "update_btn": "Mettre à jour l'identité"
+        },
+        "work": {
+            "tjm": "Honoraires (TJM)",
+            "availability": "Disponibilité",
+            "update_btn": "Mettre à jour le Prisme Work"
+        },
+        "social": {
+            "update_btn": "Mettre à jour le Prisme Social"
+        },
+        "hobby": {
+            "update_btn": "Mettre à jour le Prisme Hobby"
+        },
+        "common": {
+            "dimension": "Dimension d'échange",
+            "position": "Positionnement Typologique",
+            "bio": "Bio sémantique (Vecteur Mistral)",
+            "bio_placeholder": "Détaillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
+            "syncing": "Synchronisation...",
+            "encrypt_note": "Les modifications sont cryptées et vectorisées en temps réel."
+        },
+        "sectors": {
+            "TECH": "Tech & Digital",
+            "DESIGN": "Création & Design",
+            "BUSINESS": "Business & Vente",
+            "MANAGEMENT": "Admin & Management",
+            "HEALTH": "Santé & Bien-être",
+            "INDUSTRY": "Artisanat & Industrie",
+            "OTHER": "Autre",
+            "FRIENDSHIP": "Amitié & Social",
+            "DATING": "Rencontres (Soul)",
+            "MENTORING": "Mentorat",
+            "COMMUNITY": "Communauté / Cause",
+            "PROFESSIONAL": "Networking",
+            "SPORT": "Sport & Fitness",
+            "ARTS": "Art & Culture",
+            "GAMING": "Jeux & Gaming",
+            "TRAVEL": "Voyage & Nature",
+            "FOOD": "Gastronomie & Vin"
+        },
+        "availabilities": {
+            "IMMEDIATE": "Immédiate",
+            "ONE_MONTH": "Sous 1 mois",
+            "UNAVAILABLE": "Indisponible"
+        },
+        "settings": {
+            "logout": "Déconnexion"
+        }
+    },
+    "radar": {
+        "title": "Radar Sémantique",
+        "subtitle": "Découvrez les profils qui résonnent avec votre recherche",
+        "search_placeholder": "Que cherchez-vous ? (ex: Mentor en design, Partenaire de tennis...)",
+        "filters": "Filtres",
+        "match_score": "Correspondance",
+        "connect_btn": "Créer le rapport",
+        "empty_state": "Aucune résonance trouvée. Essayez une autre intention.",
+        "incoming_requests": "Requêtes Entrantes",
+        "encrypted_link": "Souhaite établir une liaison chiffrée",
+        "secure_channels": "Canaux Sécurisés",
+        "audit_ready": "Rapport d'Audit Stratégique Prêt",
+        "start_audit": "Lancer l'Audit Stratégique",
+        "read_audit": "Lire l'Audit Cortex",
+        "invite_sent": "Invitation envoyée. En attente de réponse...",
+        "channel_request": "Demande d'ouverture de canal",
+        "new_invite": "Nouvelle invitation",
+        "accept": "Accepter",
+        "accepted": "Accepté",
+        "refuse": "Refuser",
+        "ignore": "Ignorer",
+        "block": "Bloquer",
+        "creating": "Création...",
+        "join_chat": "Rejoindre la Discussion"
+    },
+    "cortex": {
+        "title": "Cortex",
+        "subtitle": "Le centre névralgique de votre Agent",
+        "memory_nodes": "Nœuds de mémoire",
+        "system_status": "État du système",
+        "vector_space": "Espace vectoriel",
+        "last_sync": "Dernière synchronisation",
+        "ingest": "Ingérer",
+        "analyzing": "Analyse en cours...",
+        "success": "Mémoire ingérée avec succès",
+        "error_size": "Le fichier dépasse la limite de 5Mo.",
+        "error_format": "Format non supporté. Utilisez PDF, TXT ou MD.",
+        "attach_file": "Joindre un document",
+        "remove_file": "Retirer le fichier",
+        "access_error": "Erreur d'accès aux données du Cortex",
+        "retry": "Réessayer",
+        "back_to_feed": "Retour au Tactical Feed",
+        "no_dataset": "Aucun dataset injecté",
+        "empty_core": "Le noyau mémoriel est vide",
+        "fragment": "Fragment"
+    },
+    "settings": {
+        "language": "Langue"
+    }
+}
+</file>
+
+<file path="app/(routes)/cortex/opportunity/page.tsx">
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
+import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
+
+function OpportunityContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const oppId = searchParams.get('id');
+
+    const [opp, setOpp] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [inviteTitle, setInviteTitle] = useState('');
+
+    useEffect(() => {
+        if (!oppId) {
+            setLoading(false);
+            return;
+        }
+        const fetchOpp = async () => {
+            try {
+                const { createClient } = await import('@/lib/supabaseBrowser');
+                const supabase = createClient();
+                const { data: { session } } = await supabase.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const res = await fetch(getApiUrl(`/api/opportunities?id=${oppId}`), { headers }).then(r => r.json());
+                if (res.success && res.opportunity) {
+                    setOpp(res.opportunity);
+                }
+            } catch (e) {
+                console.error("fetchOpp error", e);
+            }
+            setLoading(false);
+        };
+        fetchOpp();
+    }, [oppId]);
+
+    const handleAudit = async () => {
+        if (!oppId) return;
+        setActionLoading(true);
+        setOpp((prev: any) => ({ ...prev, audit: '' })); // Reset for typewriter effect
+        
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ opportunityId: oppId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            if (!reader) throw new Error('No stream reader available');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                setOpp((prev: any) => ({ 
+                    ...prev, 
+                    audit: (prev.audit || '') + chunk 
+                }));
+            }
+
+            setOpp((prev: any) => ({ ...prev, status: 'AUDITED' }));
+        } catch (e: any) {
+            console.error("❌ [STREAM ERROR]:", e);
+            alert(`Erreur Cortex: ${e.message}`);
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCancel = async () => {
+        if (!oppId) return;
+        setActionLoading(true);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'CANCELLED' })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
+    };
+
+    const handleBlock = async () => {
+        if (!oppId) return;
+        if (!confirm("Voulez-vous bloquer cet agent définitivement ?")) return;
+        setActionLoading(true);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'updateStatus', oppId, status: 'BLOCKED' })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
+    };
+
+    const handleInvite = async () => {
+        if (!oppId) return;
+        if (!inviteTitle.trim()) return alert("Veuillez saisir un titre");
+        setActionLoading(true);
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            await fetch(getApiUrl(`/api/opportunities`), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ action: 'sendInvite', oppId, customTitle: inviteTitle })
+            });
+            router.push('/cortex');
+        } catch (e) { console.error(e) }
+    };
+
+    if (loading) return <div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
+    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
+
+    // Vue Initiale : Résumé + Match %
+    if (opp.status === "DETECTED") {
+        return (
+            <div className="max-w-xl mx-auto p-4 md:p-8 space-y-8">
+                <Link href="/cortex" className="inline-flex items-center text-zinc-400 hover:text-white mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Radar
+                </Link>
+
+                <div className="p-8 rounded-2xl bg-black border border-green-500/30 text-green-500 font-mono relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Zap className="w-32 h-32" />
+                    </div>
+
+                    <div className="flex items-center gap-3 mb-6">
+                        <Zap className="w-8 h-8 text-green-400" />
+                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
+                    </div>
+
+                    <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>
+
+                    <div className="flex flex-col sm:flex-row gap-4 mt-12 relative z-10">
+                        <button
+                            onClick={handleAudit}
+                            disabled={actionLoading}
+                            className="flex-1 bg-green-600 hover:bg-green-500 text-black font-bold py-3 px-6 rounded-lg transition-colors flex justify-center items-center"
+                        >
+                            {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "LANCER AUDIT PROFOND"}
+                        </button>
+                        <button
+                            onClick={handleCancel}
+                            disabled={actionLoading}
+                            className="bg-transparent hover:bg-zinc-800 border border-zinc-600 text-zinc-300 font-bold py-3 px-6 rounded-lg transition-colors uppercase"
+                        >
+                            Ignorer
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={handleBlock}
+                        className="mt-6 flex items-center text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
+                    >
+                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer cet agent
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Vue Audit : Audit Complet + Invitation
+    if (opp.status === "AUDITED") {
+        return (
+            <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-8">
+                <Link href="/cortex" className="inline-flex items-center text-zinc-400 hover:text-white mb-4">
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Radar
+                </Link>
+
+                <div className="p-8 rounded-2xl bg-zinc-900 border border-zinc-800 text-white">
+                    <div className="flex items-center gap-3 border-b border-green-500/50 pb-4">
+                        <ShieldCheck className="w-6 h-6 text-green-400" />
+                        <h2 className="text-xl font-bold tracking-widest uppercase">Rapport d'Audit</h2>
+                    </div>
+
+                    <div className="mt-8 bg-zinc-900/50 border border-white/10 rounded-xl p-8 shadow-2xl backdrop-blur-sm mb-12 max-w-none">
+                        <div className="text-zinc-300 font-mono text-sm">
+                            <ReactMarkdown
+                                components={{
+                                    p: ({node, ...props}) => <p className="text-zinc-300 text-sm leading-relaxed mb-4" {...props} />,
+                                    strong: ({node, ...props}) => <strong className="text-white font-semibold" {...props} />,
+                                    ul: ({node, ...props}) => <ul className="space-y-2 mb-6" {...props} />,
+                                    li: ({node, ...props}) => (
+                                        <li className="text-sm text-zinc-400 flex items-start gap-2" {...props}>
+                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500/50 flex-none" />
+                                            {props.children}
+                                        </li>
+                                    ),
+                                    h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
+                                }}
+                            >
+                                {opp.audit || "Génération du rapport de synergie..."}
+                            </ReactMarkdown>
+                        </div>
+                    </div>
+
+                    <div className="bg-black/50 p-6 rounded-xl border border-blue-500/20">
+                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal Sécurisé</h3>
+                        <input
+                            type="text"
+                            value={inviteTitle}
+                            onChange={(e) => setInviteTitle(e.target.value)}
+                            placeholder="Ex: Projet IA & Crypto..."
+                            className="bg-zinc-900 w-full p-4 rounded-lg border border-zinc-700 text-white focus:outline-none focus:border-blue-500 mb-4 font-mono"
+                        />
+                        <button
+                            onClick={handleInvite}
+                            disabled={actionLoading || !inviteTitle.trim()}
+                            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-lg transition-colors flex justify-center items-center uppercase tracking-wider"
+                        >
+                            {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Envoyer l'Invitation"}
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={handleBlock}
+                        className="mt-8 flex items-center justify-center w-full text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
+                    >
+                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer définitivement
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Vue autres états (INVITED, BLOCKED, CANCELLED)
+    return (
+        <div className="max-w-xl mx-auto p-4 md:p-8 text-center space-y-4">
+            <h1 className="text-xl font-bold text-white uppercase">Dossier Classé</h1>
+            <p className="text-zinc-400 font-mono">Statut de l'opportunité : {opp.status}</p>
+            <Link href="/cortex" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
+                Retour au Radar
+            </Link>
+        </div>
+    );
+}
+
+export default function OpportunityPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>}>
+            <OpportunityContent />
+        </Suspense>
+    );
 }
 </file>
 
@@ -7913,167 +7913,6 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-</file>
-
-<file path="app/api/profile/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
-import { getMistralEmbedding } from '@/lib/mistral';
-
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    return user;
-}
-
-export async function GET(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get('id');
-        if (!id) return NextResponse.json({ success: false, error: 'ID manquant' }, { status: 400 });
-
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const prismaRLS = getPrismaForUser(user.id);
-        const profile = await prismaRLS.profile.findUnique({ where: { id } });
-
-        if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
-        return NextResponse.json({ success: true, profile });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-export async function POST(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const prismaRLS = getPrismaForUser(user.id);
-        const body = await request.json();
-        const { action } = body;
-
-        if (action === 'updateGeneralIdentity') {
-            const { name, age, gender, city, country, activePrism } = body;
-            const ageParsed = age ? parseInt(age, 10) : null;
-
-            await prismaRLS.profile.update({
-                where: { id: user.id },
-                data: {
-                    name,
-                    age: ageParsed,
-                    gender,
-                    city,
-                    country,
-                    activePrism: activePrism || 'WORK'
-                }
-            });
-
-            // Mise à jour de la mémoire vectorielle (pour que l'IA connaisse ton identité de base)
-            const identityString = `Identité Agent Ipse: Pseudo: ${name || 'Inconnu'}. Âge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non précisé'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
-            const embedding = await getMistralEmbedding(identityString);
-
-            if (embedding) {
-                await prisma.$executeRawUnsafe(
-                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
-                    `[${embedding.join(',')}]`,
-                    user.id
-                );
-            }
-
-            return NextResponse.json({ success: true });
-        }
-
-        // Garder les anciennes actions si nécessaire (Optionnel mais sécurisé)
-        if (action === 'create') {
-            const { name, publicKey } = body;
-            
-            if (!publicKey) {
-                return NextResponse.json({ success: false, error: "Clé publique (publicKey) manquante ou invalide. L'onboarding a été interrompu." }, { status: 400 });
-            }
-
-            try {
-                const profile = await prismaRLS.profile.upsert({
-                    where: { id: user.id },
-                    update: { 
-                        name,
-                        publicKey
-                    },
-                    create: { 
-                        id: user.id, 
-                        email: user.email!, 
-                        name,
-                        publicKey
-                    }
-                });
-                
-                if (publicKey) {
-                    console.log(`✅ [API-PROFILE] Clé publique synchronisée pour l'utilisateur ${user.id}`);
-                }
-                
-                return NextResponse.json({ success: true, profileId: profile.id });
-            } catch (error: any) {
-                console.error("❌ [API-PROFILE] Échec critique de la persistance de la clé publique:", error.message);
-                throw error;
-            }
-        }
-
-        if (action === 'updateIdentity') {
-            const { primaryRole, customRole, tjm, availability, bio } = body;
-            const tjmParsed = tjm ? parseInt(tjm, 10) : null;
-
-            await prismaRLS.profile.update({
-                where: { id: user.id },
-                data: {
-                    primaryRole,
-                    customRole: primaryRole === 'OTHER' ? customRole : null,
-                    tjm: tjmParsed,
-                    availability,
-                    bio
-                }
-            });
-
-            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
-            const embedding = await getMistralEmbedding(identityString);
-
-            if (embedding) {
-                await prisma.$executeRawUnsafe(
-                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
-                    `[${embedding.join(',')}]`,
-                    user.id
-                );
-            }
-
-            return NextResponse.json({ success: true });
-        }
-
-        return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
@@ -9421,16 +9260,16 @@ export async function GET(req: Request) {
 }
 </file>
 
-<file path="app/api/opportunities/route.ts">
+<file path="app/api/profile/route.ts">
 export const dynamic = 'force-dynamic';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
-import { mistralClient } from '@/lib/mistral';
+import { getPrismaForUser, prisma } from '@/lib/prisma';
+import { getMistralEmbedding } from '@/lib/mistral';
 
-async function getAuthUser(req: Request) {
-    const authHeader = req.headers.get('Authorization');
+async function getAuthUser(request: Request) {
+    const authHeader = request.headers.get('Authorization');
     let token = null;
     if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.split(' ')[1];
@@ -9448,125 +9287,134 @@ async function getAuthUser(req: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(req);
-        const myId = user.id;
-        const searchParams = req.nextUrl.searchParams;
+        const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
+        if (!id) return NextResponse.json({ success: false, error: 'ID manquant' }, { status: 400 });
 
-        if (id) {
-            // 🛡️ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
-            const opp = await prisma.opportunity.findUnique({
-                where: { id },
-                include: { sourceProfile: true, targetProfile: true }
-            });
-            // Vérification manuelle (L'utilisateur doit être source ou cible)
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
-            }
-            return NextResponse.json({ success: true, opportunity: opp });
-        }
+        const user = await getAuthUser(request);
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
-        // 🛡️ SECURITY BYPASS pour les joins Profile
-        const rawOpportunities = await prisma.opportunity.findMany({
-            where: { OR: [{ sourceId: myId }, { targetId: myId }] },
-            include: { sourceProfile: true, targetProfile: true },
-            orderBy: { createdAt: 'desc' }
-        });
+        const prismaRLS = getPrismaForUser(user.id);
+        const profile = await prismaRLS.profile.findUnique({ where: { id } });
 
-        // Calculer les messages non lus pour chaque opportunité
-        const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
-            const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
-            const unreadCount = await prisma.message.count({
-                where: {
-                    senderId: otherId,
-                    receiverId: myId,
-                    isRead: false
-                }
-            });
-            return { ...opp, unreadCount };
-        }));
-
-        return NextResponse.json({ success: true, opportunities });
+        if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
+        return NextResponse.json({ success: true, profile });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(req);
+        const user = await getAuthUser(request);
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+
         const prismaRLS = getPrismaForUser(user.id);
-        const myId = user.id;
-        const body = await req.json();
-        const { action, oppId, customTitle, status } = body;
+        const body = await request.json();
+        const { action } = body;
 
-        if (action === 'audit') {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Deprecated: Use /api/opportunities/evaluate instead' 
-            }, { status: 400 });
-        }
+        if (action === 'updateGeneralIdentity') {
+            const { name, age, gender, city, country, activePrism } = body;
+            const ageParsed = age ? parseInt(age, 10) : null;
 
-        if (action === 'sendChatInvite' || action === 'sendInvite') {
-            const id = oppId;
-            const opp = await prisma.opportunity.findUnique({
-                where: { id },
-                include: { targetProfile: true, sourceProfile: true }
+            await prismaRLS.profile.update({
+                where: { id: user.id },
+                data: {
+                    name,
+                    age: ageParsed,
+                    gender,
+                    city,
+                    country,
+                    activePrism: activePrism || 'WORK'
+                }
             });
 
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            // Mise à jour de la mémoire vectorielle (pour que l'IA connaisse ton identité de base)
+            const identityString = `Identité Agent Ipse: Pseudo: ${name || 'Inconnu'}. Âge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non précisé'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
+            const embedding = await getMistralEmbedding(identityString);
+
+            if (embedding) {
+                await prisma.$executeRawUnsafe(
+                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
+                    `[${embedding.join(',')}]`,
+                    user.id
+                );
             }
 
-            await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
             return NextResponse.json({ success: true });
         }
 
-        if (action === 'acceptInvite' && oppId) {
-            const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
-            if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
-            const newConnection = await prismaRLS.connection.create({
-                data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: 'ACCEPTED' }
+        // Garder les anciennes actions si nécessaire (Optionnel mais sécurisé)
+        if (action === 'create') {
+            const { name, publicKey } = body;
+            
+            if (!publicKey) {
+                return NextResponse.json({ success: false, error: "Clé publique (publicKey) manquante ou invalide. L'onboarding a été interrompu." }, { status: 400 });
+            }
+
+            try {
+                const profile = await prismaRLS.profile.upsert({
+                    where: { id: user.id },
+                    update: { 
+                        name,
+                        publicKey
+                    },
+                    create: { 
+                        id: user.id, 
+                        email: user.email!, 
+                        name,
+                        publicKey
+                    }
+                });
+                
+                if (publicKey) {
+                    console.log(`✅ [API-PROFILE] Clé publique synchronisée pour l'utilisateur ${user.id}`);
+                }
+                
+                return NextResponse.json({ success: true, profileId: profile.id });
+            } catch (error: any) {
+                console.error("❌ [API-PROFILE] Échec critique de la persistance de la clé publique:", error.message);
+                throw error;
+            }
+        }
+
+        if (action === 'updateIdentity') {
+            const { primaryRole, customRole, tjm, availability, bio } = body;
+            const tjmParsed = tjm ? parseInt(tjm, 10) : null;
+
+            await prismaRLS.profile.update({
+                where: { id: user.id },
+                data: {
+                    primaryRole,
+                    customRole: primaryRole === 'OTHER' ? customRole : null,
+                    tjm: tjmParsed,
+                    availability,
+                    bio
+                }
             });
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
-            return NextResponse.json({ success: true, connectionId: newConnection.id });
-        }
 
-        if (action === 'updateStatus' && oppId) {
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status } });
-            return NextResponse.json({ success: true });
-        }
+            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
+            const embedding = await getMistralEmbedding(identityString);
 
-        if (action === 'scout') {
-            const { forceHuntSync } = await import('@/app/actions/radar');
-            await forceHuntSync();
+            if (embedding) {
+                await prisma.$executeRawUnsafe(
+                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
+                    `[${embedding.join(',')}]`,
+                    user.id
+                );
+            }
+
             return NextResponse.json({ success: true });
         }
 
         return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-export async function DELETE(req: NextRequest) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(req);
-        const prismaRLS = getPrismaForUser(user.id);
-        const body = await req.json();
-        const { oppId } = body;
-        if (!oppId) return NextResponse.json({ success: false, error: 'oppId manquant' }, { status: 400 });
-        await prismaRLS.opportunity.delete({ where: { id: oppId } });
-        return NextResponse.json({ success: true });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
@@ -10192,83 +10040,6 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
-</file>
-
-<file path="app/profile/unlock/page.tsx">
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { VaultManager, VaultKey } from '@/lib/vault-manager';
-import { useKeyStore } from '@/store/keyStore';
-
-export default function UnlockPage() {
-    const router = useRouter();
-    const setMasterKey = useKeyStore((state) => state.setMasterKey);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleUnlock = async () => {
-        setLoading(true);
-        setError('');
-
-        try {
-            // 🔒 One-step Unlock: Biometric Challenge + Hardware Retrieval
-            const masterKey = await VaultManager.unlockAndLoad(
-                VaultKey.MASTER_KEY,
-                "Déverrouillage de l'Agent Ipse - Déchiffrement du MasterKey"
-            );
-
-            if (masterKey) {
-                // 3. Injection into RAM for SQLite & Crypto workers
-                setMasterKey(masterKey);
-                router.push('/cortex');
-            } else {
-                setError("Coffre-fort vide. Veuillez réinitialiser votre compte.");
-            }
-        } catch (err: any) {
-            setError(err.message || "Échec de l'authentification biométrique.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20 text-center">
-                <div className="w-20 h-20 bg-blue-600/20 rounded-full mx-auto mb-6 flex items-center justify-center border border-blue-500/30">
-                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-
-                <h1 className="text-2xl font-bold text-white mb-2">Bunker Verrouillé</h1>
-                <p className="text-blue-200 text-sm mb-8">Authentification biométrique requise pour dévouer votre clé de chiffrement.</p>
-
-                {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-6 text-sm">{error}</div>}
-
-                <button
-                    onClick={handleUnlock}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-                >
-                    {loading ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                    ) : (
-                        <>
-                            <span className="animate-pulse">🔓</span>
-                            Déverrouiller par Biométrie
-                        </>
-                    )}
-                </button>
-
-                <div className="mt-8 text-slate-500 text-xs uppercase tracking-widest font-bold">
-                    Hardware Protected Storage
-                </div>
-            </div>
-        </div>
-    );
 }
 </file>
 
@@ -11302,189 +11073,6 @@ FORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :
 // trigger fix build
 </file>
 
-<file path="app/api/chat/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getPrismaForUser } from '@/lib/prisma';
-
-// Helper for auth via API Route
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    if (token) return undefined;
-                    return cookieStore.get(name)?.value;
-                },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Accès refusé. Token invalide ou manquant.");
-    return user;
-}
-
-export async function POST(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        // 1. Parsing strict du payload
-        const body = await request.json();
-        const { content, receiverId, action } = body;
-
-        // 2. Vérification de l'identité via Supabase Auth
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        if (action === 'read' && receiverId) {
-            await prismaRLS.message.updateMany({
-                where: {
-                    senderId: receiverId,
-                    receiverId: user.id,
-                    isRead: false
-                },
-                data: { isRead: true }
-            });
-            return NextResponse.json({ success: true });
-        }
-
-        if (!content || !receiverId) {
-            return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
-        }
-
-        // 3. ⚡ Instanciation du Prisma avec RLS ⚡
-        // prismaRLS est déjà déclaré en haut pour le action === 'read'
-
-        // Vérification d'association si besoin, mais RLS gère les accès de base.
-        // On s'assure qu'une connexion ACCEPTED existe.
-        const activeConnection = await prismaRLS.connection.findFirst({
-            where: {
-                OR: [
-                    { initiatorId: user.id, receiverId: receiverId },
-                    { initiatorId: receiverId, receiverId: user.id }
-                ],
-                status: 'ACCEPTED'
-            }
-        });
-
-        if (!activeConnection) {
-            return NextResponse.json({ error: "Accès refusé. Aucune connexion active avec cet utilisateur." }, { status: 403 });
-        }
-
-        // 4. Exécution de la requête sous contexte utilisateur
-        const message = await prismaRLS.message.create({
-            data: {
-                content,
-                senderId: user.id,
-                receiverId
-            }
-        });
-
-        return NextResponse.json({ success: true, message });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (POST):", error);
-        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
-    }
-}
-
-export async function GET(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const { searchParams } = new URL(request.url);
-        const receiverId = searchParams.get('receiverId');
-        const cursorId = searchParams.get('cursorId');
-
-        if (!receiverId || !cursorId) {
-            return NextResponse.json({ error: "Paramètres manquants : receiverId ou cursorId" }, { status: 400 });
-        }
-
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        // Fetch des messages plus anciens via pagination sur RLS
-        const olderMessages = await prismaRLS.message.findMany({
-            where: {
-                OR: [
-                    { senderId: user.id, receiverId: receiverId },
-                    { senderId: receiverId, receiverId: user.id }
-                ]
-            },
-            take: 50,
-            skip: 1, // Skip cursor
-            cursor: { id: cursorId },
-            orderBy: { createdAt: 'desc' } // Fetch backwards
-        });
-
-        // Remettre dans l'ordre chronologique logique (plus vieux en haut)
-        return NextResponse.json({ success: true, messages: olderMessages.reverse() });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (GET):", error);
-        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
-    }
-}
-
-export async function DELETE(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const body = await request.json();
-        const { connectionId } = body;
-
-        if (!connectionId) {
-            return NextResponse.json({ success: false, error: "connectionId manquant" }, { status: 400 });
-        }
-
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        // Vérifier que la connexion existe et appartient à l'utilisateur
-        const connection = await prismaRLS.connection.findFirst({
-            where: {
-                id: connectionId,
-                OR: [
-                    { initiatorId: user.id },
-                    { receiverId: user.id }
-                ]
-            }
-        });
-
-        if (!connection) {
-            return NextResponse.json({ success: false, error: "Connexion introuvable ou accès refusé." }, { status: 404 });
-        }
-
-        // Supprimer les messages associés puis la connexion
-        await prismaRLS.message.deleteMany({
-            where: {
-                OR: [
-                    { senderId: connection.initiatorId, receiverId: connection.receiverId },
-                    { senderId: connection.receiverId, receiverId: connection.initiatorId }
-                ]
-            }
-        });
-
-        await prismaRLS.connection.delete({ where: { id: connectionId } });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (DELETE):", error);
-        return NextResponse.json({ success: false, error: error.message || "Erreur critique du serveur" }, { status: 500 });
-    }
-}
-</file>
-
 <file path="app/api/guardian/route.ts">
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
@@ -11541,6 +11129,158 @@ export async function POST(request: Request) {
     } catch (error: any) {
         console.error("Guardian API Error:", error);
         return NextResponse.json({ success: true, isSafe: true, intervention: false });
+    }
+}
+</file>
+
+<file path="app/api/opportunities/route.ts">
+export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { prisma, getPrismaForUser } from '@/lib/prisma';
+import { mistralClient } from '@/lib/mistral';
+
+async function getAuthUser(req: Request) {
+    const authHeader = req.headers.get('Authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set() { }, remove() { }
+            }
+        }
+    );
+    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
+    if (!user) throw new Error("Non autorisé");
+    return user;
+}
+
+export async function GET(req: NextRequest) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(req);
+        const myId = user.id;
+        const searchParams = req.nextUrl.searchParams;
+        const id = searchParams.get('id');
+
+        if (id) {
+            // 🛡️ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
+            const opp = await prisma.opportunity.findUnique({
+                where: { id },
+                include: { sourceProfile: true, targetProfile: true }
+            });
+            // Vérification manuelle (L'utilisateur doit être source ou cible)
+            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
+                return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+            }
+            return NextResponse.json({ success: true, opportunity: opp });
+        }
+
+        // 🛡️ SECURITY BYPASS pour les joins Profile
+        const rawOpportunities = await prisma.opportunity.findMany({
+            where: { OR: [{ sourceId: myId }, { targetId: myId }] },
+            include: { sourceProfile: true, targetProfile: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // Calculer les messages non lus pour chaque opportunité
+        const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
+            const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
+            const unreadCount = await prisma.message.count({
+                where: {
+                    senderId: otherId,
+                    receiverId: myId,
+                    isRead: false
+                }
+            });
+            return { ...opp, unreadCount };
+        }));
+
+        return NextResponse.json({ success: true, opportunities });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+export async function POST(req: NextRequest) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(req);
+        const prismaRLS = getPrismaForUser(user.id);
+        const myId = user.id;
+        const body = await req.json();
+        const { action, oppId, customTitle, status } = body;
+
+        if (action === 'audit') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Deprecated: Use /api/opportunities/evaluate instead' 
+            }, { status: 400 });
+        }
+
+        if (action === 'sendChatInvite' || action === 'sendInvite') {
+            const id = oppId;
+            const opp = await prisma.opportunity.findUnique({
+                where: { id },
+                include: { targetProfile: true, sourceProfile: true }
+            });
+
+            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
+                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            }
+
+            await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
+            return NextResponse.json({ success: true });
+        }
+
+        if (action === 'acceptInvite' && oppId) {
+            const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
+            if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            const newConnection = await prismaRLS.connection.create({
+                data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: 'ACCEPTED' }
+            });
+            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
+            return NextResponse.json({ success: true, connectionId: newConnection.id });
+        }
+
+        if (action === 'updateStatus' && oppId) {
+            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status } });
+            return NextResponse.json({ success: true });
+        }
+
+        if (action === 'scout') {
+            const { forceHuntSync } = await import('@/app/actions/radar');
+            await forceHuntSync();
+            return NextResponse.json({ success: true });
+        }
+
+        return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(req);
+        const prismaRLS = getPrismaForUser(user.id);
+        const body = await req.json();
+        const { oppId } = body;
+        if (!oppId) return NextResponse.json({ success: false, error: 'oppId manquant' }, { status: 400 });
+        await prismaRLS.opportunity.delete({ where: { id: oppId } });
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
 </file>
@@ -11899,20 +11639,81 @@ export default function CortexPage() {
 }
 </file>
 
-<file path="capacitor.config.ts">
-import { CapacitorConfig } from '@capacitor/cli';
+<file path="app/profile/unlock/page.tsx">
+'use client';
 
-const config: CapacitorConfig = {
-  appId: 'com.twins.app',
-  appName: 'Ipse',
-  webDir: 'public',
-  server: {
-    url: 'https://cposw-2a01-cb1c-8455-9a00-a88a-b451-bef3-ece7.a.free.pinggy.link', // 🚀 CORRECTION : https://
-    cleartext: true
-  }
-};
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { VaultManager, VaultKey } from '@/lib/vault-manager';
+import { useKeyStore } from '@/store/keyStore';
 
-export default config;
+export default function UnlockPage() {
+    const router = useRouter();
+    const setMasterKey = useKeyStore((state) => state.setMasterKey);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleUnlock = async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            // 🔒 One-step Unlock: Biometric Challenge + Hardware Retrieval
+            const masterKey = await VaultManager.unlockAndLoad(
+                VaultKey.MASTER_KEY,
+                "Déverrouillage de l'Agent Ipse - Déchiffrement du MasterKey"
+            );
+
+            if (masterKey) {
+                // 3. Injection into RAM for SQLite & Crypto workers
+                setMasterKey(masterKey);
+                router.push('/cortex');
+            } else {
+                setError("Coffre-fort vide. Veuillez réinitialiser votre compte.");
+            }
+        } catch (err: any) {
+            setError(err.message || "Échec de l'authentification biométrique.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white/10 backdrop-blur rounded-2xl p-8 border border-white/20 text-center">
+                <div className="w-20 h-20 bg-blue-600/20 rounded-full mx-auto mb-6 flex items-center justify-center border border-blue-500/30">
+                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+
+                <h1 className="text-2xl font-bold text-white mb-2">Bunker Verrouillé</h1>
+                <p className="text-blue-200 text-sm mb-8">Authentification biométrique requise pour dévouer votre clé de chiffrement.</p>
+
+                {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-6 text-sm">{error}</div>}
+
+                <button
+                    onClick={handleUnlock}
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/40 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
+                >
+                    {loading ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    ) : (
+                        <>
+                            <span className="animate-pulse">🔓</span>
+                            Déverrouiller par Biométrie
+                        </>
+                    )}
+                </button>
+
+                <div className="mt-8 text-slate-500 text-xs uppercase tracking-widest font-bold">
+                    Hardware Protected Storage
+                </div>
+            </div>
+        </div>
+    );
+}
 </file>
 
 <file path="components/OpportunityRadar.tsx">
@@ -12534,6 +12335,840 @@ ${formatData(targetMemories)}
       scores: {}, psyche: [], network: ["Profil introuvable ou erreur serveur"], risks: []
     };
   }
+}
+</file>
+
+<file path="app/api/chat/route.ts">
+export const dynamic = 'force-dynamic';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { getPrismaForUser } from '@/lib/prisma';
+
+// Helper for auth via API Route
+async function getAuthUser(request: Request) {
+    const authHeader = request.headers.get('Authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    if (token) return undefined;
+                    return cookieStore.get(name)?.value;
+                },
+                set() { }, remove() { }
+            }
+        }
+    );
+    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
+    if (!user) throw new Error("Accès refusé. Token invalide ou manquant.");
+    return user;
+}
+
+export async function POST(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        // 1. Parsing strict du payload
+        const body = await request.json();
+        const { content, receiverId, action } = body;
+
+        // 2. Vérification de l'identité via Supabase Auth
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        if (action === 'read' && receiverId) {
+            await prismaRLS.message.updateMany({
+                where: {
+                    senderId: receiverId,
+                    receiverId: user.id,
+                    isRead: false
+                },
+                data: { isRead: true }
+            });
+            return NextResponse.json({ success: true });
+        }
+
+        if (!content || !receiverId) {
+            return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
+        }
+
+        // 3. ⚡ Instanciation du Prisma avec RLS ⚡
+        // prismaRLS est déjà déclaré en haut pour le action === 'read'
+
+        // Vérification d'association si besoin, mais RLS gère les accès de base.
+        // On s'assure qu'une connexion ACCEPTED existe.
+        const activeConnection = await prismaRLS.connection.findFirst({
+            where: {
+                OR: [
+                    { initiatorId: user.id, receiverId: receiverId },
+                    { initiatorId: receiverId, receiverId: user.id }
+                ],
+                status: 'ACCEPTED'
+            }
+        });
+
+        if (!activeConnection) {
+            return NextResponse.json({ error: "Accès refusé. Aucune connexion active avec cet utilisateur." }, { status: 403 });
+        }
+
+        // 4. Exécution de la requête sous contexte utilisateur
+        const message = await prismaRLS.message.create({
+            data: {
+                content,
+                senderId: user.id,
+                receiverId
+            }
+        });
+
+        return NextResponse.json({ success: true, message });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (POST):", error);
+        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+
+export async function GET(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const { searchParams } = new URL(request.url);
+        const receiverId = searchParams.get('receiverId');
+        const cursorId = searchParams.get('cursorId');
+
+        if (!receiverId || !cursorId) {
+            return NextResponse.json({ error: "Paramètres manquants : receiverId ou cursorId" }, { status: 400 });
+        }
+
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // Fetch des messages plus anciens via pagination sur RLS
+        const olderMessages = await prismaRLS.message.findMany({
+            where: {
+                OR: [
+                    { senderId: user.id, receiverId: receiverId },
+                    { senderId: receiverId, receiverId: user.id }
+                ]
+            },
+            take: 50,
+            skip: 1, // Skip cursor
+            cursor: { id: cursorId },
+            orderBy: { createdAt: 'desc' } // Fetch backwards
+        });
+
+        // Remettre dans l'ordre chronologique logique (plus vieux en haut)
+        return NextResponse.json({ success: true, messages: olderMessages.reverse() });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (GET):", error);
+        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const body = await request.json();
+        const { connectionId } = body;
+
+        if (!connectionId) {
+            return NextResponse.json({ success: false, error: "connectionId manquant" }, { status: 400 });
+        }
+
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // Vérifier que la connexion existe et appartient à l'utilisateur
+        const connection = await prismaRLS.connection.findFirst({
+            where: {
+                id: connectionId,
+                OR: [
+                    { initiatorId: user.id },
+                    { receiverId: user.id }
+                ]
+            }
+        });
+
+        if (!connection) {
+            return NextResponse.json({ success: false, error: "Connexion introuvable ou accès refusé." }, { status: 404 });
+        }
+
+        // Supprimer les messages associés puis la connexion
+        await prismaRLS.message.deleteMany({
+            where: {
+                OR: [
+                    { senderId: connection.initiatorId, receiverId: connection.receiverId },
+                    { senderId: connection.receiverId, receiverId: connection.initiatorId }
+                ]
+            }
+        });
+
+        await prismaRLS.connection.delete({ where: { id: connectionId } });
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (DELETE):", error);
+        return NextResponse.json({ success: false, error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+</file>
+
+<file path="capacitor.config.ts">
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.twins.app',
+  appName: 'Ipse',
+  webDir: 'public',
+  server: {
+    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // 🚀 CORRECTION : https://
+    cleartext: true
+  }
+};
+
+export default config;
+</file>
+
+<file path="vercel.json">
+{
+    "crons": [
+        {
+            "path": "/api/cron/radar?theme=work",
+            "schedule": "0 8 * * *"
+        },
+        {
+            "path": "/api/cron/radar?theme=hobby",
+            "schedule": "0 13 * * *"
+        },
+        {
+            "path": "/api/cron/radar?theme=dating",
+            "schedule": "0 20 * * *"
+        }
+    ]
+}
+</file>
+
+<file path="app/actions/opportunities.ts">
+// 'use server' (static build fix)
+import { mistralClient } from '@/lib/mistral';
+import { prisma } from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
+import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+
+// Helper for auth
+async function getAuthUser() {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set(name, value, options) { },
+                remove(name, options) { }
+            }
+        }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Non autorisé");
+    return user;
+}
+
+// 1. AUDIT PROFOND
+export async function performAudit(oppId: string) {
+    try {
+        const user = await getAuthUser();
+        const myId = user.id;
+
+        // 1. On récupère l'opportunité avec les relations exactes
+        const opp = await prisma.opportunity.findUnique({
+            where: { id: oppId },
+            include: {
+                sourceProfile: true,
+                targetProfile: true
+            }
+        });
+
+        if (!opp || !opp.sourceProfile || !opp.targetProfile) {
+            return { success: false, error: "Données introuvables" };
+        }
+
+        // Identifier clairement qui est la cible (l'autre agent)
+        const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
+
+        // 2. On construit le prompt avec un FOCUS REQUIS STRICT SUR LA CIBLE
+        const prompt = `
+Tu es le Cortex, une IA de renseignement stratégique B2B.
+
+RÈGLES DE SURVIE ABSOLUES :
+1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
+2. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
+3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
+
+NOUVELLE DIRECTIVE STRICTE :
+Dans la section 'Match Stratégique' (le champ 'synergies'), tu dois UNIQUEMENT décrire l'identité et l'activité de la CIBLE détectée. 
+Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un résumé direct de la cible détectée sous ce format : "[Nom de la cible] est [Métier de la cible]. Il/Elle cherche à [Objectif]."
+
+FORMAT ATTENDU :
+{
+  "synergies": "[Nom de la cible] est [Métier]. Il cherche à [Objectif].",
+  "actions": [
+    "Action précise 1",
+    "Action précise 2"
+  ]
+}
+
+CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
+Rôle : ${targetProfile.primaryRole || 'Non défini'}
+Bio : ${targetProfile.bio || 'Non définie'}
+
+RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.
+`;
+
+        console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
+
+        // 3. Appel à Mistral
+        const auditResponse = await mistralClient.chat.complete({
+            model: 'mistral-large-latest',
+            messages: [{ role: 'user', content: prompt }]
+        });
+
+        const content = auditResponse.choices[0]?.message.content;
+        let auditResult = "Erreur d'analyse.";
+
+        try {
+            const cleanedContent = typeof content === 'string'
+                ? content.replace(/```json/gi, '').replace(/```/g, '').trim()
+                : '{}';
+            auditResult = cleanedContent; // Or parse it if we need structured data later
+            // result = JSON.parse(cleanedContent); 
+        } catch (error: any) {
+            console.error("❌ [AUDIT] Échec du parsing... (Score: Inconnu)");
+            console.error("Détail de l'erreur Mistral :", error);
+            console.log("Réponse brute reçue :", content);
+        }
+
+        // 4. Sauvegarde en BDD
+        await prisma.opportunity.update({
+            where: { id: oppId },
+            data: { audit: auditResult, status: 'AUDITED' }
+        });
+
+        return { success: true, audit: auditResult };
+
+    } catch (error) {
+        console.error("Erreur Audit:", error);
+        return { success: false, error: "Crash de l'audit" };
+    }
+}
+
+// 2. ENVOYER INVITATION
+export async function sendChatInvite(oppId: string, customTitle: string) {
+    try {
+        // 1. On récupère l'opportunité et les profils
+        const opp = await prisma.opportunity.findUnique({
+            where: { id: oppId },
+            include: { targetProfile: true, sourceProfile: true }
+        });
+
+        if (!opp) throw new Error("Opportunité introuvable");
+
+        // 2. ON MET À JOUR LA BDD D'ABORD (L'invitation est créée quoi qu'il arrive)
+        await prisma.opportunity.update({
+            where: { id: oppId },
+            data: { title: customTitle, status: 'INVITED' }
+        });
+
+        // 3. ENVOI DE LA NOTIFICATION (Optionnel : on ne crashe pas si pas de token)
+        if (opp.targetProfile?.fcmToken) {
+            const admin = (await import('firebase-admin')).default;
+            // On s'assure que Firebase est initialisé (pushSender.ts le fait, mais au cas où)
+            if (!admin.apps.length) {
+                admin.initializeApp({
+                    credential: admin.credential.cert({
+                        projectId: process.env.FIREBASE_PROJECT_ID,
+                        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                    }),
+                });
+            }
+
+            const message = {
+                notification: {
+                    title: `📩 Nouvelle Invitation : ${customTitle}`,
+                    body: `${opp.sourceProfile?.name || 'Un agent'} souhaite ouvrir un canal avec vous.`,
+                },
+                data: {
+                    type: 'CHAT_INVITATION',
+                    opportunityId: oppId,
+                    url: `/cortex/invitation?id=${oppId}`
+                },
+                token: opp.targetProfile.fcmToken,
+            };
+
+            try {
+                await admin.messaging().send(message as any);
+                console.log("✅ [OPP] Notification Push envoyée avec succès.");
+            } catch (notifError) {
+                console.error("⚠️ [OPP] Erreur Push (mais invitation créée) :", notifError);
+            }
+        } else {
+            console.log("⚠️ [OPP] Cible sans fcmToken. Invitation créée en BDD mais pas de notification Push envoyée.");
+        }
+
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        console.error("❌ [OPP] Erreur envoi invitation:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+// 3. ACCEPTER L'INVITATION (Création de Canal)
+export async function acceptInvite(oppId: string) {
+    try {
+        const opp = await prisma.opportunity.findUnique({
+            where: { id: oppId }
+        });
+
+        if (!opp) throw new Error("Opportunité expirée ou introuvable");
+
+        // 1. On crée le canal de communication (Table Connection)
+        const newConnection = await prisma.connection.create({
+            data: {
+                initiatorId: opp.sourceId,
+                receiverId: opp.targetId,
+                status: 'ACCEPTED' // On l'accepte d'emblée
+            }
+        });
+
+        // 2. On clôture l'opportunité
+        await prisma.opportunity.update({
+            where: { id: oppId },
+            data: { status: 'ACCEPTED' }
+        });
+
+        revalidatePath('/');
+        return { success: true, connectionId: newConnection.id };
+    } catch (error) {
+        console.error("❌ [OPP] Erreur acceptation invitation:", error);
+        return { success: false, error };
+    }
+}
+
+// 3. BLOQUER / ANNULER
+export async function updateOppStatus(oppId: string, status: 'BLOCKED' | 'CANCELLED') {
+    return await prisma.opportunity.update({
+        where: { id: oppId },
+        data: { status }
+    });
+}
+
+// 4. GET OPPORTUNITY
+export async function getOpportunity(oppId: string) {
+    try {
+        if (!oppId) throw new Error("Missing ID");
+        const opp = await prisma.opportunity.findUnique({
+            where: { id: oppId },
+            include: { sourceProfile: true, targetProfile: true }
+        });
+        if (!opp) throw new Error("Not found");
+        return { success: true, opportunity: opp };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// 5. GET OPPORTUNITIES
+export async function getOpportunities(profileId: string) {
+    try {
+        if (!profileId) throw new Error("Missing ID");
+        const opps = await prisma.opportunity.findMany({
+            where: {
+                OR: [
+                    { sourceId: profileId, targetId: { not: profileId } },
+                    { targetId: profileId, sourceId: { not: profileId } }
+                ]
+            },
+            include: { sourceProfile: true, targetProfile: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        return { success: true, opportunities: opps };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
+// 6. SCOUT (Trigger Radar) - This just triggers forceHuntSync
+export async function scoutOpportunities(profileId: string) {
+    try {
+        const { forceHuntSync } = await import('./radar');
+        await forceHuntSync();
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+// 7. DELETE OPPORTUNITY
+export async function deleteOpportunity(oppId: string) {
+    try {
+        if (!oppId) throw new Error("Missing ID");
+        await prisma.opportunity.delete({ where: { id: oppId } });
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+</file>
+
+<file path="app/actions/scan-global-network.ts">
+'use server'
+import { mistralClient } from "@/lib/mistral";
+
+import { prisma } from "@/lib/prisma";
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import { trackAgentActivity } from '@/app/actions/missions';
+
+const client = mistralClient;
+
+export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
+  // 1. Initialiser le client Supabase sécurisé
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value; }
+      }
+    }
+  );
+
+  // 2. Récupération du profil agent pour définir l'intention de recherche
+  const agent: any = await prisma.profile.findUnique({
+    where: { id: userId }
+  });
+  if (!agent) throw new Error("Agent introuvable.");
+
+  // Ce que notre Agent cherche activement :
+  const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
+
+  // 3. Transformation en vecteur mathématique (Embeddings)
+  const embeddingResponse = await client.embeddings.create({
+    model: "mistral-embed",
+    inputs: [searchIntent],
+  });
+  const queryVector = embeddingResponse.data[0].embedding;
+
+  // 4. Recherche RAG dans la mémoire vectorielle
+  const { data: ragResults } = await supabase.rpc('match_memories', {
+    query_embedding: queryVector,
+    match_threshold: 0.75,
+    match_count: 10,
+    filter_profile_id: userId,
+  });
+
+  const contextBlock = ragResults && ragResults.length > 0
+    ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
+    : 'Aucune mémoire pertinente trouvée dans la base vectorielle.';
+
+  // 5. Construction du prompt selon le mode
+  const promptContent = mode === 'deep'
+    ? `Tu es TWINS_INTEL, un moteur d'analyse stratégique avancé.
+Analyse ce profil et ses données mémoire en profondeur pour identifier des opportunités de connexion et de collaboration.
+
+AGENT:
+- Nom: ${agent.name || 'Agent'}
+- Profession: ${agent.profession || 'Non spécifiée'}
+- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
+- Bio: ${agent.bio || 'Aucune'}
+- Analyse unifiée: ${agent.unifiedAnalysis || 'Aucune'}
+
+DONNÉES MÉMOIRE PERTINENTES:
+${contextBlock}
+
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
+{
+  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
+  "analysisSummary": "Résumé de l'analyse en 2-3 phrases.",
+  "overallMatchScore": 0-100,
+  "targetClassification": "Classification du profil cible",
+  "unifiedAnalysis": "Analyse détaillée du potentiel de l'agent.",
+  "strategicAlignment": "Comment l'agent peut capitaliser sur ses forces.",
+  "targetId": "${userId}",
+  "targets": [
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+  ],
+  "opportunities": [
+    {"title": "Titre opportunité", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
+  ]
+}`
+    : `Tu es TWINS_INTEL, un radar de surface rapide.
+Fais une analyse de surface du profil suivant pour identifier le statut général et les directions stratégiques.
+
+AGENT:
+- Nom: ${agent.name || 'Agent'}
+- Profession: ${agent.profession || 'Non spécifiée'}
+- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
+
+DONNÉES MÉMOIRE:
+${contextBlock}
+
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
+{
+  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
+  "analysisSummary": "Résumé bref en 1-2 phrases.",
+  "targetId": "${userId}",
+  "targets": [
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+  ]
+}`;
+
+  // 6. Appel Mistral avec format JSON forcé
+  const response = await client.chat.complete({
+    model: "mistral-large-latest",
+    messages: [{ role: "system", content: promptContent }],
+    responseFormat: { type: "json_object" }
+  });
+
+  const rawContent = response.choices?.[0]?.message?.content;
+
+  // 7. DÉCLARATION EN DEHORS DU TRY/CATCH
+  let aiAnalysis: any = {};
+  let targets: any[] = [];
+
+  // 8. PARSING SÉCURISÉ
+  try {
+    const cleanJsonContent = (rawContent as string).replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
+    const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
+    const parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(cleanJsonContent);
+    aiAnalysis = parsedData;
+    targets = parsedData.targets || [];
+  } catch (e) {
+    console.error("[RESEAU - CRITIQUE] JSON.parse a échoué pour l'analyse IA :", rawContent);
+    throw new Error("Erreur de parsing JSON de la réponse Mistral.");
+  }
+
+  // 9. LE RETURN SÉCURISÉ
+  await trackAgentActivity(userId, 'scan');
+
+  return {
+    ...aiAnalysis,
+    targetId: userId,
+    targets
+  };
+}
+</file>
+
+<file path="app/api/memories/route.ts">
+export const dynamic = 'force-dynamic';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { prisma, getPrismaForUser } from '@/lib/prisma';
+import { mistralClient } from '@/lib/mistral';
+import { trackAgentActivity } from '@/app/actions/missions';
+
+// ⚡ La fonction qui lit le Bearer Token
+async function getAuthUser(request: Request) {
+    const authHeader = request.headers.get('Authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+            cookies: {
+                get(name: string) { return cookieStore.get(name)?.value; },
+                set() { }, remove() { }
+            }
+        }
+    );
+    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
+    if (!user) throw new Error("Accès refusé.");
+    return user;
+}
+
+async function vectorizeAndStoreMemory(memoryId: string, content: string) {
+    try {
+        const embeddingsResponse = await mistralClient.embeddings.create({
+            model: 'mistral-embed',
+            inputs: [content],
+        });
+        const embeddingVector = embeddingsResponse.data[0].embedding;
+        await prisma.$executeRaw`
+            UPDATE public.memory SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
+        `;
+    } catch (error) {
+        console.error(`❌ [VECTORISATION ERREUR]:`, error);
+    }
+}
+
+// GET /api/memories
+export async function GET(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const { searchParams } = new URL(request.url);
+        const profileId = searchParams.get('profileId');
+        if (!profileId) return NextResponse.json({ success: false, error: 'profileId manquant' }, { status: 400 });
+
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        const memories = await prismaRLS.memory.findMany({
+            where: { profileId },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+        return NextResponse.json({ success: true, memories });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+// POST /api/memories
+export async function POST(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(request);
+        const contentType = request.headers.get('content-type') || '';
+
+        // FILE UPLOAD (FormData)
+        if (contentType.includes('multipart/form-data')) {
+            const formData = await request.formData();
+            const file = formData.get('file') as File;
+            const profileId = formData.get('profileId') as string || user.id;
+            const textContext = formData.get('textContext') as string;
+            const fileName = formData.get('fileName') as string;
+            const hasFile = formData.get('hasFile') === 'true';
+
+            if (textContext) {
+                const cleanContent = textContext.replace(/\0/g, '');
+                if (!cleanContent) return NextResponse.json({ success: false, error: 'Aucun contenu valide.' }, { status: 400 });
+
+                const memory = await prisma.memory.create({
+                    data: {
+                        profileId: user.id,
+                        content: cleanContent,
+                        type: hasFile ? 'document' : 'thought',
+                        source: fileName || 'manual'
+                    }
+                });
+                await vectorizeAndStoreMemory(memory.id, cleanContent);
+                return NextResponse.json({ success: true, memory });
+            }
+
+            if (!file) return NextResponse.json({ success: false, error: 'Fichier manquant' }, { status: 400 });
+            const text = await file.text();
+            const sanitizedText = text.replace(/\0/g, '');
+            const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
+
+            const memory = await prisma.memory.create({
+                data: { profileId, content: memoryContent, type: 'document', source: file.name }
+            });
+            await vectorizeAndStoreMemory(memory.id, memoryContent);
+            return NextResponse.json({ success: true, memory });
+        }
+
+        // JSON actions
+        const body = await request.json();
+        const { action } = body;
+
+        if (action === 'addMemory') {
+            const { profileId, content, type = 'thought', source = 'manual' } = body;
+            const memory = await prisma.memory.create({
+                data: { profileId: profileId || user.id, content, type, source }
+            });
+            await vectorizeAndStoreMemory(memory.id, content);
+            return NextResponse.json({ success: true, memory });
+        }
+
+        if (action === 'scrapeUrl') {
+            const { url, profileId } = body;
+            if (!url) return NextResponse.json({ success: false, error: 'URL manquante' }, { status: 400 });
+
+            const response = await fetch('https://api.tavily.com/extract', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, urls: [url] })
+            });
+            if (!response.ok) throw new Error("Erreur extraction URL");
+
+            const data = await response.json();
+            const content = data?.results?.[0]?.rawContent || "Aucun contenu";
+            const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
+
+            const memory = await prisma.memory.create({
+                data: { profileId: profileId || user.id, content: memoryContent, type: 'scraped', source: url }
+            });
+            await vectorizeAndStoreMemory(memory.id, memoryContent);
+            return NextResponse.json({ success: true, content, memory });
+        }
+
+        return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+// PATCH /api/memories
+export async function PATCH(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(request);
+        const body = await request.json();
+        const { memoryId, newContent } = body;
+
+        if (!memoryId || !newContent) return NextResponse.json({ success: false, error: 'Params manquants' }, { status: 400 });
+
+        const embedResponse = await mistralClient.embeddings.create({
+            model: 'mistral-embed',
+            inputs: [newContent]
+        });
+        const newVector = embedResponse.data[0].embedding;
+
+        await prisma.$executeRaw`
+            UPDATE public.memory SET content = ${newContent}, embedding = ${newVector}::vector WHERE id = ${memoryId}
+        `;
+
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
+}
+
+// DELETE /api/memories
+export async function DELETE(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const user = await getAuthUser(request);
+        const body = await request.json();
+        const { memoryId } = body;
+
+        if (!memoryId) return NextResponse.json({ success: false, error: 'memoryId manquant' }, { status: 400 });
+
+        await prisma.memory.delete({ where: { id: memoryId } });
+        await trackAgentActivity(user.id, 'memory_delete');
+
+        return NextResponse.json({ success: true });
+    } catch (e: any) {
+        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+    }
 }
 </file>
 
@@ -13549,299 +14184,6 @@ export default function NewProfilePage() {
 }
 </file>
 
-<file path="vercel.json">
-{
-    "crons": [
-        {
-            "path": "/api/cron/radar?theme=work",
-            "schedule": "0 8 * * *"
-        },
-        {
-            "path": "/api/cron/radar?theme=hobby",
-            "schedule": "0 13 * * *"
-        },
-        {
-            "path": "/api/cron/radar?theme=dating",
-            "schedule": "0 20 * * *"
-        }
-    ]
-}
-</file>
-
-<file path="app/actions/opportunities.ts">
-// 'use server' (static build fix)
-import { mistralClient } from '@/lib/mistral';
-import { prisma } from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
-import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-
-// Helper for auth
-async function getAuthUser() {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set(name, value, options) { },
-                remove(name, options) { }
-            }
-        }
-    );
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
-    return user;
-}
-
-// 1. AUDIT PROFOND
-export async function performAudit(oppId: string) {
-    try {
-        const user = await getAuthUser();
-        const myId = user.id;
-
-        // 1. On récupère l'opportunité avec les relations exactes
-        const opp = await prisma.opportunity.findUnique({
-            where: { id: oppId },
-            include: {
-                sourceProfile: true,
-                targetProfile: true
-            }
-        });
-
-        if (!opp || !opp.sourceProfile || !opp.targetProfile) {
-            return { success: false, error: "Données introuvables" };
-        }
-
-        // Identifier clairement qui est la cible (l'autre agent)
-        const targetProfile = opp.sourceId === myId ? opp.targetProfile : opp.sourceProfile;
-
-        // 2. On construit le prompt avec un FOCUS REQUIS STRICT SUR LA CIBLE
-        const prompt = `
-Tu es le Cortex, une IA de renseignement stratégique B2B.
-
-RÈGLES DE SURVIE ABSOLUES :
-1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
-2. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
-3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
-
-NOUVELLE DIRECTIVE STRICTE :
-Dans la section 'Match Stratégique' (le champ 'synergies'), tu dois UNIQUEMENT décrire l'identité et l'activité de la CIBLE détectée. 
-Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un résumé direct de la cible détectée sous ce format : "[Nom de la cible] est [Métier de la cible]. Il/Elle cherche à [Objectif]."
-
-FORMAT ATTENDU :
-{
-  "synergies": "[Nom de la cible] est [Métier]. Il cherche à [Objectif].",
-  "actions": [
-    "Action précise 1",
-    "Action précise 2"
-  ]
-}
-
-CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
-Rôle : ${targetProfile.primaryRole || 'Non défini'}
-Bio : ${targetProfile.bio || 'Non définie'}
-
-RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.
-`;
-
-        console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
-
-        // 3. Appel à Mistral
-        const auditResponse = await mistralClient.chat.complete({
-            model: 'mistral-large-latest',
-            messages: [{ role: 'user', content: prompt }]
-        });
-
-        const content = auditResponse.choices[0]?.message.content;
-        let auditResult = "Erreur d'analyse.";
-
-        try {
-            const cleanedContent = typeof content === 'string'
-                ? content.replace(/```json/gi, '').replace(/```/g, '').trim()
-                : '{}';
-            auditResult = cleanedContent; // Or parse it if we need structured data later
-            // result = JSON.parse(cleanedContent); 
-        } catch (error: any) {
-            console.error("❌ [AUDIT] Échec du parsing... (Score: Inconnu)");
-            console.error("Détail de l'erreur Mistral :", error);
-            console.log("Réponse brute reçue :", content);
-        }
-
-        // 4. Sauvegarde en BDD
-        await prisma.opportunity.update({
-            where: { id: oppId },
-            data: { audit: auditResult, status: 'AUDITED' }
-        });
-
-        return { success: true, audit: auditResult };
-
-    } catch (error) {
-        console.error("Erreur Audit:", error);
-        return { success: false, error: "Crash de l'audit" };
-    }
-}
-
-// 2. ENVOYER INVITATION
-export async function sendChatInvite(oppId: string, customTitle: string) {
-    try {
-        // 1. On récupère l'opportunité et les profils
-        const opp = await prisma.opportunity.findUnique({
-            where: { id: oppId },
-            include: { targetProfile: true, sourceProfile: true }
-        });
-
-        if (!opp) throw new Error("Opportunité introuvable");
-
-        // 2. ON MET À JOUR LA BDD D'ABORD (L'invitation est créée quoi qu'il arrive)
-        await prisma.opportunity.update({
-            where: { id: oppId },
-            data: { title: customTitle, status: 'INVITED' }
-        });
-
-        // 3. ENVOI DE LA NOTIFICATION (Optionnel : on ne crashe pas si pas de token)
-        if (opp.targetProfile?.fcmToken) {
-            const admin = (await import('firebase-admin')).default;
-            // On s'assure que Firebase est initialisé (pushSender.ts le fait, mais au cas où)
-            if (!admin.apps.length) {
-                admin.initializeApp({
-                    credential: admin.credential.cert({
-                        projectId: process.env.FIREBASE_PROJECT_ID,
-                        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-                    }),
-                });
-            }
-
-            const message = {
-                notification: {
-                    title: `📩 Nouvelle Invitation : ${customTitle}`,
-                    body: `${opp.sourceProfile?.name || 'Un agent'} souhaite ouvrir un canal avec vous.`,
-                },
-                data: {
-                    type: 'CHAT_INVITATION',
-                    opportunityId: oppId,
-                    url: `/cortex/invitation?id=${oppId}`
-                },
-                token: opp.targetProfile.fcmToken,
-            };
-
-            try {
-                await admin.messaging().send(message as any);
-                console.log("✅ [OPP] Notification Push envoyée avec succès.");
-            } catch (notifError) {
-                console.error("⚠️ [OPP] Erreur Push (mais invitation créée) :", notifError);
-            }
-        } else {
-            console.log("⚠️ [OPP] Cible sans fcmToken. Invitation créée en BDD mais pas de notification Push envoyée.");
-        }
-
-        revalidatePath('/');
-        return { success: true };
-    } catch (error: any) {
-        console.error("❌ [OPP] Erreur envoi invitation:", error);
-        return { success: false, error: error.message };
-    }
-}
-
-// 3. ACCEPTER L'INVITATION (Création de Canal)
-export async function acceptInvite(oppId: string) {
-    try {
-        const opp = await prisma.opportunity.findUnique({
-            where: { id: oppId }
-        });
-
-        if (!opp) throw new Error("Opportunité expirée ou introuvable");
-
-        // 1. On crée le canal de communication (Table Connection)
-        const newConnection = await prisma.connection.create({
-            data: {
-                initiatorId: opp.sourceId,
-                receiverId: opp.targetId,
-                status: 'ACCEPTED' // On l'accepte d'emblée
-            }
-        });
-
-        // 2. On clôture l'opportunité
-        await prisma.opportunity.update({
-            where: { id: oppId },
-            data: { status: 'ACCEPTED' }
-        });
-
-        revalidatePath('/');
-        return { success: true, connectionId: newConnection.id };
-    } catch (error) {
-        console.error("❌ [OPP] Erreur acceptation invitation:", error);
-        return { success: false, error };
-    }
-}
-
-// 3. BLOQUER / ANNULER
-export async function updateOppStatus(oppId: string, status: 'BLOCKED' | 'CANCELLED') {
-    return await prisma.opportunity.update({
-        where: { id: oppId },
-        data: { status }
-    });
-}
-
-// 4. GET OPPORTUNITY
-export async function getOpportunity(oppId: string) {
-    try {
-        if (!oppId) throw new Error("Missing ID");
-        const opp = await prisma.opportunity.findUnique({
-            where: { id: oppId },
-            include: { sourceProfile: true, targetProfile: true }
-        });
-        if (!opp) throw new Error("Not found");
-        return { success: true, opportunity: opp };
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
-}
-
-// 5. GET OPPORTUNITIES
-export async function getOpportunities(profileId: string) {
-    try {
-        if (!profileId) throw new Error("Missing ID");
-        const opps = await prisma.opportunity.findMany({
-            where: {
-                OR: [
-                    { sourceId: profileId, targetId: { not: profileId } },
-                    { targetId: profileId, sourceId: { not: profileId } }
-                ]
-            },
-            include: { sourceProfile: true, targetProfile: true },
-            orderBy: { createdAt: 'desc' }
-        });
-        return { success: true, opportunities: opps };
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
-}
-
-// 6. SCOUT (Trigger Radar) - This just triggers forceHuntSync
-export async function scoutOpportunities(profileId: string) {
-    try {
-        const { forceHuntSync } = await import('./radar');
-        await forceHuntSync();
-        return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
-}
-// 7. DELETE OPPORTUNITY
-export async function deleteOpportunity(oppId: string) {
-    try {
-        if (!oppId) throw new Error("Missing ID");
-        await prisma.opportunity.delete({ where: { id: oppId } });
-        return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
-    }
-}
-</file>
-
 <file path="app/actions/radar.ts">
 // 'use server' (static build fix)
 
@@ -14009,348 +14351,6 @@ export async function getRadarResults(profileId: string) {
 
 export async function getGlobalRadarNews() {
     return { success: true, news: [] };
-}
-</file>
-
-<file path="app/actions/scan-global-network.ts">
-'use server'
-import { mistralClient } from "@/lib/mistral";
-
-import { prisma } from "@/lib/prisma";
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-import { trackAgentActivity } from '@/app/actions/missions';
-
-const client = mistralClient;
-
-export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
-  // 1. Initialiser le client Supabase sécurisé
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) { return cookieStore.get(name)?.value; }
-      }
-    }
-  );
-
-  // 2. Récupération du profil agent pour définir l'intention de recherche
-  const agent: any = await prisma.profile.findUnique({
-    where: { id: userId }
-  });
-  if (!agent) throw new Error("Agent introuvable.");
-
-  // Ce que notre Agent cherche activement :
-  const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
-
-  // 3. Transformation en vecteur mathématique (Embeddings)
-  const embeddingResponse = await client.embeddings.create({
-    model: "mistral-embed",
-    inputs: [searchIntent],
-  });
-  const queryVector = embeddingResponse.data[0].embedding;
-
-  // 4. Recherche RAG dans la mémoire vectorielle
-  const { data: ragResults } = await supabase.rpc('match_memories', {
-    query_embedding: queryVector,
-    match_threshold: 0.75,
-    match_count: 10,
-    filter_profile_id: userId,
-  });
-
-  const contextBlock = ragResults && ragResults.length > 0
-    ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
-    : 'Aucune mémoire pertinente trouvée dans la base vectorielle.';
-
-  // 5. Construction du prompt selon le mode
-  const promptContent = mode === 'deep'
-    ? `Tu es TWINS_INTEL, un moteur d'analyse stratégique avancé.
-Analyse ce profil et ses données mémoire en profondeur pour identifier des opportunités de connexion et de collaboration.
-
-AGENT:
-- Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spécifiée'}
-- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
-- Bio: ${agent.bio || 'Aucune'}
-- Analyse unifiée: ${agent.unifiedAnalysis || 'Aucune'}
-
-DONNÉES MÉMOIRE PERTINENTES:
-${contextBlock}
-
-Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
-{
-  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "Résumé de l'analyse en 2-3 phrases.",
-  "overallMatchScore": 0-100,
-  "targetClassification": "Classification du profil cible",
-  "unifiedAnalysis": "Analyse détaillée du potentiel de l'agent.",
-  "strategicAlignment": "Comment l'agent peut capitaliser sur ses forces.",
-  "targetId": "${userId}",
-  "targets": [
-    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
-  ],
-  "opportunities": [
-    {"title": "Titre opportunité", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
-  ]
-}`
-    : `Tu es TWINS_INTEL, un radar de surface rapide.
-Fais une analyse de surface du profil suivant pour identifier le statut général et les directions stratégiques.
-
-AGENT:
-- Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spécifiée'}
-- Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
-
-DONNÉES MÉMOIRE:
-${contextBlock}
-
-Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
-{
-  "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "Résumé bref en 1-2 phrases.",
-  "targetId": "${userId}",
-  "targets": [
-    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
-  ]
-}`;
-
-  // 6. Appel Mistral avec format JSON forcé
-  const response = await client.chat.complete({
-    model: "mistral-large-latest",
-    messages: [{ role: "system", content: promptContent }],
-    responseFormat: { type: "json_object" }
-  });
-
-  const rawContent = response.choices?.[0]?.message?.content;
-
-  // 7. DÉCLARATION EN DEHORS DU TRY/CATCH
-  let aiAnalysis: any = {};
-  let targets: any[] = [];
-
-  // 8. PARSING SÉCURISÉ
-  try {
-    const cleanJsonContent = (rawContent as string).replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
-    const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
-    const parsedData = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(cleanJsonContent);
-    aiAnalysis = parsedData;
-    targets = parsedData.targets || [];
-  } catch (e) {
-    console.error("[RESEAU - CRITIQUE] JSON.parse a échoué pour l'analyse IA :", rawContent);
-    throw new Error("Erreur de parsing JSON de la réponse Mistral.");
-  }
-
-  // 9. LE RETURN SÉCURISÉ
-  await trackAgentActivity(userId, 'scan');
-
-  return {
-    ...aiAnalysis,
-    targetId: userId,
-    targets
-  };
-}
-</file>
-
-<file path="app/api/memories/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
-import { mistralClient } from '@/lib/mistral';
-import { trackAgentActivity } from '@/app/actions/missions';
-
-// ⚡ La fonction qui lit le Bearer Token
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Accès refusé.");
-    return user;
-}
-
-async function vectorizeAndStoreMemory(memoryId: string, content: string) {
-    try {
-        const embeddingsResponse = await mistralClient.embeddings.create({
-            model: 'mistral-embed',
-            inputs: [content],
-        });
-        const embeddingVector = embeddingsResponse.data[0].embedding;
-        await prisma.$executeRaw`
-            UPDATE public.memory SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
-        `;
-    } catch (error) {
-        console.error(`❌ [VECTORISATION ERREUR]:`, error);
-    }
-}
-
-// GET /api/memories
-export async function GET(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
-        if (!profileId) return NextResponse.json({ success: false, error: 'profileId manquant' }, { status: 400 });
-
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        const memories = await prismaRLS.memory.findMany({
-            where: { profileId },
-            orderBy: { createdAt: 'desc' },
-            take: 50
-        });
-        return NextResponse.json({ success: true, memories });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-// POST /api/memories
-export async function POST(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        const contentType = request.headers.get('content-type') || '';
-
-        // FILE UPLOAD (FormData)
-        if (contentType.includes('multipart/form-data')) {
-            const formData = await request.formData();
-            const file = formData.get('file') as File;
-            const profileId = formData.get('profileId') as string || user.id;
-            const textContext = formData.get('textContext') as string;
-            const fileName = formData.get('fileName') as string;
-            const hasFile = formData.get('hasFile') === 'true';
-
-            if (textContext) {
-                const cleanContent = textContext.replace(/\0/g, '');
-                if (!cleanContent) return NextResponse.json({ success: false, error: 'Aucun contenu valide.' }, { status: 400 });
-
-                const memory = await prisma.memory.create({
-                    data: {
-                        profileId: user.id,
-                        content: cleanContent,
-                        type: hasFile ? 'document' : 'thought',
-                        source: fileName || 'manual'
-                    }
-                });
-                await vectorizeAndStoreMemory(memory.id, cleanContent);
-                return NextResponse.json({ success: true, memory });
-            }
-
-            if (!file) return NextResponse.json({ success: false, error: 'Fichier manquant' }, { status: 400 });
-            const text = await file.text();
-            const sanitizedText = text.replace(/\0/g, '');
-            const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
-
-            const memory = await prisma.memory.create({
-                data: { profileId, content: memoryContent, type: 'document', source: file.name }
-            });
-            await vectorizeAndStoreMemory(memory.id, memoryContent);
-            return NextResponse.json({ success: true, memory });
-        }
-
-        // JSON actions
-        const body = await request.json();
-        const { action } = body;
-
-        if (action === 'addMemory') {
-            const { profileId, content, type = 'thought', source = 'manual' } = body;
-            const memory = await prisma.memory.create({
-                data: { profileId: profileId || user.id, content, type, source }
-            });
-            await vectorizeAndStoreMemory(memory.id, content);
-            return NextResponse.json({ success: true, memory });
-        }
-
-        if (action === 'scrapeUrl') {
-            const { url, profileId } = body;
-            if (!url) return NextResponse.json({ success: false, error: 'URL manquante' }, { status: 400 });
-
-            const response = await fetch('https://api.tavily.com/extract', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ api_key: process.env.TAVILY_API_KEY, urls: [url] })
-            });
-            if (!response.ok) throw new Error("Erreur extraction URL");
-
-            const data = await response.json();
-            const content = data?.results?.[0]?.rawContent || "Aucun contenu";
-            const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
-
-            const memory = await prisma.memory.create({
-                data: { profileId: profileId || user.id, content: memoryContent, type: 'scraped', source: url }
-            });
-            await vectorizeAndStoreMemory(memory.id, memoryContent);
-            return NextResponse.json({ success: true, content, memory });
-        }
-
-        return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-// PATCH /api/memories
-export async function PATCH(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        const body = await request.json();
-        const { memoryId, newContent } = body;
-
-        if (!memoryId || !newContent) return NextResponse.json({ success: false, error: 'Params manquants' }, { status: 400 });
-
-        const embedResponse = await mistralClient.embeddings.create({
-            model: 'mistral-embed',
-            inputs: [newContent]
-        });
-        const newVector = embedResponse.data[0].embedding;
-
-        await prisma.$executeRaw`
-            UPDATE public.memory SET content = ${newContent}, embedding = ${newVector}::vector WHERE id = ${memoryId}
-        `;
-
-        return NextResponse.json({ success: true });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-// DELETE /api/memories
-export async function DELETE(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(request);
-        const body = await request.json();
-        const { memoryId } = body;
-
-        if (!memoryId) return NextResponse.json({ success: false, error: 'memoryId manquant' }, { status: 400 });
-
-        await prisma.memory.delete({ where: { id: memoryId } });
-        await trackAgentActivity(user.id, 'memory_delete');
-
-        return NextResponse.json({ success: true });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
 }
 </file>
 
@@ -16908,8 +16908,8 @@ model Connection {
   receiverId  String
   status      String   @default("PENDING")
   createdAt   DateTime @default(now())
-  initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id])
-  receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id])
+  initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
 }
 
 model Opportunity {
@@ -16923,8 +16923,8 @@ model Opportunity {
   title         String?
   createdAt     DateTime @default(now())
   synergies     String
-  sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id])
-  targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id])
+  sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id], onDelete: Cascade)
 }
 
 enum MatchStatus {

@@ -61,7 +61,7 @@ export default function NewProfilePage() {
 
             const { generateAndStoreKeyPair } = await import('@/lib/crypto-client');
             console.log("🧬 [ONBOARDING] Démarrage de la génération d'identité E2EE...");
-            const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair();
+            const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair(formData.masterPassword);
             const publicKeyString = btoa(JSON.stringify(publicKeyJwk)); // Format base64 as requested
 
             const { createClient } = await import('@/lib/supabaseBrowser');

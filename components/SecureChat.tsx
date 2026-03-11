@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -30,6 +30,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const channelRef = useRef<any>(null)
     const lastTypingTime = useRef(0)
+    const sharedKeyRef = useRef<CryptoKey | null>(null)
 
     useEffect(() => {
         if (!channelId) return;
@@ -39,65 +40,129 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         const roomName = `room_v4_${channelId}`;
 
         // LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
-        const initDelay = setTimeout(() => {
+        const initDelay = setTimeout(async () => {
             if (!isMounted) return;
 
-            console.log(`ðŸ“¡ Ouverture confirmée du tunnel... [${roomName}]`);
+            try {
+                // 1. Fetch partner's profile for country and publicKey
+                const { data: partnerData } = await supabase.from('Profile').select('country, publicKey').eq('id', partnerId).single();
+                if (partnerData?.country && isMounted) setPartnerCountry(partnerData.country);
 
-            room = supabase.channel(roomName, {
-                config: { broadcast: { ack: false } }
-            });
-
-            room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
-                if (payload.new.communication_id === channelId) {
-                    setMessages(prev => {
-                        if (prev.some(m => m.id === payload.new.id)) return prev;
-                        return [...prev, payload.new];
-                    });
-                    setIsTyping(false);
+                let sKey: CryptoKey | null = null;
+                if (partnerData?.publicKey) {
+                    const { deriveSharedKey } = await import('@/lib/crypto-client');
+                    try {
+                        const partnerPublicKeyJwk = JSON.parse(atob(partnerData.publicKey));
+                        sKey = await deriveSharedKey(partnerPublicKeyJwk);
+                        sharedKeyRef.current = sKey;
+                    } catch (e) {
+                         console.error("Erreur dérivation clé partagée:", e);
+                    }
                 }
-            })
+
+                // 2. Fetch messages
+                const { data: rawMessages } = await supabase.from('Message')
+                    .select('*')
+                    .eq('communication_id', channelId)
+                    .order('created_at', { ascending: true });
+
+                if (isMounted && rawMessages) {
+                    if (sKey) {
+                        const { decryptLocal } = await import('@/lib/crypto-client');
+                        const decryptedMessages = await Promise.all(
+                            rawMessages.map(async (msg: any) => {
+                                try {
+                                    const clair = await decryptLocal(msg.content, sKey!);
+                                    return { ...msg, content: clair };
+                                } catch (err) {
+                                    console.error("Impossible de déchiffrer le message", msg.id);
+                                    return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                }
+                            })
+                        );
+                        setMessages(decryptedMessages);
+                    } else {
+                        setMessages(rawMessages.map((m: any) => ({ ...m, content: "🔒 [Clé partenaire introuvable]" })));
+                    }
+                    setIsLoading(false);
+                }
+
+                if (!isMounted) return;
+
+                console.log(`📡 Ouverture confirmée du tunnel... [${roomName}]`);
+
+                room = supabase.channel(roomName, {
+                    config: { broadcast: { ack: false } }
+                });
+
+                room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, async (payload: any) => {
+                    if (payload.new.communication_id === channelId) {
+                        // Empêcher l'ajout en double si c'est moi qui l'ai envoyé
+                        setMessages((currentMessages) => {
+                            if (currentMessages.some(m => m.id === payload.new.id)) return currentMessages;
+                            return currentMessages;
+                        });
+
+                        let finalMsg = payload.new;
+                        // On déchiffre le message entrant s'il vient de l'autre
+                        // (Si ça vient de nous, l'affichage optimiste a déjà fait le travail)
+                        if (payload.new.sender_id !== myId) {
+                            if (sharedKeyRef.current) {
+                                try {
+                                    const { decryptLocal } = await import('@/lib/crypto-client');
+                                    const clair = await decryptLocal(payload.new.content, sharedKeyRef.current);
+                                    finalMsg = { ...payload.new, content: clair };
+                                } catch (err) {
+                                    console.error("Impossible de déchiffrer le message entrant", finalMsg.id);
+                                    finalMsg = { ...payload.new, content: "🔒 [Message indéchiffrable]" };
+                                }
+                            } else {
+                                finalMsg = { ...payload.new, content: "🔒 [Clé manquante]" };
+                            }
+                        }
+
+                        if (isMounted) {
+                            setMessages(prev => {
+                                if (prev.some(m => m.id === finalMsg.id)) return prev;
+                                return [...prev, finalMsg];
+                            });
+                            setIsTyping(false);
+                        }
+                    }
+                })
                 .on('broadcast', { event: 'typing' }, (payload: any) => {
                     if (payload.payload.sender_id !== myId) {
-                        setIsTyping(true);
+                        if (isMounted) setIsTyping(true);
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
+                        typingTimeoutRef.current = setTimeout(() => {
+                            if (isMounted) setIsTyping(false);
+                        }, 2000);
                     }
                 })
                 .subscribe((status: string) => {
-                    console.log(`ðŸ“¡ STATUT [${roomName}]:`, status);
-                    setIsConnected(status === 'SUBSCRIBED');
+                    console.log(`📡 STATUT [${roomName}]:`, status);
+                    if (isMounted) setIsConnected(status === 'SUBSCRIBED');
                 });
 
-            channelRef.current = room;
+                channelRef.current = room;
+
+            } catch (err) {
+                console.error("Erreur initialisation chat:", err);
+                if (isMounted) setIsLoading(false);
+            }
         }, 300);
-
-        // 🟢 LE CORRECTIF EST LÀ : On charge l'historique ET ON COUPE LE CHARGEMENT
-        supabase.from('Message').select('*').eq('communication_id', channelId).order('created_at', { ascending: true })
-            .then(({ data, error }: any) => {
-                if (isMounted) {
-                    if (data) setMessages(data);
-                    setIsLoading(false); // 🚨 LA LIGNE MAGIQUE QUI AFFICHE ENFIN VOS MESSAGES
-                }
-            });
-
-        // 🟢 NOUVEAU : On récupère le pays du partenaire pour la traduction
-        supabase.from('Profile').select('country').eq('id', partnerId).single()
-            .then(({ data }: any) => {
-                if (data?.country && isMounted) setPartnerCountry(data.country);
-            });
 
         // LE NETTOYAGE SÉCURISÉ
         return () => {
             isMounted = false;
             clearTimeout(initDelay);
             if (room) {
-                console.log(`ðŸ›‘ Fermeture de ${roomName}`);
+                console.log(`🛑 Fermeture de ${roomName}`);
                 setIsConnected(false);
                 supabase.removeChannel(room);
             }
         };
-    }, [channelId, myId]);
+    }, [channelId, myId, partnerId]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -157,7 +222,23 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
         };
 
         setMessages(prev => [...prev, newMsgPayload]); // Affichage Optimiste
-        await supabase.from('Message').insert([newMsgPayload]);
+        
+        // 🔒 Chiffrement du message avant sauvegarde
+        let contentToSend = finalContent;
+        if (sharedKeyRef.current) {
+            try {
+                const { encryptLocal } = await import('@/lib/crypto-client');
+                contentToSend = await encryptLocal(finalContent, sharedKeyRef.current);
+            } catch (e) {
+                console.error("Encryption failed before sending:", e);
+                // Si l'encryption échoue on pourrait throw, mais ici on fallback sur le message en clair si c'est autorisé, ou on bloque
+                // Normalement il faut bloquer! 
+                return; // 🚨 Sécurité : On ne logue pas en clair si ça rate
+            }
+        }
+        
+        const encryptedPayload = { ...newMsgPayload, content: contentToSend };
+        await supabase.from('Message').insert([encryptedPayload]);
 
         setIsTranslating(false); // 🟢 On libère le bouton
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
+import { generateAndStoreKeyPair } from '@/lib/crypto-client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -46,8 +47,20 @@ export default function LoginPage() {
     }
 
     if (authData?.user?.id) {
-      try {
-        console.log("🔍 Vérification du profil côté client...");
+        try {
+            console.log("🔍 Vérification du profil côté client...");
+            
+            // 🚨 NOUVEAU: CHARGEMENT DE LA CLÉ PRIVÉE EN RAM si login
+            if (actionType === 'login') {
+                const { unlockLocalVault } = await import('@/lib/crypto-client');
+                try {
+                    await unlockLocalVault(password);
+                } catch (vaultErr) {
+                    console.error("Échec du déverrouillage du coffre: ", vaultErr);
+                    // On laisse quand même continuer si jamais l'utilisateur n'a pas de coffre
+                    // mais il devra recréer une clé s'il n'en a pas.
+                }
+            }
 
         const response = await fetch(getApiUrl('/api/auth/sync-profile'), {
           method: 'POST',
@@ -61,9 +74,38 @@ export default function LoginPage() {
           setError(`Alerte Ipse : La synchronisation du profil a échoué.`);
         }
 
-        console.log("✅ Agent Ipse validé avec succès !");
-        router.push('/');
-        router.refresh();
+        // 1. On récupère AUSSI la publicKey
+        const { data: profile } = await supabase.from('Profile').select('id, publicKey').eq('id', authData.user.id).single();
+
+        // 2. On vérifie la PRÉSENCE DU PROFIL ET DE LA CLÉ
+        if (profile && profile.publicKey) {
+            console.log("✅ Agent Ipse validé avec succès ! Clé présente.");
+            // L'onboarding est VRAIMENT terminé
+            router.push('/');
+            router.refresh();
+        } else {
+            console.log("⚠️ Profil incomplet ou clé manquante. Génération en cours...");
+            
+            // 3. ICI TU GÉNÈRES TES CLÉS WEBCRYPTO (Paire publique/privée)
+            const { publicKeyJwk } = await generateAndStoreKeyPair(password); 
+            // We use the full Base64-encoded string as expected by the server
+            const newPublicKey = btoa(JSON.stringify(publicKeyJwk));
+            
+            // 4. ET ICI SEULEMENT TU FAIS TON UPDATE SUR SUPABASE
+            const { error: updateError } = await supabase
+                .from('Profile')
+                .update({ publicKey: newPublicKey }) // On injecte la clé générée
+                .eq('id', authData.user.id);
+
+            if (updateError) {
+                console.error("❌ Échec de la sauvegarde de la clé publique", updateError);
+                throw updateError;
+            }
+            
+            console.log("✅ Clé publique sauvegardée avec succès sur le Web !");
+            router.push('/');
+            router.refresh();
+        }
       } catch (err) {
         console.error("Erreur inattendue:", err);
         setError("Erreur inattendue lors de la vérification.");
