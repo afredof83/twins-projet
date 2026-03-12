@@ -96,8 +96,8 @@ export function SecureMessageBubble({
 
     const bubbleAlignClass = isSender ? 'self-end items-end' : 'self-start items-start';
     const bubbleColorClass = isSender
-        ? 'bg-blue-600/20 border-blue-500/30 text-blue-100'
-        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300';
+        ? 'bg-[var(--primary)]/20 border-[var(--primary)]/30 text-[var(--text-main)]'
+        : 'bg-[var(--bg-card)]/50 border-white/10 text-[var(--text-main)]/80';
 
     return (
         <div className={`flex flex-col max-w-[80%] mb-4 ${bubbleAlignClass}`}>

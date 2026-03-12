@@ -33,6 +33,8 @@ export async function deriveKeyFromPin(pin: string, salt: Uint8Array): Promise<C
     );
 }
 
+
+
 /**
  * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
  * Ne retourne QUE la clé publique à envoyer au serveur.
@@ -119,17 +121,112 @@ export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
             if (!key) throw new Error("Clé native introuvable.");
             return key;
         } else {
+            // ⚡️ 1. Vérification la plus rapide : La RAM
             if (cachedPrivateKey) {
-                console.log("⚡️ Clé récupérée depuis la RAM");
-                return await crypto.subtle.exportKey("jwk", cachedPrivateKey) as JsonWebKey;
+                return await window.crypto.subtle.exportKey("jwk", cachedPrivateKey) as JsonWebKey;
             }
+
+            // 🔄 2. TENTATIVE DE RÉCUPÉRATION JWT (Cross-Tab / F5)
+            console.log("🔄 RAM vide. Tentative de récupération depuis la Session...");
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                const recoveredKey = await unwrapKeyWithSession(session.access_token);
+                if (recoveredKey) {
+                    cachedPrivateKey = recoveredKey; // Remise en RAM
+                    console.log("✅ Clé E2EE restaurée depuis le JWT !");
+                    return await window.crypto.subtle.exportKey("jwk", recoveredKey) as JsonWebKey;
+                }
+            }
+
+            // ❌ 3. Si la RAM est vide ET le SessionStorage est vide/invalide
+            // C'est ici, et SEULEMENT ici, qu'on throw l'erreur qui affiche ton écran de déverrouillage
             throw new Error("Clé non chargée en RAM. Reconnexion requise.");
         }
     } catch (e) {
-        console.error(e);
+        console.error("❌ Erreur critique E2EE:", e);
         throw e;
     }
 }
+
+// --- DÉBUT DU BLOC JWT WRAPPING ---
+
+// Utilitaire d'encodage pour ArrayBuffer au lieu d'Uint8Array directement
+function arrayBufferToBase64ForWrap(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+// 1. Emballe la clé privée avec le Token Supabase
+export async function wrapKeyWithSession(privateKey: CryptoKey, jwtToken: string) {
+    const jwk = await window.crypto.subtle.exportKey("jwk", privateKey);
+    const encoder = new TextEncoder();
+    
+    // Dérivation d'une clé AES à partir du JWT
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", encoder.encode(jwtToken), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const aesKey = await window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 10000, hash: "SHA-256" },
+        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+    );
+
+    // Chiffrement de la clé
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, aesKey, encoder.encode(JSON.stringify(jwk))
+    );
+
+    // Sauvegarde Cross-Tab
+    localStorage.setItem('ipse_jwt_vault', JSON.stringify({
+        encryptedKey: arrayBufferToBase64ForWrap(encrypted),
+        salt: arrayBufferToBase64ForWrap(salt.buffer),
+        iv: arrayBufferToBase64ForWrap(iv.buffer)
+    }));
+    console.log("🔐 Clé E2EE sécurisée avec la session active.");
+}
+
+// 2. Déballe la clé privée avec le Token Supabase
+export async function unwrapKeyWithSession(jwtToken: string): Promise<CryptoKey | null> {
+    const vaultStr = localStorage.getItem('ipse_jwt_vault');
+    if (!vaultStr) return null;
+
+    try {
+        const vaultData = JSON.parse(vaultStr);
+        const salt = base64ToArrayBuffer(vaultData.salt);
+        const iv = base64ToArrayBuffer(vaultData.iv);
+        const encryptedKey = base64ToArrayBuffer(vaultData.encryptedKey);
+
+        const encoder = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+            "raw", encoder.encode(jwtToken), { name: "PBKDF2" }, false, ["deriveKey"]
+        );
+        const aesKey = await window.crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt as BufferSource, iterations: 10000, hash: "SHA-256" },
+            keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+        );
+
+        const decryptedBuffer = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: new Uint8Array(iv.buffer) as BufferSource }, aesKey, encryptedKey as BufferSource
+        );
+
+        const jwk = JSON.parse(new TextDecoder().decode(decryptedBuffer));
+        return await window.crypto.subtle.importKey(
+            "jwk", jwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]
+        );
+    } catch (e) {
+        console.warn("⚠️ Impossible de déchiffrer avec la session. Token expiré ?");
+        return null;
+    }
+}
+// --- FIN DU BLOC JWT WRAPPING ---
 
 /**
  * Ouvre le coffre local, déchiffre la clé privée avec le mot de passe fourni, et la place en RAM.
@@ -210,28 +307,71 @@ export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKey
 // =====================================================
 
 /**
- * Calculer la clé partagée AES-GCM (quand tu ouvres un chat).
+ * Dérive la clé partagée (SharedKey) entre ta clé privée et la clé publique du partenaire.
+ * Ce parseur est blindé contre TOUTES les variations d'encodage (Objet, JSON, Base64, Base64Url).
  */
-export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
-    const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+export async function deriveSharedKey(myPrivateKey: CryptoKey, partnerPublicKeyData: string | object): Promise<CryptoKey> {
+    let partnerJwkObj;
 
-    const privateKey = await crypto.subtle.importKey(
-        "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
-    );
+    try {
+        // CAS 1: Supabase a déjà parsé le champ en Objet JavaScript natif
+        if (typeof partnerPublicKeyData === 'object') {
+            partnerJwkObj = partnerPublicKeyData;
+        } 
+        // CAS 2: C'est une chaîne de caractères (JSON ou Base64)
+        else if (typeof partnerPublicKeyData === 'string') {
+            const trimmed = partnerPublicKeyData.trim();
+            
+            // Si c'est du JSON en texte brut
+            if (trimmed.startsWith('{')) {
+                partnerJwkObj = JSON.parse(trimmed);
+            } 
+            // Si c'est du Base64
+            else {
+                // 1. Nettoyage extrême : on retire les guillemets (" ou ') et les espaces invisibles
+                let cleanBase64 = trimmed.replace(/['"\s]/g, '');
+                
+                // 2. Conversion du Base64Url-Safe vers le Base64 Standard
+                cleanBase64 = cleanBase64.replace(/-/g, '+').replace(/_/g, '/');
+                
+                // 3. Réparation du Padding (=) pour forcer un multiple de 4
+                while (cleanBase64.length % 4 !== 0) {
+                    cleanBase64 += '=';
+                }
+                
+                // 4. Décodage et parsing
+                const jsonString = window.atob(cleanBase64);
+                partnerJwkObj = JSON.parse(jsonString);
+            }
+        } else {
+            throw new Error("Le format de la clé est inconnu (ni object, ni string).");
+        }
+    } catch (error) {
+        console.error("❌ Échec critique du parsing de la clé publique de l'interlocuteur :", partnerPublicKeyData);
+        console.error("Détail de l'erreur :", error);
+        throw new Error("Clé du destinataire corrompue ou indécodable.");
+    }
 
-    const publicKey = await crypto.subtle.importKey(
-        "jwk", otherPersonPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []
-    );
-
-    const sharedKey = await crypto.subtle.deriveKey(
-        { name: "ECDH", public: publicKey },
-        privateKey,
-        { name: "AES-GCM", length: 256 },
+    // Importation de la clé via WebCrypto au format JWK
+    const partnerPublicKey = await window.crypto.subtle.importKey(
+        "jwk",
+        partnerJwkObj as JsonWebKey,
+        { name: "ECDH", namedCurve: "P-256" },
         true,
+        [] // Les clés publiques ECDH n'ont pas d'opérations assignées
+    );
+
+    // Dérivation mathématique de la clé AES partagée
+    return await window.crypto.subtle.deriveKey(
+        {
+            name: "ECDH",
+            public: partnerPublicKey
+        },
+        myPrivateKey,
+        { name: "AES-GCM", length: 256 },
+        false,
         ["encrypt", "decrypt"]
     );
-
-    return sharedKey;
 }
 
 // =====================================================

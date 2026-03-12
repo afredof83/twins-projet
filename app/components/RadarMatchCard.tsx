@@ -140,7 +140,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                             : (otherProfile?.bio || otherProfile?.primaryRole || "Agent Digital Twin")}
                     </p>
                 </div>
-                <span className="badge-status border-blue-500/20 text-blue-400 shrink-0 ml-4">
+                <span className="badge-status border-[var(--primary)]/20 text-[var(--primary)] shrink-0 ml-4">
                     {opportunity.matchScore}% {t('radar.match_score')}
                 </span>
             </div>
@@ -203,7 +203,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {status === 'ACCEPTED' && (
                     <Link
                         href={`/chat?id=${otherProfile?.id}`}
-                        className="btn-primary w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] relative"
+                        className="btn-primary w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(var(--accent-rgb,16,185,129),0.3)] relative"
                     >
                         <MessageSquare className="w-4 h-4" />
                         {t('radar.join_chat')}
@@ -222,8 +222,8 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 {/* --- NOUVEAU : STATUT INVITÉ --- */}
                 {/* Si JE suis celui qui a envoyé l'invitation (Source) */}
                 {status === 'INVITED' && opportunity.sourceId === myId && (
-                    <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center">
-                        <p className="text-blue-400 text-xs font-bold">
+                    <div className="w-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 p-3 rounded text-center">
+                        <p className="text-[var(--primary)] text-xs font-bold">
                             ⏳ {t('radar.invite_sent')}
                         </p>
                     </div>
@@ -231,21 +231,22 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 
                 {/* Si JE suis celui qui reçoit l'invitation (Cible) */}
                 {status === 'INVITED' && opportunity.targetId === myId && (
-                    <div className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-xl text-center">
-                        <p className="text-green-400 text-sm font-bold mb-4">
+                    <div className="w-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-4 rounded-xl text-center">
+                        <p className="text-[var(--accent)] text-sm font-bold mb-4">
                             📩 {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
                         </p>
                         <div className="flex gap-2">
                             <button
                                 disabled={loading || isAccepted}
                                 onClick={handleAccept}
-                                className={`btn-primary flex-1 ${isAccepted ? 'bg-emerald-600/50 cursor-default text-emerald-100' : 'bg-green-600 hover:bg-green-500 text-white'}`}
+                                className={`btn-primary flex-1 ${isAccepted ? 'opacity-50 cursor-default' : ''}`}
+                                style={isAccepted ? { backgroundColor: 'var(--accent)' } : { backgroundColor: 'var(--accent)' }}
                             >
                                 {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
                             </button>
                             <button
                                 onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
-                                className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
+                                className="btn-outline flex-1 border-white/10 text-red-400 hover:bg-red-500/10"
                             >
                                 {t('radar.refuse')}
                             </button>

@@ -99,13 +99,11 @@ export const ProfileScalarFieldEnum = {
   primaryRole: 'primaryRole',
   thematicProfile: 'thematicProfile',
   updatedAt: 'updatedAt',
+  userId: 'userId',
+  type: 'type',
+  displayName: 'displayName',
   sector: 'sector',
   hobbyBio: 'hobbyBio',
-  hobbyRole: 'hobbyRole',
-  hobbySector: 'hobbySector',
-  socialBio: 'socialBio',
-  socialRole: 'socialRole',
-  socialSector: 'socialSector',
   language: 'language',
   activePrism: 'activePrism'
 } as const

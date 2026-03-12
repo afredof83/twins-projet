@@ -31,17 +31,19 @@ model Profile {
   thematicProfile        Json?                  @map("thematic_profile")
   updatedAt              DateTime               @default(now()) @updatedAt @map("updated_at")
   bioEmbedding           Unsupported("vector")?
+  
+  // Identity Triad & Vector isolation
+  userId                 String?                @map("user_id")
+  type                   String?                @default("WORK")
+  metadataVector         Unsupported("vector")? @map("metadata_vector")
+  displayName            String?                @map("display_name")
+  
   sector                 String?
   hobbyBio               String?                @map("hobby_bio")
-  hobbyEmbedding         Unsupported("vector")? @map("hobby_embedding")
-  hobbyRole              String?                @map("hobby_role")
-  hobbySector            String?                @map("hobby_sector")
-  socialBio              String?                @map("social_bio")
-  socialEmbedding        Unsupported("vector")? @map("social_embedding")
-  socialRole             String?                @map("social_role")
-  socialSector           String?                @map("social_sector")
+  // ...
   language               String                 @default("fr")
   activePrism            String?                @default("WORK") @map("active_prism")
+  
   initiatedConnections   Connection[]           @relation("InitiatedConnections")
   receivedConnections    Connection[]           @relation("ReceivedConnections")
   notes                  CortexNote[]
@@ -59,6 +61,7 @@ model Profile {
   @@index([primaryRole])
   @@index([availability])
   @@index([tjm])
+  @@unique([userId, type])
 }
 
 model FileArchive {

@@ -1,52 +1,82 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&family=Inter:wght@400;700&family=Quicksand:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
 @import "tailwindcss";
 
 :root {
   --background: #09090b;
-  /* Zinc 950 - Plus doux que le noir pur */
   --foreground: #f4f4f5;
   --card: #18181b;
   --card-border: #27272a;
   --primary: #2563eb;
-  /* Blue 600 */
   --cortex: #6366f1;
-  /* Indigo 500 */
 }
 
 @layer base {
   body {
-    @apply bg-[var(--background)] text-[var(--foreground)] antialiased selection:bg-blue-500/30;
+    @apply bg-[var(--bg-main)] text-[var(--text-main)] antialiased transition-colors duration-500 ease-in-out;
+    font-family: var(--font-main), sans-serif;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
+}
+
+/* Thème WORK : Focus, Rigueur */
+.theme-work {
+  --primary: #3B82F6;
+  --bg-main: #0F172A;
+  --bg-card: #1E293B;
+  --text-main: #F8FAFC;
+  --accent: #60A5FA;
+  --radius: 4px;
+  --font-main: 'Inter';
+  --density: 0.75rem; /* Haute densité */
+}
+
+/* Thème HOBBY : Énergie, Partage */
+.theme-hobby {
+  --primary: #10B981;
+  --bg-main: #064E3B;
+  --bg-card: #065F46;
+  --text-main: #ECFDF5;
+  --accent: #34D399;
+  --radius: 12px;
+  --font-main: 'Quicksand';
+  --density: 1rem; /* Densité moyenne */
+}
+
+/* Thème DATING : Intimité, Mystère */
+.theme-dating {
+  --primary: #EC4899;
+  --bg-main: #2E1065;
+  --bg-card: #4C1D95;
+  --text-main: #FDF2F8;
+  --accent: #F472B6;
+  --radius: 24px;
+  --font-main: 'Playfair Display';
+  --density: 1.5rem; /* Basse densité */
 }
 
 @layer components {
 
   /* Cartes Radar & Intelligence */
   .b2b-card {
-    @apply bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-2xl transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5;
+    @apply bg-zinc-900/40 backdrop-blur-md border border-zinc-800 transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5;
+    padding: var(--density);
+    border-radius: var(--radius);
   }
 
   /* Bouton Primaire (Audit / Action) */
   .btn-primary {
-    @apply relative px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20;
-  }
-
-  /* Bouton Secondaire / Outline */
-  .btn-outline {
-    @apply px-5 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-zinc-800 hover:text-white active:scale-[0.98];
-  }
-
-  /* Badge de Score / Status */
-  .badge-status {
-    @apply px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-800 border border-zinc-700 text-zinc-400;
+    @apply relative bg-blue-600 text-white text-sm font-semibold transition-all duration-200 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20;
+    padding: calc(var(--density) * 0.6) var(--density);
+    border-radius: var(--radius);
   }
 
   /* Inputs de Grade Professionnel */
   .b2b-input {
-    @apply w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm placeholder:text-zinc-600 outline-none transition-all focus:border-blue-500/50 focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/5;
+    @apply w-full bg-zinc-900/50 border border-zinc-800 text-sm placeholder:text-zinc-600 outline-none transition-all focus:border-blue-500/50 focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/5;
+    padding: var(--density);
+    border-radius: var(--radius);
   }
 }
 

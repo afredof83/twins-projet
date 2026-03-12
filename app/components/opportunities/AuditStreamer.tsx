@@ -76,13 +76,13 @@ export default function AuditStreamer({ opportunityId, onComplete }: AuditStream
             {/* Header */}
             <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-yellow-400 animate-pulse' : 'text-blue-400'}`} />
+                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-[var(--accent)] animate-pulse' : 'text-[var(--primary)]'}`} />
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">
                         Analyse Cortex en temps réel
                     </span>
                 </div>
                 {status === 'streaming' && (
-                    <div className="flex items-center gap-2 text-[10px] text-yellow-400 font-mono">
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--accent)] font-mono">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         STREAMING_ACTIVE
                     </div>
@@ -92,7 +92,7 @@ export default function AuditStreamer({ opportunityId, onComplete }: AuditStream
             {/* Content Area */}
             <div 
                 ref={scrollRef}
-                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-blue-500/30"
+                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-[var(--primary)]/30"
             >
                 {status === 'error' ? (
                     <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
@@ -100,24 +100,24 @@ export default function AuditStreamer({ opportunityId, onComplete }: AuditStream
                         <p className="text-sm text-red-200 font-medium">{error}</p>
                     </div>
                 ) : streamedText ? (
-                    <article className="prose prose-invert prose-blue max-w-none">
+                    <article className="prose prose-invert max-w-none">
                         <ReactMarkdown 
                             components={{
-                                h3: ({node, ...props}) => <h3 className="text-blue-400 border-l-2 border-blue-500 pl-4 mt-8 mb-4 tracking-tight" {...props} />,
+                                h3: ({node, ...props}) => <h3 className="text-[var(--primary)] border-l-2 border-[var(--primary)] pl-4 mt-8 mb-4 tracking-tight" {...props} />,
                                 p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />,
-                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-blue-500" {...props} />,
+                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-[var(--primary)]" {...props} />,
                             }}
                         >
                             {streamedText}
                         </ReactMarkdown>
                         {status === 'streaming' && (
-                            <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1 align-middle" />
+                            <span className="inline-block w-2 h-4 bg-[var(--primary)] animate-pulse ml-1 align-middle" />
                         )}
                     </article>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full space-y-4">
-                        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                        <p className="text-xs text-blue-400 font-mono animate-pulse">
+                        <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                        <p className="text-xs text-[var(--primary)] font-mono animate-pulse">
                             Initialisation du moteur de synergie...
                         </p>
                     </div>

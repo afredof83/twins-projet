@@ -3,18 +3,22 @@
 import { useState, useEffect, useOptimistic, useRef } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 // Server actions supprimées — on utilise fetch vers /api/chat
-import { deriveSharedKey, encryptLocal, decryptLocal } from '@/lib/crypto-client';
+import { deriveSharedKey, encryptLocal, decryptLocal, getStoredPrivateKeyJwk } from '@/lib/crypto-client';
 import { Send, AlertCircle, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
 import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
+import { usePrismManager } from '@/components/providers/PrismProvider';
 
 type Message = { id: string; content: string; senderId: string; receiverId?: string; createdAt: Date | string };
 
-export default function RealtimeChat({ initialMessages, currentUserId, receiverId, receiverPublicKeyJwk }: any) {
+export default function RealtimeChat({ initialMessages, receiverId, receiverPublicKeyJwk }: any) {
+    const { activeProfile } = usePrismManager();
+    const currentUserId = activeProfile?.id;
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isError, setIsError] = useState(false);
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
+    const sharedKeyRef = useRef<CryptoKey | null>(null);
     const [isDecrypting, setIsDecrypting] = useState(true);
 
     // --- ÉTATS DE PAGINATION ---
@@ -57,27 +61,58 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
     useEffect(() => {
         async function initCrypto() {
             try {
-                if (!receiverPublicKeyJwk) {
-                    console.warn("[E2E] Clé publique du destinataire manquante, chiffrement désactivé.");
+                // 1. La requête stricte vers Supabase pour le profil du partenaire
+                const { data: partnerProfile, error: profileError } = await supabase
+                    .from('Profile')
+                    .select('id, publicKey')
+                    .eq('id', receiverId)
+                    .single();
+
+                // 2. Le Stress-Test de la donnée (L'entonnoir de sécurité)
+                if (profileError || !partnerProfile) {
+                    console.error("❌ Impossible de trouver le profil de l'interlocuteur :", profileError);
                     setIsDecrypting(false);
                     return;
                 }
 
-                let parsedJwk;
-                try {
-                    // Les nouvelles clés sont encodées en base64
-                    parsedJwk = JSON.parse(atob(receiverPublicKeyJwk));
-                } catch (e) {
-                    // Rétrocompatibilité avec les anciennes clés en clair (JSON)
-                    parsedJwk = JSON.parse(receiverPublicKeyJwk);
+                if (!partnerProfile.publicKey) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
+                    setIsDecrypting(false);
+                    return;
                 }
 
-                // Dérivation de la clé partagée (récupère auto la clé privée du coffre-fort)
-                const derived = await deriveSharedKey(parsedJwk);
-                setSharedKey(derived);
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.publicKey.substring(0, 20) + "...");
 
-                // On ne déchiffre pas les messages lors du chargement : SecureMessageBubble s'en chargera
-                setMessages(initialMessages);
+                // 3. Récupération de MA clé privée et dérivation
+                const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+                const myPrivateKey = await window.crypto.subtle.importKey(
+                    "jwk", 
+                    myPrivateKeyJwk, 
+                    { name: "ECDH", namedCurve: "P-256" }, 
+                    true, 
+                    ["deriveKey"]
+                );
+
+                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.publicKey);
+                setSharedKey(derived);
+                sharedKeyRef.current = derived;
+
+                // --- L'ÉTAPE CRITIQUE : DÉCHIFFREMENT DE L'HISTORIQUE INITIAL ---
+                const decryptedMessages = await Promise.all(
+                    initialMessages.map(async (msg: Message) => {
+                        if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                            try {
+                                const clearText = await decryptLocal(msg.content, derived);
+                                return { ...msg, content: clearText };
+                            } catch (e) {
+                                console.error("Échec du déchiffrement du message historique:", msg.id, e);
+                                return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                            }
+                        }
+                        return msg;
+                    })
+                );
+                setMessages(decryptedMessages);
             } catch (e) {
                 console.error("[E2E] Erreur dérivation ECDH:", e);
             } finally {
@@ -85,7 +120,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             }
         }
         initCrypto();
-    }, [receiverPublicKeyJwk]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [receiverId, initialMessages]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // --- L'OBSERVATEUR D'INFINITE SCROLL (Le Radar Front-end) ---
     useEffect(() => {
@@ -111,14 +146,31 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                         const headers: any = { 'Content-Type': 'application/json' };
                         if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-                        const res = await fetch(getApiUrl(`/api/chat?receiverId=${receiverId}&cursorId=${oldestMessage.id}`), { headers });
+                        const res = await fetch(getApiUrl(`/api/chat?receiverId=${receiverId}&cursorId=${oldestMessage.id}&senderId=${currentUserId}`), { headers });
                         const data = await res.json();
                         const older = data.messages || [];
 
                         if (older.length < 50) setHasMore(false);
 
-                        // Ne pas déchiffrer ici, laisser SecureMessageBubble s'en occuper
-                        setMessages((prev) => [...older, ...prev]);
+                        // --- DÉCHIFFREMENT DES ARCHIVES ---
+                        if (sharedKeyRef.current) {
+                            const decryptedOlder = await Promise.all(
+                                older.map(async (msg: Message) => {
+                                    if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                                        try {
+                                            const clearText = await decryptLocal(msg.content, sharedKeyRef.current!);
+                                            return { ...msg, content: clearText };
+                                        } catch (e) {
+                                            return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                        }
+                                    }
+                                    return msg;
+                                })
+                            );
+                            setMessages((prev) => [...decryptedOlder, ...prev]);
+                        } else {
+                            setMessages((prev) => [...older, ...prev]);
+                        }
 
                         setTimeout(() => {
                             if (container) {
@@ -169,6 +221,19 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                 if ((incoming.senderId === currentUserId && incoming.receiverId === receiverId) ||
                     (incoming.senderId === receiverId && incoming.receiverId === currentUserId)) {
 
+                    // --- DÉCHIFFREMENT IMMÉDIAT DU MESSAGE ENTRANT ---
+                    if (incoming.content && (incoming.content.includes(':') || incoming.content.startsWith('🧠'))) {
+                        try {
+                            if (sharedKeyRef.current) {
+                                incoming.content = await decryptLocal(incoming.content, sharedKeyRef.current);
+                            } else {
+                                incoming.content = "🔒 [Clé manquante]";
+                            }
+                        } catch (e) {
+                            incoming.content = "🔒 [Message indéchiffrable]";
+                        }
+                    }
+
                     setMessages((prev) => {
                         // Éviter les doublons (si le message est déjà là via fetch ou optimisme)
                         if (prev.some(m => m.id === incoming.id)) return prev;
@@ -180,7 +245,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                         fetch(getApiUrl('/api/chat'), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'read', receiverId })
+                            body: JSON.stringify({ action: 'read', receiverId, senderId: currentUserId })
                         });
                     }
                 }
@@ -206,7 +271,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         fetch(getApiUrl('/api/chat'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'read', receiverId })
+            body: JSON.stringify({ action: 'read', receiverId, senderId: currentUserId })
         });
 
         return () => {
@@ -243,7 +308,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
     const handleSend = async (formData: FormData) => {
         const content = formData.get('content') as string;
-        if (!content.trim()) return;
+        if (!content || !content.trim() || !currentUserId) return;
 
         formRef.current?.reset();
         setIsError(false);
@@ -259,8 +324,8 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
         // CHIFFREMENT STRICT CÔTÉ CLIENT
         try {
-            if (!sharedKey || !receiverPublicKeyJwk) {
-                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé du destinataire introuvable.");
+            if (!sharedKey) {
+                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé partagée non dérivée.");
             }
 
             const payload = await encryptLocal(content, sharedKey);
@@ -274,7 +339,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             const res = await fetch(getApiUrl('/api/chat'), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ content: payload, receiverId })
+                body: JSON.stringify({ content: payload, receiverId, senderId: currentUserId })
             });
             const result = await res.json();
             if (!result?.success) throw new Error(result?.error || "Refus du serveur");
@@ -304,8 +369,8 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         return (
             <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-3">
-                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto" />
-                    <p className="text-xs text-emerald-400 font-mono uppercase tracking-widest">Déchiffrement en cours...</p>
+                    <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
+                    <p className="text-xs text-[var(--text-main)]/60 font-mono uppercase tracking-widest">Déchiffrement en cours...</p>
                 </div>
             </div>
         );
@@ -321,7 +386,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
                 {/* INDICATEUR DE FOUILLE */}
                 {isLoadingOlder && (
-                    <div className="flex justify-center items-center py-2 text-blue-500">
+                    <div className="flex justify-center items-center py-2 text-[var(--primary)]">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
                         <span className="text-xs uppercase tracking-widest font-bold">Déchiffrement des archives...</span>
                     </div>
@@ -340,7 +405,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                             if (isSystem) {
                                 return (
                                     <div key={msg.id} className="flex justify-center my-4 animate-in fade-in duration-500">
-                                        <div className="px-4 py-2 rounded-full bg-purple-900/30 border border-purple-500/50 text-purple-200 text-xs font-mono tracking-wide text-center max-w-[90%] shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                        <div className="px-4 py-2 rounded-full bg-[var(--cortex)]/20 border border-[var(--cortex)]/40 text-[var(--text-main)] text-xs font-mono tracking-wide text-center max-w-[90%] shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                                             🧠 {msg.content.replace('[CORTEX] ', '')}
                                         </div>
                                     </div>
@@ -372,7 +437,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             {/* FORMULAIRE */}
             <div className="shrink-0 p-4 border-t border-white/10 bg-black/50 backdrop-blur-md">
                 {isTyping && (
-                    <div className="mb-2 text-[10px] text-emerald-400 font-mono animate-pulse uppercase tracking-widest">
+                    <div className="mb-2 text-[10px] text-[var(--accent)] font-mono animate-pulse uppercase tracking-widest">
                         📡 L'agent adverse est en train d'écrire...
                     </div>
                 )}
@@ -394,7 +459,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                     />
                     <button
                         type="submit"
-                        className={`px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 ${isError ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30'}`}
+                        className={`px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 ${isError ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30' : 'bg-[var(--primary)]/20 text-[var(--primary)] border-[var(--primary)]/30 hover:bg-[var(--primary)]/30'}`}
                     >
                         <Send className="w-5 h-5" />
                     </button>

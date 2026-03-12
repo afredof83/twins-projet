@@ -26,92 +26,137 @@ export default function LoginPage() {
     setError(null);
 
     // 1. Authentification Supabase
-    const { data: authData, error: authError } = actionType === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({
+    if (actionType === 'login') {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (authData.user && authData.session) {
+        try {
+          console.log("🔍 Vérification du profil côté client...");
+          
+          await fetch(getApiUrl('/api/auth/sync-profile'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authData.session.access_token}`
+            }
+          });
+
+          const { unlockLocalVault, wrapKeyWithSession } = await import('@/lib/crypto-client');
+
+          // 2. Le bloc de SURVIE CRYPTOGRAPHIQUE (Le fameux Fallback)
+          try {
+            console.log("Tentative de déverrouillage du coffre local...");
+            const privateKey = await unlockLocalVault(password);
+            await wrapKeyWithSession(privateKey, authData.session.access_token);
+            console.log("✅ Connexion et déchiffrement réussis.");
+          } catch (cryptoError: any) {
+            if (cryptoError.message && cryptoError.message.includes("Aucun coffre local")) {
+              console.warn("⚠️ Nouveau navigateur détecté. Auto-génération de nouvelles clés E2EE...");
+              const { generateAndStoreKeyPair, unlockLocalVault: unlockAfterGen } = await import('@/lib/crypto-client');
+              const { publicKeyJwk } = await generateAndStoreKeyPair(password);
+              const newPublicKeyBase64 = btoa(JSON.stringify(publicKeyJwk));
+              
+              await supabase
+                .from('Profile')
+                .update({ publicKey: newPublicKeyBase64 })
+                .eq('id', authData.user.id);
+                
+              const newPrivateKey = await unlockAfterGen(password);
+              await wrapKeyWithSession(newPrivateKey, authData.session.access_token);
+            } else {
+              console.error("Erreur fatale de déchiffrement :", cryptoError);
+              setError("Mot de passe incorrect pour le coffre-fort local.");
+              setLoading(false);
+              return;
+            }
+          }
+
+          router.push('/');
+          router.refresh();
+
+        } catch (err) {
+          console.error("Erreur inattendue:", err);
+          setError("Erreur inattendue lors de la vérification.");
+          setLoading(false);
+        }
+      } else if (!authData.session) {
+        setError("⚠️ Agent Ipse : Session invalide ou email non confirmé.");
+        setLoading(false);
+      }
+    } else {
+      // --- BLOC STRICT INSCRIPTION ---
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: `${window.location.origin}/` }
       });
 
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (!authData.session) {
-      setError("⚠️ Agent Ipse : En attente de confirmation email.");
-      setLoading(false);
-      return;
-    }
-
-    if (authData?.user?.id) {
-        try {
-            console.log("🔍 Vérification du profil côté client...");
-            
-            // 🚨 NOUVEAU: CHARGEMENT DE LA CLÉ PRIVÉE EN RAM si login
-            if (actionType === 'login') {
-                const { unlockLocalVault } = await import('@/lib/crypto-client');
-                try {
-                    await unlockLocalVault(password);
-                } catch (vaultErr) {
-                    console.error("Échec du déverrouillage du coffre: ", vaultErr);
-                    // On laisse quand même continuer si jamais l'utilisateur n'a pas de coffre
-                    // mais il devra recréer une clé s'il n'en a pas.
-                }
-            }
-
-        const response = await fetch(getApiUrl('/api/auth/sync-profile'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authData.session.access_token}`
-          }
-        });
-
-        if (!response.ok) {
-          setError(`Alerte Ipse : La synchronisation du profil a échoué.`);
-        }
-
-        // 1. On récupère AUSSI la publicKey
-        const { data: profile } = await supabase.from('Profile').select('id, publicKey').eq('id', authData.user.id).single();
-
-        // 2. On vérifie la PRÉSENCE DU PROFIL ET DE LA CLÉ
-        if (profile && profile.publicKey) {
-            console.log("✅ Agent Ipse validé avec succès ! Clé présente.");
-            // L'onboarding est VRAIMENT terminé
-            router.push('/');
-            router.refresh();
-        } else {
-            console.log("⚠️ Profil incomplet ou clé manquante. Génération en cours...");
-            
-            // 3. ICI TU GÉNÈRES TES CLÉS WEBCRYPTO (Paire publique/privée)
-            const { publicKeyJwk } = await generateAndStoreKeyPair(password); 
-            // We use the full Base64-encoded string as expected by the server
-            const newPublicKey = btoa(JSON.stringify(publicKeyJwk));
-            
-            // 4. ET ICI SEULEMENT TU FAIS TON UPDATE SUR SUPABASE
-            const { error: updateError } = await supabase
-                .from('Profile')
-                .update({ publicKey: newPublicKey }) // On injecte la clé générée
-                .eq('id', authData.user.id);
-
-            if (updateError) {
-                console.error("❌ Échec de la sauvegarde de la clé publique", updateError);
-                throw updateError;
-            }
-            
-            console.log("✅ Clé publique sauvegardée avec succès sur le Web !");
-            router.push('/');
-            router.refresh();
-        }
-      } catch (err) {
-        console.error("Erreur inattendue:", err);
-        setError("Erreur inattendue lors de la vérification.");
+      if (authError) {
+        console.error("Erreur d'inscription :", authError.message);
+        setError(authError.message);
         setLoading(false);
+        return;
       }
-    } else {
+
+      if (authData.user) {
+        try {
+          console.log("🚀 Nouvel utilisateur créé. Génération de l'identité cryptographique (E2EE)...");
+          
+          // On s'assure d'abord que le profil existe (via notre API interne qui handle le insert ou upsert)
+          if (authData.session) {
+            await fetch(getApiUrl('/api/auth/sync-profile'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authData.session.access_token}`
+              }
+            });
+          }
+
+          const { generateAndStoreKeyPair, wrapKeyWithSession, unlockLocalVault } = await import('@/lib/crypto-client');
+
+          // 2. Création du Coffre Local et des Clés (avec le mot de passe fraîchement tapé)
+          const { publicKeyJwk } = await generateAndStoreKeyPair(password);
+          const newPublicKey = btoa(JSON.stringify(publicKeyJwk));
+
+          // 3. On pousse la Clé Publique fraîchement générée dans la table Profile
+          const { error: updateError } = await supabase
+            .from('Profile')
+            .update({ publicKey: newPublicKey })
+            .eq('id', authData.user.id);
+
+          if (updateError) {
+            console.error("❌ Échec de la sauvegarde de la clé publique dans Supabase :", updateError);
+          } else {
+            console.log("✅ Profil E2EE initialisé avec succès !");
+          }
+
+          // 4. (Optionnel) Si Supabase auto-connecte l'utilisateur après le signUp, on sécurise la session (F5 survival)
+          if (authData.session) {
+            const privateKey = await unlockLocalVault(password);
+            await wrapKeyWithSession(privateKey, authData.session.access_token);
+          }
+
+        } catch (cryptoError) {
+          console.error("❌ Échec critique lors de la génération des clés :", cryptoError);
+        }
+      }
+
+      if (!authData.session) {
+        setError("⚠️ Agent Ipse : Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
+      } else {
+        router.push('/');
+        router.refresh();
+      }
       setLoading(false);
     }
   };

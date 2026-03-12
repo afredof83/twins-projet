@@ -55,19 +55,19 @@ export function TacticalEarpiece({
             <button
                 onClick={handleCallIpse}
                 disabled={isThinking}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-900/20 text-blue-400 border border-blue-800/50 hover:bg-blue-800/30 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(37,99,235,0.15)] hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30 hover:bg-[var(--primary)]/20 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50"
             >
                 {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
                 {isThinking ? "Ipse analyse..." : "Demander conseil à Ipse"}
             </button>
 
             {advice && (
-                <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-indigo-950/40 border border-indigo-500/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <p className="text-[10px] text-indigo-400 font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-[var(--cortex)]/10 border border-[var(--cortex)]/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--cortex)]"></div>
+                    <p className="text-[10px] text-[var(--cortex)] font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                         <Brain className="w-3 h-3" /> Signal Tactique Intercepté
                     </p>
-                    <p className="text-sm md:text-base text-indigo-100 italic leading-relaxed">"{advice}"</p>
+                    <p className="text-sm md:text-base text-[var(--text-main)] italic leading-relaxed">"{advice}"</p>
                 </div>
             )}
         </div>

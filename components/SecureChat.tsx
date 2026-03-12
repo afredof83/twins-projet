@@ -25,6 +25,10 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
     const [isConnected, setIsConnected] = useState(false)
     const [partnerCountry, setPartnerCountry] = useState<string | null>(null)
     const [isTranslating, setIsTranslating] = useState(false)
+    const [isVaultLocked, setIsVaultLocked] = useState(false)
+    const [unlockPassword, setUnlockPassword] = useState("")
+    const [unlockError, setUnlockError] = useState("")
+    const [retryTrigger, setRetryTrigger] = useState(0)
 
     const scrollRef = useRef<HTMLDivElement>(null)
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -44,19 +48,50 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
             if (!isMounted) return;
 
             try {
-                // 1. Fetch partner's profile for country and publicKey
-                const { data: partnerData } = await supabase.from('Profile').select('country, publicKey').eq('id', partnerId).single();
+                // 1. Fetch partner's profile with Strict Guardrails
+                const { data: partnerData, error: profileError } = await supabase
+                    .from('Profile')
+                    .select('id, country, publicKey')
+                    .eq('id', partnerId)
+                    .single();
+
                 if (partnerData?.country && isMounted) setPartnerCountry(partnerData.country);
+
+                // 2. Le Stress-Test de la donnée (L'entonnoir de sécurité)
+                if (profileError || !partnerData) {
+                    console.error("❌ Impossible de trouver le profil de l'interlocuteur :", profileError);
+                    if (isMounted) setIsLoading(false);
+                    throw new Error("Profil partenaire introuvable.");
+                }
+
+                if (!partnerData.publicKey) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
+                    if (isMounted) setIsLoading(false);
+                    throw new Error("Le partenaire n'a pas encore de clé E2EE (Profil non initialisé).");
+                }
+
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerData.publicKey.substring(0, 20) + "...");
 
                 let sKey: CryptoKey | null = null;
                 if (partnerData?.publicKey) {
-                    const { deriveSharedKey } = await import('@/lib/crypto-client');
+                    const { deriveSharedKey, getStoredPrivateKeyJwk } = await import('@/lib/crypto-client');
                     try {
-                        const partnerPublicKeyJwk = JSON.parse(atob(partnerData.publicKey));
-                        sKey = await deriveSharedKey(partnerPublicKeyJwk);
+                        const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+                        const myPrivateKey = await window.crypto.subtle.importKey(
+                            "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
+                        );
+                        sKey = await deriveSharedKey(myPrivateKey, partnerData.publicKey);
                         sharedKeyRef.current = sKey;
-                    } catch (e) {
+                        if (isMounted) setIsVaultLocked(false);
+                    } catch (e: any) {
                          console.error("Erreur dérivation clé partagée:", e);
+                         if (e.message && (e.message.includes("RAM") || e.message.includes("Seed Phrase") || e.message.includes("Reconnexion"))) {
+                             if (isMounted) {
+                                 setIsVaultLocked(true);
+                                 setIsLoading(false);
+                             }
+                             return; // On arrête l'initialisation si verrouillé
+                         }
                     }
                 }
 
@@ -71,13 +106,16 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                         const { decryptLocal } = await import('@/lib/crypto-client');
                         const decryptedMessages = await Promise.all(
                             rawMessages.map(async (msg: any) => {
-                                try {
-                                    const clair = await decryptLocal(msg.content, sKey!);
-                                    return { ...msg, content: clair };
-                                } catch (err) {
-                                    console.error("Impossible de déchiffrer le message", msg.id);
-                                    return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                                    try {
+                                        const clair = await decryptLocal(msg.content, sKey!);
+                                        return { ...msg, content: clair };
+                                    } catch (err) {
+                                        console.error("Impossible de déchiffrer le message", msg.id, err);
+                                        return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                    }
                                 }
+                                return msg;
                             })
                         );
                         setMessages(decryptedMessages);
@@ -96,35 +134,32 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                 });
 
                 room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, async (payload: any) => {
-                    if (payload.new.communication_id === channelId) {
-                        // Empêcher l'ajout en double si c'est moi qui l'ai envoyé
-                        setMessages((currentMessages) => {
-                            if (currentMessages.some(m => m.id === payload.new.id)) return currentMessages;
-                            return currentMessages;
-                        });
-
-                        let finalMsg = payload.new;
-                        // On déchiffre le message entrant s'il vient de l'autre
-                        // (Si ça vient de nous, l'affichage optimiste a déjà fait le travail)
-                        if (payload.new.sender_id !== myId) {
-                            if (sharedKeyRef.current) {
-                                try {
+                    const incomingMessage = payload.new;
+                    if (incomingMessage.communication_id === channelId) {
+                        try {
+                            // 1. On vérifie si le message contient un ':' (signe qu'il est chiffré)
+                            if (incomingMessage.content && (incomingMessage.content.includes(':') || incomingMessage.content.startsWith('🧠'))) {
+                                // 2. On attend le déchiffrement avec la sharedKey
+                                if (sharedKeyRef.current) {
                                     const { decryptLocal } = await import('@/lib/crypto-client');
-                                    const clair = await decryptLocal(payload.new.content, sharedKeyRef.current);
-                                    finalMsg = { ...payload.new, content: clair };
-                                } catch (err) {
-                                    console.error("Impossible de déchiffrer le message entrant", finalMsg.id);
-                                    finalMsg = { ...payload.new, content: "🔒 [Message indéchiffrable]" };
+                                    const decryptedText = await decryptLocal(incomingMessage.content, sharedKeyRef.current);
+                                    // 3. On remplace le texte chiffré par le texte en clair
+                                    incomingMessage.content = decryptedText;
+                                } else {
+                                    incomingMessage.content = "🔒 [Clé manquante]";
                                 }
-                            } else {
-                                finalMsg = { ...payload.new, content: "🔒 [Clé manquante]" };
                             }
+                        } catch (error) {
+                            console.error("❌ Échec du déchiffrement à la volée :", error);
+                            incomingMessage.content = "🔒 [Message indéchiffrable]";
                         }
 
                         if (isMounted) {
-                            setMessages(prev => {
-                                if (prev.some(m => m.id === finalMsg.id)) return prev;
-                                return [...prev, finalMsg];
+                            // 4. ON MET À JOUR L'UI SEULEMENT APRÈS LE DÉCHIFFREMENT
+                            setMessages((prevMessages) => {
+                                // Optionnel : éviter les doublons avec l'affichage optimiste de l'expéditeur
+                                if (prevMessages.some(msg => msg.id === incomingMessage.id)) return prevMessages;
+                                return [...prevMessages, incomingMessage];
                             });
                             setIsTyping(false);
                         }
@@ -162,11 +197,39 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                 supabase.removeChannel(room);
             }
         };
-    }, [channelId, myId, partnerId]);
+    }, [channelId, myId, partnerId, retryTrigger]);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isTyping]);
+
+    const handleUnlockVault = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setUnlockError("");
+        try {
+            const { unlockLocalVault, wrapKeyWithSession } = await import('@/lib/crypto-client');
+            const privateKey = await unlockLocalVault(unlockPassword);
+            
+            // Nouveau: On wrap la clé pour qu'elle survive aux prochains F5
+            try {
+                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+                const supabaseClient = createSupabase();
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.access_token) {
+                    await wrapKeyWithSession(privateKey, session.access_token);
+                }
+            } catch (wrapErr) {
+                console.error("Erreur gérable lors du wrapping de la clé de session", wrapErr);
+            }
+
+            setIsVaultLocked(false);
+            setUnlockPassword("");
+            setIsLoading(true);
+            setRetryTrigger(prev => prev + 1);
+        } catch (err) {
+            setUnlockError("Mot de passe incorrect. Impossible de déchiffrer le coffre.");
+        }
+    };
 
     const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewMessage(e.target.value);
@@ -261,6 +324,30 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
     };
 
     if (!channelId) return null;
+
+    if (isVaultLocked) {
+        return (
+            <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl items-center justify-center p-6 text-center animate-in fade-in zoom-in-95">
+                <h2 className="text-xl font-bold text-emerald-400 mb-2 font-mono">🔒 COFFRE-FORT VERROUILLÉ</h2>
+                <p className="text-slate-400 mb-6 text-sm font-mono max-w-sm">Votre session a été rafraîchie. Saisissez votre mot de passe pour déchiffrer vos messages E2EE en RAM.</p>
+                
+                <form onSubmit={handleUnlockVault} className="flex flex-col gap-4 w-full max-w-sm">
+                    <input 
+                        type="password" 
+                        placeholder="Mot de passe du compte" 
+                        value={unlockPassword}
+                        onChange={(e) => setUnlockPassword(e.target.value)}
+                        className="px-4 py-3 bg-black border border-slate-800 rounded-lg text-emerald-400 font-mono text-center focus:outline-none focus:border-emerald-500/50"
+                        required
+                    />
+                    <button type="submit" disabled={!unlockPassword} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-mono py-3 rounded-lg transition-colors disabled:opacity-50">
+                        DÉVERROUILLER
+                    </button>
+                    {unlockError && <p className="text-red-500 text-sm mt-2 font-mono">{unlockError}</p>}
+                </form>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in-95">

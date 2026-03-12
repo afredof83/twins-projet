@@ -55,13 +55,11 @@ export type ProfileMinAggregateOutputType = {
   customRole: string | null
   primaryRole: string | null
   updatedAt: Date | null
+  userId: string | null
+  type: string | null
+  displayName: string | null
   sector: string | null
   hobbyBio: string | null
-  hobbyRole: string | null
-  hobbySector: string | null
-  socialBio: string | null
-  socialRole: string | null
-  socialSector: string | null
   language: string | null
   activePrism: string | null
 }
@@ -85,13 +83,11 @@ export type ProfileMaxAggregateOutputType = {
   customRole: string | null
   primaryRole: string | null
   updatedAt: Date | null
+  userId: string | null
+  type: string | null
+  displayName: string | null
   sector: string | null
   hobbyBio: string | null
-  hobbyRole: string | null
-  hobbySector: string | null
-  socialBio: string | null
-  socialRole: string | null
-  socialSector: string | null
   language: string | null
   activePrism: string | null
 }
@@ -116,13 +112,11 @@ export type ProfileCountAggregateOutputType = {
   primaryRole: number
   thematicProfile: number
   updatedAt: number
+  userId: number
+  type: number
+  displayName: number
   sector: number
   hobbyBio: number
-  hobbyRole: number
-  hobbySector: number
-  socialBio: number
-  socialRole: number
-  socialSector: number
   language: number
   activePrism: number
   _all: number
@@ -158,13 +152,11 @@ export type ProfileMinAggregateInputType = {
   customRole?: true
   primaryRole?: true
   updatedAt?: true
+  userId?: true
+  type?: true
+  displayName?: true
   sector?: true
   hobbyBio?: true
-  hobbyRole?: true
-  hobbySector?: true
-  socialBio?: true
-  socialRole?: true
-  socialSector?: true
   language?: true
   activePrism?: true
 }
@@ -188,13 +180,11 @@ export type ProfileMaxAggregateInputType = {
   customRole?: true
   primaryRole?: true
   updatedAt?: true
+  userId?: true
+  type?: true
+  displayName?: true
   sector?: true
   hobbyBio?: true
-  hobbyRole?: true
-  hobbySector?: true
-  socialBio?: true
-  socialRole?: true
-  socialSector?: true
   language?: true
   activePrism?: true
 }
@@ -219,13 +209,11 @@ export type ProfileCountAggregateInputType = {
   primaryRole?: true
   thematicProfile?: true
   updatedAt?: true
+  userId?: true
+  type?: true
+  displayName?: true
   sector?: true
   hobbyBio?: true
-  hobbyRole?: true
-  hobbySector?: true
-  socialBio?: true
-  socialRole?: true
-  socialSector?: true
   language?: true
   activePrism?: true
   _all?: true
@@ -337,13 +325,11 @@ export type ProfileGroupByOutputType = {
   primaryRole: string | null
   thematicProfile: runtime.JsonValue | null
   updatedAt: Date
+  userId: string | null
+  type: string | null
+  displayName: string | null
   sector: string | null
   hobbyBio: string | null
-  hobbyRole: string | null
-  hobbySector: string | null
-  socialBio: string | null
-  socialRole: string | null
-  socialSector: string | null
   language: string
   activePrism: string | null
   _count: ProfileCountAggregateOutputType | null
@@ -391,13 +377,11 @@ export type ProfileWhereInput = {
   primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  userId?: Prisma.StringNullableFilter<"Profile"> | string | null
+  type?: Prisma.StringNullableFilter<"Profile"> | string | null
+  displayName?: Prisma.StringNullableFilter<"Profile"> | string | null
   sector?: Prisma.StringNullableFilter<"Profile"> | string | null
   hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
   language?: Prisma.StringFilter<"Profile"> | string
   activePrism?: Prisma.StringNullableFilter<"Profile"> | string | null
   initiatedConnections?: Prisma.ConnectionListRelationFilter
@@ -435,13 +419,11 @@ export type ProfileOrderByWithRelationInput = {
   primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
   thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  type?: Prisma.SortOrderInput | Prisma.SortOrder
+  displayName?: Prisma.SortOrderInput | Prisma.SortOrder
   sector?: Prisma.SortOrderInput | Prisma.SortOrder
   hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
   language?: Prisma.SortOrder
   activePrism?: Prisma.SortOrderInput | Prisma.SortOrder
   initiatedConnections?: Prisma.ConnectionOrderByRelationAggregateInput
@@ -462,6 +444,7 @@ export type ProfileOrderByWithRelationInput = {
 export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   email?: string
+  userId_type?: Prisma.ProfileUserIdTypeCompoundUniqueInput
   AND?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
   OR?: Prisma.ProfileWhereInput[]
   NOT?: Prisma.ProfileWhereInput | Prisma.ProfileWhereInput[]
@@ -482,13 +465,11 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   primaryRole?: Prisma.StringNullableFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableFilter<"Profile">
   updatedAt?: Prisma.DateTimeFilter<"Profile"> | Date | string
+  userId?: Prisma.StringNullableFilter<"Profile"> | string | null
+  type?: Prisma.StringNullableFilter<"Profile"> | string | null
+  displayName?: Prisma.StringNullableFilter<"Profile"> | string | null
   sector?: Prisma.StringNullableFilter<"Profile"> | string | null
   hobbyBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableFilter<"Profile"> | string | null
   language?: Prisma.StringFilter<"Profile"> | string
   activePrism?: Prisma.StringNullableFilter<"Profile"> | string | null
   initiatedConnections?: Prisma.ConnectionListRelationFilter
@@ -504,7 +485,7 @@ export type ProfileWhereUniqueInput = Prisma.AtLeast<{
   receivedOpportunities?: Prisma.OpportunityListRelationFilter
   radars?: Prisma.RadarResultListRelationFilter
   memories?: Prisma.MemoryListRelationFilter
-}, "id" | "email">
+}, "id" | "email" | "userId_type">
 
 export type ProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -526,13 +507,11 @@ export type ProfileOrderByWithAggregationInput = {
   primaryRole?: Prisma.SortOrderInput | Prisma.SortOrder
   thematicProfile?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
+  type?: Prisma.SortOrderInput | Prisma.SortOrder
+  displayName?: Prisma.SortOrderInput | Prisma.SortOrder
   sector?: Prisma.SortOrderInput | Prisma.SortOrder
   hobbyBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  hobbySector?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialBio?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialRole?: Prisma.SortOrderInput | Prisma.SortOrder
-  socialSector?: Prisma.SortOrderInput | Prisma.SortOrder
   language?: Prisma.SortOrder
   activePrism?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ProfileCountOrderByAggregateInput
@@ -565,13 +544,11 @@ export type ProfileScalarWhereWithAggregatesInput = {
   primaryRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   thematicProfile?: Prisma.JsonNullableWithAggregatesFilter<"Profile">
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Profile"> | Date | string
+  userId?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  type?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
+  displayName?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   sector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   hobbyBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  hobbyRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  hobbySector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialBio?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialRole?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
-  socialSector?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
   language?: Prisma.StringWithAggregatesFilter<"Profile"> | string
   activePrism?: Prisma.StringNullableWithAggregatesFilter<"Profile"> | string | null
 }
@@ -596,13 +573,11 @@ export type ProfileCreateInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -640,13 +615,11 @@ export type ProfileUncheckedCreateInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -684,13 +657,11 @@ export type ProfileUpdateInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -728,13 +699,11 @@ export type ProfileUncheckedUpdateInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -772,13 +741,11 @@ export type ProfileCreateManyInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
 }
@@ -803,13 +770,11 @@ export type ProfileUpdateManyMutationInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -834,15 +799,18 @@ export type ProfileUncheckedUpdateManyInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type ProfileUserIdTypeCompoundUniqueInput = {
+  userId: string
+  type: string
 }
 
 export type ProfileCountOrderByAggregateInput = {
@@ -865,13 +833,11 @@ export type ProfileCountOrderByAggregateInput = {
   primaryRole?: Prisma.SortOrder
   thematicProfile?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   sector?: Prisma.SortOrder
   hobbyBio?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
   language?: Prisma.SortOrder
   activePrism?: Prisma.SortOrder
 }
@@ -900,13 +866,11 @@ export type ProfileMaxOrderByAggregateInput = {
   customRole?: Prisma.SortOrder
   primaryRole?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   sector?: Prisma.SortOrder
   hobbyBio?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
   language?: Prisma.SortOrder
   activePrism?: Prisma.SortOrder
 }
@@ -930,13 +894,11 @@ export type ProfileMinOrderByAggregateInput = {
   customRole?: Prisma.SortOrder
   primaryRole?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  userId?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  displayName?: Prisma.SortOrder
   sector?: Prisma.SortOrder
   hobbyBio?: Prisma.SortOrder
-  hobbyRole?: Prisma.SortOrder
-  hobbySector?: Prisma.SortOrder
-  socialBio?: Prisma.SortOrder
-  socialRole?: Prisma.SortOrder
-  socialSector?: Prisma.SortOrder
   language?: Prisma.SortOrder
   activePrism?: Prisma.SortOrder
 }
@@ -1173,13 +1135,11 @@ export type ProfileCreateWithoutFilesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -1216,13 +1176,11 @@ export type ProfileUncheckedCreateWithoutFilesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -1275,13 +1233,11 @@ export type ProfileUpdateWithoutFilesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -1318,13 +1274,11 @@ export type ProfileUncheckedUpdateWithoutFilesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -1361,13 +1315,11 @@ export type ProfileCreateWithoutNotesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -1404,13 +1356,11 @@ export type ProfileUncheckedCreateWithoutNotesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -1463,13 +1413,11 @@ export type ProfileUpdateWithoutNotesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -1506,13 +1454,11 @@ export type ProfileUncheckedUpdateWithoutNotesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -1549,13 +1495,11 @@ export type ProfileCreateWithoutRadarsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -1592,13 +1536,11 @@ export type ProfileUncheckedCreateWithoutRadarsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -1651,13 +1593,11 @@ export type ProfileUpdateWithoutRadarsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -1694,13 +1634,11 @@ export type ProfileUncheckedUpdateWithoutRadarsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -1737,13 +1675,11 @@ export type ProfileCreateWithoutMatchesInitiatedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -1780,13 +1716,11 @@ export type ProfileUncheckedCreateWithoutMatchesInitiatedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -1828,13 +1762,11 @@ export type ProfileCreateWithoutMatchesReceivedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -1871,13 +1803,11 @@ export type ProfileUncheckedCreateWithoutMatchesReceivedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -1930,13 +1860,11 @@ export type ProfileUpdateWithoutMatchesInitiatedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -1973,13 +1901,11 @@ export type ProfileUncheckedUpdateWithoutMatchesInitiatedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2027,13 +1953,11 @@ export type ProfileUpdateWithoutMatchesReceivedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -2070,13 +1994,11 @@ export type ProfileUncheckedUpdateWithoutMatchesReceivedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2113,13 +2035,11 @@ export type ProfileCreateWithoutMessagesReceivedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -2156,13 +2076,11 @@ export type ProfileUncheckedCreateWithoutMessagesReceivedInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -2204,13 +2122,11 @@ export type ProfileCreateWithoutMessagesSentInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -2247,13 +2163,11 @@ export type ProfileUncheckedCreateWithoutMessagesSentInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -2306,13 +2220,11 @@ export type ProfileUpdateWithoutMessagesReceivedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -2349,13 +2261,11 @@ export type ProfileUncheckedUpdateWithoutMessagesReceivedInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2403,13 +2313,11 @@ export type ProfileUpdateWithoutMessagesSentInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -2446,13 +2354,11 @@ export type ProfileUncheckedUpdateWithoutMessagesSentInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2489,13 +2395,11 @@ export type ProfileCreateWithoutMemoriesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -2532,13 +2436,11 @@ export type ProfileUncheckedCreateWithoutMemoriesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -2591,13 +2493,11 @@ export type ProfileUpdateWithoutMemoriesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -2634,13 +2534,11 @@ export type ProfileUncheckedUpdateWithoutMemoriesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2677,13 +2575,11 @@ export type ProfileCreateWithoutDiscoveriesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -2720,13 +2616,11 @@ export type ProfileUncheckedCreateWithoutDiscoveriesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -2779,13 +2673,11 @@ export type ProfileUpdateWithoutDiscoveriesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -2822,13 +2714,11 @@ export type ProfileUncheckedUpdateWithoutDiscoveriesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -2865,13 +2755,11 @@ export type ProfileCreateWithoutInitiatedConnectionsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   receivedConnections?: Prisma.ConnectionCreateNestedManyWithoutReceiverInput
@@ -2908,13 +2796,11 @@ export type ProfileUncheckedCreateWithoutInitiatedConnectionsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   receivedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutReceiverInput
@@ -2956,13 +2842,11 @@ export type ProfileCreateWithoutReceivedConnectionsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -2999,13 +2883,11 @@ export type ProfileUncheckedCreateWithoutReceivedConnectionsInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -3058,13 +2940,11 @@ export type ProfileUpdateWithoutInitiatedConnectionsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedConnections?: Prisma.ConnectionUpdateManyWithoutReceiverNestedInput
@@ -3101,13 +2981,11 @@ export type ProfileUncheckedUpdateWithoutInitiatedConnectionsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   receivedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutReceiverNestedInput
@@ -3155,13 +3033,11 @@ export type ProfileUpdateWithoutReceivedConnectionsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -3198,13 +3074,11 @@ export type ProfileUncheckedUpdateWithoutReceivedConnectionsInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -3241,13 +3115,11 @@ export type ProfileCreateWithoutInitiatedOpportunitiesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -3284,13 +3156,11 @@ export type ProfileUncheckedCreateWithoutInitiatedOpportunitiesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -3332,13 +3202,11 @@ export type ProfileCreateWithoutReceivedOpportunitiesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionCreateNestedManyWithoutInitiatorInput
@@ -3375,13 +3243,11 @@ export type ProfileUncheckedCreateWithoutReceivedOpportunitiesInput = {
   primaryRole?: string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Date | string
+  userId?: string | null
+  type?: string | null
+  displayName?: string | null
   sector?: string | null
   hobbyBio?: string | null
-  hobbyRole?: string | null
-  hobbySector?: string | null
-  socialBio?: string | null
-  socialRole?: string | null
-  socialSector?: string | null
   language?: string
   activePrism?: string | null
   initiatedConnections?: Prisma.ConnectionUncheckedCreateNestedManyWithoutInitiatorInput
@@ -3434,13 +3300,11 @@ export type ProfileUpdateWithoutInitiatedOpportunitiesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -3477,13 +3341,11 @@ export type ProfileUncheckedUpdateWithoutInitiatedOpportunitiesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -3531,13 +3393,11 @@ export type ProfileUpdateWithoutReceivedOpportunitiesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUpdateManyWithoutInitiatorNestedInput
@@ -3574,13 +3434,11 @@ export type ProfileUncheckedUpdateWithoutReceivedOpportunitiesInput = {
   primaryRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   thematicProfile?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hobbyBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbyRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  hobbySector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialBio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  socialSector?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
   activePrism?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   initiatedConnections?: Prisma.ConnectionUncheckedUpdateManyWithoutInitiatorNestedInput
@@ -3756,13 +3614,11 @@ export type ProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   primaryRole?: boolean
   thematicProfile?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  type?: boolean
+  displayName?: boolean
   sector?: boolean
   hobbyBio?: boolean
-  hobbyRole?: boolean
-  hobbySector?: boolean
-  socialBio?: boolean
-  socialRole?: boolean
-  socialSector?: boolean
   language?: boolean
   activePrism?: boolean
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
@@ -3801,13 +3657,11 @@ export type ProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   primaryRole?: boolean
   thematicProfile?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  type?: boolean
+  displayName?: boolean
   sector?: boolean
   hobbyBio?: boolean
-  hobbyRole?: boolean
-  hobbySector?: boolean
-  socialBio?: boolean
-  socialRole?: boolean
-  socialSector?: boolean
   language?: boolean
   activePrism?: boolean
 }, ExtArgs["result"]["profile"]>
@@ -3832,13 +3686,11 @@ export type ProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   primaryRole?: boolean
   thematicProfile?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  type?: boolean
+  displayName?: boolean
   sector?: boolean
   hobbyBio?: boolean
-  hobbyRole?: boolean
-  hobbySector?: boolean
-  socialBio?: boolean
-  socialRole?: boolean
-  socialSector?: boolean
   language?: boolean
   activePrism?: boolean
 }, ExtArgs["result"]["profile"]>
@@ -3863,18 +3715,16 @@ export type ProfileSelectScalar = {
   primaryRole?: boolean
   thematicProfile?: boolean
   updatedAt?: boolean
+  userId?: boolean
+  type?: boolean
+  displayName?: boolean
   sector?: boolean
   hobbyBio?: boolean
-  hobbyRole?: boolean
-  hobbySector?: boolean
-  socialBio?: boolean
-  socialRole?: boolean
-  socialSector?: boolean
   language?: boolean
   activePrism?: boolean
 }
 
-export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "avatarUrl" | "unifiedAnalysis" | "availability" | "bio" | "tjm" | "fcmToken" | "publicKey" | "age" | "city" | "country" | "gender" | "createdAt" | "customRole" | "primaryRole" | "thematicProfile" | "updatedAt" | "sector" | "hobbyBio" | "hobbyRole" | "hobbySector" | "socialBio" | "socialRole" | "socialSector" | "language" | "activePrism", ExtArgs["result"]["profile"]>
+export type ProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "avatarUrl" | "unifiedAnalysis" | "availability" | "bio" | "tjm" | "fcmToken" | "publicKey" | "age" | "city" | "country" | "gender" | "createdAt" | "customRole" | "primaryRole" | "thematicProfile" | "updatedAt" | "userId" | "type" | "displayName" | "sector" | "hobbyBio" | "language" | "activePrism", ExtArgs["result"]["profile"]>
 export type ProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   initiatedConnections?: boolean | Prisma.Profile$initiatedConnectionsArgs<ExtArgs>
   receivedConnections?: boolean | Prisma.Profile$receivedConnectionsArgs<ExtArgs>
@@ -3931,13 +3781,11 @@ export type $ProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     primaryRole: string | null
     thematicProfile: runtime.JsonValue | null
     updatedAt: Date
+    userId: string | null
+    type: string | null
+    displayName: string | null
     sector: string | null
     hobbyBio: string | null
-    hobbyRole: string | null
-    hobbySector: string | null
-    socialBio: string | null
-    socialRole: string | null
-    socialSector: string | null
     language: string
     activePrism: string | null
   }, ExtArgs["result"]["profile"]>
@@ -4395,13 +4243,11 @@ export interface ProfileFieldRefs {
   readonly primaryRole: Prisma.FieldRef<"Profile", 'String'>
   readonly thematicProfile: Prisma.FieldRef<"Profile", 'Json'>
   readonly updatedAt: Prisma.FieldRef<"Profile", 'DateTime'>
+  readonly userId: Prisma.FieldRef<"Profile", 'String'>
+  readonly type: Prisma.FieldRef<"Profile", 'String'>
+  readonly displayName: Prisma.FieldRef<"Profile", 'String'>
   readonly sector: Prisma.FieldRef<"Profile", 'String'>
   readonly hobbyBio: Prisma.FieldRef<"Profile", 'String'>
-  readonly hobbyRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly hobbySector: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialBio: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialRole: Prisma.FieldRef<"Profile", 'String'>
-  readonly socialSector: Prisma.FieldRef<"Profile", 'String'>
   readonly language: Prisma.FieldRef<"Profile", 'String'>
   readonly activePrism: Prisma.FieldRef<"Profile", 'String'>
 }

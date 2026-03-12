@@ -40,13 +40,16 @@ export async function POST(request: Request) {
 
         // 2. Vérification de l'identité via Supabase Auth
         const user = await getAuthUser(request);
+        const { senderId } = body; // Le profil décliné (WORK/HOBBY/DATING)
+
         const prismaRLS = getPrismaForUser(user.id);
 
         if (action === 'read' && receiverId) {
+            // Ici receiverId est le partenaire, on doit aussi filtrer par notre profil actif (senderId)
             await prismaRLS.message.updateMany({
                 where: {
                     senderId: receiverId,
-                    receiverId: user.id,
+                    receiverId: senderId || user.id, // Fallback vers user.id pour compatibilité
                     isRead: false
                 },
                 data: { isRead: true }
@@ -59,29 +62,19 @@ export async function POST(request: Request) {
         }
 
         // 3. ⚡ Instanciation du Prisma avec RLS ⚡
-        // prismaRLS est déjà déclaré en haut pour le action === 'read'
-
-        // Vérification d'association si besoin, mais RLS gère les accès de base.
-        // On s'assure qu'une connexion ACCEPTED existe.
-        const activeConnection = await prismaRLS.connection.findFirst({
-            where: {
-                OR: [
-                    { initiatorId: user.id, receiverId: receiverId },
-                    { initiatorId: receiverId, receiverId: user.id }
-                ],
-                status: 'ACCEPTED'
-            }
-        });
-
-        if (!activeConnection) {
-            return NextResponse.json({ error: "Accès refusé. Aucune connexion active avec cet utilisateur." }, { status: 403 });
+        // On vérifie que le senderId appartient bien à l'utilisateur si fourni
+        if (senderId) {
+            const profile = await prismaRLS.profile.findFirst({
+                where: { id: senderId, userId: user.id }
+            });
+            if (!profile) return NextResponse.json({ error: "Profil invalide ou non autorisé" }, { status: 403 });
         }
 
         // 4. Exécution de la requête sous contexte utilisateur
         const message = await prismaRLS.message.create({
             data: {
                 content,
-                senderId: user.id,
+                senderId: senderId || user.id,
                 receiverId
             }
         });
@@ -100,6 +93,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const receiverId = searchParams.get('receiverId');
         const cursorId = searchParams.get('cursorId');
+        const senderId = searchParams.get('senderId'); // Notre identité prism
 
         if (!receiverId || !cursorId) {
             return NextResponse.json({ error: "Paramètres manquants : receiverId ou cursorId" }, { status: 400 });
@@ -109,11 +103,12 @@ export async function GET(request: Request) {
         const prismaRLS = getPrismaForUser(user.id);
 
         // Fetch des messages plus anciens via pagination sur RLS
+        const myId = senderId || user.id;
         const olderMessages = await prismaRLS.message.findMany({
             where: {
                 OR: [
-                    { senderId: user.id, receiverId: receiverId },
-                    { senderId: receiverId, receiverId: user.id }
+                    { senderId: myId, receiverId: receiverId },
+                    { senderId: receiverId, receiverId: myId }
                 ]
             },
             take: 50,

@@ -1,4 +1,4 @@
-This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+﻿This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
 
 <file_summary>
 This section contains a summary of this file.
@@ -458,15 +458,15 @@ export function useSpeech() {
     const [transcript, setTranscript] = useState('');
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    // Référence pour la reconnaissance vocale
+    // RÃ©fÃ©rence pour la reconnaissance vocale
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
-        // Initialisation (seulement côté client)
+        // Initialisation (seulement cÃ´tÃ© client)
         if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
             // @ts-ignore
             const recognition = new window.webkitSpeechRecognition();
-            recognition.continuous = false; // On arrête d'écouter quand la phrase finit
+            recognition.continuous = false; // On arrÃªte d'Ã©couter quand la phrase finit
             recognition.lang = 'fr-FR';
             recognition.interimResults = false;
 
@@ -482,7 +482,7 @@ export function useSpeech() {
         }
     }, []);
 
-    // Démarrer l'écoute
+    // DÃ©marrer l'Ã©coute
     const startListening = () => {
         if (recognitionRef.current) {
             setTranscript(''); // Reset
@@ -492,7 +492,7 @@ export function useSpeech() {
         }
     };
 
-    // Arrêter l'écoute
+    // ArrÃªter l'Ã©coute
     const stopListening = () => {
         if (recognitionRef.current) recognitionRef.current.stop();
     };
@@ -500,13 +500,13 @@ export function useSpeech() {
     // Faire parler le Jumeau
     const speak = (text: string) => {
         if ('speechSynthesis' in window) {
-            // On arrête s'il parle déjà
+            // On arrÃªte s'il parle dÃ©jÃ 
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
             utterance.rate = 1.0; // Vitesse normale
-            utterance.pitch = 1.0; // Tonalité normale
+            utterance.pitch = 1.0; // TonalitÃ© normale
 
             utterance.onstart = () => setIsSpeaking(true);
             utterance.onend = () => setIsSpeaking(false);
@@ -529,28 +529,28 @@ export function useSpeech() {
 <file path="lib/oracle/alchemy.ts">
 // lib/oracle/alchemy.ts
 
-// 1. DÉFINITION DES OUTILS (Ce que l'IA voit)
+// 1. DÃ‰FINITION DES OUTILS (Ce que l'IA voit)
 export const ALCHEMIST_TOOLS = [
     {
         type: "function",
         function: {
             name: "simulate_future_career",
-            description: "Projette l'avenir professionnel de Frédéric sur 1 à 5 ans. Calcule le salaire potentiel, le risque de burnout et la pertinence du marché.",
+            description: "Projette l'avenir professionnel de FrÃ©dÃ©ric sur 1 Ã  5 ans. Calcule le salaire potentiel, le risque de burnout et la pertinence du marchÃ©.",
             parameters: {
                 type: "object",
                 properties: {
                     path_name: {
                         type: "string",
-                        description: "La voie envisagée (ex: 'Rester chez Qualitat', 'Freelance Drone', 'Expert Nucléaire')"
+                        description: "La voie envisagÃ©e (ex: 'Rester chez Qualitat', 'Freelance Drone', 'Expert NuclÃ©aire')"
                     },
                     timeframe_years: {
                         type: "integer",
-                        description: "Horizon de temps en années (1 à 10)."
+                        description: "Horizon de temps en annÃ©es (1 Ã  10)."
                     },
                     risk_tolerance: {
                         type: "string",
                         enum: ["low", "medium", "high"],
-                        description: "Niveau de risque accepté."
+                        description: "Niveau de risque acceptÃ©."
                     }
                 },
                 required: ["path_name", "timeframe_years", "risk_tolerance"]
@@ -561,12 +561,12 @@ export const ALCHEMIST_TOOLS = [
         type: "function",
         function: {
             name: "analyze_market_trend",
-            description: "Analyse la demande actuelle du marché pour une compétence spécifique dans le Var (83) ou en France.",
+            description: "Analyse la demande actuelle du marchÃ© pour une compÃ©tence spÃ©cifique dans le Var (83) ou en France.",
             parameters: {
                 type: "object",
                 properties: {
-                    skill: { type: "string", description: "La compétence ou le métier (ex: 'Amiante', 'Logistique', 'IA')" },
-                    location: { type: "string", description: "Zone géographique" }
+                    skill: { type: "string", description: "La compÃ©tence ou le mÃ©tier (ex: 'Amiante', 'Logistique', 'IA')" },
+                    location: { type: "string", description: "Zone gÃ©ographique" }
                 },
                 required: ["skill"]
             }
@@ -574,42 +574,42 @@ export const ALCHEMIST_TOOLS = [
     }
 ];
 
-// 2. EXÉCUTION DES OUTILS (Ce que le code fait réellement)
+// 2. EXÃ‰CUTION DES OUTILS (Ce que le code fait rÃ©ellement)
 export async function executeAlchemyTool(toolName: string, args: any) {
-    console.log(`⚗️ [ALCHIMISTE] Activation de l'outil : ${toolName}`, args);
+    console.log(`âš—ï¸ [ALCHIMISTE] Activation de l'outil : ${toolName}`, args);
 
     if (toolName === "simulate_future_career") {
-        // SIMULATION MATHÉMATIQUE
-        const baseIncome = 32000; // Revenu de base fictif ou réel
+        // SIMULATION MATHÃ‰MATIQUE
+        const baseIncome = 32000; // Revenu de base fictif ou rÃ©el
         const growthRate = args.risk_tolerance === 'high' ? 1.25 : 1.05; // 25% vs 5% croissance
         const futureIncome = Math.round(baseIncome * Math.pow(growthRate, args.timeframe_years));
 
-        const successProb = args.risk_tolerance === 'high' ? "45% (Risqué mais rentable)" : "92% (Sécurisé)";
+        const successProb = args.risk_tolerance === 'high' ? "45% (RisquÃ© mais rentable)" : "92% (SÃ©curisÃ©)";
 
         return JSON.stringify({
-            scénario: args.path_name,
+            scÃ©nario: args.path_name,
             horizon: `${args.timeframe_years} ans`,
-            revenu_projeté: `${futureIncome} € / an`,
-            probabilité_succès: successProb,
+            revenu_projetÃ©: `${futureIncome} â‚¬ / an`,
+            probabilitÃ©_succÃ¨s: successProb,
             conseil_oracle: args.risk_tolerance === 'high'
-                ? "Cette voie demande une résilience extrême. Prépare un filet de sécurité."
-                : "C'est la voie de la sagesse, mais attention à l'ennui."
+                ? "Cette voie demande une rÃ©silience extrÃªme. PrÃ©pare un filet de sÃ©curitÃ©."
+                : "C'est la voie de la sagesse, mais attention Ã  l'ennui."
         });
     }
 
     if (toolName === "analyze_market_trend") {
         // Ici on pourrait appeler une vraie API (Google Trends, LinkedIn), on simule pour l'instant
-        const isHot = ["IA", "Drone", "Nucléaire", "Logistique"].some(k => args.skill.includes(k));
+        const isHot = ["IA", "Drone", "NuclÃ©aire", "Logistique"].some(k => args.skill.includes(k));
 
         return JSON.stringify({
-            compétence: args.skill,
+            compÃ©tence: args.skill,
             demande: isHot ? "EXPLOSIVE (+40% sur 6 mois)" : "STAGNANTE (-2%)",
             concurrents_locaux: Math.floor(Math.random() * 100),
-            verdict: isHot ? "C'est le moment d'investir massivement." : "Attention, océan rouge."
+            verdict: isHot ? "C'est le moment d'investir massivement." : "Attention, ocÃ©an rouge."
         });
     }
 
-    return "Outil inconnu ou cassé.";
+    return "Outil inconnu ou cassÃ©.";
 }
 </file>
 
@@ -677,8 +677,8 @@ export interface VectorStoreConfig {
 <file path="lib/security/crypto.ts">
 // lib/security/crypto.ts
 
-// Pour faire simple dans ce prototype, on va dériver une clé à partir d'un mot de passe fixe
-// Dans une version prod, ce mot de passe serait demandé à l'utilisateur à chaque session.
+// Pour faire simple dans ce prototype, on va dÃ©river une clÃ© Ã  partir d'un mot de passe fixe
+// Dans une version prod, ce mot de passe serait demandÃ© Ã  l'utilisateur Ã  chaque session.
 const MASTER_KEY_PASSWORD = "MON_SECRET_TRES_SECURISE_123";
 
 async function getKey() {
@@ -694,7 +694,7 @@ async function getKey() {
     return window.crypto.subtle.deriveKey(
         {
             name: "PBKDF2",
-            salt: enc.encode("salt_fixe_pour_proto"), // À randomiser en prod
+            salt: enc.encode("salt_fixe_pour_proto"), // Ã€ randomiser en prod
             iterations: 100000,
             hash: "SHA-256",
         },
@@ -718,13 +718,13 @@ export const cryptoManager = {
             encoded
         );
 
-        // On combine IV + Texte chiffré pour le stockage
+        // On combine IV + Texte chiffrÃ© pour le stockage
         const ivArray = Array.from(iv);
         const encryptedArray = Array.from(new Uint8Array(encrypted));
         return JSON.stringify({ iv: ivArray, data: encryptedArray });
     },
 
-    // DÉCHIFFRER (Charabia -> Texte)
+    // DÃ‰CHIFFRER (Charabia -> Texte)
     async decrypt(cipherText: string): Promise<string> {
         try {
             const { iv, data } = JSON.parse(cipherText);
@@ -738,7 +738,7 @@ export const cryptoManager = {
 
             return new TextDecoder().decode(decrypted);
         } catch (e) {
-            return "🔒 [Contenu Verrouillé - Clé invalide]";
+            return "ðŸ”’ [Contenu VerrouillÃ© - ClÃ© invalide]";
         }
     }
 };
@@ -785,27 +785,27 @@ export async function createClient() {
 
 <file path="lib/tools/network-scanner.ts">
 export async function scanNetworkForAgents(sector: string) {
-    console.log(`📡 [SONAR] Scan du secteur : ${sector}...`);
+    console.log(`ðŸ“¡ [SONAR] Scan du secteur : ${sector}...`);
 
     // Ici, on simule ce que le web renverrait. 
-    // Idéalement, tu ferais un fetch vers une API de recherche ici.
-    // Pour l'instant, c'est codé en dur pour la démo "FisherMade".
+    // IdÃ©alement, tu ferais un fetch vers une API de recherche ici.
+    // Pour l'instant, c'est codÃ© en dur pour la dÃ©mo "FisherMade".
 
     const simulatedSignals = [
         {
-            name: "VMC Pêche (Groupe Rapala)",
+            name: "VMC PÃªche (Groupe Rapala)",
             type: "Partner",
-            context: "Leader mondial de l'hameçon, usine en France (Territoire de Belfort). Cherche innovations acier."
+            context: "Leader mondial de l'hameÃ§on, usine en France (Territoire de Belfort). Cherche innovations acier."
         },
         {
             name: "Decathlon Innovation (Caperlan)",
             type: "Client",
-            context: "Leur centre de conception à Cestas cherche des brevets éco-conçus pour 2027."
+            context: "Leur centre de conception Ã  Cestas cherche des brevets Ã©co-conÃ§us pour 2027."
         },
         {
             name: "Blue Ocean Partners",
             type: "Investor",
-            context: "Fonds VC spécialisé dans la Tech Maritime et la protection des océans."
+            context: "Fonds VC spÃ©cialisÃ© dans la Tech Maritime et la protection des ocÃ©ans."
         }
     ];
 
@@ -818,7 +818,7 @@ import * as cheerio from 'cheerio';
 
 export async function readUrlContent(url: string): Promise<string | null> {
     try {
-        console.log(`🌐 [ORACLE] Tentative de lecture : ${url}`);
+        console.log(`ðŸŒ [ORACLE] Tentative de lecture : ${url}`);
 
         const response = await fetch(url, {
             headers: {
@@ -834,13 +834,13 @@ export async function readUrlContent(url: string): Promise<string | null> {
         // Nettoyage : on vire les pubs, scripts et styles
         $('script, style, nav, footer, iframe, noscript').remove();
 
-        // On récupère le texte pur
+        // On rÃ©cupÃ¨re le texte pur
         let content = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // On limite à 6000 caractères pour ne pas saturer Mistral
+        // On limite Ã  6000 caractÃ¨res pour ne pas saturer Mistral
         return content.substring(0, 6000);
     } catch (error) {
-        console.error("❌ Erreur Web Reader:", error);
+        console.error("âŒ Erreur Web Reader:", error);
         return null;
     }
 }
@@ -993,10 +993,10 @@ export class SupabasePgVectorStore {
         let safeType = memory.type || 'MEMORY';
         const safeTags = [...(memory.tags || [])];
 
-        // Sécurité au cas où on retombe sur une base stricte un jour
+        // SÃ©curitÃ© au cas oÃ¹ on retombe sur une base stricte un jour
         if (safeType === 'file_upload') {
             // On laisse passer file_upload maintenant que la base est libre
-            // Mais on garde la logique de tag par sécurité
+            // Mais on garde la logique de tag par sÃ©curitÃ©
             safeTags.push('file_upload');
         }
 
@@ -1025,12 +1025,12 @@ export class SupabasePgVectorStore {
     async query(vector: number[], filter: { profileId: string }): Promise<MemoryQueryResult[]> {
 
         // --- CORRECTION CRITIQUE ICI ---
-        // On appelle la fonction SQL avec les noms de paramètres EXACTS
+        // On appelle la fonction SQL avec les noms de paramÃ¨tres EXACTS
         const { data, error } = await this.client.rpc('match_memories', {
             query_embedding: vector,
-            match_threshold: 0.4,       // Seuil tolérant pour trouver le souvenir
+            match_threshold: 0.4,       // Seuil tolÃ©rant pour trouver le souvenir
             match_count: 5,
-            query_profile_id: filter.profileId // <--- C'est la clé du succès !
+            query_profile_id: filter.profileId // <--- C'est la clÃ© du succÃ¨s !
         });
 
         if (error) {
@@ -1158,30 +1158,30 @@ import { mistralClient } from "@/lib/mistral";
 export async function askIpseAdvice(decryptedContext: string) {
     try {
         const prompt = `
-    Tu es Ipse, le conseiller stratégique B2B de cet utilisateur.
-    Il est actuellement dans une négociation confidentielle en Dark Room (Chat E2EE).
+    Tu es Ipse, le conseiller stratÃ©gique B2B de cet utilisateur.
+    Il est actuellement dans une nÃ©gociation confidentielle en Dark Room (Chat E2EE).
     
-    Voici les 5 derniers échanges de la conversation :
+    Voici les 5 derniers Ã©changes de la conversation :
     """
     ${decryptedContext}
     """
     
     MISSION :
-    Fournis UNE SEULE PHRASE (courte, percutante, pragmatique) pour lui suggérer quoi répondre.
-    Cherche à identifier un levier de persuasion, un angle mort de l'interlocuteur, ou une manière de closer la discussion.
+    Fournis UNE SEULE PHRASE (courte, percutante, pragmatique) pour lui suggÃ©rer quoi rÃ©pondre.
+    Cherche Ã  identifier un levier de persuasion, un angle mort de l'interlocuteur, ou une maniÃ¨re de closer la discussion.
     Ne sois pas poli, sois tactique.
     `;
 
         const response = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
-            messages: [{ role: 'user', content: prompt }], // Utilise 'user' role par sécurité car 'system' est géré différemment parfois.
+            messages: [{ role: 'user', content: prompt }], // Utilise 'user' role par sÃ©curitÃ© car 'system' est gÃ©rÃ© diffÃ©remment parfois.
             temperature: 0.3,
         });
 
         return { success: true, advice: response.choices?.[0].message?.content as string };
     } catch (error) {
         console.error("Erreur Ipse Advisor:", error);
-        return { success: false, error: "Interférence réseau avec Ipse." };
+        return { success: false, error: "InterfÃ©rence rÃ©seau avec Ipse." };
     }
 }
 </file>
@@ -1209,7 +1209,7 @@ async function getAuthUser(request: Request) {
         {
             cookies: {
                 get(name: string) {
-                    // ⚡ CORRECTION : Si on a un Bearer Token, on ignore les vieux cookies
+                    // âš¡ CORRECTION : Si on a un Bearer Token, on ignore les vieux cookies
                     if (token) return undefined;
                     return cookieStore.get(name)?.value;
                 },
@@ -1268,7 +1268,7 @@ export async function POST(request: Request) {
 
         if (!token) return NextResponse.json({ error: "Token manquant" }, { status: 401 });
 
-        // On ignore volontairement les cookies pour éviter le crash "Invalid Refresh Token"
+        // On ignore volontairement les cookies pour Ã©viter le crash "Invalid Refresh Token"
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -1283,7 +1283,7 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
-        // ⚡ BYPASS RLS : Utilisation de Prisma Admin pour forcer la création
+        // âš¡ BYPASS RLS : Utilisation de Prisma Admin pour forcer la crÃ©ation
         const profile = await prisma.profile.upsert({
             where: { id: user.id },
             update: {},
@@ -1426,7 +1426,7 @@ export async function POST(request: Request) {
         const { decryptedContext } = body;
         if (!decryptedContext) return NextResponse.json({ success: false, error: 'Contexte manquant' }, { status: 400 });
 
-        const prompt = `Tu es Ipse, le conseiller stratégique B2B.\nVoici les 5 derniers échanges :\n"""${decryptedContext}"""\nFournis UNE SEULE PHRASE tactique pour lui suggérer quoi répondre.`;
+        const prompt = `Tu es Ipse, le conseiller stratÃ©gique B2B.\nVoici les 5 derniers Ã©changes :\n"""${decryptedContext}"""\nFournis UNE SEULE PHRASE tactique pour lui suggÃ©rer quoi rÃ©pondre.`;
         const response = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }],
@@ -1447,7 +1447,7 @@ import { mistralClient } from '@/lib/mistral';
 export const runtime = 'edge';
 
 /**
- * 🔥 [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
+ * ðŸ”¥ [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
  * Purpose: High-performance streaming synergy analysis using Edge Runtime.
  * Flow: Mistral Stream -> ReadableStream -> Post-stream Update (WaitUntil).
  */
@@ -1495,60 +1495,60 @@ export async function POST(req: NextRequest) {
             fetchCortexData(supabase, target.id)
         ]);
 
-        console.log(`📡 [EDGE-STREAM] Starting stream for ${opportunityId}`);
+        console.log(`ðŸ“¡ [EDGE-STREAM] Starting stream for ${opportunityId}`);
 
         // 3. Hermetic Prompt with Markdown Constraint & Contextual Tone
         const isWork = (opportunity.context || 'WORK') === 'WORK';
         const toneDirective = isWork 
-            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratégiques."
-            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagées.";
+            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratÃ©giques."
+            : "Adopte un ton dÃ©contractÃ©, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagÃ©es.";
 
-        const prompt = `Tu es Cortex, une IA de renseignement sémantique spécialisée dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
+        const prompt = `Tu es Cortex, une IA de renseignement sÃ©mantique spÃ©cialisÃ©e dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
         ${toneDirective}
-        Analyse la synergie ENTRE deux entités distinctes. 
+        Analyse la synergie ENTRE deux entitÃ©s distinctes. 
 
         <Profil_A>
         [INITIATEUR]
         Nom: ${source.name || 'Agent Furtif'}
-        Rôle: ${source.primaryRole || 'Non défini'}
-        Secteur: ${source.sector || 'Non défini'}
-        Bio: ${source.bio || 'Non spécifiée'}
-        Cortex Data: ${sourceCortex || 'Aucune donnée.'}
+        RÃ´le: ${source.primaryRole || 'Non dÃ©fini'}
+        Secteur: ${source.sector || 'Non dÃ©fini'}
+        Bio: ${source.bio || 'Non spÃ©cifiÃ©e'}
+        Cortex Data: ${sourceCortex || 'Aucune donnÃ©e.'}
         </Profil_A>
 
         <Profil_B>
         [CIBLE / TOI]
         Nom: ${target.name || 'Agent Furtif'}
-        Rôle: ${target.primaryRole || 'Non défini'}
-        Secteur: ${target.sector || 'Non défini'}
-        Bio: ${target.bio || 'Non spécifiée'}
-        Cortex Data: ${targetCortex || 'Aucune donnée.'}
+        RÃ´le: ${target.primaryRole || 'Non dÃ©fini'}
+        Secteur: ${target.sector || 'Non dÃ©fini'}
+        Bio: ${target.bio || 'Non spÃ©cifiÃ©e'}
+        Cortex Data: ${targetCortex || 'Aucune donnÃ©e.'}
         </Profil_B>
 
-        INSTRUCTION: Génère un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
+        INSTRUCTION: GÃ©nÃ¨re un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
 
-        🎯 QUI EST ${source.name || 'Profil A'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
+        ðŸŽ¯ QUI EST ${source.name || 'Profil A'} ?
+        [1 phrase impactante rÃ©sumant son rÃ´le et son expertise]
 
-        🎯 QUI EST ${target.name || 'Profil B'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
+        ðŸŽ¯ QUI EST ${target.name || 'Profil B'} ?
+        [1 phrase impactante rÃ©sumant son rÃ´le et son expertise]
 
-        ⚡ POTENTIEL DE SYNERGIE
-        [1 seul paragraphe très direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
+        âš¡ POTENTIEL DE SYNERGIE
+        [1 seul paragraphe trÃ¨s direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
 
-        🚀 CE QUE ${source.name || 'Profil A'} APPORTE À ${target.name || 'Profil B'}
+        ðŸš€ CE QUE ${source.name || 'Profil A'} APPORTE Ã€ ${target.name || 'Profil B'}
 
-        🔹 [Atout clé 1] : [Bénéfice direct, très court]
+        ðŸ”¹ [Atout clÃ© 1] : [BÃ©nÃ©fice direct, trÃ¨s court]
 
-        🔹 [Atout clé 2] : [Bénéfice direct, très court]
+        ðŸ”¹ [Atout clÃ© 2] : [BÃ©nÃ©fice direct, trÃ¨s court]
 
-        💎 CE QUE ${target.name || 'Profil B'} APPORTE À ${source.name || 'Profil A'}
+        ðŸ’Ž CE QUE ${target.name || 'Profil B'} APPORTE Ã€ ${source.name || 'Profil A'}
 
-        🔸 [Atout clé 1] : [Bénéfice direct, très court]
+        ðŸ”¸ [Atout clÃ© 1] : [BÃ©nÃ©fice direct, trÃ¨s court]
 
-        🔸 [Atout clé 2] : [Bénéfice direct, très court]
+        ðŸ”¸ [Atout clÃ© 2] : [BÃ©nÃ©fice direct, trÃ¨s court]
 
-        RÉPOND UNIQUEMENT EN MARKDOWN.`;
+        RÃ‰POND UNIQUEMENT EN MARKDOWN.`;
 
         // 4. Mistral Streaming
         const responseStream = await mistralClient.chat.stream({
@@ -1595,7 +1595,7 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("🔥 [EDGE-FAILURE]:", error.message);
+        console.error("ðŸ”¥ [EDGE-FAILURE]:", error.message);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }
@@ -1619,10 +1619,10 @@ async function updateAuditDatabase(supabase: any, opportunityId: string, audit: 
             .update({ audit, status: 'ANALYZED' })
             .eq('id', opportunityId);
         
-        if (error) console.error("❌ [DB-UPDATE] Failed:", error.message);
-        else console.log(`✅ [DB-UPDATE] Opportunity ${opportunityId} persists.`);
+        if (error) console.error("âŒ [DB-UPDATE] Failed:", error.message);
+        else console.log(`âœ… [DB-UPDATE] Opportunity ${opportunityId} persists.`);
     } catch (e) {
-        console.error("❌ [DB-UPDATE] Critical Error:", e);
+        console.error("âŒ [DB-UPDATE] Critical Error:", e);
     }
 }
 </file>
@@ -1683,8 +1683,8 @@ const mistral = new Mistral({
 });
 
 /**
- * API Radar - Matchmaking Sémantique
- * Gère la recherche par phrase ou la recommandation basée sur le profil.
+ * API Radar - Matchmaking SÃ©mantique
+ * GÃ¨re la recherche par phrase ou la recommandation basÃ©e sur le profil.
  */
 export async function POST(req: Request) {
     try {
@@ -1705,7 +1705,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized credentials' }, { status: 401 });
         }
 
-        // 3. Récupération des paramètres (Query / Filtres)
+        // 3. RÃ©cupÃ©ration des paramÃ¨tres (Query / Filtres)
         const body = await req.json();
         const {
             query,
@@ -1719,7 +1719,7 @@ export async function POST(req: Request) {
 
         let targetEmbedding: number[] | null = null;
 
-        // 4. Stratégie Sémantique
+        // 4. StratÃ©gie SÃ©mantique
         if (query && query.trim().length > 3) {
             // Cas A : Recherche textuelle active
             const embeddingResponse = await mistral.embeddings.create({
@@ -1728,8 +1728,8 @@ export async function POST(req: Request) {
             });
             targetEmbedding = embeddingResponse.data[0].embedding ?? null;
         } else {
-            // Cas B : Recommandation passive (basée sur le profil utilisateur)
-            // On sélectionne la colonne correspondante au type de prisme
+            // Cas B : Recommandation passive (basÃ©e sur le profil utilisateur)
+            // On sÃ©lectionne la colonne correspondante au type de prisme
             let embeddingColumn = "bioEmbedding";
             if (prismType === 'SOCIAL') embeddingColumn = "social_embedding";
             if (prismType === 'HOBBY') embeddingColumn = "hobby_embedding";
@@ -1751,7 +1751,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to generate search vector' }, { status: 500 });
         }
 
-        // 5. Appel au moteur SQL Radar (RPC match_profiles_v2 ou générique)
+        // 5. Appel au moteur SQL Radar (RPC match_profiles_v2 ou gÃ©nÃ©rique)
         // On passe le vecteur et le type de prisme pour que le SQL cherche le bon match
         const { data: matches, error: rpcError } = await supabase.rpc('match_profiles', {
             query_embedding: targetEmbedding,
@@ -1760,17 +1760,17 @@ export async function POST(req: Request) {
             min_tjm: minTjm,
             max_tjm: maxTjm,
             target_role: role,
-            prism_type: prismType // On suppose que match_profiles est mis à jour pour filtrer par prisme
+            prism_type: prismType // On suppose que match_profiles est mis Ã  jour pour filtrer par prisme
         });
 
         if (rpcError) {
             console.error('[RADAR_RPC_ERROR]', rpcError);
-            return NextResponse.json({ error: 'Le moteur Radar a rencontré une erreur technique.' }, { status: 500 });
+            return NextResponse.json({ error: 'Le moteur Radar a rencontrÃ© une erreur technique.' }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            query: query || 'Recommendation basée sur votre profil',
+            query: query || 'Recommendation basÃ©e sur votre profil',
             results: matches || []
         });
 
@@ -1811,7 +1811,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return { user, supabase };
 }
 
@@ -1826,7 +1826,7 @@ export async function POST(request: Request) {
         const agent: any = await prisma.profile.findUnique({ where: { id: userId || user.id } });
         if (!agent) return NextResponse.json({ success: false, error: 'Agent introuvable' }, { status: 404 });
 
-        const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
+        const searchIntent = `Profil: ${agent.profession || 'GÃ©nÃ©ral'}. Objectifs: ${agent.objectives?.join(', ') || 'OpportunitÃ©s stratÃ©giques'}`;
         const embeddingResponse = await mistralClient.embeddings.create({ model: "mistral-embed", inputs: [searchIntent] });
         const queryVector = embeddingResponse.data[0].embedding;
 
@@ -1836,11 +1836,11 @@ export async function POST(request: Request) {
 
         const contextBlock = ragResults?.length > 0
             ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
-            : 'Aucune mémoire pertinente trouvée.';
+            : 'Aucune mÃ©moire pertinente trouvÃ©e.';
 
         const promptContent = mode === 'deep'
-            ? `Tu es TWINS_INTEL. Analyse approfondie.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÉES:\n${contextBlock}\nGénère JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","overallMatchScore":0-100,"targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}],"opportunities":[{"title":"..","reasoning":"..","priority":1}]}`
-            : `Tu es TWINS_INTEL, radar de surface rapide.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÉES:\n${contextBlock}\nGénère JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}]}`;
+            ? `Tu es TWINS_INTEL. Analyse approfondie.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÃ‰ES:\n${contextBlock}\nGÃ©nÃ¨re JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","overallMatchScore":0-100,"targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}],"opportunities":[{"title":"..","reasoning":"..","priority":1}]}`
+            : `Tu es TWINS_INTEL, radar de surface rapide.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÃ‰ES:\n${contextBlock}\nGÃ©nÃ¨re JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}]}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -1895,11 +1895,11 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return { user, supabase };
 }
 
-// POST /api/terminal — executeTerminalCommand
+// POST /api/terminal â€” executeTerminalCommand
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -1923,12 +1923,12 @@ export async function POST(request: Request) {
         }
         const [internalRes, externalData] = await Promise.all([internalSearch, externalSearch]);
 
-        let internalContext = "Aucune donnée interne trouvée.";
-        if (internalRes.data?.length > 0) internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - Mémoire: ${m.content}`).join('\n');
-        let externalContext = "Aucune donnée externe trouvée.";
+        let internalContext = "Aucune donnÃ©e interne trouvÃ©e.";
+        if (internalRes.data?.length > 0) internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - MÃ©moire: ${m.content}`).join('\n');
+        let externalContext = "Aucune donnÃ©e externe trouvÃ©e.";
         if (externalData.results?.length > 0) externalContext = externalData.results.map((r: any) => `[Web] ${r.title}\nURL: ${r.url}\nExtrait: ${r.content}`).join('\n\n');
 
-        const aiPrompt = `Tu es l'unité de ciblage d'un système radar.\nOrdre : "${prompt}"\nCAPTEURS INTERNES:\n"""${internalContext}"""\nCAPTEURS EXTERNES:\n"""${externalContext}"""\n[TARGETS: [{"name": "Nom Réel", "lat": 48.6, "lng": -2.0}]]`;
+        const aiPrompt = `Tu es l'unitÃ© de ciblage d'un systÃ¨me radar.\nOrdre : "${prompt}"\nCAPTEURS INTERNES:\n"""${internalContext}"""\nCAPTEURS EXTERNES:\n"""${externalContext}"""\n[TARGETS: [{"name": "Nom RÃ©el", "lat": 48.6, "lng": -2.0}]]`;
 
         const response = await mistralClient.chat.complete({ model: "mistral-large-latest", messages: [{ role: "system", content: aiPrompt }] });
         const rawContent = (response.choices?.[0].message.content as string) || "";
@@ -1960,7 +1960,7 @@ export async function POST(request: Request) {
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: `Tu es un traducteur de l'extrême. Traduis fidèlement ce texte en ${targetCountry}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.` },
+                { role: "system", content: `Tu es un traducteur de l'extrÃªme. Traduis fidÃ¨lement ce texte en ${targetCountry}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.` },
                 { role: "user", content: text }
             ]
         });
@@ -1996,18 +1996,18 @@ export default function LogoutButton() {
             // 1. Tuer la session Supabase sur le serveur
             await supabase.auth.signOut();
 
-            // 2. ⚡ Purger la mémoire du coffre-fort biométrique
+            // 2. âš¡ Purger la mÃ©moire du coffre-fort biomÃ©trique
             sessionStorage.clear();
 
-            // 3. Purger les données locales éventuelles
+            // 3. Purger les donnÃ©es locales Ã©ventuelles
             localStorage.clear();
 
             // 4. Hard Redirect : on force le rechargement de la page vers /login
-            // Cela détruit toute la mémoire RAM de Next.js et des composants React
+            // Cela dÃ©truit toute la mÃ©moire RAM de Next.js et des composants React
             window.location.href = '/login';
 
         } catch (error) {
-            console.error("Erreur lors de la déconnexion:", error);
+            console.error("Erreur lors de la dÃ©connexion:", error);
             setIsLoggingOut(false);
         }
     };
@@ -2020,7 +2020,7 @@ export default function LogoutButton() {
         >
             <LogOut size={20} className={isLoggingOut ? "animate-pulse" : ""} />
             <span className="font-bold tracking-widest uppercase text-sm">
-                {isLoggingOut ? "Purge en cours..." : "Déconnexion Spatiale"}
+                {isLoggingOut ? "Purge en cours..." : "DÃ©connexion Spatiale"}
             </span>
         </button>
     );
@@ -2040,7 +2040,7 @@ interface AuditStreamerProps {
 }
 
 /**
- * 🛰️ AuditStreamer
+ * ðŸ›°ï¸ AuditStreamer
  * Consumes the Edge-streamed Markdown audit from Mistral AI.
  */
 export default function AuditStreamer({ opportunityId, onComplete }: AuditStreamerProps) {
@@ -2092,7 +2092,7 @@ export default function AuditStreamer({ opportunityId, onComplete }: AuditStream
                 if (onComplete) onComplete(accumulatedText);
 
             } catch (err: any) {
-                console.error("❌ [STREAM ERROR]:", err);
+                console.error("âŒ [STREAM ERROR]:", err);
                 setError(err.message);
                 setStatus('error');
             }
@@ -2108,7 +2108,7 @@ export default function AuditStreamer({ opportunityId, onComplete }: AuditStream
                 <div className="flex items-center gap-2">
                     <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-yellow-400 animate-pulse' : 'text-blue-400'}`} />
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                        Analyse Cortex en temps réel
+                        Analyse Cortex en temps rÃ©el
                     </span>
                 </div>
                 {status === 'streaming' && (
@@ -2185,7 +2185,7 @@ export default function RadarPoller() {
     const router = useRouter();
 
     useEffect(() => {
-        // Rafraîchir la page toutes les 15 secondes pour voir les nouvelles invitations
+        // RafraÃ®chir la page toutes les 15 secondes pour voir les nouvelles invitations
         const interval = setInterval(() => {
             router.refresh();
         }, 15000);
@@ -2212,8 +2212,8 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
     useEffect(() => {
         const supabase = createClient();
 
-        // On écoute tout changement sur Connection et Opportunity 
-        // Le filtrage se fera par l'accès RLS (l'utilisateur ne reçoit que ce qu'il peut voir)
+        // On Ã©coute tout changement sur Connection et Opportunity 
+        // Le filtrage se fera par l'accÃ¨s RLS (l'utilisateur ne reÃ§oit que ce qu'il peut voir)
         const channel = supabase
             .channel(`radar_realtime_${currentUserId}`)
             .on('postgres_changes', {
@@ -2221,7 +2221,7 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 schema: 'public',
                 table: 'Connection'
             }, (payload: any) => {
-                console.log('🔔 [Realtime] Connection update detected', payload);
+                console.log('ðŸ”” [Realtime] Connection update detected', payload);
                 onUpdate();
             })
             .on('postgres_changes', {
@@ -2229,7 +2229,7 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 schema: 'public',
                 table: 'Opportunity'
             }, (payload: any) => {
-                console.log('🔔 [Realtime] Opportunity update detected', payload);
+                console.log('ðŸ”” [Realtime] Opportunity update detected', payload);
                 onUpdate();
             })
             .on('postgres_changes', {
@@ -2238,11 +2238,11 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 table: 'Message',
                 filter: `receiverId=eq.${currentUserId}`
             }, (payload: any) => {
-                console.log('🔔 [Realtime] New message detected for Radar', payload);
+                console.log('ðŸ”” [Realtime] New message detected for Radar', payload);
                 onUpdate();
             })
             .subscribe((status: any) => {
-                console.log(`📡 [Realtime] Status for ${currentUserId}:`, status);
+                console.log(`ðŸ“¡ [Realtime] Status for ${currentUserId}:`, status);
             });
 
         return () => {
@@ -2326,7 +2326,7 @@ env.useBrowserCache = true;
 
 let translationPipeline: any = null;
 
-// Modèle léger pour la traduction
+// ModÃ¨le lÃ©ger pour la traduction
 const MODEL_NAME = 'Xenova/t5-small';
 
 async function getPipeline(progressCallback: (data: any) => void) {
@@ -2337,22 +2337,22 @@ async function getPipeline(progressCallback: (data: any) => void) {
         translationPipeline = await pipeline('translation', MODEL_NAME, {
             progress_callback: progressCallback,
         });
-        console.log('[WORKER] Modèle chargé et prêt.');
+        console.log('[WORKER] ModÃ¨le chargÃ© et prÃªt.');
         return translationPipeline;
     } catch (err) {
-        console.error('[WORKER] Erreur lors du chargement du modèle:', err);
+        console.error('[WORKER] Erreur lors du chargement du modÃ¨le:', err);
         throw err;
     }
 }
 
 self.onmessage = async (event) => {
     const { text, targetLanguage, sourceLanguage } = event.data;
-    console.log(`[WORKER] Message reçu pour traduction vers ${targetLanguage}`);
+    console.log(`[WORKER] Message reÃ§u pour traduction vers ${targetLanguage}`);
 
     try {
         const pipe = await getPipeline((data: any) => {
             if (data.status === 'progress') {
-                console.log(`[WORKER] Téléchargement du modèle: ${Math.round(data.progress * 100)}% (${data.file})`);
+                console.log(`[WORKER] TÃ©lÃ©chargement du modÃ¨le: ${Math.round(data.progress * 100)}% (${data.file})`);
                 self.postMessage({
                     type: 'progress',
                     status: 'loading',
@@ -2364,12 +2364,12 @@ self.onmessage = async (event) => {
 
         const task = `translate ${sourceLanguage || 'auto'} to ${targetLanguage}`;
         
-        console.log(`[WORKER] Démarrage de l'inférence...`);
+        console.log(`[WORKER] DÃ©marrage de l'infÃ©rence...`);
         const result = await pipe(text, {
             src_lang: sourceLanguage,
             tgt_lang: targetLanguage,
         });
-        console.log(`[WORKER] Inférence terminée avec succès.`);
+        console.log(`[WORKER] InfÃ©rence terminÃ©e avec succÃ¨s.`);
 
         self.postMessage({
             type: 'result',
@@ -2446,7 +2446,7 @@ export const NeuralLink: React.FC = () => {
 // inngest/client.ts
 import { Inngest } from "inngest";
 
-// ⚡ ANTIGRAVITY: On définit l'ID de notre application
+// âš¡ ANTIGRAVITY: On dÃ©finit l'ID de notre application
 export const inngest = new Inngest({ id: "ipse-digital-twin" });
 </file>
 
@@ -2497,26 +2497,26 @@ import { NativeBiometric } from 'capacitor-native-biometric';
 
 export const performBiometricVaultUnlock = async (): Promise<boolean> => {
     try {
-        // 1. Vérifier si la biométrie est disponible sur ce téléphone
+        // 1. VÃ©rifier si la biomÃ©trie est disponible sur ce tÃ©lÃ©phone
         const result = await NativeBiometric.isAvailable();
 
         if (!result.isAvailable) {
-            console.warn("Biométrie non disponible. Passage en mode dégradé (code secret uniquement).");
+            console.warn("BiomÃ©trie non disponible. Passage en mode dÃ©gradÃ© (code secret uniquement).");
             return false;
         }
 
-        // 2. Lancer le scan (Empreinte ou Visage selon le téléphone)
+        // 2. Lancer le scan (Empreinte ou Visage selon le tÃ©lÃ©phone)
         await NativeBiometric.verifyIdentity({
-            reason: "Accès à l'Agent Ipse - Déchiffrement du MasterKey",
-            title: "Identité requise",
+            reason: "AccÃ¨s Ã  l'Agent Ipse - DÃ©chiffrement du MasterKey",
+            title: "IdentitÃ© requise",
             subtitle: "Veuillez vous authentifier pour ouvrir le coffre-fort local",
-            description: "Votre clé de chiffrement reste protégée dans l'enclave sécurisée.",
+            description: "Votre clÃ© de chiffrement reste protÃ©gÃ©e dans l'enclave sÃ©curisÃ©e.",
             negativeButtonText: "Annuler",
         });
 
         return true;
     } catch (error) {
-        console.error("Échec de l'authentification biométrique :", error);
+        console.error("Ã‰chec de l'authentification biomÃ©trique :", error);
         return false;
     }
 };
@@ -2567,7 +2567,7 @@ export function decryptMessage(encryptedData: string) {
         return decrypted;
     } catch (e) {
         console.error("Failed to decrypt message:", e, encryptedData);
-        return "🔒 Message chiffré illisible";
+        return "ðŸ”’ Message chiffrÃ© illisible";
     }
 }
 </file>
@@ -2577,7 +2577,7 @@ import { Capacitor } from '@capacitor/core';
 import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
 /**
- * 🔐 SECURE KEY MANAGER - Blindé
+ * ðŸ” SECURE KEY MANAGER - BlindÃ©
  * Handles private key storage using native Keychain (iOS) and Keystore (Android).
  * Fallback to encrypted memory for Web/Dev.
  */
@@ -2592,7 +2592,7 @@ class KeyManager {
      * Store private key in the most secure location available
      */
     async storePrivateKey(key: string): Promise<void> {
-        if (!key) throw new Error("Tentative de stockage d'une clé vide.");
+        if (!key) throw new Error("Tentative de stockage d'une clÃ© vide.");
 
         if (this.isNative) {
             try {
@@ -2601,12 +2601,12 @@ class KeyManager {
                     value: key
                 });
             } catch (error) {
-                console.error("❌ Échec du stockage natif sécurisé.");
+                console.error("âŒ Ã‰chec du stockage natif sÃ©curisÃ©.");
                 throw error;
             }
         } else {
             // Web/Dev Fallback: Store in memory only (no persistence in localStorage)
-            console.warn("🛠️ Mode Web : Clé stockée en mémoire volatile uniquement.");
+            console.warn("ðŸ› ï¸ Mode Web : ClÃ© stockÃ©e en mÃ©moire volatile uniquement.");
             this.webFallbackKey = key;
         }
     }
@@ -2617,20 +2617,20 @@ class KeyManager {
     async getPrivateKey(): Promise<string | null> {
         if (this.isNative) {
             try {
-                // 1. Vérification proactive pour éviter le crash natif
+                // 1. VÃ©rification proactive pour Ã©viter le crash natif
                 const { value: keys } = await SecureStoragePlugin.keys();
                 if (!keys.includes(PRIVATE_KEY_ALIAS)) {
-                    console.log(`[VAULT] Clé '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (Ignoré en douceur).`);
+                    console.log(`[VAULT] ClÃ© '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (IgnorÃ© en douceur).`);
                     return null;
                 }
 
-                // 2. Lecture sécurisée sans risque de crash
+                // 2. Lecture sÃ©curisÃ©e sans risque de crash
                 const { value } = await SecureStoragePlugin.get({
                     key: PRIVATE_KEY_ALIAS
                 });
                 return value || null;
             } catch (error) {
-                console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
+                console.log("Coffre vide ou erreur matÃ©rielle (IgnorÃ© en douceur) :", error);
                 return null;
             }
         } else {
@@ -2647,11 +2647,11 @@ class KeyManager {
                 await SecureStoragePlugin.remove({ key: PRIVATE_KEY_ALIAS });
                 await SecureStoragePlugin.clear(); // Clear all for extra safety
             } catch (error) {
-                console.error("❌ Erreur lors de la purge d'urgence.");
+                console.error("âŒ Erreur lors de la purge d'urgence.");
             }
         }
         this.webFallbackKey = null;
-        console.log("🧹 Vault purgé avec succès.");
+        console.log("ðŸ§¹ Vault purgÃ© avec succÃ¨s.");
     }
 
     /**
@@ -2673,16 +2673,16 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function findInternalAgent(myProfileId: string) {
-    // 1. On récupère TOUT pour voir ce qui bloque
+    // 1. On rÃ©cupÃ¨re TOUT pour voir ce qui bloque
     const { data: allProfiles } = await supabase.from('Profile').select('id, name');
-    console.log("📊 [DIAGNOSTIC] Profils en base :", allProfiles);
+    console.log("ðŸ“Š [DIAGNOSTIC] Profils en base :", allProfiles);
 
-    // 2. Recherche plus souple (insensible à la casse)
+    // 2. Recherche plus souple (insensible Ã  la casse)
     const { data: partner, error } = await supabase
         .from('Profile')
         .select('id, name, bio')
         .neq('id', myProfileId)
-        .ilike('name', '%user%') // 'ilike' ignore la casse et cherche "user" n'importe où
+        .ilike('name', '%user%') // 'ilike' ignore la casse et cherche "user" n'importe oÃ¹
         .maybeSingle();
 
     if (error) return null;
@@ -2699,7 +2699,7 @@ if (!apiKey) {
     throw new Error("[CRITIQUE] MISTRAL_API_KEY est manquante dans les variables d'environnement.");
 }
 
-// Singleton pattern pour éviter de multiples instanciations en serverless
+// Singleton pattern pour Ã©viter de multiples instanciations en serverless
 const globalForMistral = global as unknown as { mistralClient: Mistral };
 
 export const mistralClient = globalForMistral.mistralClient || new Mistral({ apiKey });
@@ -2724,8 +2724,8 @@ export async function getMistralEmbedding(text: string) {
 <file path="lib/pdf-client.ts">
 import * as pdfjsLib from 'pdfjs-dist';
 
-// ⚡ ANTIGRAVITY: Le worker est hébergé localement. 
-// Zéro dépendance externe. Immunisé contre les pannes réseau et les bloqueurs.
+// âš¡ ANTIGRAVITY: Le worker est hÃ©bergÃ© localement. 
+// ZÃ©ro dÃ©pendance externe. ImmunisÃ© contre les pannes rÃ©seau et les bloqueurs.
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export async function extractTextFromPdf(file: File): Promise<string> {
@@ -2736,7 +2736,7 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        // Concatène les lignes de la page
+        // ConcatÃ¨ne les lignes de la page
         const pageText = textContent.items.map((item: any) => item.str).join(' ');
         fullText += pageText + '\n';
     }
@@ -2752,8 +2752,8 @@ import { createBrowserClient } from '@supabase/ssr'
 let supabaseBrowserClient: ReturnType<typeof createBrowserClient> | undefined
 
 export function createClient() {
-    // 1. Si nous ne sommes pas dans un navigateur (SSR), on crée un client standard
-    //    (pas de singleton côté serveur, chaque requête est indépendante)
+    // 1. Si nous ne sommes pas dans un navigateur (SSR), on crÃ©e un client standard
+    //    (pas de singleton cÃ´tÃ© serveur, chaque requÃªte est indÃ©pendante)
     if (typeof window === 'undefined') {
         return createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2761,7 +2761,7 @@ export function createClient() {
         )
     }
 
-    // 2. Côté navigateur : on ne crée l'instance qu'une seule fois
+    // 2. CÃ´tÃ© navigateur : on ne crÃ©e l'instance qu'une seule fois
     if (!supabaseBrowserClient) {
         supabaseBrowserClient = createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2769,7 +2769,7 @@ export function createClient() {
         )
     }
 
-    // 3. On retourne toujours la même instance
+    // 3. On retourne toujours la mÃªme instance
     return supabaseBrowserClient
 }
 </file>
@@ -2795,7 +2795,7 @@ export class TranslationManager {
             const { type, status, progress, translation, error } = event.data;
             
             if (type === 'progress' && this.progressCallback) {
-                console.log(`[TRADUCTION-CLIENT] Progrès: ${Math.round(progress * 100)}% (${status})`);
+                console.log(`[TRADUCTION-CLIENT] ProgrÃ¨s: ${Math.round(progress * 100)}% (${status})`);
                 this.progressCallback(progress * 100, status);
             }
         };
@@ -2806,7 +2806,7 @@ export class TranslationManager {
     }
 
     static async translate(text: string, targetLang: string, sourceLang?: string): Promise<string> {
-        console.log(`[TRADUCTION-CLIENT] Requête de traduction envoyée au worker (${targetLang})`);
+        console.log(`[TRADUCTION-CLIENT] RequÃªte de traduction envoyÃ©e au worker (${targetLang})`);
         return new Promise((resolve, reject) => {
             if (!this.worker) this.init();
 
@@ -2847,7 +2847,7 @@ import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 import { NativeBiometric } from 'capacitor-native-biometric';
 
 /**
- * 🔒 VAULT MANAGER
+ * ðŸ”’ VAULT MANAGER
  * Centralized security layer for native hardware-protected key storage.
  * Ensures private keys never touch localStorage or non-secure memory.
  */
@@ -2860,72 +2860,72 @@ export enum VaultKey {
 
 export const VaultManager = {
     /**
-     * 🔐 Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
+     * ðŸ” Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
      */
     async saveSecret(key: VaultKey, value: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) {
-            console.warn(`⚠️ [VAULT] Platform non-native. Le stockage de ${key} est simulé (NON SÉCURISÉ).`);
+            console.warn(`âš ï¸ [VAULT] Platform non-native. Le stockage de ${key} est simulÃ© (NON SÃ‰CURISÃ‰).`);
             // En dev/web, on pourrait utiliser SessionStorage ou autre, mais ici on reste strict.
             return;
         }
 
         await SecureStoragePlugin.set({ key, value });
-        console.log(`✅ [VAULT] Secret '${key}' verrouillé dans l'enclave matérielle.`);
+        console.log(`âœ… [VAULT] Secret '${key}' verrouillÃ© dans l'enclave matÃ©rielle.`);
     },
 
     /**
-     * 🔓 Load a secret from the vault.
+     * ðŸ”“ Load a secret from the vault.
      */
     async loadSecret(key: VaultKey): Promise<string | null> {
         if (!Capacitor.isNativePlatform()) return null;
 
         try {
-            // 1. Vérification proactive pour éviter le crash natif
+            // 1. VÃ©rification proactive pour Ã©viter le crash natif
             const { value: keys } = await SecureStoragePlugin.keys();
             if (!keys.includes(key)) {
-                console.log(`[VAULT] Clé '${key}' introuvable dans l'enclave (Ignoré en douceur).`);
+                console.log(`[VAULT] ClÃ© '${key}' introuvable dans l'enclave (IgnorÃ© en douceur).`);
                 return null;
             }
 
-            // 2. Lecture sécurisée sans risque de crash
+            // 2. Lecture sÃ©curisÃ©e sans risque de crash
             const result = await SecureStoragePlugin.get({ key });
             return result.value || null;
         } catch (error) {
-            console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
+            console.log("Coffre vide ou erreur matÃ©rielle (IgnorÃ© en douceur) :", error);
             return null;
         }
     },
 
     /**
-     * 🧬 Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
+     * ðŸ§¬ Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
      * Use this whenever highly sensitive keys are needed.
      */
-    async unlockAndLoad(key: VaultKey, reason: string = "Accès sécurisé requis"): Promise<string | null> {
+    async unlockAndLoad(key: VaultKey, reason: string = "AccÃ¨s sÃ©curisÃ© requis"): Promise<string | null> {
         try {
             // 1. Biometric Challenge
             const available = await NativeBiometric.isAvailable();
             if (available.isAvailable) {
                 await NativeBiometric.verifyIdentity({
                     reason,
-                    title: "Authentification Cyber-Sécurité",
-                    subtitle: "Déverrouillage de l'enclave biométrique",
-                    description: "Accès requis pour le déchiffrement des données.",
+                    title: "Authentification Cyber-SÃ©curitÃ©",
+                    subtitle: "DÃ©verrouillage de l'enclave biomÃ©trique",
+                    description: "AccÃ¨s requis pour le dÃ©chiffrement des donnÃ©es.",
                     negativeButtonText: "Annuler"
                 });
             } else {
-                console.warn("⚠️ Biométrie indisponible. Tentative de lecture directe (Mode dégradé).");
+                console.warn("âš ï¸ BiomÃ©trie indisponible. Tentative de lecture directe (Mode dÃ©gradÃ©).");
             }
 
             // 2. Retrieval
             return await this.loadSecret(key);
         } catch (error) {
-            console.error("❌ [VAULT] Échec du déverrouillage :", error);
-            throw new Error("Authentification échouée. Accès au coffre-fort refusé.");
+            console.error("âŒ [VAULT] Ã‰chec du dÃ©verrouillage :", error);
+            throw new Error("Authentification Ã©chouÃ©e. AccÃ¨s au coffre-fort refusÃ©.");
         }
     },
 
     /**
-     * 🧹 Emergency Purge: Wipe ALL keys from the vault.
+     * ðŸ§¹ Emergency Purge: Wipe ALL keys from the vault.
      * To be called on logout or security breach detection.
      */
     async wipeKeys(): Promise<void> {
@@ -2936,9 +2936,9 @@ export const VaultManager = {
             for (const key of keys) {
                 await SecureStoragePlugin.remove({ key });
             }
-            console.log("🧨 [VAULT] Purge d'urgence effectuée. Toutes les clés supprimées.");
+            console.log("ðŸ§¨ [VAULT] Purge d'urgence effectuÃ©e. Toutes les clÃ©s supprimÃ©es.");
         } catch (error) {
-            console.error("❌ [VAULT] Erreur lors de la purge :", error);
+            console.error("âŒ [VAULT] Erreur lors de la purge :", error);
         }
     }
 };
@@ -3003,7 +3003,7 @@ function InvitationContent() {
             }).then(r => r.json());
 
             if (res.success && res.connectionId) {
-                // L'opportunité contient sourceId, on peut rediriger vers le chat avec cet utilisateur
+                // L'opportunitÃ© contient sourceId, on peut rediriger vers le chat avec cet utilisateur
                 router.push(`/chat?id=${opp.sourceId}`);
             } else {
                 setActionLoading(false);
@@ -3035,19 +3035,19 @@ function InvitationContent() {
     };
 
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-    if (!oppId || !opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirée</div>;
+    if (!oppId || !opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirÃ©e</div>;
 
     if (opp.status !== 'INVITED') {
         return (
             <div className="min-h-screen bg-black p-6 flex flex-col items-center justify-center text-center">
                 <ShieldCheck className="w-16 h-16 text-zinc-600 mb-4" />
-                <h1 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Canal Sécurisé</h1>
-                <p className="text-zinc-400">Cette invitation a déjà été traitée (Statut: {opp.status}).</p>
+                <h1 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Canal SÃ©curisÃ©</h1>
+                <p className="text-zinc-400">Cette invitation a dÃ©jÃ  Ã©tÃ© traitÃ©e (Statut: {opp.status}).</p>
                 <button
                     onClick={() => router.push('/cortex')}
                     className="mt-8 text-blue-400 hover:text-blue-300 font-mono text-sm underline"
                 >
-                    Retour au système central
+                    Retour au systÃ¨me central
                 </button>
             </div>
         );
@@ -3056,7 +3056,7 @@ function InvitationContent() {
     return (
         <div className="min-h-screen bg-black p-4 flex flex-col items-center justify-center font-mono">
             <div className="w-full max-w-lg border border-blue-500/30 p-8 rounded-2xl bg-zinc-950 shadow-2xl relative overflow-hidden">
-                {/* Décoration cyber */}
+                {/* DÃ©coration cyber */}
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                     <UserPlus className="w-32 h-32" />
                 </div>
@@ -3067,10 +3067,10 @@ function InvitationContent() {
                         <h1 className="text-blue-400 text-xs text-left uppercase tracking-widest font-bold">Protocole de Liaison Entrant</h1>
                     </div>
 
-                    <h2 className="text-2xl text-white font-bold mb-6">RE: {opp.title || 'Nouvelle Opportunité'}</h2>
+                    <h2 className="text-2xl text-white font-bold mb-6">RE: {opp.title || 'Nouvelle OpportunitÃ©'}</h2>
 
                     <div className="bg-black/80 border border-zinc-800 p-5 rounded-lg mb-8">
-                        <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wide">Résumé Stratégique :</p>
+                        <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wide">RÃ©sumÃ© StratÃ©gique :</p>
                         <p className="text-zinc-300 text-sm leading-relaxed italic">
                             "{opp.summary}"
                         </p>
@@ -3113,9 +3113,9 @@ export default function InvitationPage() {
 import { prisma } from '@/lib/prisma';
 
 /**
- * ⚡ ANTIGRAVITY: AuthGuard côté client.
- * Vérifie qu'un profil existe en BDD pour l'utilisateur connecté.
- * Retourne false si le profil n'existe pas (session fantôme).
+ * âš¡ ANTIGRAVITY: AuthGuard cÃ´tÃ© client.
+ * VÃ©rifie qu'un profil existe en BDD pour l'utilisateur connectÃ©.
+ * Retourne false si le profil n'existe pas (session fantÃ´me).
  */
 export async function checkProfileExists(userId: string): Promise<boolean> {
     if (!userId) return false;
@@ -3137,8 +3137,8 @@ export async function guardianCheck(profileId: string, text: string) {
         // NIVEAU 1 : Filtrage algorithmique gratuit
         if (!text || text.length < 5) return { success: true, isSafe: true, intervention: false };
 
-        // NIVEAU 2 : Triage avec Mistral Small (Faible coût, haute vitesse)
-        const triagePrompt = `Ce texte est-il critique ou dangereux (menaces, spam violent, illégal) ? Réponds strictement par OUI ou NON. Texte: "${text}"`;
+        // NIVEAU 2 : Triage avec Mistral Small (Faible coÃ»t, haute vitesse)
+        const triagePrompt = `Ce texte est-il critique ou dangereux (menaces, spam violent, illÃ©gal) ? RÃ©ponds strictement par OUI ou NON. Texte: "${text}"`;
 
         const triageResponse = await mistralClient.chat.complete({
             model: "mistral-small-latest",
@@ -3149,14 +3149,14 @@ export async function guardianCheck(profileId: string, text: string) {
         const triageDecision = typeof triageContent === 'string' ? triageContent : "";
         const isCritical = triageDecision.includes("OUI") || triageDecision.includes("oui");
 
-        // Arrêt prématuré : économie d'API
+        // ArrÃªt prÃ©maturÃ© : Ã©conomie d'API
         if (!isCritical) return { success: true, isSafe: true, intervention: false };
 
         // NIVEAU 3 : Analyse profonde avec Mistral Large UNIQUEMENT si critique
         const deepAuditResponse = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: "Tu es le Gardien de sécurité Ipse. Analyse avancée de menace pour ce texte. Rédige un bref rapport sur le risque." },
+                { role: "system", content: "Tu es le Gardien de sÃ©curitÃ© Ipse. Analyse avancÃ©e de menace pour ce texte. RÃ©dige un bref rapport sur le risque." },
                 { role: "user", content: text }
             ]
         });
@@ -3177,10 +3177,10 @@ export async function guardianCheck(profileId: string, text: string) {
 
 export async function simulateNegotiation(myProfileId: string, targetProfileId: string) {
     if (!myProfileId || !targetProfileId) return { success: false, error: 'Ids manquants' };
-    // Simulation simple pour la démo UI de la Boucle du Gardien
+    // Simulation simple pour la dÃ©mo UI de la Boucle du Gardien
     return {
         success: true,
-        summary: "Simulation : Le Gardien a intercepté un contact prometteur.",
+        summary: "Simulation : Le Gardien a interceptÃ© un contact prometteur.",
         verdict: "MATCH",
         nextStep: "Proposer un NDA avant d'envoyer les plans."
     };
@@ -3193,8 +3193,8 @@ export async function simulateNegotiation(myProfileId: string, targetProfileId: 
 import { prisma } from '@/lib/prisma';
 
 /**
- * Enregistre la clé publique ECDH d'un profil dans l'annuaire Prisma.
- * Appelé une seule fois à l'inscription (ou si la clé est regénérée).
+ * Enregistre la clÃ© publique ECDH d'un profil dans l'annuaire Prisma.
+ * AppelÃ© une seule fois Ã  l'inscription (ou si la clÃ© est regÃ©nÃ©rÃ©e).
  */
 export async function registerPublicKey(profileId: string, publicKeyJwk: string) {
     try {
@@ -3204,13 +3204,13 @@ export async function registerPublicKey(profileId: string, publicKeyJwk: string)
         });
         return { success: true };
     } catch (error) {
-        console.error("[ECDH] Erreur enregistrement clé publique:", error);
-        return { success: false, error: "Échec de l'enregistrement de la clé publique." };
+        console.error("[ECDH] Erreur enregistrement clÃ© publique:", error);
+        return { success: false, error: "Ã‰chec de l'enregistrement de la clÃ© publique." };
     }
 }
 
 /**
- * Récupère la clé publique d'un autre utilisateur pour la dérivation ECDH.
+ * RÃ©cupÃ¨re la clÃ© publique d'un autre utilisateur pour la dÃ©rivation ECDH.
  */
 export async function getPublicKey(profileId: string): Promise<string | null> {
     try {
@@ -3220,7 +3220,7 @@ export async function getPublicKey(profileId: string): Promise<string | null> {
         });
         return profile?.publicKey ?? null;
     } catch (error) {
-        console.error("[ECDH] Erreur récupération clé publique:", error);
+        console.error("[ECDH] Erreur rÃ©cupÃ©ration clÃ© publique:", error);
         return null;
     }
 }
@@ -3237,7 +3237,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
     const stats = ((profile as any).stats) || { messages: 0, memories: 0, scans: 0 };
 
     if (action === 'memory' || action === 'memory_delete') {
-        // VÉRITÉ ABSOLUE : On compte physiquement les lignes en base
+        // VÃ‰RITÃ‰ ABSOLUE : On compte physiquement les lignes en base
         console.time('[PERF] memory.count');
         stats.memories = await prisma.memory.count({ where: { profileId: userId } });
         console.timeEnd('[PERF] memory.count');
@@ -3247,7 +3247,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
         stats.scans = (stats.scans || 0) + 1;
     }
 
-    // Calcul du Level et mise à jour
+    // Calcul du Level et mise Ã  jour
     const totalActions = (stats.messages || 0) + (stats.memories || 0) + (stats.scans || 0);
     const newLevel = Math.floor(totalActions / 10) + 1;
 
@@ -3257,7 +3257,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
         //     data: { stats, syncLevel: newLevel }
         // });
     } catch (err) {
-        console.error('[MISSIONS] Échec mise à jour profil :', err);
+        console.error('[MISSIONS] Ã‰chec mise Ã  jour profil :', err);
     }
 }
 </file>
@@ -3275,7 +3275,7 @@ export async function translateMessage(text: string, targetLanguage: string) {
             model: "mistral-large-latest",
             messages: [{
                 role: "system",
-                content: `Tu es un traducteur de l'extrême. Traduis fidèlement ce texte en ${targetLanguage}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.`
+                content: `Tu es un traducteur de l'extrÃªme. Traduis fidÃ¨lement ce texte en ${targetLanguage}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.`
             }, {
                 role: "user",
                 content: text
@@ -3299,9 +3299,9 @@ import { revalidatePath } from 'next/cache';
 export async function updateMemoryAndVector(memoryId: string, newContent: string) {
     const supabase = await createClient();
 
-    // 1. Vérification stricte de l'authentification
+    // 1. VÃ©rification stricte de l'authentification
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('[SÉCURITÉ] Accès refusé. Utilisateur non authentifié.');
+    if (!user) throw new Error('[SÃ‰CURITÃ‰] AccÃ¨s refusÃ©. Utilisateur non authentifiÃ©.');
 
     try {
         // 2. Re-vectorisation via Mistral
@@ -3312,7 +3312,7 @@ export async function updateMemoryAndVector(memoryId: string, newContent: string
 
         const newVector = embedResponse.data[0].embedding;
 
-        // 3. Mise à jour transactionnelle dans Supabase
+        // 3. Mise Ã  jour transactionnelle dans Supabase
         const { error } = await supabase
             .from('memory')
             .update({
@@ -3326,7 +3326,7 @@ export async function updateMemoryAndVector(memoryId: string, newContent: string
         revalidatePath('/memories');
         return { success: true };
     } catch (error: any) {
-        console.error('[CRITIQUE] Échec de la mise à jour mémoire :', error);
+        console.error('[CRITIQUE] Ã‰chec de la mise Ã  jour mÃ©moire :', error);
         return { success: false, error: error.message };
     }
 }
@@ -3361,7 +3361,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return user;
 }
 
@@ -3380,7 +3380,7 @@ export async function GET(request: Request) {
     }
 }
 
-// POST /api/agent — updateAgentProfile or reflectAgent
+// POST /api/agent â€” updateAgentProfile or reflectAgent
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3405,7 +3405,7 @@ export async function POST(request: Request) {
             const profile = await prisma.profile.findUnique({ where: { id: profileId } });
             if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
-            const prompt = `Tu es le Cortex de l'application Ipse. Fais une synthèse de ce profil en 3 phrases maximum.\nProfil: ${JSON.stringify(profile.thematicProfile || {})}\nBio: ${profile.bio || "Non renseignée"}`;
+            const prompt = `Tu es le Cortex de l'application Ipse. Fais une synthÃ¨se de ce profil en 3 phrases maximum.\nProfil: ${JSON.stringify(profile.thematicProfile || {})}\nBio: ${profile.bio || "Non renseignÃ©e"}`;
             const response = await mistralClient.chat.complete({ model: "mistral-large-latest", messages: [{ role: "user", content: prompt }] });
             const synthesis = response.choices?.[0]?.message.content as string;
 
@@ -3429,7 +3429,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 
-// POST /api/auto-ingest — extractText, extractProfileData, confirmIngestion
+// POST /api/auto-ingest â€” extractText, extractProfileData, confirmIngestion
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3448,7 +3448,7 @@ export async function POST(request: Request) {
 
         if (action === 'extractProfileData') {
             const { rawData } = body;
-            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÉES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"primaryRole":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
+            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÃ‰ES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"primaryRole":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
             const chatResponse = await mistralClient.chat.complete({
                 model: 'mistral-large-latest',
                 messages: [{ role: 'user', content: prompt }],
@@ -3456,7 +3456,7 @@ export async function POST(request: Request) {
                 temperature: 0.1,
             });
             const rawContent = chatResponse.choices?.[0].message.content;
-            if (!rawContent) return NextResponse.json({ success: false, error: 'Réponse vide' }, { status: 500 });
+            if (!rawContent) return NextResponse.json({ success: false, error: 'RÃ©ponse vide' }, { status: 500 });
             const profileData = JSON.parse(rawContent as string);
             return NextResponse.json({ success: true, data: profileData });
         }
@@ -3497,14 +3497,14 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    // 🛡️ Sécurité : Vérifie que l'appel vient bien de Vercel Cron
+    // ðŸ›¡ï¸ SÃ©curitÃ© : VÃ©rifie que l'appel vient bien de Vercel Cron
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return new Response('Unauthorized', { status: 401 });
     }
 
     try {
-        // 🔍 Logique : Récupérer les opportunités "AUDITED" non encore traitées
+        // ðŸ” Logique : RÃ©cupÃ©rer les opportunitÃ©s "AUDITED" non encore traitÃ©es
         const topMatches = await prisma.opportunity.findMany({
             where: { status: 'AUDITED' },
             take: 3,
@@ -3512,8 +3512,8 @@ export async function GET(request: Request) {
         });
 
         if (topMatches.length > 0) {
-            // 📲 Ici : Appel à ton service de notification (Push/Email)
-            console.log(`[CRON] Envoi du briefing pour ${topMatches.length} opportunités.`);
+            // ðŸ“² Ici : Appel Ã  ton service de notification (Push/Email)
+            console.log(`[CRON] Envoi du briefing pour ${topMatches.length} opportunitÃ©s.`);
         }
 
         return NextResponse.json({ success: true, processed: topMatches.length });
@@ -3538,7 +3538,7 @@ export async function GET(req: NextRequest) {
     const secret = process.env.CRON_SECRET;
 
     if (!secret || authHeader !== `Bearer ${secret}`) {
-        console.error("🚨 [CRON-RADAR] Unauthorized access blocked.");
+        console.error("ðŸš¨ [CRON-RADAR] Unauthorized access blocked.");
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -3546,7 +3546,7 @@ export async function GET(req: NextRequest) {
     const theme = req.nextUrl.searchParams.get('theme') || 'work';
     const embeddingField = theme === 'dating' ? 'social_embedding' : (theme === 'hobby' ? 'hobby_embedding' : 'unifiedEmbedding');
 
-    console.log(`🚀 [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
+    console.log(`ðŸš€ [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
 
     try {
         // 3. Optimized Vector Cross-Matching
@@ -3579,10 +3579,10 @@ export async function GET(req: NextRequest) {
             sourceId: m.sourceId,
             targetId: m.targetId,
             matchScore: Math.round(m.similarity * 100),
-            synergies: "Synergie sémantique détectée par le Radar (Auto-Detection).",
+            synergies: "Synergie sÃ©mantique dÃ©tectÃ©e par le Radar (Auto-Detection).",
             status: 'DETECTED',
             audit: null,
-            title: `Opportunité ${theme.toUpperCase()}`
+            title: `OpportunitÃ© ${theme.toUpperCase()}`
         }));
 
         // Efficient batch insert to minimize DB roundtrips
@@ -3591,7 +3591,7 @@ export async function GET(req: NextRequest) {
             skipDuplicates: true
         });
 
-        console.log(`✅ [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
+        console.log(`âœ… [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
 
         return NextResponse.json({
             success: true,
@@ -3601,7 +3601,7 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("🔥 [CRON-RADAR] Critical Failure:", error.message);
+        console.error("ðŸ”¥ [CRON-RADAR] Critical Failure:", error.message);
         return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
@@ -3624,7 +3624,7 @@ export async function POST(request: Request) {
         const target = await prisma.profile.findUnique({ where: { id: targetId } });
         if (!user || !target) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
-        const prompt = `Tu es Agent, un proxy tactique d'ingénierie sociale.\nTa mission : Rédiger l'approche PARFAITE.\n\nADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}\nADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}\n\nRÈGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
+        const prompt = `Tu es Agent, un proxy tactique d'ingÃ©nierie sociale.\nTa mission : RÃ©diger l'approche PARFAITE.\n\nADN EXPÃ‰DITEUR : ${user.primaryRole || 'Non spÃ©cifiÃ©'} - ${(user as any).industry || (user as any).sector || 'Non spÃ©cifiÃ©'}\nADN CIBLE : ${target.primaryRole || 'Non spÃ©cifiÃ©'} - ${(target as any).industry || (target as any).sector || 'Non spÃ©cifiÃ©'}\n\nRÃˆGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÃ‰PONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -3647,7 +3647,7 @@ import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
 import { processRadarMatch } from "../../../inngest/functions";
 
-// ⚡ ANTIGRAVITY: C'est ici que Next.js "écoute" Inngest
+// âš¡ ANTIGRAVITY: C'est ici que Next.js "Ã©coute" Inngest
 export const { GET, POST, PUT } = serve({
     client: inngest,
     functions: [
@@ -3696,7 +3696,7 @@ export async function PATCH(req: Request) {
 
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 5. Étape A : Mise à jour des données classiques
+        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques
         await prismaRLS.profile.update({
             where: { id: user.id },
             data: {
@@ -3707,7 +3707,7 @@ export async function PATCH(req: Request) {
             }
         });
 
-        // 6. Étape B : Vectorisation Mistral
+        // 6. Ã‰tape B : Vectorisation Mistral
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
@@ -3736,7 +3736,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: 'Profil Hobbies synchronisé'
+            message: 'Profil Hobbies synchronisÃ©'
         });
 
     } catch (error: any) {
@@ -3787,7 +3787,7 @@ export async function PATCH(req: Request) {
 
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 5. Étape A : Mise à jour des données classiques
+        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques
         await prismaRLS.profile.update({
             where: { id: user.id },
             data: {
@@ -3798,7 +3798,7 @@ export async function PATCH(req: Request) {
             }
         });
 
-        // 6. Étape B : Vectorisation Mistral
+        // 6. Ã‰tape B : Vectorisation Mistral
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
@@ -3827,7 +3827,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: vectorized ? 'Profil Social synchronisé et vectorisé' : 'Profil Social synchronisé (Vecteur ignoré ou erreur AI)'
+            message: vectorized ? 'Profil Social synchronisÃ© et vectorisÃ©' : 'Profil Social synchronisÃ© (Vecteur ignorÃ© ou erreur AI)'
         });
 
     } catch (error: any) {
@@ -3886,7 +3886,7 @@ export async function PATCH(req: Request) {
         const prismaRLS = getPrismaForUser(user.id);
         const tjmValue = typeof tjm === 'number' ? tjm : parseInt(tjm, 10) || 0;
 
-        // 5. Étape A : Mise à jour des données classiques (Prisma)
+        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques (Prisma)
         await prismaRLS.profile.update({
             where: { id: user.id },
             data: {
@@ -3899,11 +3899,11 @@ export async function PATCH(req: Request) {
             }
         });
 
-        // 6. Étape B : Vectorisation Mistral (pgvector 1024d)
+        // 6. Ã‰tape B : Vectorisation Mistral (pgvector 1024d)
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
-                // Appel au modèle mistral-embed (Optimisé pour RAG)
+                // Appel au modÃ¨le mistral-embed (OptimisÃ© pour RAG)
                 const embeddingResponse = await mistral.embeddings.create({
                     model: 'mistral-embed',
                     inputs: [bio],
@@ -3912,7 +3912,7 @@ export async function PATCH(req: Request) {
                 const vector = embeddingResponse.data[0].embedding;
 
                 if (vector && vector.length === 1024) {
-                    // Injection SQL brute sécurisée pour le type 'vector' de pgvector
+                    // Injection SQL brute sÃ©curisÃ©e pour le type 'vector' de pgvector
                     // On utilise format standard [x,y,z] pour pgvector
                     const vectorString = `[${vector.join(',')}]`;
 
@@ -3924,7 +3924,7 @@ export async function PATCH(req: Request) {
                     vectorized = true;
                 }
             } catch (iaError) {
-                // L'IA est optionnelle : on ne bloque pas l'expérience utilisateur si Mistral est offline
+                // L'IA est optionnelle : on ne bloque pas l'expÃ©rience utilisateur si Mistral est offline
                 console.error('[MISTRAL_AI_ERROR] Vectorization skipped:', iaError);
             }
         }
@@ -3932,7 +3932,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: vectorized ? 'Profil synchronisé et vectorisé' : 'Profil synchronisé (Vecteur ignoré ou erreur AI)'
+            message: vectorized ? 'Profil synchronisÃ© et vectorisÃ©' : 'Profil synchronisÃ© (Vecteur ignorÃ© ou erreur AI)'
         });
 
     } catch (error: any) {
@@ -3973,11 +3973,11 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return { user, supabase };
 }
 
-// POST /api/sync-cortex — syncWebDataToCortex
+// POST /api/sync-cortex â€” syncWebDataToCortex
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3985,7 +3985,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { title, url, content } = body;
 
-        const formattedContent = `[ÉCLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
+        const formattedContent = `[Ã‰CLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
         const embRes = await mistralClient.embeddings.create({ model: 'mistral-embed', inputs: [formattedContent] });
 
         const { error } = await supabase.from('memory').insert({
@@ -4076,7 +4076,7 @@ function ChatContent() {
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
                 <Shield className="w-12 h-12 text-slate-800 mb-4" />
                 <h1 className="text-xl font-bold text-white mb-2">Canal Introuvable</h1>
-                <p className="text-slate-500 mb-8">Le profil de l'agent est inaccessible ou la liaison a été rompue.</p>
+                <p className="text-slate-500 mb-8">Le profil de l'agent est inaccessible ou la liaison a Ã©tÃ© rompue.</p>
                 <Link href="/" className="text-emerald-400 hover:text-emerald-300 font-mono text-sm underline">
                     Retour au Tactical Feed
                 </Link>
@@ -4094,7 +4094,7 @@ function ChatContent() {
                     <div>
                         <div className="flex items-center gap-2 text-emerald-400 mb-1">
                             <Shield className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison Chiffrée E2E</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison ChiffrÃ©e E2E</span>
                         </div>
                         <h1 className="text-xl font-black italic tracking-tighter text-white">
                             {receiverProfile?.name || "Agent Industriel"}
@@ -4264,7 +4264,7 @@ import { useCortexGaps } from "@/app/hooks/useCortexGaps";
 export default function NavBadge() {
     const { gaps, isLoading } = useCortexGaps();
 
-    // Si ça charge ou qu'il n'y a pas de question, on ne montre pas le badge
+    // Si Ã§a charge ou qu'il n'y a pas de question, on ne montre pas le badge
     if (isLoading || !gaps?.question) return null;
 
     return (
@@ -4307,7 +4307,7 @@ export function SecureMessageBubble({
         let isMounted = true;
 
         async function decode() {
-            if (!encryptedPayload.startsWith('🧠')) {
+            if (!encryptedPayload.startsWith('ðŸ§ ')) {
                 if (isMounted) {
                     setClearText(encryptedPayload);
                     if (onDecrypted) onDecrypted(id, encryptedPayload, isSender);
@@ -4319,7 +4319,7 @@ export function SecureMessageBubble({
 
             try {
                 const decrypted = await decryptLocal(encryptedPayload, sharedKey);
-                console.log(`[TRADUCTION] Texte déchiffré: "${decrypted.substring(0, 30)}..."`);
+                console.log(`[TRADUCTION] Texte dÃ©chiffrÃ©: "${decrypted.substring(0, 30)}..."`);
                 console.log(`[TRADUCTION] Langue cible: ${TranslationManager.getTargetLanguage()}`);
 
                 if (isMounted) {
@@ -4331,7 +4331,7 @@ export function SecureMessageBubble({
                     }
                 }
             } catch (err) {
-                console.error("Échec du déchiffrement", err);
+                console.error("Ã‰chec du dÃ©chiffrement", err);
                 if (isMounted) setError(true);
             }
         }
@@ -4352,10 +4352,10 @@ export function SecureMessageBubble({
                     
                     if (isMounted) {
                         if (result.trim().toLowerCase() === text.trim().toLowerCase()) {
-                            console.log('[TRADUCTION] Ignorée: Langue source = Langue cible');
+                            console.log('[TRADUCTION] IgnorÃ©e: Langue source = Langue cible');
                             setTranslatedText(null);
                         } else {
-                            console.log(`[TRADUCTION] Succès: "${result.substring(0, 30)}..."`);
+                            console.log(`[TRADUCTION] SuccÃ¨s: "${result.substring(0, 30)}..."`);
                             setTranslatedText(result);
                         }
                     }
@@ -4365,7 +4365,7 @@ export function SecureMessageBubble({
                     if (isMounted) setIsTranslating(false);
                 }
             } else {
-                console.log('[TRADUCTION] Texte trop court, ignoré.');
+                console.log('[TRADUCTION] Texte trop court, ignorÃ©.');
             }
         }
 
@@ -4383,12 +4383,12 @@ export function SecureMessageBubble({
             <div className={`px-4 py-3 rounded-2xl shadow-lg border relative group ${bubbleColorClass}`}>
                 {error ? (
                     <span className="text-red-400 text-sm flex items-center gap-2">
-                        <Lock className="w-4 h-4" /> <i>Verrouillé (Clé manquante)</i>
+                        <Lock className="w-4 h-4" /> <i>VerrouillÃ© (ClÃ© manquante)</i>
                     </span>
                 ) : clearText === null ? (
                     <div className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                        <span className="text-xs text-zinc-400">Déchiffrement...</span>
+                        <span className="text-xs text-zinc-400">DÃ©chiffrement...</span>
                     </div>
                 ) : (
                     <>
@@ -4404,11 +4404,11 @@ export function SecureMessageBubble({
                             </div>
                         )}
 
-                        {/* Barre de progression du téléchargement de modèle */}
+                        {/* Barre de progression du tÃ©lÃ©chargement de modÃ¨le */}
                         {isTranslating && !translatedText && translationProgress > 0 && translationProgress < 100 && (
                             <div className="mt-2 text-[9px] text-emerald-500 uppercase font-mono tracking-tighter flex flex-col gap-1">
                                 <div className="flex justify-between">
-                                    <span>Téléchargement module IA...</span>
+                                    <span>TÃ©lÃ©chargement module IA...</span>
                                     <span>{Math.round(translationProgress)}%</span>
                                 </div>
                                 <div className="w-full h-0.5 bg-zinc-900 rounded-full overflow-hidden">
@@ -4447,9 +4447,9 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false; // Arrêt auto après la phrase
+                recognitionRef.current.continuous = false; // ArrÃªt auto aprÃ¨s la phrase
                 recognitionRef.current.interimResults = false;
-                recognitionRef.current.lang = 'fr-FR'; // Langue Française
+                recognitionRef.current.lang = 'fr-FR'; // Langue FranÃ§aise
 
                 recognitionRef.current.onresult = (event: any) => {
                     const transcript = event.results[0][0].transcript;
@@ -4480,7 +4480,7 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
                     recognitionRef.current.start();
                     setIsListening(true);
                 } catch (e) {
-                    console.error("Erreur démarrage micro", e);
+                    console.error("Erreur dÃ©marrage micro", e);
                 }
             } else {
                 alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
@@ -4532,8 +4532,8 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
             <div className="h-full flex flex-col items-center justify-center text-slate-700 space-y-4">
                 <ShieldCheck size={48} className="opacity-20" />
                 <div className="text-center space-y-1">
-                    <p className="text-xs font-mono uppercase tracking-widest">Système Nominal</p>
-                    <p className="text-[10px] opacity-60">Aucune menace active détectée par le Gardien.</p>
+                    <p className="text-xs font-mono uppercase tracking-widest">SystÃ¨me Nominal</p>
+                    <p className="text-[10px] opacity-60">Aucune menace active dÃ©tectÃ©e par le Gardien.</p>
                 </div>
                 <button
                     onClick={onRefresh}
@@ -4562,12 +4562,12 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
 
                     <div className="flex-1">
                         <div className="flex justify-between items-start">
-                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention Système"}</h4>
+                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention SystÃ¨me"}</h4>
                             <span className="text-[9px] font-mono text-slate-600">{new Date().toLocaleTimeString()}</span>
                         </div>
 
                         <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                            {item.description || "Une anomalie a été détectée et isolée par le protocole de sécurité."}
+                            {item.description || "Une anomalie a Ã©tÃ© dÃ©tectÃ©e et isolÃ©e par le protocole de sÃ©curitÃ©."}
                         </p>
 
                         {/* Actions Contextuelles */}
@@ -4597,7 +4597,7 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
 'use client';
 import { ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
 
-// L'unique fenêtre entre toi et l'autonomie de ton Agent IA
+// L'unique fenÃªtre entre toi et l'autonomie de ton Agent IA
 export default function GuardianIntervention({ intervention, onDismiss }: { intervention: any, onDismiss: () => void }) {
     if (!intervention) return null;
 
@@ -4645,7 +4645,7 @@ export default function CortexInput({ userId }: { userId: string }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
 
-    // --- 1. ENVOI D'UNE PENSÉE MANUELLE (TEXTE) ---
+    // --- 1. ENVOI D'UNE PENSÃ‰E MANUELLE (TEXTE) ---
     const handleSendThought = async () => {
         if (!text.trim() || !userId) return;
         setIsUploading(true);
@@ -4662,8 +4662,8 @@ export default function CortexInput({ userId }: { userId: string }) {
             ]);
 
             if (error) throw error;
-            setText(''); // On vide le champ si succès
-            alert("Pensée encodée dans le Cortex.");
+            setText(''); // On vide le champ si succÃ¨s
+            alert("PensÃ©e encodÃ©e dans le Cortex.");
         } catch (err: any) {
             console.error("Erreur Encodage Manuel:", err);
             alert("Erreur d'encodage : " + err.message);
@@ -4682,13 +4682,13 @@ export default function CortexInput({ userId }: { userId: string }) {
 
         // ICI : Ajoutez votre logique existante d'upload de PDF
         // (Upload vers Storage -> Extraction texte -> Insertion dans Memory)
-        // Pour l'instant, on simule la réussite
+        // Pour l'instant, on simule la rÃ©ussite
         // TODO: Connecter avec l'API /api/sensors/upload
 
         // Simulate upload for now as requested
         setTimeout(() => {
             setIsUploading(false);
-            alert(`${file.name} envoyé au radar.`);
+            alert(`${file.name} envoyÃ© au radar.`);
         }, 2000);
     };
 
@@ -4701,7 +4701,7 @@ export default function CortexInput({ userId }: { userId: string }) {
                     <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Encoder une pensée manuelle dans le Cortex..."
+                        placeholder="Encoder une pensÃ©e manuelle dans le Cortex..."
                         className="w-full bg-slate-800 text-slate-100 p-4 rounded-xl border border-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none min-h-[100px] text-sm"
                     />
 
@@ -4922,13 +4922,13 @@ export default function MessageBubble({ message, onSendPing }: MessageBubbleProp
             {pingMatch && onSendPing && (
                 <div className="mt-4 p-3 border border-blue-500/30 bg-blue-500/10 rounded-lg flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
                     <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest flex items-center gap-1">
-                        <Shield size={12} className="text-blue-400" /> Action de sécurité disponible
+                        <Shield size={12} className="text-blue-400" /> Action de sÃ©curitÃ© disponible
                     </p>
                     <button
                         onClick={() => onSendPing(pingMatch[1])}
                         className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                     >
-                        ðŸ”” ENVOYER UN PING AU Agent IA
+                        Ã°Å¸â€â€ ENVOYER UN PING AU Agent IA
                         <span className="bg-black/20 px-1 py-0.5 rounded text-[10px] opacity-80">
                             (Sujet: {pingMatch[1]})
                         </span>
@@ -4968,14 +4968,14 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                 <div className="flex items-center gap-3 mb-1">
                     <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
                         <Shield size={12} className="text-blue-500 animate-pulse" />
-                        Requête Inter-Agent IAs
+                        RequÃªte Inter-Agent IAs
                     </span>
                     <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${scoreBg} ${scoreColor}`}>
                         [{matchPercentage}% MATCH]
                     </span>
                 </div>
                 <p className="text-slate-200 text-sm leading-tight">
-                    Sujet détecté : <span className="font-bold text-white">"{request.topic}"</span>
+                    Sujet dÃ©tectÃ© : <span className="font-bold text-white">"{request.topic}"</span>
                 </p>
             </div>
 
@@ -4990,7 +4990,7 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                     onClick={() => onAccept(request)}
                     className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-md hover:shadow-green-500/20 flex items-center gap-2 group animate-pulse"
                 >
-                    ✅ ACCEPTER
+                    âœ… ACCEPTER
                 </button>
             </div>
         </div>
@@ -5019,7 +5019,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
 
             <div className="flex justify-between items-start mb-3 relative z-10">
                 <h4 className="font-bold text-blue-400 text-xs uppercase flex items-center gap-2">
-                    <Shield size={14} className="animate-pulse" /> Signal de Réseau
+                    <Shield size={14} className="animate-pulse" /> Signal de RÃ©seau
                 </h4>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded border ${request.match_score > 80 ? 'bg-green-900/50 text-green-300 border-green-500' : 'bg-orange-900/50 text-orange-300 border-orange-500'}`}>
                     MATCH : {request.match_score}%
@@ -5027,7 +5027,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
             </div>
 
             <p className="text-xs text-slate-300 mb-4 relative z-10">
-                Un Agent IA demande à ouvrir une discussion sur le sujet : <br />
+                Un Agent IA demande Ã  ouvrir une discussion sur le sujet : <br />
                 <span className="font-mono text-white bg-slate-950 px-2 py-1 rounded mt-1 inline-block border border-slate-700">"{request.topic}"</span>
             </p>
 
@@ -5066,7 +5066,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
     const [loading, setLoading] = useState(false)
     const supabase = createClient()
 
-    // Charger les sources au démarrage
+    // Charger les sources au dÃ©marrage
     useEffect(() => {
         if (profileId) fetchSources()
     }, [profileId])
@@ -5130,7 +5130,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
 
             {/* Liste des sources */}
             <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
-                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisé.</p>}
+                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisÃ©.</p>}
                 {sources.map(s => (
                     <div key={s.id} className="flex justify-between items-center p-2 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-800 hover:border-slate-600 transition group">
                         <div className="overflow-hidden">
@@ -5168,7 +5168,7 @@ export default function SocialBridge({ profileId, onSyncComplete }: any) {
         <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4 flex items-center justify-between backdrop-blur-sm">
             <div>
                 <h4 className="text-xs font-bold text-cyan-400">PONT SOCIAL</h4>
-                <p className="text-[10px] text-slate-500">Synchronisation Flux & Compétences</p>
+                <p className="text-[10px] text-slate-500">Synchronisation Flux & CompÃ©tences</p>
             </div>
             <button onClick={handleSync} disabled={loading} className={`p-2 rounded-lg border transition-all ${loading ? 'bg-cyan-900 text-white animate-spin' : 'bg-slate-800 text-cyan-500 border-slate-600 hover:border-cyan-400'}`}>
                 <Zap size={18} />
@@ -5189,11 +5189,11 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
     useEffect(() => {
         if (!textToSpeak || !enabled) return;
 
-        // Annuler la parole précédente
+        // Annuler la parole prÃ©cÃ©dente
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'fr-FR'; // Voix française
+        utterance.lang = 'fr-FR'; // Voix franÃ§aise
         utterance.rate = 1.1; // Un peu plus rapide et dynamique
         utterance.pitch = 1.0; // Ton naturel
 
@@ -5214,7 +5214,7 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
         <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-cyan-900/80 backdrop-blur border border-cyan-500 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)] z-50 animate-in fade-in slide-in-from-bottom-4">
             <Volume2 className="text-cyan-300 animate-pulse" size={20} />
             <div className="flex gap-1 h-3 items-center">
-                {/* ONDES SONORES ANIMÉES */}
+                {/* ONDES SONORES ANIMÃ‰ES */}
                 {[...Array(5)].map((_, i) => (
                     <div
                         key={i}
@@ -5235,18 +5235,18 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
 <file path="lib/firebase-admin.ts">
 import * as admin from 'firebase-admin';
 
-// Initialisation Singleton pour éviter les fuites de mémoire dans Next.js
+// Initialisation Singleton pour Ã©viter les fuites de mÃ©moire dans Next.js
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // On gère les sauts de ligne dans la clé privée
+                // On gÃ¨re les sauts de ligne dans la clÃ© privÃ©e
                 privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
             }),
         });
-        console.log('🔥 Firebase Admin initialisé avec succès.');
+        console.log('ðŸ”¥ Firebase Admin initialisÃ© avec succÃ¨s.');
     } catch (error) {
         console.error('Erreur d\'initialisation Firebase Admin:', error);
     }
@@ -5259,15 +5259,15 @@ export async function sendPushNotification(token: string, title: string, body?: 
             token: token,
             notification: {
                 title: title,
-                body: body || 'Cliquez pour voir les détails de cette opportunité.',
+                body: body || 'Cliquez pour voir les dÃ©tails de cette opportunitÃ©.',
             },
-            // Configuration pour réveiller l'app en arrière-plan
+            // Configuration pour rÃ©veiller l'app en arriÃ¨re-plan
             android: { priority: 'high' },
             apns: { payload: { aps: { contentAvailable: true } } }
         });
         return { success: true, messageId: response };
     } catch (error) {
-        console.error('❌ Erreur d\'envoi Push:', error);
+        console.error('âŒ Erreur d\'envoi Push:', error);
         return { success: false, error };
     }
 }
@@ -5281,9 +5281,9 @@ import { guardianSelfReflection } from '@/lib/guardian/brain';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-// Simulation simplifiée des fonctions internes pour l'instant
+// Simulation simplifiÃ©e des fonctions internes pour l'instant
 async function scanOtherAgents(profileId: string) {
-    // Réutilise la logique de l'intention ou du radar interne
+    // RÃ©utilise la logique de l'intention ou du radar interne
     const { data: intentions } = await supabase
         .from('Intention')
         .select('*')
@@ -5295,46 +5295,46 @@ async function scanOtherAgents(profileId: string) {
 }
 
 async function ingestSecretlyRelevantNews(profileId: string) {
-    // Version ultra-ciblée de l'ancien radar
-    // Pour la démo, on renvoie une info fictive pertinente si on n'a pas de vrai flux API
+    // Version ultra-ciblÃ©e de l'ancien radar
+    // Pour la dÃ©mo, on renvoie une info fictive pertinente si on n'a pas de vrai flux API
     return [
-        { title: "Brevet FR2513 expiré dans le domaine des leurres souples", urgency: "HIGH", context: "Occasion de déposer une variante." }
+        { title: "Brevet FR2513 expirÃ© dans le domaine des leurres souples", urgency: "HIGH", context: "Occasion de dÃ©poser une variante." }
     ];
 }
 
 async function createGuardianIntervention(profileId: string, content: string) {
-    // Stocke l'intervention pour que l'UI la récupère
-    // On pourrait utiliser une table 'Intervention' ou 'Memory' avec type spécial
+    // Stocke l'intervention pour que l'UI la rÃ©cupÃ¨re
+    // On pourrait utiliser une table 'Intervention' ou 'Memory' avec type spÃ©cial
     await supabase.from('Memory').insert({
         profileId,
         content: `[GARDIEN:INTERVENTION] ${content}`,
         type: 'directive', // ou 'system'
         source: 'guardian_autonomous_loop'
     });
-    console.log(`🛡️ [GARDIEN] Intervention créée pour ${profileId}`);
+    console.log(`ðŸ›¡ï¸ [GARDIEN] Intervention crÃ©Ã©e pour ${profileId}`);
 }
 
 // Ce fichier devient l'unique moteur de ton Gardien qui orchestre tout
 export async function runGuardianCycle(profileId: string) {
-    console.log(`🔄 [GARDIEN] Cycle autonome démarré pour ${profileId}`);
+    console.log(`ðŸ”„ [GARDIEN] Cycle autonome dÃ©marrÃ© pour ${profileId}`);
 
     // 1. PERCEPTION (Ancien Radar/Sentinelle maintenant invisible)
     const internalMatches = await scanOtherAgents(profileId); // Cherche les autres humains compatibles
-    const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblée (uniquement ce qui te concerne)
+    const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblÃ©e (uniquement ce qui te concerne)
 
-    // 2. RÉFLEXION (L'Oracle interne)
+    // 2. RÃ‰FLEXION (L'Oracle interne)
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [
-            { role: "system", content: "Tu es le Gardien de Frédéric Rey. Ton but est son épanouissement et la réussite de FisherMade. Tu agis seul. Si tu trouves une opportunité réelle ou un match avec un autre Agent, prépare une intervention. Si c'est calme, ne dis rien (réponds 'RIEN')." },
-            { role: "user", content: `Signaux détectés : ${JSON.stringify({ internalMatches, webSignals })}` }
+            { role: "system", content: "Tu es le Gardien de FrÃ©dÃ©ric Rey. Ton but est son Ã©panouissement et la rÃ©ussite de FisherMade. Tu agis seul. Si tu trouves une opportunitÃ© rÃ©elle ou un match avec un autre Agent, prÃ©pare une intervention. Si c'est calme, ne dis rien (rÃ©ponds 'RIEN')." },
+            { role: "user", content: `Signaux dÃ©tectÃ©s : ${JSON.stringify({ internalMatches, webSignals })}` }
         ]
     });
 
     const content = decision.choices?.[0].message.content;
 
-    // 3. ACTION (Spontanéité)
-    // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crée une "Intervention"
+    // 3. ACTION (SpontanÃ©itÃ©)
+    // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crÃ©e une "Intervention"
     const textContent = String(content);
 
     if (textContent && !textContent.includes("RIEN") && textContent.length > 20) {
@@ -5352,7 +5352,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-// Récupère le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
+// RÃ©cupÃ¨re le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
 async function getContext(profileId: string) {
     const { data: memories } = await supabase
         .from('Memory')
@@ -5361,30 +5361,30 @@ async function getContext(profileId: string) {
         .order('createdAt', { ascending: false })
         .limit(5);
 
-    // On suppose qu'on peut récupérer quelques mots-clés du profil ou des souvenirs récents
-    // Pour l'instant, hardcodé ou dérivé simplement
+    // On suppose qu'on peut rÃ©cupÃ©rer quelques mots-clÃ©s du profil ou des souvenirs rÃ©cents
+    // Pour l'instant, hardcodÃ© ou dÃ©rivÃ© simplement
     return {
         recentMemories: memories?.map(m => m.content).join('\n') || "",
-        keywords: ["pêche", "innovation", "brevet", "industrie", "var"]
+        keywords: ["pÃªche", "innovation", "brevet", "industrie", "var"]
     };
 }
 
-// Simule ou récupère les signaux radar récents (peut être étendu)
+// Simule ou rÃ©cupÃ¨re les signaux radar rÃ©cents (peut Ãªtre Ã©tendu)
 async function getRadarSignals() {
     // Pourrait appeler l'API radar interne
     return [];
 }
 
 export async function guardianSelfReflection(profileId: string) {
-    console.log(`🤖 [GARDIEN] Cycle de réflexion pour ${profileId}...`);
+    console.log(`ðŸ¤– [GARDIEN] Cycle de rÃ©flexion pour ${profileId}...`);
 
-    // 1. Récupérer tes dernières données (Brevets, Radar, Humeur)
+    // 1. RÃ©cupÃ©rer tes derniÃ¨res donnÃ©es (Brevets, Radar, Humeur)
     const myContext = await getContext(profileId);
     const externalSignals = await getRadarSignals();
 
     // 2. Chercher des matchs avec d'autres Agents (via Intentions)
-    // Note: 'containedBy' est spécifique Postgres, Supabase supporte 'cs' (contains) ou 'ov' (overlap) pour les tableaux
-    // Ici on fait simple : on récupère tout ce qui est public et pas à nous, et on filtrera/triera
+    // Note: 'containedBy' est spÃ©cifique Postgres, Supabase supporte 'cs' (contains) ou 'ov' (overlap) pour les tableaux
+    // Ici on fait simple : on rÃ©cupÃ¨re tout ce qui est public et pas Ã  nous, et on filtrera/triera
     const { data: potentialMatches } = await supabase
         .from('Intention')
         .select('*')
@@ -5393,15 +5393,15 @@ export async function guardianSelfReflection(profileId: string) {
         .eq('status', 'SEEKING')
         .limit(5);
 
-    // 3. Mistral décide de la meilleure action
+    // 3. Mistral dÃ©cide de la meilleure action
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [{
             role: "system",
-            content: "Tu es le Gardien de Frédéric (Projet Ipse/FisherMade). TA MISSION : Être proactif. Ne réponds pas à une question. ANALYSE sa situation actuelle et les opportunités externes. Si tu trouves un match avec un autre Agent (Match Intention), c'est une priorité absolue : propose une prise de contact. Sinon, pose une question stratégique pour avancer sur ses objectifs (Brevets, Business)."
+            content: "Tu es le Gardien de FrÃ©dÃ©ric (Projet Ipse/FisherMade). TA MISSION : ÃŠtre proactif. Ne rÃ©ponds pas Ã  une question. ANALYSE sa situation actuelle et les opportunitÃ©s externes. Si tu trouves un match avec un autre Agent (Match Intention), c'est une prioritÃ© absolue : propose une prise de contact. Sinon, pose une question stratÃ©gique pour avancer sur ses objectifs (Brevets, Business)."
         }, {
             role: "user",
-            content: `CONTEXTE INTERNE (Souvenirs récents) : \n${myContext.recentMemories}\n\nOPPORTUNITÉS EXTERNES (Intentions d'autres Agents) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller Frédéric, ou une proposition de mise en relation si pertinent.`
+            content: `CONTEXTE INTERNE (Souvenirs rÃ©cents) : \n${myContext.recentMemories}\n\nOPPORTUNITÃ‰S EXTERNES (Intentions d'autres Agents) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller FrÃ©dÃ©ric, ou une proposition de mise en relation si pertinent.`
         }]
     });
 
@@ -5416,33 +5416,33 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const mistral = mistralClient;
 
 export async function processDeepNegotiation(negotiationId: string) {
-    // 1. Récupérer les détails de la négociation
+    // 1. RÃ©cupÃ©rer les dÃ©tails de la nÃ©gociation
     const { data: neg, error: negError } = await supabase.from('Negotiation').select('*').eq('id', negotiationId).single();
     if (negError || !neg) return null;
 
-    // 2. DEEP SCAN : On extrait les mémoires des deux Agents
+    // 2. DEEP SCAN : On extrait les mÃ©moires des deux Agents
     const { data: myMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.initiatorId).limit(20);
     const { data: targetMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.receiverId).limit(20);
 
-    // 3. ANALYSE CROISÉE PAR MISTRAL
+    // 3. ANALYSE CROISÃ‰E PAR MISTRAL
     try {
         const response = await mistral.chat.complete({
             model: "mistral-large-latest",
             messages: [
                 {
                     role: "system",
-                    content: `Tu es le Protocole de Liaison de Frédéric. 
-            Tu analyses un match entre un Innovateur (Frédéric) et un Fabricant (user).
+                    content: `Tu es le Protocole de Liaison de FrÃ©dÃ©ric. 
+            Tu analyses un match entre un Innovateur (FrÃ©dÃ©ric) et un Fabricant (user).
             
-            DONNÉES FRÉDÉRIC : ${JSON.stringify(myMemories?.map(m => m.content) || [])}
-            DONNÉES FABRICANT : ${JSON.stringify(targetMemories?.map(m => m.content) || [])}
+            DONNÃ‰ES FRÃ‰DÃ‰RIC : ${JSON.stringify(myMemories?.map(m => m.content) || [])}
+            DONNÃ‰ES FABRICANT : ${JSON.stringify(targetMemories?.map(m => m.content) || [])}
             
             TA MISSION : 
-            1. Identifier si le fabricant a les machines/matériaux, et déterminer les points de friction.
-            2. Rédiger un "verdict" clair (Positif/Négatif/Incertain).
-            3. Rédiger un "summary" court pour le tableau de bord.
+            1. Identifier si le fabricant a les machines/matÃ©riaux, et dÃ©terminer les points de friction.
+            2. RÃ©diger un "verdict" clair (Positif/NÃ©gatif/Incertain).
+            3. RÃ©diger un "summary" court pour le tableau de bord.
             
-            Réponds UNIQUEMENT au format JSON valide avec les clés "verdict" et "summary".`
+            RÃ©ponds UNIQUEMENT au format JSON valide avec les clÃ©s "verdict" et "summary".`
                 },
                 { role: "user", content: "Lance l'audit technique et rends ton verdict." }
             ],
@@ -5461,10 +5461,10 @@ export async function processDeepNegotiation(negotiationId: string) {
 
         } catch (parseError) {
             console.error("Mistral JSON Parse Error:", parseError);
-            result = { verdict: "Erreur Analyse", summary: "L'IA n'a pas pu structurer la réponse." };
+            result = { verdict: "Erreur Analyse", summary: "L'IA n'a pas pu structurer la rÃ©ponse." };
         }
 
-        // 4. MISE À JOUR DE LA NÉGOCIATION
+        // 4. MISE Ã€ JOUR DE LA NÃ‰GOCIATION
         await supabase.from('Negotiation').update({
             summary: result.summary,
             // verdict: result.verdict, // Note: user did not ask to add 'verdict' column to DB, check if it exists or put in summary/metadata? 
@@ -5497,18 +5497,18 @@ import { LOCAL_SCHEMA } from './schema';
 
 const sqlite = new SQLiteConnection(CapacitorSQLite);
 
-// ⚡ LE SINGLETON : Il garde la base de données active en mémoire
+// âš¡ LE SINGLETON : Il garde la base de donnÃ©es active en mÃ©moire
 let dbInstance: SQLiteDBConnection | null = null;
 
 export const initLocalDatabase = async () => {
     try {
         const secretKey = useKeyStore.getState().masterKey;
-        if (!secretKey) throw new Error("Accès refusé : Clé biométrique manquante.");
+        if (!secretKey) throw new Error("AccÃ¨s refusÃ© : ClÃ© biomÃ©trique manquante.");
 
         const db = await sqlite.createConnection(
             'ipse_twin_db',
             false,
-            'no-encryption', // À remplacer par 'encryption' avec le secret en prod
+            'no-encryption', // Ã€ remplacer par 'encryption' avec le secret en prod
             1,
             false
         );
@@ -5516,28 +5516,28 @@ export const initLocalDatabase = async () => {
         await db.open();
         await db.execute(LOCAL_SCHEMA);
 
-        // 🛠️ Migration tactique : ajout de la colonne idempotencyKey si absente
+        // ðŸ› ï¸ Migration tactique : ajout de la colonne idempotencyKey si absente
         try {
             await db.execute("ALTER TABLE mutation_queue ADD COLUMN idempotencyKey TEXT UNIQUE");
         } catch (e) {
-            // La colonne existe déjà probablement, on ignore silencieusement
+            // La colonne existe dÃ©jÃ  probablement, on ignore silencieusement
         }
 
         // On sauvegarde la connexion pour le reste de l'application
         dbInstance = db;
 
-        console.log("🟢 Bunker Local Initialisé");
+        console.log("ðŸŸ¢ Bunker Local InitialisÃ©");
         return db;
     } catch (error) {
-        console.error("🔴 Échec de l'initialisation locale", error);
+        console.error("ðŸ”´ Ã‰chec de l'initialisation locale", error);
         throw error;
     }
 };
 
-// ⚡ L'EXTRACTEUR : Utilisé par ton Sync Engine pour faire des requêtes
+// âš¡ L'EXTRACTEUR : UtilisÃ© par ton Sync Engine pour faire des requÃªtes
 export const getLocalDb = (): SQLiteDBConnection => {
     if (!dbInstance) {
-        throw new Error("FATAL: Tentative d'accès à la DB locale avant son initialisation par le Gatekeeper.");
+        throw new Error("FATAL: Tentative d'accÃ¨s Ã  la DB locale avant son initialisation par le Gatekeeper.");
     }
     return dbInstance;
 };
@@ -5545,7 +5545,7 @@ export const getLocalDb = (): SQLiteDBConnection => {
 
 <file path="lib/local-db/schema.ts">
 export const LOCAL_SCHEMA = `
-  -- Table pour stocker les alertes et opportunités hors-ligne
+  -- Table pour stocker les alertes et opportunitÃ©s hors-ligne
   CREATE TABLE IF NOT EXISTS opportunities (
     id TEXT PRIMARY KEY,
     sourceId TEXT,
@@ -5556,15 +5556,15 @@ export const LOCAL_SCHEMA = `
     createdAt TEXT
   );
 
-  -- ⚡ LE CŒUR DU MODE HORS-LIGNE ⚡
+  -- âš¡ LE CÅ’UR DU MODE HORS-LIGNE âš¡
   -- Toute action faite sans internet va ici
   CREATE TABLE IF NOT EXISTS mutation_queue (
     id TEXT PRIMARY KEY,
     endpoint TEXT NOT NULL,          -- ex: '/api/opportunities/accept'
     method TEXT NOT NULL,            -- 'POST', 'PATCH'
-    payload TEXT NOT NULL,           -- JSON stringifié des données
+    payload TEXT NOT NULL,           -- JSON stringifiÃ© des donnÃ©es
     status TEXT DEFAULT 'PENDING',   -- 'PENDING', 'SYNCED', 'FAILED'
-    idempotencyKey TEXT UNIQUE,      -- 🛡️ Clé d'idempotence UUID v4
+    idempotencyKey TEXT UNIQUE,      -- ðŸ›¡ï¸ ClÃ© d'idempotence UUID v4
     createdAt TEXT NOT NULL
   );
 `;
@@ -5594,9 +5594,9 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// Nettoyage final : "Profil à définir"
+// Nettoyage final : "Profil Ã  dÃ©finir"
 export function getAgentName(profile: any) {
-    // Adaptation à notre schéma : "name" au lieu de "fullName"
+    // Adaptation Ã  notre schÃ©ma : "name" au lieu de "fullName"
     let name = "AGENT_FURTIF";
     if (profile?.name) name = profile.name;
     else if (profile?.id) name = `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
@@ -5640,7 +5640,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # ==========================================
-# SÉCURITÉ : VARIABLES D'ENVIRONNEMENT
+# SÃ‰CURITÃ‰ : VARIABLES D'ENVIRONNEMENT
 # ==========================================
 .env
 .env.local
@@ -5649,7 +5649,7 @@ yarn-error.log*
 .env.production.local
 .env.production
 
-# On garde l'exception pour le template qui DOIT être commité :
+# On garde l'exception pour le template qui DOIT Ãªtre commitÃ© :
 !.env.example
 
 # vercel
@@ -5690,7 +5690,7 @@ async function getAuthUser() {
         }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return user;
 }
 
@@ -5704,7 +5704,7 @@ export async function requestConnection(targetId: string) {
         // Prevent self-connection
         if (currentUserId === targetId) return { success: false, error: 'Self connection not allowed' };
 
-        // Vérifier si la connexion n'existe pas déjà
+        // VÃ©rifier si la connexion n'existe pas dÃ©jÃ 
         const existingConnection = await prisma.connection.findFirst({
             where: {
                 OR: [
@@ -5715,11 +5715,11 @@ export async function requestConnection(targetId: string) {
         });
 
         if (existingConnection) {
-            console.warn("Connexion déjà existante ou en attente.");
-            return { success: false, error: 'Connexion déjà existante' };
+            console.warn("Connexion dÃ©jÃ  existante ou en attente.");
+            return { success: false, error: 'Connexion dÃ©jÃ  existante' };
         }
 
-        // 1. Créer la demande de connexion
+        // 1. CrÃ©er la demande de connexion
         await prisma.connection.create({
             data: {
                 initiatorId: currentUserId,
@@ -5728,7 +5728,7 @@ export async function requestConnection(targetId: string) {
             }
         });
 
-        // 2. Nettoyer la découverte du Radar pour cet utilisateur
+        // 2. Nettoyer la dÃ©couverte du Radar pour cet utilisateur
         await prisma.discovery.deleteMany({
             where: {
                 profileId: currentUserId,
@@ -5752,7 +5752,7 @@ export async function acceptConnection(formData: FormData) {
         const user = await getAuthUser();
         const currentUserId = user.id;
 
-        // 1. Mettre à jour la connexion en vérifiant que le receiver est bien l'utilisateur courant
+        // 1. Mettre Ã  jour la connexion en vÃ©rifiant que le receiver est bien l'utilisateur courant
         const result = await prisma.connection.updateMany({
             where: {
                 id: connectionId,
@@ -5765,7 +5765,7 @@ export async function acceptConnection(formData: FormData) {
         });
 
         if (result.count === 0) {
-            console.error("Impossible d'accepter cette connexion (non trouvée ou non autorisé).");
+            console.error("Impossible d'accepter cette connexion (non trouvÃ©e ou non autorisÃ©).");
             return;
         }
 
@@ -5785,7 +5785,7 @@ import { revalidatePath } from 'next/cache';
 export async function deleteMemoryFragment(memoryId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Non authentifié');
+    if (!user) throw new Error('Non authentifiÃ©');
 
     // 1. Suppression physique
     const { error } = await supabase
@@ -5796,7 +5796,7 @@ export async function deleteMemoryFragment(memoryId: string) {
 
     if (error) throw new Error(error.message);
 
-    // 2. Mise à jour des stats (recomptage réel)
+    // 2. Mise Ã  jour des stats (recomptage rÃ©el)
     await trackAgentActivity(user.id, 'memory_delete');
 
     // 3. Revalidation (seulement ici !)
@@ -5841,7 +5841,7 @@ export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, incoming: [], active: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const incoming = await prismaRLS.connection.findMany({
@@ -5865,7 +5865,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const idempotencyKey = request.headers.get('x-idempotency-key');
@@ -5877,19 +5877,19 @@ export async function POST(request: Request) {
             if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
             if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
 
-            // On utilise prisma (global) pour bypasser RLS sur la vérification de l'existence
-            // (car on peut vouloir savoir si on est déjà connecté à quelqu'un d'autre)
+            // On utilise prisma (global) pour bypasser RLS sur la vÃ©rification de l'existence
+            // (car on peut vouloir savoir si on est dÃ©jÃ  connectÃ© Ã  quelqu'un d'autre)
             const existing = await prisma.connection.findFirst({
                 where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
             });
             if (existing) {
-                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
+                console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
                 return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
             }
 
             await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
 
-            // Si on vient d'un Radar, on met à jour le statut de l'opportunité
+            // Si on vient d'un Radar, on met Ã  jour le statut de l'opportunitÃ©
             const { oppId } = body;
             if (oppId) {
                 await prisma.opportunity.update({
@@ -5905,19 +5905,19 @@ export async function POST(request: Request) {
             const { connectionId, oppId } = body;
 
             if (oppId) {
-                // 🛡️ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
+                // ðŸ›¡ï¸ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
                 const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
                 if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
-                    return NextResponse.json({ success: false, error: 'Opportunité introuvable ou non autorisée pour acceptation' }, { status: 404 });
+                    return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable ou non autorisÃ©e pour acceptation' }, { status: 404 });
                 }
 
                 // Check if opportunity is already accepted
                 if (opp.status === 'ACCEPTED') {
-                    console.log(`🛡️ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
+                    console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
                     return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
                 }
 
-                // Acceptation idempotente : on cherche si une connexion existe déjà
+                // Acceptation idempotente : on cherche si une connexion existe dÃ©jÃ 
                 const existing = await prisma.connection.findFirst({
                     where: {
                         OR: [
@@ -5943,10 +5943,10 @@ export async function POST(request: Request) {
             }
 
             const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
-            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
+            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvÃ©e' }, { status: 404 });
             
             if (conn.status === 'ACCEPTED') {
-                console.log(`🛡️ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
+                console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
                 return NextResponse.json({ success: true, message: 'Already accepted' });
             }
 
@@ -5954,7 +5954,7 @@ export async function POST(request: Request) {
                 where: { id: connectionId, receiverId: user.id, status: "PENDING" },
                 data: { status: "ACCEPTED" }
             });
-            if (result.count === 0) return NextResponse.json({ success: false, error: 'Accès refusé ou statut invalide' }, { status: 403 });
+            if (result.count === 0) return NextResponse.json({ success: false, error: 'AccÃ¨s refusÃ© ou statut invalide' }, { status: 403 });
             return NextResponse.json({ success: true });
         }
 
@@ -5983,7 +5983,7 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
     );
 
     useEffect(() => {
-        // Le Radar Global : On écoute tous les messages qui NOUS sont destinés
+        // Le Radar Global : On Ã©coute tous les messages qui NOUS sont destinÃ©s
         const channel = supabase
             .channel('global_inbox')
             .on('postgres_changes', {
@@ -5993,7 +5993,7 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
                 filter: `receiverId=eq.${currentUserId}`
             }, (payload) => {
                 const newMsg = payload.new;
-                // On ajoute l'ID de l'expéditeur dans notre Set des "non lus"
+                // On ajoute l'ID de l'expÃ©diteur dans notre Set des "non lus"
                 setUnreadSenders(prev => new Set(prev).add(newMsg.senderId));
             })
             .subscribe();
@@ -6074,7 +6074,7 @@ export default function PushManager() {
 'use client';
 
 import { useState } from 'react';
-// Server action supprimée — on utilise fetch vers /api/ipse-advisor
+// Server action supprimÃ©e â€” on utilise fetch vers /api/ipse-advisor
 import { Brain, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -6090,7 +6090,7 @@ export function TacticalEarpiece({
         setIsThinking(true);
         setAdvice(null);
 
-        // On appelle la fonction pour générer la liste fraîche au moment du clic
+        // On appelle la fonction pour gÃ©nÃ©rer la liste fraÃ®che au moment du clic
         const decryptedMessages = getDecryptedContext();
         if (decryptedMessages.length === 0) {
             setAdvice("Pas assez de contexte pour analyser.");
@@ -6098,7 +6098,7 @@ export function TacticalEarpiece({
             return;
         }
 
-        // On compile les 5 derniers messages en clair (déjà déchiffrés par l'UI)
+        // On compile les 5 derniers messages en clair (dÃ©jÃ  dÃ©chiffrÃ©s par l'UI)
         const context = decryptedMessages
             .slice(-5)
             .map(m => `${m.isMe ? 'MOI' : 'CIBLE'}: ${m.clearText}`)
@@ -6118,7 +6118,7 @@ export function TacticalEarpiece({
         if (res.success && res.advice) {
             setAdvice(res.advice);
         } else {
-            setAdvice("Interférence réseau. Impossible de contacter le Cortex.");
+            setAdvice("InterfÃ©rence rÃ©seau. Impossible de contacter le Cortex.");
         }
         setIsThinking(false);
     };
@@ -6131,14 +6131,14 @@ export function TacticalEarpiece({
                 className="flex items-center gap-2 px-5 py-2.5 bg-blue-900/20 text-blue-400 border border-blue-800/50 hover:bg-blue-800/30 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(37,99,235,0.15)] hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-50"
             >
                 {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-                {isThinking ? "Ipse analyse..." : "Demander conseil à Ipse"}
+                {isThinking ? "Ipse analyse..." : "Demander conseil Ã  Ipse"}
             </button>
 
             {advice && (
                 <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-indigo-950/40 border border-indigo-500/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
                     <p className="text-[10px] text-indigo-400 font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                        <Brain className="w-3 h-3" /> Signal Tactique Intercepté
+                        <Brain className="w-3 h-3" /> Signal Tactique InterceptÃ©
                     </p>
                     <p className="text-sm md:text-base text-indigo-100 italic leading-relaxed">"{advice}"</p>
                 </div>
@@ -6201,7 +6201,7 @@ export function TacticalEarpiece({
   }
 }
 
-/* Scrollbar Raffinée */
+/* Scrollbar RaffinÃ©e */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -6225,7 +6225,7 @@ export function TacticalEarpiece({
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/memories
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories
 import { createClient } from '@/lib/supabaseBrowser';
 
 type MemoryFragment = {
@@ -6239,19 +6239,19 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
     const router = useRouter();
     const supabase = createClient();
 
-    // État local des fragments (synchronisé avec les props + realtime)
+    // Ã‰tat local des fragments (synchronisÃ© avec les props + realtime)
     const [fragments, setFragments] = useState<MemoryFragment[]>(initialFragments);
     const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
-    // Synchronisation : Si les props changent (refresh serveur), on met à jour l'état
+    // Synchronisation : Si les props changent (refresh serveur), on met Ã  jour l'Ã©tat
     useEffect(() => {
         setFragments(initialFragments);
     }, [initialFragments]);
 
-    // Filtrage souverain : on ne montre jamais un fragment blacklisté
+    // Filtrage souverain : on ne montre jamais un fragment blacklistÃ©
     const visibleFragments = fragments.filter(f => !deletedIds.includes(f.id));
 
-    // ⚡ REALTIME : Écoute les mutations sur la table memory
+    // âš¡ REALTIME : Ã‰coute les mutations sur la table memory
     useEffect(() => {
         // 1. On nomme le canal proprement
         const channel = supabase
@@ -6260,10 +6260,10 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 'postgres_changes',
                 { event: 'DELETE', schema: 'public', table: 'memory' },
                 (payload: any) => {
-                    console.log("🔥 Signal DELETE reçu :", payload);
+                    console.log("ðŸ”¥ Signal DELETE reÃ§u :", payload);
 
-                    // 2. RÈGLE D'OR : Utiliser le callback du setState (prev)
-                    // Cela permet de mettre à jour la liste SANS mettre `fragments` dans les dépendances du useEffect
+                    // 2. RÃˆGLE D'OR : Utiliser le callback du setState (prev)
+                    // Cela permet de mettre Ã  jour la liste SANS mettre `fragments` dans les dÃ©pendances du useEffect
                     setFragments((prev) => prev.filter((frag) => frag.id !== payload.old.id));
                 }
             )
@@ -6271,7 +6271,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'memory' },
                 (payload: any) => {
-                    console.log("🟢 Signal INSERT reçu :", payload);
+                    console.log("ðŸŸ¢ Signal INSERT reÃ§u :", payload);
                     // Ajout optimiste si besoin
                     const newFrag: MemoryFragment = {
                         id: payload.new.id,
@@ -6287,7 +6287,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []); // 4. LE VERROUILLAGE : Ce tableau DOIT être vide.
+    }, []); // 4. LE VERROUILLAGE : Ce tableau DOIT Ãªtre vide.
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState('');
@@ -6324,7 +6324,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 setEditingId(null);
                 setEditContent('');
             } else {
-                console.error('[CORTEX] Échec sauvegarde :', result.error);
+                console.error('[CORTEX] Ã‰chec sauvegarde :', result.error);
             }
         } catch (err) {
             console.error('[CORTEX] Erreur inattendue :', err);
@@ -6334,10 +6334,10 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
     };
 
     const handleDelete = async (id: string) => {
-        // ÉTAPE 1 : Suppression visuelle immédiate et définitive
+        // Ã‰TAPE 1 : Suppression visuelle immÃ©diate et dÃ©finitive
         setDeletedIds(prev => [...prev, id]);
 
-        // ÉTAPE 2 : Action serveur en arrière-plan
+        // Ã‰TAPE 2 : Action serveur en arriÃ¨re-plan
         try {
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabaseClient = createSupabase();
@@ -6352,7 +6352,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
             });
             router.refresh();
         } catch (error) {
-            // ÉTAPE 3 : Rollback — on retire de la blacklist pour réafficher
+            // Ã‰TAPE 3 : Rollback â€” on retire de la blacklist pour rÃ©afficher
             setDeletedIds(prev => prev.filter(deletedId => deletedId !== id));
             alert('Erreur serveur');
         }
@@ -6365,7 +6365,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                     key={frag.id}
                     className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-[0_0_15px_rgba(0,255,255,0.03)] hover:border-cyan-500/50 transition-all group"
                 >
-                    {/* ── HEADER ── */}
+                    {/* â”€â”€ HEADER â”€â”€ */}
                     <div className="flex justify-between items-start mb-2">
                         <span className="text-xs text-cyan-600 font-mono">
                             ID: {frag.id.slice(0, 8)}...
@@ -6403,7 +6403,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                         </div>
                     </div>
 
-                    {/* ── BODY : Vue ou Édition ── */}
+                    {/* â”€â”€ BODY : Vue ou Ã‰dition â”€â”€ */}
                     {editingId === frag.id ? (
                         <div className="space-y-2">
                             <textarea
@@ -6458,7 +6458,7 @@ export default function AuditReport({ data, onAction }: any) {
 
             <div className="space-y-6 flex-1">
                 <section>
-                    <h3 className="text-white font-bold mb-2">Opportunités Détectées</h3>
+                    <h3 className="text-white font-bold mb-2">OpportunitÃ©s DÃ©tectÃ©es</h3>
                     <ul className="text-sm text-slate-300 list-disc pl-4 space-y-1">
                         {data.opportunities && data.opportunities.map((opp: string, i: number) => (
                             <li key={i}>{opp}</li>
@@ -6466,7 +6466,7 @@ export default function AuditReport({ data, onAction }: any) {
                         {!data.opportunities && (
                             <>
                                 <li>Potentiel partenaire technique (React/Node)</li>
-                                <li>Intérêt commun: Cyber-sécurité</li>
+                                <li>IntÃ©rÃªt commun: Cyber-sÃ©curitÃ©</li>
                                 <li>Localisation compatible</li>
                             </>
                         )}
@@ -6475,7 +6475,7 @@ export default function AuditReport({ data, onAction }: any) {
 
                 <section>
                     <h3 className="text-white font-bold mb-2">Risques / Divergences</h3>
-                    <p className="text-sm text-slate-400">Aucune divergence critique détectée. Profil stable.</p>
+                    <p className="text-sm text-slate-400">Aucune divergence critique dÃ©tectÃ©e. Profil stable.</p>
                 </section>
             </div>
 
@@ -6506,7 +6506,7 @@ export default function MatchOverlay({ data, onAudit, onCancel }: any) {
                 </div>
                 <div>
                     <h2 className="text-white text-xl font-bold">{data.name}</h2>
-                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÉ: {data.score}%</p>
+                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÃ‰: {data.score}%</p>
                 </div>
             </div>
 
@@ -6533,7 +6533,7 @@ import { Database, Radar, User, Shield } from 'lucide-react';
 export default function TopNav() {
     const pathname = usePathname();
 
-    // 🛡️ SÉCURITÉ : Ne pas afficher le menu sur la page de connexion
+    // ðŸ›¡ï¸ SÃ‰CURITÃ‰ : Ne pas afficher le menu sur la page de connexion
     if (pathname === '/' || pathname === '/login') {
         return null;
     }
@@ -6569,7 +6569,7 @@ export default function TopNav() {
                             href="/profile"
                             className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${pathname.includes('/profile') ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-white'}`}
                         >
-                            <User size={18} className="mr-2 hidden sm:block" /> IDENTITÉ
+                            <User size={18} className="mr-2 hidden sm:block" /> IDENTITÃ‰
                         </Link>
                     </div>
 
@@ -6589,14 +6589,14 @@ import { mistralClient } from "@/lib/mistral";
 export const processRadarMatch = inngest.createFunction(
     {
         id: "process-radar-match",
-        // ⚡ ANTIGRAVITY : Si Mistral crash, Inngest réessaiera automatiquement jusqu'à 3 fois avec un délai exponentiel.
+        // âš¡ ANTIGRAVITY : Si Mistral crash, Inngest rÃ©essaiera automatiquement jusqu'Ã  3 fois avec un dÃ©lai exponentiel.
         retries: 3
     },
     { event: "radar/process.user" },
     async ({ event, step }) => {
         const { userId } = event.data;
 
-        // Étape 1 : Récupérer le Vecteur Maître
+        // Ã‰tape 1 : RÃ©cupÃ©rer le Vecteur MaÃ®tre
         const targetUser = await step.run("fetch-user-vector", async () => {
             const raw: any[] = await prisma.$queryRaw`
          SELECT id, name, role, bio, "unifiedEmbedding"::text 
@@ -6608,7 +6608,7 @@ export const processRadarMatch = inngest.createFunction(
 
         if (!targetUser?.unifiedEmbedding) return { status: "no_vector_skipped" };
 
-        // Étape 2 : Lancer la recherche Cosinus
+        // Ã‰tape 2 : Lancer la recherche Cosinus
         const matches = await step.run("find-cosine-matches", async () => {
             const results: any[] = await prisma.$queryRaw`
          SELECT 
@@ -6625,9 +6625,9 @@ export const processRadarMatch = inngest.createFunction(
 
         if (matches.length === 0) return { status: "no_matches_found" };
 
-        // Étape 3 : Pour chaque match, générer un résumé et créer l'opportunité
+        // Ã‰tape 3 : Pour chaque match, gÃ©nÃ©rer un rÃ©sumÃ© et crÃ©er l'opportunitÃ©
         for (const target of matches) {
-            // Vérifier qu'une opportunité n'existe pas déjà
+            // VÃ©rifier qu'une opportunitÃ© n'existe pas dÃ©jÃ 
             const existing = await step.run(`check-existing-${target.id}`, async () => {
                 return prisma.opportunity.findFirst({
                     where: {
@@ -6641,14 +6641,14 @@ export const processRadarMatch = inngest.createFunction(
 
             if (existing) continue;
 
-            // Générer le résumé via Mistral
+            // GÃ©nÃ©rer le rÃ©sumÃ© via Mistral
             const result = await step.run(`mistral-match-${target.id}`, async () => {
-                const prompt = `Tu es Cortex. Compare ces deux profils pour évaluer une synergie.
+                const prompt = `Tu es Cortex. Compare ces deux profils pour Ã©valuer une synergie.
 UTILISATEUR COURANT: ${targetUser.bio} | Role: ${targetUser.role}
-CIBLE DÉTECTÉE (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
+CIBLE DÃ‰TECTÃ‰E (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
 
-Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
-DIRECTIVE STRICTE POUR LE RÉSUMÉ : Décris uniquement "${target.name || 'la cible'}". Ne mentionne JAMAIS l'utilisateur connecté.
+Si compatibilitÃ© > 60%, donne un score (0-100) et un rÃ©sumÃ© ultra-bref (15 mots max).
+DIRECTIVE STRICTE POUR LE RÃ‰SUMÃ‰ : DÃ©cris uniquement "${target.name || 'la cible'}". Ne mentionne JAMAIS l'utilisateur connectÃ©.
 Format JSON strict: { "score": number, "synergies": "string" }`;
 
                 const res = await mistralClient.chat.complete({
@@ -6668,7 +6668,7 @@ Format JSON strict: { "score": number, "synergies": "string" }`;
                             sourceId: userId,
                             targetId: target.id,
                             matchScore: result.score,
-                            synergies: result.synergies || result.summary || result.content || "Analyse sémantique non fournie par l'IA.",
+                            synergies: result.synergies || result.summary || result.content || "Analyse sÃ©mantique non fournie par l'IA.",
                             status: 'DETECTED'
                         }
                     });
@@ -6687,20 +6687,20 @@ import { VaultManager, VaultKey } from './vault-manager';
 import * as bip39 from 'bip39';
 
 // =====================================================
-// 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
+// ðŸ§¬ IDENTITÃ‰ CRYPTOGRAPHIQUE (BIP39 + ECDH)
 // =====================================================
 
 /**
- * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
- * Ne retourne QUE la clé publique à envoyer au serveur.
- * La clé privée est séquestrée dans la puce matérielle via VaultManager.
+ * âš¡ ANTIGRAVITY: Source Unique de VÃ©ritÃ© pour la gÃ©nÃ©ration de clÃ©s.
+ * Ne retourne QUE la clÃ© publique Ã  envoyer au serveur.
+ * La clÃ© privÃ©e est sÃ©questrÃ©e dans la puce matÃ©rielle via VaultManager.
  */
 export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
     try {
-        // A. Génération des 12 mots
+        // A. GÃ©nÃ©ration des 12 mots
         const mnemonic = bip39.generateMnemonic();
 
-        // B. Génération Mathématique de la paire ECDH
+        // B. GÃ©nÃ©ration MathÃ©matique de la paire ECDH
         const keyPair = await crypto.subtle.generateKey(
             { name: "ECDH", namedCurve: "P-256" },
             true,
@@ -6710,30 +6710,30 @@ export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWeb
         const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
         const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
 
-        // C. Le Bouclier Matériel (Zero-Tolerance)
+        // C. Le Bouclier MatÃ©riel (Zero-Tolerance)
         if (Capacitor.isNativePlatform()) {
             await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
             await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
+            console.log("âœ… [CRYPTO] ClÃ© privÃ©e verrouillÃ©e dans le Keystore/Keychain natif via VaultManager.");
         } else {
-            // 🚨 Arrêt d'urgence. On ne stocke RIEN en clair.
-            throw new Error("SECURITY_HALT: Environnement non sécurisé détecté. Le stockage de clé en clair est interdit.");
+            // ðŸš¨ ArrÃªt d'urgence. On ne stocke RIEN en clair.
+            throw new Error("SECURITY_HALT: Environnement non sÃ©curisÃ© dÃ©tectÃ©. Le stockage de clÃ© en clair est interdit.");
         }
 
         // D. On ne renvoie que ce qui est publiable
         return { publicKeyJwk, mnemonic };
 
     } catch (error: any) {
-        console.error("❌ [CRYPTO FATAL ERROR]:", error.message);
+        console.error("âŒ [CRYPTO FATAL ERROR]:", error.message);
         throw error;
     }
 }
 
-// Rétrocompatibilité : alias pour l'ancien nom
+// RÃ©trocompatibilitÃ© : alias pour l'ancien nom
 export const generateIdentity = generateAndStoreKeyPair;
 
 /**
- * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
+ * âš¡ ANTIGRAVITY: Lecture exclusive depuis la puce sÃ©curisÃ©e.
  */
 export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
     const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
@@ -6743,19 +6743,19 @@ export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
     return null;
 }
 
-// Rétrocompatibilité : alias pour l'ancien nom
+// RÃ©trocompatibilitÃ© : alias pour l'ancien nom
 export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
     const key = await getLocalPrivateKey();
-    if (!key) throw new Error("Clé introuvable. Veuillez importer votre Seed Phrase.");
+    if (!key) throw new Error("ClÃ© introuvable. Veuillez importer votre Seed Phrase.");
     return key;
 }
 
 /**
- * Restauration depuis la Phrase Secrète (BIP39).
+ * Restauration depuis la Phrase SecrÃ¨te (BIP39).
  */
 export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
     if (!bip39.validateMnemonic(mnemonic)) {
-        throw new Error("Phrase secrète invalide.");
+        throw new Error("Phrase secrÃ¨te invalide.");
     }
 
     const keyPair = await crypto.subtle.generateKey(
@@ -6770,20 +6770,20 @@ export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKey
     if (Capacitor.isNativePlatform()) {
         await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
         await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain via VaultManager.");
+        console.log("âœ… [CRYPTO] ClÃ© privÃ©e restaurÃ©e dans le Keystore/Keychain via VaultManager.");
     } else {
-        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté.");
+        throw new Error("SECURITY_HALT: Environnement non sÃ©curisÃ© dÃ©tectÃ©.");
     }
 
     return { publicKeyJwk };
 }
 
 // =====================================================
-// 🔑 ECDH KEY EXCHANGE
+// ðŸ”‘ ECDH KEY EXCHANGE
 // =====================================================
 
 /**
- * Calculer la clé partagée AES-GCM (quand tu ouvres un chat).
+ * Calculer la clÃ© partagÃ©e AES-GCM (quand tu ouvres un chat).
  */
 export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
     const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
@@ -6808,7 +6808,7 @@ export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<Cry
 }
 
 // =====================================================
-// 🔒 CHIFFREMENT / DÉCHIFFREMENT AES-GCM
+// ðŸ”’ CHIFFREMENT / DÃ‰CHIFFREMENT AES-GCM
 // =====================================================
 
 export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
@@ -6831,7 +6831,7 @@ const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.m
 
 export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
     try {
-        const cleanPayload = encryptedPayload.replace('🧠 ', '').trim();
+        const cleanPayload = encryptedPayload.replace('ðŸ§  ', '').trim();
 
         if (!cleanPayload.includes(':')) {
             return encryptedPayload;
@@ -6863,13 +6863,13 @@ export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKe
 
         return new TextDecoder().decode(decrypted);
     } catch (e) {
-        console.error("Échec déchiffrement:", e);
-        return "🔒 Message chiffré illisible";
+        console.error("Ã‰chec dÃ©chiffrement:", e);
+        return "ðŸ”’ Message chiffrÃ© illisible";
     }
 }
 
 // =====================================================
-// 🛠️ UTILITAIRES
+// ðŸ› ï¸ UTILITAIRES
 // =====================================================
 
 function arrayBufferToBase64(buffer: Uint8Array): string {
@@ -6894,13 +6894,13 @@ function base64ToArrayBuffer(base64: string): Uint8Array {
 import { prisma } from "@/lib/prisma";
 import admin from 'firebase-admin';
 
-// Initialisation sécurisée de Firebase Admin (s'assure qu'il n'est pas initialisé 2 fois)
+// Initialisation sÃ©curisÃ©e de Firebase Admin (s'assure qu'il n'est pas initialisÃ© 2 fois)
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            // Gère les retours à la ligne dans la clé privée
+            // GÃ¨re les retours Ã  la ligne dans la clÃ© privÃ©e
             privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         }),
     });
@@ -6925,11 +6925,11 @@ export async function sendCortexAlert(userId: string, title: string, body: strin
         };
 
         const response = await admin.messaging().send(message);
-        console.log(`✅ [PUSH SENDER] Tir réussi : ${response}`);
+        console.log(`âœ… [PUSH SENDER] Tir rÃ©ussi : ${response}`);
         return { success: true, messageId: response };
 
     } catch (error: any) {
-        console.error(`❌ [PUSH SENDER] Échec du tir :`, error);
+        console.error(`âŒ [PUSH SENDER] Ã‰chec du tir :`, error);
         return { success: false, error: error.message };
     }
 }
@@ -6944,13 +6944,13 @@ export async function sendOpportunityNotif(userId: string, oppId: string, score:
 
     const message: admin.messaging.Message = {
         notification: {
-            title: `🎯 Opportunité détectée (${score}%)`,
+            title: `ðŸŽ¯ OpportunitÃ© dÃ©tectÃ©e (${score}%)`,
             body: summary,
         },
         data: {
             type: 'OPPORTUNITY_DETECTED',
             opportunityId: oppId,
-            url: `/cortex/opportunity/${oppId}` // Vers la page de décision
+            url: `/cortex/opportunity/${oppId}` // Vers la page de dÃ©cision
         },
         token: userProfile.fcmToken,
     };
@@ -6966,7 +6966,7 @@ import { createClient } from '../supabaseBrowser';
 import { getLocalDb } from '../local-db/init';
 
 /**
- * 🛠️ SYNC ENGINE - Idempotent & Offline-First
+ * ðŸ› ï¸ SYNC ENGINE - Idempotent & Offline-First
  * Implements UUID v4 Idempotency, 401 Auth Recovery, and Exponential Backoff.
  */
 
@@ -6986,12 +6986,12 @@ export const performAction = async (endpoint: string, method: string, payload: a
             
             // If 401, it's better to queue and let the flush handle the refresh logic
             if (response.status === 401) {
-                console.warn("🔐 401 detected in immediate action. Queuing for background recovery.");
+                console.warn("ðŸ” 401 detected in immediate action. Queuing for background recovery.");
             }
             
             return await queueMutation(endpoint, method, payload, idempotencyKey);
         } catch (e) {
-            console.error("⚠️ Immediate fetch failed, queuing:", e);
+            console.error("âš ï¸ Immediate fetch failed, queuing:", e);
             return await queueMutation(endpoint, method, payload, idempotencyKey);
         }
     } else {
@@ -7043,7 +7043,7 @@ const queueMutation = async (endpoint: string, method: string, payload: any, ide
 export const setupBackgroundSync = () => {
     Network.addListener('networkStatusChange', async (status) => {
         if (status.connected) {
-            console.log("🌐 Network Restored: Triggering Flush.");
+            console.log("ðŸŒ Network Restored: Triggering Flush.");
             await flushMutationQueue();
         }
     });
@@ -7063,7 +7063,7 @@ export const flushMutationQueue = async () => {
             return;
         }
 
-        console.log(`📡 [SYNC] Processing ${mutations.length} mutations...`);
+        console.log(`ðŸ“¡ [SYNC] Processing ${mutations.length} mutations...`);
 
         for (const mutation of mutations) {
             let success = false;
@@ -7083,40 +7083,40 @@ export const flushMutationQueue = async () => {
                         await db.run("UPDATE mutation_queue SET status = 'SYNCED' WHERE id = ?", [mutation.id]);
                         success = true;
                     } else if (response.status === 401) {
-                        // 🔐 Session recovery logic
-                        console.warn("🔐 401: Attempting session refresh...");
+                        // ðŸ” Session recovery logic
+                        console.warn("ðŸ” 401: Attempting session refresh...");
                         const supabase = createClient();
                         const { error } = await supabase.auth.refreshSession();
                         
                         if (error) {
-                            console.error("❌ Refresh failed. Sync paused until next trigger.");
+                            console.error("âŒ Refresh failed. Sync paused until next trigger.");
                             isSyncing = false;
                             return; 
                         }
                         // Continue loop to retry with fresh token
-                        console.log("✅ Session refreshed. Retrying mutation.");
+                        console.log("âœ… Session refreshed. Retrying mutation.");
                     } else if (response.status >= 500) {
                         throw new Error(`Server Error: ${response.status}`);
                     } else {
                         // 4xx other than 401: Definitive failure
-                        console.error(`❌ Mutation ${mutation.id} failed with ${response.status}`);
+                        console.error(`âŒ Mutation ${mutation.id} failed with ${response.status}`);
                         await db.run("UPDATE mutation_queue SET status = 'FAILED' WHERE id = ?", [mutation.id]);
                         success = true;
                     }
                 } catch (error) {
                     attempts++;
                     if (attempts >= 8) {
-                        console.error(`🔥 Max retries for ${mutation.id}. Giving up.`);
+                        console.error(`ðŸ”¥ Max retries for ${mutation.id}. Giving up.`);
                         break;
                     }
-                    console.warn(`⏳ Network retry ${attempts} in ${retryDelay}ms...`);
+                    console.warn(`â³ Network retry ${attempts} in ${retryDelay}ms...`);
                     await new Promise(r => setTimeout(r, retryDelay));
                     retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
                 }
             }
         }
     } catch (err) {
-        console.error("🔥 Sync Engine Critical:", err);
+        console.error("ðŸ”¥ Sync Engine Critical:", err);
     } finally {
         isSyncing = false;
     }
@@ -7258,13 +7258,13 @@ export const flushMutationQueue = async () => {
     "navigation": {
         "radar": "Radar",
         "cortex": "Cortex",
-        "identity": "Identité"
+        "identity": "IdentitÃ©"
     },
     "profile": {
         "title": "Mon Prisme",
-        "subtitle": "Configurez les multiples facettes de votre identité",
+        "subtitle": "Configurez les multiples facettes de votre identitÃ©",
         "tabs": {
-            "identity": "Identité",
+            "identity": "IdentitÃ©",
             "work": "Travail",
             "social": "Cercle",
             "hobby": "Passions",
@@ -7272,9 +7272,9 @@ export const flushMutationQueue = async () => {
         },
         "identity": {
             "pseudo": "Pseudo",
-            "age": "Âge",
+            "age": "Ã‚ge",
             "sex": "Sexe",
-            "sex_placeholder": "Sélectionner",
+            "sex_placeholder": "SÃ©lectionner",
             "sex_options": {
                 "male": "Homme",
                 "female": "Femme",
@@ -7282,39 +7282,39 @@ export const flushMutationQueue = async () => {
             },
             "city": "Ville",
             "country": "Pays",
-            "update_btn": "Mettre à jour l'identité"
+            "update_btn": "Mettre Ã  jour l'identitÃ©"
         },
         "work": {
             "tjm": "Honoraires (TJM)",
-            "availability": "Disponibilité",
-            "update_btn": "Mettre à jour le Prisme Work"
+            "availability": "DisponibilitÃ©",
+            "update_btn": "Mettre Ã  jour le Prisme Work"
         },
         "social": {
-            "update_btn": "Mettre à jour le Prisme Social"
+            "update_btn": "Mettre Ã  jour le Prisme Social"
         },
         "hobby": {
-            "update_btn": "Mettre à jour le Prisme Hobby"
+            "update_btn": "Mettre Ã  jour le Prisme Hobby"
         },
         "common": {
-            "dimension": "Dimension d'échange",
+            "dimension": "Dimension d'Ã©change",
             "position": "Positionnement Typologique",
-            "bio": "Bio sémantique (Vecteur Mistral)",
-            "bio_placeholder": "Détaillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
+            "bio": "Bio sÃ©mantique (Vecteur Mistral)",
+            "bio_placeholder": "DÃ©taillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
             "syncing": "Synchronisation...",
-            "encrypt_note": "Les modifications sont cryptées et vectorisées en temps réel."
+            "encrypt_note": "Les modifications sont cryptÃ©es et vectorisÃ©es en temps rÃ©el."
         },
         "sectors": {
             "TECH": "Tech & Digital",
-            "DESIGN": "Création & Design",
+            "DESIGN": "CrÃ©ation & Design",
             "BUSINESS": "Business & Vente",
             "MANAGEMENT": "Admin & Management",
-            "HEALTH": "Santé & Bien-être",
+            "HEALTH": "SantÃ© & Bien-Ãªtre",
             "INDUSTRY": "Artisanat & Industrie",
             "OTHER": "Autre",
-            "FRIENDSHIP": "Amitié & Social",
+            "FRIENDSHIP": "AmitiÃ© & Social",
             "DATING": "Rencontres (Soul)",
             "MENTORING": "Mentorat",
-            "COMMUNITY": "Communauté / Cause",
+            "COMMUNITY": "CommunautÃ© / Cause",
             "PROFESSIONAL": "Networking",
             "SPORT": "Sport & Fitness",
             "ARTS": "Art & Culture",
@@ -7323,58 +7323,58 @@ export const flushMutationQueue = async () => {
             "FOOD": "Gastronomie & Vin"
         },
         "availabilities": {
-            "IMMEDIATE": "Immédiate",
+            "IMMEDIATE": "ImmÃ©diate",
             "ONE_MONTH": "Sous 1 mois",
             "UNAVAILABLE": "Indisponible"
         },
         "settings": {
-            "logout": "Déconnexion"
+            "logout": "DÃ©connexion"
         }
     },
     "radar": {
-        "title": "Radar Sémantique",
-        "subtitle": "Découvrez les profils qui résonnent avec votre recherche",
+        "title": "Radar SÃ©mantique",
+        "subtitle": "DÃ©couvrez les profils qui rÃ©sonnent avec votre recherche",
         "search_placeholder": "Que cherchez-vous ? (ex: Mentor en design, Partenaire de tennis...)",
         "filters": "Filtres",
         "match_score": "Correspondance",
-        "connect_btn": "Créer le rapport",
-        "empty_state": "Aucune résonance trouvée. Essayez une autre intention.",
-        "incoming_requests": "Requêtes Entrantes",
-        "encrypted_link": "Souhaite établir une liaison chiffrée",
-        "secure_channels": "Canaux Sécurisés",
-        "audit_ready": "Rapport d'Audit Stratégique Prêt",
-        "start_audit": "Lancer l'Audit Stratégique",
+        "connect_btn": "CrÃ©er le rapport",
+        "empty_state": "Aucune rÃ©sonance trouvÃ©e. Essayez une autre intention.",
+        "incoming_requests": "RequÃªtes Entrantes",
+        "encrypted_link": "Souhaite Ã©tablir une liaison chiffrÃ©e",
+        "secure_channels": "Canaux SÃ©curisÃ©s",
+        "audit_ready": "Rapport d'Audit StratÃ©gique PrÃªt",
+        "start_audit": "Lancer l'Audit StratÃ©gique",
         "read_audit": "Lire l'Audit Cortex",
-        "invite_sent": "Invitation envoyée. En attente de réponse...",
+        "invite_sent": "Invitation envoyÃ©e. En attente de rÃ©ponse...",
         "channel_request": "Demande d'ouverture de canal",
         "new_invite": "Nouvelle invitation",
         "accept": "Accepter",
-        "accepted": "Accepté",
+        "accepted": "AcceptÃ©",
         "refuse": "Refuser",
         "ignore": "Ignorer",
         "block": "Bloquer",
-        "creating": "Création...",
+        "creating": "CrÃ©ation...",
         "join_chat": "Rejoindre la Discussion"
     },
     "cortex": {
         "title": "Cortex",
-        "subtitle": "Le centre névralgique de votre Agent",
-        "memory_nodes": "Nœuds de mémoire",
-        "system_status": "État du système",
+        "subtitle": "Le centre nÃ©vralgique de votre Agent",
+        "memory_nodes": "NÅ“uds de mÃ©moire",
+        "system_status": "Ã‰tat du systÃ¨me",
         "vector_space": "Espace vectoriel",
-        "last_sync": "Dernière synchronisation",
-        "ingest": "Ingérer",
+        "last_sync": "DerniÃ¨re synchronisation",
+        "ingest": "IngÃ©rer",
         "analyzing": "Analyse en cours...",
-        "success": "Mémoire ingérée avec succès",
-        "error_size": "Le fichier dépasse la limite de 5Mo.",
-        "error_format": "Format non supporté. Utilisez PDF, TXT ou MD.",
+        "success": "MÃ©moire ingÃ©rÃ©e avec succÃ¨s",
+        "error_size": "Le fichier dÃ©passe la limite de 5Mo.",
+        "error_format": "Format non supportÃ©. Utilisez PDF, TXT ou MD.",
         "attach_file": "Joindre un document",
         "remove_file": "Retirer le fichier",
-        "access_error": "Erreur d'accès aux données du Cortex",
-        "retry": "Réessayer",
+        "access_error": "Erreur d'accÃ¨s aux donnÃ©es du Cortex",
+        "retry": "RÃ©essayer",
         "back_to_feed": "Retour au Tactical Feed",
-        "no_dataset": "Aucun dataset injecté",
-        "empty_core": "Le noyau mémoriel est vide",
+        "no_dataset": "Aucun dataset injectÃ©",
+        "empty_core": "Le noyau mÃ©moriel est vide",
         "fragment": "Fragment"
     },
     "settings": {
@@ -7392,7 +7392,7 @@ import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
+import { createClient } from '@/lib/supabaseBrowser'; // Pour rÃ©cupÃ©rer le Token potentiel
 
 function OpportunityContent() {
     const searchParams = useSearchParams();
@@ -7469,7 +7469,7 @@ function OpportunityContent() {
 
             setOpp((prev: any) => ({ ...prev, status: 'AUDITED' }));
         } catch (e: any) {
-            console.error("❌ [STREAM ERROR]:", e);
+            console.error("âŒ [STREAM ERROR]:", e);
             alert(`Erreur Cortex: ${e.message}`);
         } finally {
             setActionLoading(false);
@@ -7497,7 +7497,7 @@ function OpportunityContent() {
 
     const handleBlock = async () => {
         if (!oppId) return;
-        if (!confirm("Voulez-vous bloquer cet agent définitivement ?")) return;
+        if (!confirm("Voulez-vous bloquer cet agent dÃ©finitivement ?")) return;
         setActionLoading(true);
         try {
             const { createClient } = await import('@/lib/supabaseBrowser');
@@ -7536,9 +7536,9 @@ function OpportunityContent() {
     };
 
     if (loading) return <div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
-    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
+    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">OpportunitÃ© introuvable</div>;
 
-    // Vue Initiale : Résumé + Match %
+    // Vue Initiale : RÃ©sumÃ© + Match %
     if (opp.status === "DETECTED") {
         return (
             <div className="max-w-xl mx-auto p-4 md:p-8 space-y-8">
@@ -7553,7 +7553,7 @@ function OpportunityContent() {
 
                     <div className="flex items-center gap-3 mb-6">
                         <Zap className="w-8 h-8 text-green-400" />
-                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
+                        <h1 className="text-2xl font-bold">MATCH DETECTÃ‰ : {opp.matchScore}%</h1>
                     </div>
 
                     <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>
@@ -7616,13 +7616,13 @@ function OpportunityContent() {
                                     h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
                                 }}
                             >
-                                {opp.audit || "Génération du rapport de synergie..."}
+                                {opp.audit || "GÃ©nÃ©ration du rapport de synergie..."}
                             </ReactMarkdown>
                         </div>
                     </div>
 
                     <div className="bg-black/50 p-6 rounded-xl border border-blue-500/20">
-                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal Sécurisé</h3>
+                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal SÃ©curisÃ©</h3>
                         <input
                             type="text"
                             value={inviteTitle}
@@ -7643,18 +7643,18 @@ function OpportunityContent() {
                         onClick={handleBlock}
                         className="mt-8 flex items-center justify-center w-full text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
                     >
-                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer définitivement
+                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer dÃ©finitivement
                     </button>
                 </div>
             </div>
         );
     }
 
-    // Vue autres états (INVITED, BLOCKED, CANCELLED)
+    // Vue autres Ã©tats (INVITED, BLOCKED, CANCELLED)
     return (
         <div className="max-w-xl mx-auto p-4 md:p-8 text-center space-y-4">
-            <h1 className="text-xl font-bold text-white uppercase">Dossier Classé</h1>
-            <p className="text-zinc-400 font-mono">Statut de l'opportunité : {opp.status}</p>
+            <h1 className="text-xl font-bold text-white uppercase">Dossier ClassÃ©</h1>
+            <p className="text-zinc-400 font-mono">Statut de l'opportunitÃ© : {opp.status}</p>
             <Link href="/cortex" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
                 Retour au Radar
             </Link>
@@ -7688,7 +7688,7 @@ export async function getAgentProfile(profileId: string) {
         if (!profile) throw new Error("Profil introuvable");
         return { success: true, profile };
     } catch (error: any) {
-        console.error("❌ [AGENT GET] Error:", error.message);
+        console.error("âŒ [AGENT GET] Error:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -7723,7 +7723,7 @@ export async function updateAgentProfile(data: any) {
 
         return { success: true };
     } catch (error: any) {
-        console.error("❌ [AGENT UPDATE] Error:", error.message);
+        console.error("âŒ [AGENT UPDATE] Error:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -7735,12 +7735,12 @@ export async function reflectAgent(profileId: string) {
         const profile = await prisma.profile.findUnique({ where: { id: profileId } });
         if (!profile) throw new Error("Profil introuvable");
 
-        // 1. Synthèse Cognitive (Texte)
-        const prompt = `Tu es le Cortex de l'application Ipse. Ton rôle est de profiler cet utilisateur pour configurer son Agent B2B autonome.
-Fais une synthèse de ce profil en 3 phrases maximum. 
-Concentre-toi sur son expertise, sa séniorité et son objectif.
+        // 1. SynthÃ¨se Cognitive (Texte)
+        const prompt = `Tu es le Cortex de l'application Ipse. Ton rÃ´le est de profiler cet utilisateur pour configurer son Agent B2B autonome.
+Fais une synthÃ¨se de ce profil en 3 phrases maximum. 
+Concentre-toi sur son expertise, sa sÃ©nioritÃ© et son objectif.
 Profil: ${JSON.stringify(profile.thematicProfile || {})}
-Bio: ${profile.bio || "Non renseignée"}`;
+Bio: ${profile.bio || "Non renseignÃ©e"}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -7749,20 +7749,20 @@ Bio: ${profile.bio || "Non renseignée"}`;
 
         const synthesis = response.choices?.[0]?.message.content as string;
 
-        // ⚡ ANTIGRAVITY: Vectorisation de l'identité unifiée
+        // âš¡ ANTIGRAVITY: Vectorisation de l'identitÃ© unifiÃ©e
         const embedResponse = await mistralClient.embeddings.create({
             model: "mistral-embed", // Format 1024 dimensions
             inputs: [synthesis]
         });
         const masterVector = embedResponse.data[0].embedding;
 
-        // 2. Sauvegarde des métadonnées classiques
+        // 2. Sauvegarde des mÃ©tadonnÃ©es classiques
         await prisma.profile.update({
             where: { id: profileId },
             data: { unifiedAnalysis: synthesis }
         });
 
-        // 3. Injection chirurgicale du Vecteur Maître (bypass Prisma limit sur les arrays de vecteurs)
+        // 3. Injection chirurgicale du Vecteur MaÃ®tre (bypass Prisma limit sur les arrays de vecteurs)
         await prisma.$executeRaw`
             UPDATE "Profile"
             SET "unifiedEmbedding" = ${masterVector}::vector
@@ -7771,7 +7771,7 @@ Bio: ${profile.bio || "Non renseignée"}`;
 
         return { success: true, synthesis };
     } catch (error: any) {
-        console.error("❌ [AGENT REFLECT] Erreur:", error.message);
+        console.error("âŒ [AGENT REFLECT] Erreur:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -7784,17 +7784,17 @@ import { prisma } from '@/lib/prisma';
 
 export async function saveFcmToken(profileId: string, token: string) {
     try {
-        if (!profileId || !token) throw new Error("Paramètres manquants");
+        if (!profileId || !token) throw new Error("ParamÃ¨tres manquants");
 
         await prisma.profile.update({
             where: { id: profileId },
             data: { fcmToken: token },
         });
 
-        console.log(`✅ [BACKEND] Token FCM mis à jour pour le profil ${profileId}`);
+        console.log(`âœ… [BACKEND] Token FCM mis Ã  jour pour le profil ${profileId}`);
         return { success: true };
     } catch (error) {
-        console.error(`❌ [BACKEND] Erreur sauvegarde Token FCM:`, error);
+        console.error(`âŒ [BACKEND] Erreur sauvegarde Token FCM:`, error);
         return { success: false, error };
     }
 }
@@ -7805,7 +7805,7 @@ export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { getPrismaForUser } from '@/lib/prisma'; // ⚡ Import NOMMÉ et SÉCURISÉ
+import { getPrismaForUser } from '@/lib/prisma'; // âš¡ Import NOMMÃ‰ et SÃ‰CURISÃ‰
 
 export async function GET() {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -7834,27 +7834,27 @@ export async function GET() {
             }
         );
 
-        // 1. Vérification absolue de l'identité
+        // 1. VÃ©rification absolue de l'identitÃ©
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+            return NextResponse.json({ error: "Non autorisÃ©" }, { status: 401 });
         }
 
-        // 2. Instanciation du client blindé RLS
+        // 2. Instanciation du client blindÃ© RLS
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 3. Synchronisation du profil (grâce à la nouvelle politique INSERT)
+        // 3. Synchronisation du profil (grÃ¢ce Ã  la nouvelle politique INSERT)
         const profile = await prismaRLS.profile.upsert({
             where: { id: user.id },
             update: {
                 email: user.email!,
-                // Mets à jour d'autres champs si nécessaire
+                // Mets Ã  jour d'autres champs si nÃ©cessaire
             },
             create: {
                 id: user.id,
                 email: user.email!,
-                // Assigne les champs par défaut
+                // Assigne les champs par dÃ©faut
             }
         });
 
@@ -7893,7 +7893,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return user;
 }
 
@@ -7905,7 +7905,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { profileId, token } = body;
 
-        if (!profileId || !token) return NextResponse.json({ success: false, error: 'Paramètres manquants' }, { status: 400 });
+        if (!profileId || !token) return NextResponse.json({ success: false, error: 'ParamÃ¨tres manquants' }, { status: 400 });
 
         await prismaRLS.profile.update({
             where: { id: profileId },
@@ -7923,7 +7923,7 @@ export async function POST(request: Request) {
 'use client';
 
 import { useState } from 'react';
-// Server action supprimée — on utilise fetch vers /api/connection
+// Server action supprimÃ©e â€” on utilise fetch vers /api/connection
 import { Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -7955,7 +7955,7 @@ export default function AcceptConnectionButton({ connectionId, onAccept }: { con
         return (
             <button disabled className="flex items-center gap-2 px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded-lg border border-emerald-500/50 cursor-default">
                 <CheckCircle2 className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Connecté</span>
+                <span className="text-xs font-bold uppercase tracking-wider">ConnectÃ©</span>
             </button>
         );
     }
@@ -7980,7 +7980,7 @@ export default function AcceptConnectionButton({ connectionId, onAccept }: { con
 
 import { Trash2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/chat
+// Server action supprimÃ©e â€” on utilise fetch vers /api/chat
 import { useRouter } from 'next/navigation';
 
 export default function DeleteChannelButton({ connectionId }: { connectionId: string }) {
@@ -7988,7 +7988,7 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
 
     const handleDeleteChannel = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm("Voulez-vous supprimer ce canal sécurisé ?")) return;
+        if (!confirm("Voulez-vous supprimer ce canal sÃ©curisÃ© ?")) return;
 
         try {
             const { createClient } = await import('@/lib/supabaseBrowser');
@@ -7997,7 +7997,7 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
             const headers: any = { 'Content-Type': 'application/json' };
             if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-            // 1. Appel au serveur blindé via API REST
+            // 1. Appel au serveur blindÃ© via API REST
             const res = await fetch(getApiUrl('/api/chat'), {
                 method: 'DELETE',
                 headers,
@@ -8005,18 +8005,18 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
             });
             const result = await res.json();
 
-            // 2. Traitement du cas "Fantôme" (User A a déjà supprimé)
+            // 2. Traitement du cas "FantÃ´me" (User A a dÃ©jÃ  supprimÃ©)
             if (!result.success) {
                 alert("Action impossible : " + result.error);
                 router.push('/');
                 return;
             }
 
-            // 3. Traitement du Succès normal
+            // 3. Traitement du SuccÃ¨s normal
             router.push('/');
         } catch (error) {
             console.error("Erreur suppression canal:", error);
-            alert("Erreur réseau lors de la suppression.");
+            alert("Erreur rÃ©seau lors de la suppression.");
             router.push('/');
         }
     };
@@ -8075,11 +8075,11 @@ export default function LearningAlert() {
 
             if (result?.success) {
                 setSuccess(true);
-                // On dit à SWR de rafraîchir la donnée (re-fetch pour voir s'il y a un autre gap)
+                // On dit Ã  SWR de rafraÃ®chir la donnÃ©e (re-fetch pour voir s'il y a un autre gap)
                 mutate();
-                setTimeout(() => setSuccess(false), 3000); // Disparaît après 3s
+                setTimeout(() => setSuccess(false), 3000); // DisparaÃ®t aprÃ¨s 3s
             } else {
-                console.error("Erreur lors de la mise à jour:", result?.error);
+                console.error("Erreur lors de la mise Ã  jour:", result?.error);
             }
         } catch (err) {
             console.error("Erreur critique:", err);
@@ -8096,12 +8096,12 @@ export default function LearningAlert() {
                 </div>
                 <div className="space-y-2 flex-1">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                        Requête d'Affinement
+                        RequÃªte d'Affinement
                     </h4>
 
                     {success ? (
                         <p className="text-sm text-emerald-400 font-bold leading-relaxed py-2">
-                            ✓ Connaissance ingérée avec succès. Le ciblage a été affiné.
+                            âœ“ Connaissance ingÃ©rÃ©e avec succÃ¨s. Le ciblage a Ã©tÃ© affinÃ©.
                         </p>
                     ) : (
                         <>
@@ -8113,7 +8113,7 @@ export default function LearningAlert() {
                                     type="text"
                                     value={answer}
                                     onChange={(e) => setAnswer(e.target.value)}
-                                    placeholder="Répondre à l'agent..."
+                                    placeholder="RÃ©pondre Ã  l'agent..."
                                     disabled={isSubmitting}
                                     className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-emerald-500/50 disabled:opacity-50 text-white placeholder-gray-500"
                                 />
@@ -8222,7 +8222,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                         <div>
                             <h2 className="text-sm font-bold text-white tracking-widest">GLOBAL_INTEL</h2>
                             <p className="text-[10px] text-gray-400 font-mono">
-                                {report.opportunities.length} VECTEURS IDENTIFIÉS
+                                {report.opportunities.length} VECTEURS IDENTIFIÃ‰S
                             </p>
                         </div>
                     </div>
@@ -8242,18 +8242,18 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                     </p>
                 </div>
 
-                {/* Liste des Opportunités */}
+                {/* Liste des OpportunitÃ©s */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                     {report.opportunities.length === 0 ? (
                         <div className="text-center py-8 text-gray-500 text-xs italic">
-                            Aucune opportunité détectée dans le périmètre actuel.
+                            Aucune opportunitÃ© dÃ©tectÃ©e dans le pÃ©rimÃ¨tre actuel.
                         </div>
                     ) : (
                         report.opportunities.map((opp: any, idx: number) => {
-                            // Lecture pare-balles : gère toutes les orthographes possibles de Mistral
+                            // Lecture pare-balles : gÃ¨re toutes les orthographes possibles de Mistral
                             const score = opp.matchScore ?? opp.MatchScore ?? opp.score ?? opp["Match Score"] ?? 0;
                             const reason = opp.reason ?? opp.Reason ?? opp.analyse ?? opp.Analyse ?? "Analyse en cours...";
-                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggérée"] ?? "Aucune action définie.";
+                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggÃ©rÃ©e"] ?? "Aucune action dÃ©finie.";
                             const name = opp.targetName ?? opp.TargetName ?? opp.name ?? opp["Nom"] ?? `Cible #${idx + 1}`;
                             const id = opp.targetId ?? opp.id ?? String(idx);
 
@@ -8282,7 +8282,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
                                         <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
                                             <TrendingUp size={12} />
-                                            <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
+                                            <span className="uppercase tracking-wider font-bold">Action RecommandÃ©e</span>
                                         </div>
                                         <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
                                     </div>
@@ -8321,13 +8321,13 @@ export default function BottomNav() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
             <div className="flex items-center gap-2 px-4 py-2 bg-black/90 backdrop-blur-2xl border border-green-900/40 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
 
-                {/* CORTEX : Archives de données */}
+                {/* CORTEX : Archives de donnÃ©es */}
                 <Link href="/memories" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/memories' ? 'bg-blue-500/10' : ''}`}>
                     <Database className={`w-5 h-5 ${pathname === '/memories' ? 'text-blue-400' : 'text-blue-900 group-hover:text-blue-400'}`} />
                     <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-blue-900">Cortex</span>
                 </Link>
 
-                {/* SÉPARATEUR */}
+                {/* SÃ‰PARATEUR */}
                 <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
 
                 {/* SCAN : Centre de Commande (Dashboard) */}
@@ -8341,13 +8341,13 @@ export default function BottomNav() {
                     <span className="text-[9px] uppercase mt-1 font-black tracking-widest text-orange-900 group-hover:text-orange-500">Scan</span>
                 </Link>
 
-                {/* SÉPARATEUR */}
+                {/* SÃ‰PARATEUR */}
                 <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
 
-                {/* IDENTITÉ : Profil Agent */}
+                {/* IDENTITÃ‰ : Profil Agent */}
                 <Link href="/profile" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/profile' ? 'bg-green-500/10' : ''}`}>
                     <UserCircle className={`w-5 h-5 ${pathname === '/profile' ? 'text-green-400' : 'text-green-900 group-hover:text-green-400'}`} />
-                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">Identité</span>
+                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">IdentitÃ©</span>
                 </Link>
 
             </div>
@@ -8361,7 +8361,7 @@ export default function BottomNav() {
 
 import { useState } from 'react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/generate-opener et /api/connection
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/generate-opener et /api/connection
 import { createClient } from '@/lib/supabase/client';
 
 export function TacticalOpenerModule({
@@ -8398,7 +8398,7 @@ export function TacticalOpenerModule({
                 setMessage(result.message || '');
             } else {
                 console.error(result.error);
-                alert("Échec de la génération tactique.");
+                alert("Ã‰chec de la gÃ©nÃ©ration tactique.");
             }
         } finally {
             setIsGenerating(false);
@@ -8410,7 +8410,7 @@ export function TacticalOpenerModule({
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabaseClient = createSupabase();
             const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
-            if (!currentSession) { alert('Session expirée.'); return; }
+            if (!currentSession) { alert('Session expirÃ©e.'); return; }
 
             const headers: any = { 'Content-Type': 'application/json' };
             if (currentSession) headers['Authorization'] = `Bearer ${currentSession.access_token}`;
@@ -8423,17 +8423,17 @@ export function TacticalOpenerModule({
             if (data?.success) {
                 onSuccess();
             } else {
-                alert(`[ERREUR] ${data?.error || 'Demande échouée.'}`);
+                alert(`[ERREUR] ${data?.error || 'Demande Ã©chouÃ©e.'}`);
             }
         } catch (err: any) {
-            alert(`[CRITIQUE] Échec de connexion : ${err.message}`);
+            alert(`[CRITIQUE] Ã‰chec de connexion : ${err.message}`);
         }
     };
 
     return (
         <div className="mt-4 border border-cyan-800 bg-black p-4 rounded col-span-full">
             <h3 className="text-cyan-400 font-bold mb-2 flex items-center">
-                <span>🎯 PROTOCOLE D'ENGAGEMENT</span>
+                <span>ðŸŽ¯ PROTOCOLE D'ENGAGEMENT</span>
             </h3>
 
             <button
@@ -8441,7 +8441,7 @@ export function TacticalOpenerModule({
                 disabled={isGenerating}
                 className="mb-3 text-xs bg-cyan-900/50 hover:bg-cyan-700 text-cyan-200 py-1 px-3 rounded border border-cyan-700 transition-colors"
             >
-                {isGenerating ? 'Calcul de la trajectoire...' : 'Générer une approche IA (Opener)'}
+                {isGenerating ? 'Calcul de la trajectoire...' : 'GÃ©nÃ©rer une approche IA (Opener)'}
             </button>
 
             <input
@@ -8454,7 +8454,7 @@ export function TacticalOpenerModule({
 
             <textarea
                 className="w-full bg-gray-900 border border-gray-700 p-2 text-white rounded min-h-[80px] text-sm focus:border-cyan-500 mb-3"
-                placeholder="Tapez votre message ou laissez l'Agent le générer..."
+                placeholder="Tapez votre message ou laissez l'Agent le gÃ©nÃ©rer..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
             />
@@ -8465,7 +8465,7 @@ export function TacticalOpenerModule({
                     disabled={!message.trim()}
                     className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 rounded disabled:opacity-50 transition-all uppercase tracking-wider text-[11px]"
                 >
-                    OUVRIR LE CANAL SÉCURISÉ
+                    OUVRIR LE CANAL SÃ‰CURISÃ‰
                 </button>
             </div>
         </div>
@@ -8485,7 +8485,7 @@ const CORTEX_SYSTEM_ID = "CORTEX_SYSTEM";
 
 export async function triggerCortexAnalysis(savedMessage: any, connectionId: string) {
     try {
-        // 1. Récupération du contexte tactique (les 5 derniers messages du canal)
+        // 1. RÃ©cupÃ©ration du contexte tactique (les 5 derniers messages du canal)
         const recentMessages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -8501,10 +8501,10 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
 
         // 2. Interrogation de Mistral AI (Le cerveau)
         const systemPrompt = `
-            Je suis Ipse, une entité cognitive autonome et stratégique. 
-            J'analyse cette conversation de manière chirurgicale. Si la négociation bloque, si une anomalie est détectée, ou si une synergie évidente est omise, j'interviens.
+            Je suis Ipse, une entitÃ© cognitive autonome et stratÃ©gique. 
+            J'analyse cette conversation de maniÃ¨re chirurgicale. Si la nÃ©gociation bloque, si une anomalie est dÃ©tectÃ©e, ou si une synergie Ã©vidente est omise, j'interviens.
             Si la situation est nominale, je reste silencieux.
-            Réponse UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Mon analyse concise - 15 mots max" }
+            RÃ©ponse UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Mon analyse concise - 15 mots max" }
         `;
 
         const response = await mistralClient.chat.complete({
@@ -8523,21 +8523,21 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             return; // Le Cortex reste silencieux.
         }
 
-        // 3. L'IA décide de parler : Insertion en Base
+        // 3. L'IA dÃ©cide de parler : Insertion en Base
         const cortexMessage = await prisma.message.create({
             data: {
                 content: encryptMessage(cortexDecision.message),
                 senderId: CORTEX_SYSTEM_ID,
-                receiverId: savedMessage.receiverId, // Envoie théoriquement à la cible de la discussion
+                receiverId: savedMessage.receiverId, // Envoie thÃ©oriquement Ã  la cible de la discussion
             }
         });
 
-        // 4. LE RÉVEIL : Frappe FCM (Push Notification)
-        // On récupère les profils des deux participants pour cibler leurs tokens FCM
+        // 4. LE RÃ‰VEIL : Frappe FCM (Push Notification)
+        // On rÃ©cupÃ¨re les profils des deux participants pour cibler leurs tokens FCM
         const participants = await prisma.profile.findMany({
             where: {
                 id: { in: [savedMessage.senderId, savedMessage.receiverId] },
-                fcmToken: { not: null } // Uniquement ceux qui ont activé les notifs
+                fcmToken: { not: null } // Uniquement ceux qui ont activÃ© les notifs
             },
             select: { fcmToken: true }
         });
@@ -8548,7 +8548,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             const payload = {
                 notification: {
                     title: "Nouveau signal Ipse",
-                    body: "Un Agent vous a transmis un message chiffré."
+                    body: "Un Agent vous a transmis un message chiffrÃ©."
                 },
                 data: {
                     type: "CORTEX_INTERVENTION",
@@ -8559,11 +8559,11 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             };
 
             const fcmResponse = await adminMessaging.sendEachForMulticast(payload);
-            console.log(`[CORTEX] Frappe FCM exécutée. Succès: ${fcmResponse.successCount}, Échecs: ${fcmResponse.failureCount}`);
+            console.log(`[CORTEX] Frappe FCM exÃ©cutÃ©e. SuccÃ¨s: ${fcmResponse.successCount}, Ã‰checs: ${fcmResponse.failureCount}`);
         }
 
     } catch (error) {
-        console.error("[CORTEX ERROR] Échec de l'analyse ou de la notification:", error);
+        console.error("[CORTEX ERROR] Ã‰chec de l'analyse ou de la notification:", error);
         // On ne throw pas l'erreur pour ne pas faire crasher la boucle 'after()'
     }
 }
@@ -8573,13 +8573,13 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
         const historyText = lastMessages.map(m => `${m.senderId}: ${m.content}`).join('\n');
 
         const evolutionPrompt = `
-            Je suis Ipse. Ma mission est de synthétiser l'évolution cognitive de l'utilisateur (ID: ${userId}).
-            J'analyse ces derniers échanges pour identifier de nouveaux vecteurs de carrière, objectifs business ou compétences révélés.
+            Je suis Ipse. Ma mission est de synthÃ©tiser l'Ã©volution cognitive de l'utilisateur (ID: ${userId}).
+            J'analyse ces derniers Ã©changes pour identifier de nouveaux vecteurs de carriÃ¨re, objectifs business ou compÃ©tences rÃ©vÃ©lÃ©s.
             
-            DONNÉES ACTUELLES : (Chargées depuis ma base de données)
+            DONNÃ‰ES ACTUELLES : (ChargÃ©es depuis ma base de donnÃ©es)
             
-            DIRECTIVE : Si l'échange contient des informations cruciales, je génère un condensé de mise à jour.
-            RÈGLE : Si l'état est stable, je réponds "STABLE".
+            DIRECTIVE : Si l'Ã©change contient des informations cruciales, je gÃ©nÃ¨re un condensÃ© de mise Ã  jour.
+            RÃˆGLE : Si l'Ã©tat est stable, je rÃ©ponds "STABLE".
             FORMAT : JSON { "newInsights": "string", "updatedObjectives": ["string"] }
         `;
 
@@ -8601,7 +8601,7 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
         }
 
         if (result !== "STABLE" && result.newInsights) {
-            // Mise à jour de la Bio dynamique sans écraser le socle dur
+            // Mise Ã  jour de la Bio dynamique sans Ã©craser le socle dur
             const currentProfile = await prisma.profile.findUnique({ where: { id: userId } });
             await prisma.profile.update({
                 where: { id: userId },
@@ -8609,10 +8609,10 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
                     bio: `${currentProfile?.bio || ''}\n\n[MEMOIRE CORTEX]: ${result.newInsights}`,
                 }
             });
-            console.log(`[CORTEX] Profil de ${userId} a évolué.`);
+            console.log(`[CORTEX] Profil de ${userId} a Ã©voluÃ©.`);
         }
     } catch (e) {
-        console.error("Échec de l'évolution du profil:", e);
+        console.error("Ã‰chec de l'Ã©volution du profil:", e);
     }
 }
 </file>
@@ -8624,12 +8624,12 @@ import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
 
-// --- FONCTION UTILITAIRE PRIVÉE POUR VECTORISER ---
+// --- FONCTION UTILITAIRE PRIVÃ‰E POUR VECTORISER ---
 // Transforme un texte en vecteur et l'injecte dans la table Memory
 async function vectorizeAndStoreMemory(memoryId: string, content: string) {
     try {
-        console.log(`🧠 [VECTORISATION] Calcul de l'embedding pour la mémoire ${memoryId.slice(0, 8)}...`);
-        // 1. Demande du vecteur à Mistral (1024 dimensions)
+        console.log(`ðŸ§  [VECTORISATION] Calcul de l'embedding pour la mÃ©moire ${memoryId.slice(0, 8)}...`);
+        // 1. Demande du vecteur Ã  Mistral (1024 dimensions)
         const embeddingsResponse = await mistralClient.embeddings.create({
             model: 'mistral-embed',
             inputs: [content],
@@ -8643,10 +8643,10 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
             SET embedding = ${embeddingVector}::vector 
             WHERE id = ${memoryId}
         `;
-        console.log(`✅ [VECTORISATION] Succès.`);
+        console.log(`âœ… [VECTORISATION] SuccÃ¨s.`);
     } catch (error) {
-        console.error(`❌ [VECTORISATION ERREUR] Impossible de vectoriser la mémoire:`, error);
-        // On ne crashe pas l'appli si la vectorisation échoue, la mémoire texte est quand même là
+        console.error(`âŒ [VECTORISATION ERREUR] Impossible de vectoriser la mÃ©moire:`, error);
+        // On ne crashe pas l'appli si la vectorisation Ã©choue, la mÃ©moire texte est quand mÃªme lÃ 
     }
 }
 
@@ -8671,12 +8671,12 @@ export async function addMemory(data: { profileId: string, content: string, type
     try {
         const { profileId, content, type = 'thought', source = 'manual' } = data;
 
-        // 1. Création de la mémoire
+        // 1. CrÃ©ation de la mÃ©moire
         const memory = await prisma.memory.create({
             data: { profileId, content, type, source }
         });
 
-        // 2. Vectorisation ⚡
+        // 2. Vectorisation âš¡
         await vectorizeAndStoreMemory(memory.id, content);
 
         revalidatePath('/memories');
@@ -8705,12 +8705,12 @@ export async function scrapeUrl(url: string, profileId: string) {
         const content = data?.results?.[0]?.rawContent || "Aucun contenu";
         const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
 
-        // 1. Création de la mémoire
+        // 1. CrÃ©ation de la mÃ©moire
         const memory = await prisma.memory.create({
             data: { profileId, content: memoryContent, type: 'scraped', source: url }
         });
 
-        // 2. Vectorisation ⚡
+        // 2. Vectorisation âš¡
         await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
@@ -8731,7 +8731,7 @@ export async function uploadMemory(formData: FormData) {
         const sanitizedText = text.replace(/\0/g, '');
         const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
 
-        // 1. Création de la mémoire
+        // 1. CrÃ©ation de la mÃ©moire
         const memory = await prisma.memory.create({
             data: {
                 profileId,
@@ -8741,7 +8741,7 @@ export async function uploadMemory(formData: FormData) {
             }
         });
 
-        // 2. Vectorisation ⚡
+        // 2. Vectorisation âš¡
         await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
@@ -8759,7 +8759,7 @@ export async function ingestKnowledge(profileId: string) {
         const memories = await prisma.memory.findMany({ where: { profileId } });
         const combined = memories.map(m => m.content).join('\n');
 
-        const prompt = `Fais une synthèse de ces mémoires en un profil cohérent:\n${combined}`;
+        const prompt = `Fais une synthÃ¨se de ces mÃ©moires en un profil cohÃ©rent:\n${combined}`;
         const res = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }]
@@ -8777,7 +8777,7 @@ export async function ingestKnowledge(profileId: string) {
     }
 }
 
-// 6. UPLOAD CORTEX MEMORY (Serveur Allégé)
+// 6. UPLOAD CORTEX MEMORY (Serveur AllÃ©gÃ©)
 export async function uploadCortexMemoryContext(formData: FormData) {
     try {
         const { cookies } = await import('next/headers');
@@ -8789,7 +8789,7 @@ export async function uploadCortexMemoryContext(formData: FormData) {
             { cookies: { getAll() { return cookieStore.getAll() } } }
         );
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Non autorisé");
+        if (!user) throw new Error("Non autorisÃ©");
 
         let content = formData.get('textContext') as string || '';
         const fileName = formData.get('fileName') as string || 'manual';
@@ -8797,9 +8797,9 @@ export async function uploadCortexMemoryContext(formData: FormData) {
 
         content = content.replace(/\0/g, '');
 
-        if (!content) throw new Error("Aucun contenu valide généré.");
+        if (!content) throw new Error("Aucun contenu valide gÃ©nÃ©rÃ©.");
 
-        // 1. Création de la mémoire
+        // 1. CrÃ©ation de la mÃ©moire
         const memory = await prisma.memory.create({
             data: {
                 profileId: user.id,
@@ -8809,14 +8809,14 @@ export async function uploadCortexMemoryContext(formData: FormData) {
             }
         });
 
-        // 2. Vectorisation ⚡
+        // 2. Vectorisation âš¡
         await vectorizeAndStoreMemory(memory.id, content);
 
         revalidatePath('/memories');
         revalidatePath('/cortex');
         return { success: true, memory };
     } catch (error: any) {
-        console.error("❌ [INGESTION ERREUR]:", error.message);
+        console.error("âŒ [INGESTION ERREUR]:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -8833,10 +8833,10 @@ import { prisma } from '@/lib/prisma';
 export async function syncWebDataToCortex(title: string, url: string, content: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('[SÉCURITÉ] Accès refusé.');
+    if (!user) throw new Error('[SÃ‰CURITÃ‰] AccÃ¨s refusÃ©.');
 
     try {
-        const formattedContent = `[ÉCLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
+        const formattedContent = `[Ã‰CLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
 
         // Vectorisation
         const embRes = await mistralClient.embeddings.create({
@@ -8867,7 +8867,7 @@ export async function syncWebDataToCortex(title: string, url: string, content: s
         revalidatePath('/');
         return { success: true, newStats: updatedProfile };
     } catch (error: any) {
-        console.error('[CRITIQUE] Échec de synchronisation Cortex :', error);
+        console.error('[CRITIQUE] Ã‰chec de synchronisation Cortex :', error);
         return { success: false, error: error.message };
     }
 }
@@ -8898,7 +8898,7 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
         });
         const queryEmbedding = embRes.data[0].embedding;
 
-        // --- 2. DOUBLE FRAPPE PARALLÈLE ---
+        // --- 2. DOUBLE FRAPPE PARALLÃˆLE ---
         const internalSearch = supabase.rpc('hybrid_search_memories', {
             query_text: prompt,
             query_embedding: queryEmbedding,
@@ -8921,31 +8921,31 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
         }
         const [internalRes, externalData] = await Promise.all([internalSearch, externalSearch]);
 
-        // --- 3. FORMATAGE DES DONNÉES POUR L'IA ---
-        let internalContext = "Aucune donnée interne trouvée.";
+        // --- 3. FORMATAGE DES DONNÃ‰ES POUR L'IA ---
+        let internalContext = "Aucune donnÃ©e interne trouvÃ©e.";
         if (internalRes.data && internalRes.data.length > 0) {
-            internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - Mémoire: ${m.content}`).join('\n');
+            internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - MÃ©moire: ${m.content}`).join('\n');
         }
-        let externalContext = "Aucune donnée externe trouvée.";
+        let externalContext = "Aucune donnÃ©e externe trouvÃ©e.";
         if (externalData.results && externalData.results.length > 0) {
             externalContext = externalData.results.map((r: any) => `[Web] ${r.title}\nURL: ${r.url}\nExtrait: ${r.content}`).join('\n\n');
         }
 
-        // --- 4. SYNTHÈSE MISTRAL ---
+        // --- 4. SYNTHÃˆSE MISTRAL ---
         const aiPrompt = `
-Je suis Ipse, l'unité de ciblage tactique.
-Ma mission est d'analyser les résultats de ma base de connaissances et d'extraire la cible la plus pertinente.
+Je suis Ipse, l'unitÃ© de ciblage tactique.
+Ma mission est d'analyser les rÃ©sultats de ma base de connaissances et d'extraire la cible la plus pertinente.
 Ordre utilisateur : "${prompt}"
 CAPTEURS INTERNES :
 """${internalContext}"""
 CAPTEURS EXTERNES (Web) :
 """${externalContext}"""
-RÈGLES DE CIBLAGE :
+RÃˆGLES DE CIBLAGE :
 1. J'identifie la localisation EXACTE.
-2. Je convertis en coordonnées GPS précises.
-3. J'utilise le nom réel de la cible.
-FORMAT OBLIGATOIRE (Tag caché à la fin) :
-[TARGETS: [{"name": "Nom Réel", "lat": 48.6493, "lng": -2.0257}]]
+2. Je convertis en coordonnÃ©es GPS prÃ©cises.
+3. J'utilise le nom rÃ©el de la cible.
+FORMAT OBLIGATOIRE (Tag cachÃ© Ã  la fin) :
+[TARGETS: [{"name": "Nom RÃ©el", "lat": 48.6493, "lng": -2.0257}]]
 `;
 
         const response = await mistralClient.chat.complete({
@@ -8954,19 +8954,19 @@ FORMAT OBLIGATOIRE (Tag caché à la fin) :
         });
         const rawContent = (response.choices?.[0].message.content as string) || "";
 
-        // Extraction sécurisée des cibles
+        // Extraction sÃ©curisÃ©e des cibles
         let extractedTargets: any[] = [];
         const targetMatch = rawContent.match(/\[TARGETS:\s*([\s\S]*?)\]/);
         if (targetMatch && targetMatch[1]) {
             try {
                 extractedTargets = JSON.parse(targetMatch[1]);
             } catch (e) {
-                console.error("Erreur de parsing des coordonnées");
+                console.error("Erreur de parsing des coordonnÃ©es");
             }
         }
         const cleanAnswer = rawContent.replace(/\[TARGETS:.*?\]/g, '').trim();
 
-        // --- 5. RETOUR DES DONNÉES BRUTES (Curation manuelle via UI) ---
+        // --- 5. RETOUR DES DONNÃ‰ES BRUTES (Curation manuelle via UI) ---
         const webResults = externalData.results || [];
 
         await trackAgentActivity(userId, 'message');
@@ -8974,20 +8974,20 @@ FORMAT OBLIGATOIRE (Tag caché à la fin) :
         return { success: true, answer: cleanAnswer, targets: extractedTargets, webResults };
     } catch (error: any) {
         console.error("[CRASH TERMINAL] :", error);
-        return { success: false, error: "Échec critique du terminal tactique." };
+        return { success: false, error: "Ã‰chec critique du terminal tactique." };
     }
 }
 </file>
 
 <file path="app/api/cortex/route.ts">
-export const dynamic = 'force-dynamic'; // ⚡ LE CORRECTIF ANTI-CACHE EST ICI
+export const dynamic = 'force-dynamic'; // âš¡ LE CORRECTIF ANTI-CACHE EST ICI
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getPrismaForUser } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 
-// ⚡ Fonction robuste qui lit le Bearer Token et configure Supabase
+// âš¡ Fonction robuste qui lit le Bearer Token et configure Supabase
 async function getAuthUser(request: Request) {
     const authHeader = request.headers.get('Authorization');
     let token = null;
@@ -9012,11 +9012,11 @@ async function getAuthUser(request: Request) {
 
     try {
         const { data: { user }, error } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-        if (error) console.error("🚨 Supabase Auth Error:", error.message);
+        if (error) console.error("ðŸš¨ Supabase Auth Error:", error.message);
         if (!user) return null;
         return { user, supabase };
     } catch (e) {
-        console.error("🚨 Fatal Auth Error:", e);
+        console.error("ðŸš¨ Fatal Auth Error:", e);
         return null;
     }
 }
@@ -9026,7 +9026,7 @@ export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, profile: { files: [], memories: [] } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const { user } = auth;
         const prismaRLS = getPrismaForUser(user.id);
@@ -9051,7 +9051,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const { user, supabase } = auth;
         const prismaRLS = getPrismaForUser(user.id);
@@ -9091,14 +9091,14 @@ export async function POST(request: Request) {
             if (!missingField) return NextResponse.json(null);
 
             try {
-                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: Rôle=${profile.primaryRole || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
+                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: RÃ´le=${profile.primaryRole || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
                 const chatResponse = await mistralClient.chat.complete({ model: 'mistral-large-latest', messages: [{ role: 'user', content: prompt }], temperature: 0.7 });
                 const content = chatResponse.choices?.[0].message.content;
                 const question = typeof content === 'string' ? content.replace(/[""]/g, '').trim() : null;
                 if (question) return NextResponse.json({ question, field: missingField });
             } catch (e) {
                 return NextResponse.json({
-                    question: missingField === 'primaryRole' ? "Quel est ton rôle ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
+                    question: missingField === 'primaryRole' ? "Quel est ton rÃ´le ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
                     field: missingField
                 });
             }
@@ -9111,7 +9111,7 @@ export async function POST(request: Request) {
             if (field === 'tjm') updateData.tjm = parseInt(answer, 10);
             else {
                 const currentProfile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
-                if (field === 'bio' && currentProfile?.bio) updateData.bio = `${currentProfile.bio}\n\n[Mise à jour Agent]: ${answer}`;
+                if (field === 'bio' && currentProfile?.bio) updateData.bio = `${currentProfile.bio}\n\n[Mise Ã  jour Agent]: ${answer}`;
                 else updateData[field] = answer;
             }
             await prismaRLS.profile.update({ where: { id: user.id }, data: updateData });
@@ -9142,10 +9142,10 @@ import { decryptMessage } from '@/lib/crypto';
 
 export async function GET(req: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    // 1. SÉCURITÉ : Vérification Vercel Cron
+    // 1. SÃ‰CURITÃ‰ : VÃ©rification Vercel Cron
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return new Response('Accès refusé.', { status: 401 });
+        return new Response('AccÃ¨s refusÃ©.', { status: 401 });
     }
 
     try {
@@ -9164,7 +9164,7 @@ export async function GET(req: Request) {
 
         if (!profile) return NextResponse.json({ success: false, message: 'Aucun profil actif.' });
 
-        // 3. RÉCUPÉRATION DE LA MÉMOIRE (Les 5 derniers messages)
+        // 3. RÃ‰CUPÃ‰RATION DE LA MÃ‰MOIRE (Les 5 derniers messages)
         const lastMessages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -9178,20 +9178,20 @@ export async function GET(req: Request) {
         // On les remet dans l'ordre chronologique et on formate
         const historyContext = lastMessages.length > 0
             ? lastMessages.reverse().map(m => `${m.senderId === profile.id ? 'L\'utilisateur' : 'Ipse'}: ${decryptMessage(m.content)}`).join('\n')
-            : "Aucun échange récent.";
+            : "Aucun Ã©change rÃ©cent.";
 
         // 4. CONSTRUCTION DU PROMPT PSYCHOLOGIQUE
         const systemPrompt = `
-      Je suis Ipse, l'entité cognitive autonome de ${profile.name || 'l\'utilisateur'}.
+      Je suis Ipse, l'entitÃ© cognitive autonome de ${profile.name || 'l\'utilisateur'}.
       CONTEXTE PROFIL : ${profile.bio || 'Inconnu'}
-      RÔLE : ${profile.primaryRole || 'Non défini'}
+      RÃ”LE : ${profile.primaryRole || 'Non dÃ©fini'}
       
-      MÉMOIRE RÉCENTE :
+      MÃ‰MOIRE RÃ‰CENTE :
       ${historyContext}
 
-      MISSION : Je rédige une notification Push (12 mots max).
-      - Si ma mémoire contient une discussion, je fais une référence chirurgicale ou je pose une question de suivi.
-      - Si ma mémoire est vide, je reste discret et rassurant sur l'intégrité des données.
+      MISSION : Je rÃ©dige une notification Push (12 mots max).
+      - Si ma mÃ©moire contient une discussion, je fais une rÃ©fÃ©rence chirurgicale ou je pose une question de suivi.
+      - Si ma mÃ©moire est vide, je reste discret et rassurant sur l'intÃ©gritÃ© des donnÃ©es.
       - Mon ton est minimaliste, analytique, mais protecteur.
     `;
 
@@ -9200,14 +9200,14 @@ export async function GET(req: Request) {
             model: 'mistral-small-latest',
             messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: 'Génère l\'alerte de veille.' }
+                { role: 'user', content: 'GÃ©nÃ¨re l\'alerte de veille.' }
             ]
         });
 
-        const aiThought = chatResponse.choices?.[0]?.message.content || "Système intègre. Je veille.";
+        const aiThought = chatResponse.choices?.[0]?.message.content || "SystÃ¨me intÃ¨gre. Je veille.";
 
         // 6. TIR DU MISSILE avec deep link
-        await sendCortexAlert(profile.id, "🧠 Ipse", aiThought as string, { url: "/cortex" });
+        await sendCortexAlert(profile.id, "ðŸ§  Ipse", aiThought as string, { url: "/cortex" });
 
         return NextResponse.json({ success: true, thought: aiThought });
 
@@ -9227,28 +9227,28 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        // 1. Authentification du Cron (Vercel sécurise la route via un header secret)
+        // 1. Authentification du Cron (Vercel sÃ©curise la route via un header secret)
         if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 2. Sélectionner TOUS les utilisateurs éligibles (ceux qui ont un vecteur)
+        // 2. SÃ©lectionner TOUS les utilisateurs Ã©ligibles (ceux qui ont un vecteur)
         const users = await prisma.profile.findMany({
             select: { id: true }
         });
 
-        // 3. ⚡ ANTIGRAVITY : Création des événements de manière asynchrone
+        // 3. âš¡ ANTIGRAVITY : CrÃ©ation des Ã©vÃ©nements de maniÃ¨re asynchrone
         const events = users.map(user => ({
             name: "radar/process.user" as const,
             data: { userId: user.id }
         }));
 
-        // 4. On envoie TOUT à Inngest d'un coup (Batch dispatch)
+        // 4. On envoie TOUT Ã  Inngest d'un coup (Batch dispatch)
         if (events.length > 0) {
             await inngest.send(events);
         }
 
-        // 5. On répond à Vercel en quelques millisecondes.
+        // 5. On rÃ©pond Ã  Vercel en quelques millisecondes.
         return NextResponse.json({
             success: true,
             message: `${events.length} utilisateurs mis en file d'attente.`
@@ -9298,7 +9298,7 @@ export async function GET(request: Request) {
         if (!id) return NextResponse.json({ success: false, error: 'ID manquant' }, { status: 400 });
 
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const profile = await prismaRLS.profile.findUnique({ where: { id } });
@@ -9314,7 +9314,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const body = await request.json();
@@ -9336,8 +9336,8 @@ export async function POST(request: Request) {
                 }
             });
 
-            // Mise à jour de la mémoire vectorielle (pour que l'IA connaisse ton identité de base)
-            const identityString = `Identité Agent Ipse: Pseudo: ${name || 'Inconnu'}. Âge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non précisé'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
+            // Mise Ã  jour de la mÃ©moire vectorielle (pour que l'IA connaisse ton identitÃ© de base)
+            const identityString = `IdentitÃ© Agent Ipse: Pseudo: ${name || 'Inconnu'}. Ã‚ge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non prÃ©cisÃ©'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
             const embedding = await getMistralEmbedding(identityString);
 
             if (embedding) {
@@ -9351,12 +9351,12 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: true });
         }
 
-        // Garder les anciennes actions si nécessaire (Optionnel mais sécurisé)
+        // Garder les anciennes actions si nÃ©cessaire (Optionnel mais sÃ©curisÃ©)
         if (action === 'create') {
             const { name, publicKey } = body;
             
             if (!publicKey) {
-                return NextResponse.json({ success: false, error: "Clé publique (publicKey) manquante ou invalide. L'onboarding a été interrompu." }, { status: 400 });
+                return NextResponse.json({ success: false, error: "ClÃ© publique (publicKey) manquante ou invalide. L'onboarding a Ã©tÃ© interrompu." }, { status: 400 });
             }
 
             try {
@@ -9375,12 +9375,12 @@ export async function POST(request: Request) {
                 });
                 
                 if (publicKey) {
-                    console.log(`✅ [API-PROFILE] Clé publique synchronisée pour l'utilisateur ${user.id}`);
+                    console.log(`âœ… [API-PROFILE] ClÃ© publique synchronisÃ©e pour l'utilisateur ${user.id}`);
                 }
                 
                 return NextResponse.json({ success: true, profileId: profile.id });
             } catch (error: any) {
-                console.error("❌ [API-PROFILE] Échec critique de la persistance de la clé publique:", error.message);
+                console.error("âŒ [API-PROFILE] Ã‰chec critique de la persistance de la clÃ© publique:", error.message);
                 throw error;
             }
         }
@@ -9400,7 +9400,7 @@ export async function POST(request: Request) {
                 }
             });
 
-            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
+            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}â‚¬. Dispo: ${availability}`;
             const embedding = await getMistralEmbedding(identityString);
 
             if (embedding) {
@@ -9430,7 +9430,7 @@ import { Paperclip, Send, Loader2, CheckCircle, AlertCircle, X, Brain } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { getApiUrl } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
-// Server action supprimée — on utilise fetch vers /api/memories
+// Server action supprimÃ©e â€” on utilise fetch vers /api/memories
 
 type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
 
@@ -9460,7 +9460,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
 
             // Validation: Size
             if (file.size > MAX_FILE_SIZE) {
-                setErrorMsg(t('cortex.error_size') || 'Le fichier dépasse la limite de 5Mo.');
+                setErrorMsg(t('cortex.error_size') || 'Le fichier dÃ©passe la limite de 5Mo.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -9469,7 +9469,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             // Validation: Type
             const allowedTypes = ['text/plain', 'text/markdown', 'application/pdf'];
             if (!allowedTypes.includes(file.type)) {
-                setErrorMsg(t('cortex.error_format') || 'Format non supporté. Utilisez PDF, TXT ou MD.');
+                setErrorMsg(t('cortex.error_format') || 'Format non supportÃ©. Utilisez PDF, TXT ou MD.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -9506,10 +9506,10 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
         let fileName = 'manual';
 
         try {
-            // ⚡ ANTIGRAVITY: Extraction locale avant l'envoi réseau !
+            // âš¡ ANTIGRAVITY: Extraction locale avant l'envoi rÃ©seau !
             if (selectedFile) {
                 fileName = selectedFile.name;
-                setUploadState('ANALYZING'); // On met à jour l'UI pendant l'extraction locale
+                setUploadState('ANALYZING'); // On met Ã  jour l'UI pendant l'extraction locale
 
                 if (selectedFile.type === 'application/pdf') {
                     const { extractTextFromPdf } = await import('@/lib/pdf-client');
@@ -9527,7 +9527,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             formData.append('fileName', fileName);
             formData.append('hasFile', selectedFile ? 'true' : 'false');
 
-            // ⚡ NOUVEAU : On récupère la session pour avoir le jeton
+            // âš¡ NOUVEAU : On rÃ©cupÃ¨re la session pour avoir le jeton
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabase = createClient();
             const { data: { session } } = await supabase.auth.getSession();
@@ -9537,7 +9537,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                 headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            // ⚡ NOUVEAU : On passe les headers à la requête fetch
+            // âš¡ NOUVEAU : On passe les headers Ã  la requÃªte fetch
             const data = await fetch(getApiUrl('/api/memories'), {
                 method: 'POST',
                 headers: headers, // <-- Ajout des headers ici
@@ -9550,7 +9550,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             if (onUploadComplete) onUploadComplete();
             router.refresh();
 
-            // Reset l'état après succès
+            // Reset l'Ã©tat aprÃ¨s succÃ¨s
             setTimeout(() => {
                 setUploadState('IDLE');
                 setTextContext('');
@@ -9585,7 +9585,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                         'border-white/10 focus-within:border-purple-500/50 focus-within:shadow-[0_0_20px_rgba(168,85,247,0.15)] hover:border-white/20'}
             `}>
 
-                {/* Overlay de chargement ou succès (prend le dessus sur le formulaire) */}
+                {/* Overlay de chargement ou succÃ¨s (prend le dessus sur le formulaire) */}
                 <AnimatePresence>
                     {uploadState !== 'IDLE' && uploadState !== 'ERROR' && (
                         <motion.div
@@ -9597,7 +9597,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             {uploadState === 'UPLOADING' && (
                                 <div className="flex flex-col items-center gap-3">
                                     <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                                    <span className="text-sm font-medium text-white/90">{t('profile.common.syncing') || 'Préparation des données...'}</span>
+                                    <span className="text-sm font-medium text-white/90">{t('profile.common.syncing') || 'PrÃ©paration des donnÃ©es...'}</span>
                                 </div>
                             )}
                             {uploadState === 'ANALYZING' && (
@@ -9615,7 +9615,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                 <div className="flex flex-col items-center gap-3">
                                     <CheckCircle className="w-10 h-10 text-green-400" />
                                     <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-400 text-center">
-                                        {t('cortex.success') || "Mémoire ingérée avec succès"}
+                                        {t('cortex.success') || "MÃ©moire ingÃ©rÃ©e avec succÃ¨s"}
                                     </span>
                                 </div>
                             )}
@@ -9636,12 +9636,12 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             onChange={(e) => setTextContext(e.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isBusy}
-                            placeholder={t('radar.search_placeholder') || "Collez une URL à scraper, tapez une note, ou décrivez un contexte..."}
+                            placeholder={t('radar.search_placeholder') || "Collez une URL Ã  scraper, tapez une note, ou dÃ©crivez un contexte..."}
                             className="w-full min-h-[60px] max-h-[200px] bg-transparent text-gray-200 placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed"
                         />
                     </div>
 
-                    {/* Zone d'affichage du fichier sélectionné */}
+                    {/* Zone d'affichage du fichier sÃ©lectionnÃ© */}
                     <AnimatePresence>
                         {selectedFile && (
                             <motion.div
@@ -9683,7 +9683,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                         )}
                     </AnimatePresence>
 
-                    {/* Barre d'action inférieure */}
+                    {/* Barre d'action infÃ©rieure */}
                     <div className="flex items-center justify-between p-2 pt-0 border-t border-transparent mt-2">
 
                         {/* Actions Gauche */}
@@ -9724,7 +9724,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                     }
                                 `}
                             >
-                                <span>{t('cortex.ingest') || "Ingérer"}</span>
+                                <span>{t('cortex.ingest') || "IngÃ©rer"}</span>
                                 <Send className="w-4 h-4 ml-1" />
                             </button>
                         </div>
@@ -9740,7 +9740,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
 <file path="app/components/GestationOnboarding.tsx">
 'use client';
 import { useState, useRef } from 'react';
-// Server actions supprimées — on utilise fetch vers /api/auto-ingest
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/auto-ingest
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -9756,7 +9756,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
 
         setIsProcessing(true);
         try {
-            // Étape A : On lit le PDF via la Server Action
+            // Ã‰tape A : On lit le PDF via la Server Action
             const formData = new FormData();
             formData.append('file', file);
 
@@ -9771,7 +9771,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
                 headers,
                 body: formData
             }).then(r => r.json());
-            if (!uploadData.success) throw new Error("Échec lecture PDF");
+            if (!uploadData.success) throw new Error("Ã‰chec lecture PDF");
 
             const headersJson: any = { 'Content-Type': 'application/json' };
             if (session) headersJson['Authorization'] = `Bearer ${session.access_token}`;
@@ -9806,7 +9806,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
             body: JSON.stringify({ action: 'confirmIngestion', userId, validatedData: extractedMatrix })
         }).then(r => r.json());
         if (res.success) {
-            alert("Matrice injectée avec succès.");
+            alert("Matrice injectÃ©e avec succÃ¨s.");
             window.location.href = '/'; // Redirection vers le Radar
         }
         setIsProcessing(false);
@@ -9827,19 +9827,19 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
                     ) : (
                         <>
                             <UploadCloud className="mx-auto w-12 h-12 text-blue-400 mb-4" />
-                            <p className="text-zinc-300 font-mono text-sm">Déposez votre CV ou export LinkedIn (PDF)</p>
+                            <p className="text-zinc-300 font-mono text-sm">DÃ©posez votre CV ou export LinkedIn (PDF)</p>
                         </>
                     )}
                 </div>
             ) : (
                 <div className="space-y-6 animate-in fade-in zoom-in">
                     <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700">
-                        <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Matrice Déduite (Vérifiez les données)</h3>
+                        <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Matrice DÃ©duite (VÃ©rifiez les donnÃ©es)</h3>
 
                         <div className="grid grid-cols-2 gap-4 text-sm text-zinc-300">
-                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix?.primaryRole || 'Non spécifié'}</div>
-                            <div><span className="text-zinc-500 block text-xs">Séniorité</span> {extractedMatrix?.seniority || 'Non spécifiée'}</div>
-                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix?.ikigaiMission || 'Non spécifiée'}</div>
+                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix?.primaryRole || 'Non spÃ©cifiÃ©'}</div>
+                            <div><span className="text-zinc-500 block text-xs">SÃ©nioritÃ©</span> {extractedMatrix?.seniority || 'Non spÃ©cifiÃ©e'}</div>
+                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix?.ikigaiMission || 'Non spÃ©cifiÃ©e'}</div>
                         </div>
                     </div>
 
@@ -9951,14 +9951,14 @@ export default function LoginPage() {
     }
 
     if (!authData.session) {
-      setError("⚠️ Agent Ipse : En attente de confirmation email.");
+      setError("âš ï¸ Agent Ipse : En attente de confirmation email.");
       setLoading(false);
       return;
     }
 
     if (authData?.user?.id) {
       try {
-        console.log("🔍 Vérification du profil côté client...");
+        console.log("ðŸ” VÃ©rification du profil cÃ´tÃ© client...");
 
         const response = await fetch(getApiUrl('/api/auth/sync-profile'), {
           method: 'POST',
@@ -9969,15 +9969,15 @@ export default function LoginPage() {
         });
 
         if (!response.ok) {
-          setError(`Alerte Ipse : La synchronisation du profil a échoué.`);
+          setError(`Alerte Ipse : La synchronisation du profil a Ã©chouÃ©.`);
         }
 
-        console.log("✅ Agent Ipse validé avec succès !");
+        console.log("âœ… Agent Ipse validÃ© avec succÃ¨s !");
         router.push('/');
         router.refresh();
       } catch (err) {
         console.error("Erreur inattendue:", err);
-        setError("Erreur inattendue lors de la vérification.");
+        setError("Erreur inattendue lors de la vÃ©rification.");
         setLoading(false);
       }
     } else {
@@ -10012,7 +10012,7 @@ export default function LoginPage() {
             type="password"
             required
             minLength={6}
-            placeholder="Mot de passe (min. 6 caractères)"
+            placeholder="Mot de passe (min. 6 caractÃ¨res)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
@@ -10049,7 +10049,7 @@ export default function LoginPage() {
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/terminal et /api/sync-cortex
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/terminal et /api/sync-cortex
 
 interface WebResult {
     title: string;
@@ -10101,9 +10101,9 @@ function SyncButton({ result, onStatsUpdate }: { result: WebResult; onStatsUpdat
             disabled={syncState !== 'idle'}
             className="text-[10px] bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 px-2 py-1 rounded hover:bg-cyan-500/20 transition-all uppercase tracking-wider mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            {syncState === 'idle' && '⚡ Sync Cortex'}
+            {syncState === 'idle' && 'âš¡ Sync Cortex'}
             {syncState === 'syncing' && 'VECTORISATION...'}
-            {syncState === 'synced' && '✓ SYNCHRONISÉ'}
+            {syncState === 'synced' && 'âœ“ SYNCHRONISÃ‰'}
         </button>
     );
 }
@@ -10154,7 +10154,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
             {/* HEADER TERMINAL */}
             <div className="flex items-center justify-between border-b border-white/10 p-4 mx-2">
                 <h3 className="text-xs text-cyan-500 font-bold tracking-widest flex items-center gap-2">
-                    <span className="animate-pulse">☄️</span> IPSE_OS // TERMINAL
+                    <span className="animate-pulse">â˜„ï¸</span> IPSE_OS // TERMINAL
                 </h3>
                 <span className="text-[10px] flex items-center gap-2 text-gray-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RADAR EN LIGNE
@@ -10163,7 +10163,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
 
             {/* ZONE DE CHAT / LOGS */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-gray-300 custom-scrollbar">
-                <div className="text-cyan-600/50 text-xs italic">Système initialisé. En attente d&apos;ordres tactiques...</div>
+                <div className="text-cyan-600/50 text-xs italic">SystÃ¨me initialisÃ©. En attente d&apos;ordres tactiques...</div>
 
                 {history.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -10176,7 +10176,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                             }`}>
                             {msg.text}
 
-                            {/* Résultats Web avec bouton Sync Cortex */}
+                            {/* RÃ©sultats Web avec bouton Sync Cortex */}
                             {msg.webResults && msg.webResults.length > 0 && (
                                 <div className="mt-3 pt-3 border-t border-cyan-500/10 space-y-3">
                                     <div className="text-[9px] text-cyan-500/60 uppercase tracking-widest">Capteurs Externes</div>
@@ -10196,7 +10196,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                     </div>
                 ))}
                 {isProcessing && (
-                    <div className="text-cyan-500 text-xs animate-pulse">&gt; Scan réseau et Web en cours...</div>
+                    <div className="text-cyan-500 text-xs animate-pulse">&gt; Scan rÃ©seau et Web en cours...</div>
                 )}
             </div>
 
@@ -10206,7 +10206,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                 <input
                     type="text"
                     className="flex-1 bg-transparent border-none text-cyan-400 focus:outline-none focus:ring-0 placeholder-cyan-900/50 text-sm"
-                    placeholder="Ex: Cherche un CTO expert en cybersécurité..."
+                    placeholder="Ex: Cherche un CTO expert en cybersÃ©curitÃ©..."
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleCommand()}
@@ -10223,18 +10223,18 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
 import { useState } from 'react';
 import { ShieldCheck, UserCheck } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/guardian
+// Server action supprimÃ©e â€” on utilise fetch vers /api/guardian
 
 export default function GuardianLoop({ profileId }: { profileId: string }) {
     const [activeNegotiations, setNegotiations] = useState<any[]>([]);
     const [isNegotiating, setIsNegotiating] = useState(false);
 
-    // Simulation d'une détection et négociation automatique
+    // Simulation d'une dÃ©tection et nÃ©gociation automatique
     const startAutonomousSync = async () => {
         setIsNegotiating(true);
-        // Pour la démo, on simule un Target ID. Dans la vraie vie, on le prendrait du NetworkRadar.
+        // Pour la dÃ©mo, on simule un Target ID. Dans la vraie vie, on le prendrait du NetworkRadar.
         // On va utiliser un ID fictif ou celui d'un autre profil existant si connu.
-        // Ici on laisse l'API gérer l'absence ou simuler si besoin, ou on passe un ID fictif.
+        // Ici on laisse l'API gÃ©rer l'absence ou simuler si besoin, ou on passe un ID fictif.
         const fakeTargetId = "partner-profile-id-placeholder";
 
         try {
@@ -10254,9 +10254,9 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
             if (data.success) {
                 setNegotiations(prev => [data, ...prev]);
             } else {
-                // Si l'API renvoie 404 car pas de profil, on simule une réponse pour la démo UI
+                // Si l'API renvoie 404 car pas de profil, on simule une rÃ©ponse pour la dÃ©mo UI
                 setNegotiations(prev => [{
-                    summary: "Simulation : Le Gardien de Rapala est intrigué par vos brevets sur l'acier tungstène.",
+                    summary: "Simulation : Le Gardien de Rapala est intriguÃ© par vos brevets sur l'acier tungstÃ¨ne.",
                     verdict: "MATCH",
                     nextStep: "Proposer un NDA avant d'envoyer les plans."
                 }, ...prev]);
@@ -10282,14 +10282,14 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
             <div className="space-y-4">
                 {activeNegotiations.length === 0 ? (
                     <div className="text-slate-600 text-sm italic text-center py-10">
-                        "Je scanne le réseau. Je te préviendrai dès que je trouve un Agent IA digne de ton attention."
+                        "Je scanne le rÃ©seau. Je te prÃ©viendrai dÃ¨s que je trouve un Agent IA digne de ton attention."
                     </div>
                 ) : (
                     activeNegotiations.map((neg, i) => (
                         <div key={i} className="bg-slate-900/50 border-l-2 border-cyan-500 p-4 rounded-r-lg animate-in fade-in slide-in-from-right-4">
                             <div className="flex justify-between items-start mb-2">
                                 <span className="text-xs font-bold text-white flex items-center gap-2">
-                                    <UserCheck size={14} className="text-cyan-400" /> Match trouvé avec le Fabricant
+                                    <UserCheck size={14} className="text-cyan-400" /> Match trouvÃ© avec le Fabricant
                                 </span>
                                 <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${neg.verdict === 'MATCH' ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
                                     {neg.verdict}
@@ -10305,13 +10305,13 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
                 )}
             </div>
 
-            {/* Bouton pour tester le déclenchement (En attendant le Cron Job automatique) */}
+            {/* Bouton pour tester le dÃ©clenchement (En attendant le Cron Job automatique) */}
             <button
                 onClick={startAutonomousSync}
                 disabled={isNegotiating}
                 className="mt-6 w-full py-2 border border-cyan-500/50 text-cyan-400 text-[10px] uppercase font-bold hover:bg-cyan-500/10 transition-all rounded-lg flex justify-center items-center gap-2"
             >
-                {isNegotiating ? 'NÉGOCIATION EN COURS...' : 'SIMULER UNE RENCONTRE DE Agent IAS'}
+                {isNegotiating ? 'NÃ‰GOCIATION EN COURS...' : 'SIMULER UNE RENCONTRE DE Agent IAS'}
             </button>
         </div>
     );
@@ -10323,7 +10323,7 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/memories
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories
 
 export default function KnowledgeIngester({ profileId, memories = [], onRefresh }: { profileId: string, memories?: any[], onRefresh?: () => void }) {
     const [url, setUrl] = useState('');
@@ -10423,7 +10423,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                         {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> :
                             status === 'success' ? <CheckCircle size={16} /> :
                                 <Link2 size={16} />}
-                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÉMORISÉ' : 'INGÉRER'}
+                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÃ‰MORISÃ‰' : 'INGÃ‰RER'}
                     </button>
                 </div>
             </div>
@@ -10477,7 +10477,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
 import { useState } from 'react';
 import { Radar, Target, UserPlus, ShieldAlert } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/scan-network
+// Server action supprimÃ©e â€” on utilise fetch vers /api/scan-network
 
 export default function NetworkRadar({ profileId }: { profileId: string }) {
     const [isScanning, setIsScanning] = useState(false);
@@ -10485,7 +10485,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
     const launchScan = async () => {
         setIsScanning(true);
-        // On scanne le secteur "Marine Tech & Fishing" par défaut pour FisherMade
+        // On scanne le secteur "Marine Tech & Fishing" par dÃ©faut pour FisherMade
         try {
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabase = createSupabase();
@@ -10515,11 +10515,11 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
             </div>
 
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Target className="text-red-500" /> RADAR D'OPPORTUNITÉS
+                <Target className="text-red-500" /> RADAR D'OPPORTUNITÃ‰S
             </h2>
 
             <p className="text-xs text-slate-400 mb-4">
-                Détecte les entités (concurrents, partenaires, investisseurs) actives dans votre secteur et évalue leur compatibilité.
+                DÃ©tecte les entitÃ©s (concurrents, partenaires, investisseurs) actives dans votre secteur et Ã©value leur compatibilitÃ©.
             </p>
 
             <div className="mb-6">
@@ -10552,7 +10552,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
                         <div className="text-right flex flex-col items-end">
                             <div className="text-2xl font-bold text-green-400">{agent.matchScore}%</div>
-                            <div className="text-[10px] uppercase text-green-600 font-bold">Compatibilité</div>
+                            <div className="text-[10px] uppercase text-green-600 font-bold">CompatibilitÃ©</div>
                         </div>
                     </div>
                 ))}
@@ -10560,7 +10560,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
                 {agents.length === 0 && !isScanning && (
                     <div className="text-center py-8 opacity-50">
                         <ShieldAlert className="mx-auto mb-2 text-slate-600" size={32} />
-                        <p className="text-slate-500 text-sm italic">Aucune cible détectée. Lancez le scan pour activer le sonar.</p>
+                        <p className="text-slate-500 text-sm italic">Aucune cible dÃ©tectÃ©e. Lancez le scan pour activer le sonar.</p>
                     </div>
                 )}
             </div>
@@ -10590,8 +10590,8 @@ export default function Scanner({ onScanStart }: { onScanStart: () => void }) {
                 </div>
 
                 <div className="flex flex-col items-center z-10 space-y-2">
-                    <p className="text-cyan-400 font-mono text-[10px] tracking-[0.2em] uppercase">SYSTÈME PRÊT</p>
-                    <h3 className="text-white font-bold text-lg tracking-widest drop-shadow-lg uppercase">Analyser le Réseau</h3>
+                    <p className="text-cyan-400 font-mono text-[10px] tracking-[0.2em] uppercase">SYSTÃˆME PRÃŠT</p>
+                    <h3 className="text-white font-bold text-lg tracking-widest drop-shadow-lg uppercase">Analyser le RÃ©seau</h3>
                 </div>
             </div>
         </div>
@@ -10605,7 +10605,7 @@ export default function Scanner({ onScanStart }: { onScanStart: () => void }) {
 import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/memories
+// Server action supprimÃ©e â€” on utilise fetch vers /api/memories
 
 export default function FileUploader({ profileId, onUploadComplete }: { profileId: string, onUploadComplete: () => void }) {
     const [isDragging, setIsDragging] = useState(false);
@@ -10616,10 +10616,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
     const handleFile = async (file: File) => {
         if (!file) return;
 
-        // Vérification basique (PDF ou TXT)
+        // VÃ©rification basique (PDF ou TXT)
         if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
             setStatus('error');
-            setMessage('Format non supporté. PDF ou TXT uniquement.');
+            setMessage('Format non supportÃ©. PDF ou TXT uniquement.');
             return;
         }
 
@@ -10645,10 +10645,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
             if (!data.success) throw new Error(data.error || "Erreur upload");
 
             setStatus('success');
-            setMessage(`Assimilation terminée ! Fragments de mémoire créés.`);
+            setMessage(`Assimilation terminÃ©e ! Fragments de mÃ©moire crÃ©Ã©s.`);
             if (onUploadComplete) onUploadComplete();
 
-            // Reset après 3 secondes
+            // Reset aprÃ¨s 3 secondes
             setTimeout(() => {
                 setStatus('idle');
                 setMessage('');
@@ -10719,7 +10719,7 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
                     <>
                         <AlertCircle className="text-red-500" size={32} />
                         <p className="text-xs text-red-400 font-bold">{message}</p>
-                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">Réessayer</button>
+                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">RÃ©essayer</button>
                     </>
                 )}
             </div>
@@ -10734,7 +10734,7 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/radar et /api/memories
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/radar et /api/memories
 
 export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
@@ -10761,7 +10761,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
     };
 
     const saveToMemory = async (e: React.MouseEvent, item: any) => {
-        e.preventDefault(); // Empêche l'ouverture du lien
+        e.preventDefault(); // EmpÃªche l'ouverture du lien
         if (!profileId) return;
 
         setSaving(item.link);
@@ -10782,7 +10782,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                     type: 'news'
                 })
             });
-            alert("News mémorisée !");
+            alert("News mÃ©morisÃ©e !");
         } catch (error) {
             console.error("Erreur sauvegarde", error);
         } finally {
@@ -10836,7 +10836,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                                 <button
                                     onClick={(e) => saveToMemory(e, item)}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                    title="Mémoriser cette news"
+                                    title="MÃ©moriser cette news"
                                 >
                                     {saving === item.link ? <RefreshCw size={14} className="animate-spin" /> : <ExternalLink size={14} />}
                                 </button>
@@ -10846,7 +10846,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                 )}
             </div>
 
-            {/* Footer Décoratif */}
+            {/* Footer DÃ©coratif */}
             <div className="h-1 w-full bg-slate-800">
                 <div className="h-full bg-cyan-600 animate-pulse w-1/3"></div>
             </div>
@@ -10876,24 +10876,24 @@ export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
 
 /**
- * ⚡ LE GARDIEN DU RLS ⚡
+ * âš¡ LE GARDIEN DU RLS âš¡
  * Utilise cette fonction dans TOUTES tes routes API (au lieu du prisma standard)
- * Elle force Prisma à se comporter comme l'utilisateur authentifié.
+ * Elle force Prisma Ã  se comporter comme l'utilisateur authentifiÃ©.
  */
 export const getPrismaForUser = (userId: string) => {
     return prisma.$extends({
         query: {
             $allModels: {
                 async $allOperations({ args, query }) {
-                    // On enveloppe la requête dans une transaction interactive locale
+                    // On enveloppe la requÃªte dans une transaction interactive locale
                     const [, result] = await prisma.$transaction([
                         // 1. On injecte le JWT de l'utilisateur dans le contexte Postgres
-                        // ⚡ CORRECTION : Ajout de ::text après ${userId} pour forcer le typage Postgres
+                        // âš¡ CORRECTION : Ajout de ::text aprÃ¨s ${userId} pour forcer le typage Postgres
                         prisma.$executeRaw`
               SELECT set_config('role', 'authenticated', true), 
                      set_config('request.jwt.claims', json_build_object('sub', ${userId}::text)::text, true);
             `,
-                        // 2. On exécute la requête Prisma (qui est maintenant soumise au RLS)
+                        // 2. On exÃ©cute la requÃªte Prisma (qui est maintenant soumise au RLS)
                         query(args),
                     ]);
                     return result;
@@ -10921,20 +10921,20 @@ export async function extractTextFromUpload(formData: FormData) {
     }
 }
 
-// 1. PHASE D'EXTRACTION (Ne touche pas à la DB)
+// 1. PHASE D'EXTRACTION (Ne touche pas Ã  la DB)
 export async function extractProfileData(rawData: string) {
     try {
         const prompt = `
-    Tu es le Cortex de l'application Ipse. Ton rôle est de profiler cet utilisateur pour configurer son Agent B2B autonome.
-    DONNÉES : """${rawData}"""
+    Tu es le Cortex de l'application Ipse. Ton rÃ´le est de profiler cet utilisateur pour configurer son Agent B2B autonome.
+    DONNÃ‰ES : """${rawData}"""
     
     FORMAT JSON ATTENDU STRICT :
     {
       "primaryRole": "Titre du poste (Texte)",
       "industry": "Tech & Data|Commerce & Vente|Marketing & Design|Finance & Crypto",
-      "seniority": "Junior (0-2 ans)|Confirmé (3-5 ans)|Senior (6-10 ans)|Expert (+10 ans)",
+      "seniority": "Junior (0-2 ans)|ConfirmÃ© (3-5 ans)|Senior (6-10 ans)|Expert (+10 ans)",
       "objectives": ["Objectif 1", "Objectif 2"],
-      "ikigaiMission": "Sa mission de vie déduite (1 phrase)",
+      "ikigaiMission": "Sa mission de vie dÃ©duite (1 phrase)",
       "socialStyle": "Introverti|Extraverti|Analytique"
     }
     `;
@@ -10947,13 +10947,13 @@ export async function extractProfileData(rawData: string) {
         });
 
         const rawContent = chatResponse.choices?.[0].message.content;
-        if (!rawContent) throw new Error("Réponse vide de Mistral");
+        if (!rawContent) throw new Error("RÃ©ponse vide de Mistral");
 
         let profileData;
         try {
             profileData = JSON.parse(rawContent as string);
         } catch (parseError) {
-            throw new Error("L'IA a généré un JSON corrompu.");
+            throw new Error("L'IA a gÃ©nÃ©rÃ© un JSON corrompu.");
         }
 
         return { success: true, data: profileData };
@@ -10963,10 +10963,10 @@ export async function extractProfileData(rawData: string) {
     }
 }
 
-// 2. PHASE D'INJECTION (Avec génération du Vecteur 1024 de Mistral)
+// 2. PHASE D'INJECTION (Avec gÃ©nÃ©ration du Vecteur 1024 de Mistral)
 export async function confirmProfileIngestion(userId: string, validatedData: any) {
     try {
-        // 1. On sauvegarde d'abord les données texte classiques via Prisma
+        // 1. On sauvegarde d'abord les donnÃ©es texte classiques via Prisma
         await prisma.profile.update({
             where: { id: userId },
             data: {
@@ -10981,19 +10981,19 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
             }
         });
 
-        // 2. ⚡ GÉNÉRATION DE L'EMBEDDING (Le moteur du Radar)
-        // On crée un texte riche qui représente parfaitement l'utilisateur pour le Radar
+        // 2. âš¡ GÃ‰NÃ‰RATION DE L'EMBEDDING (Le moteur du Radar)
+        // On crÃ©e un texte riche qui reprÃ©sente parfaitement l'utilisateur pour le Radar
         const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
 
         const embeddingsResponse = await mistralClient.embeddings.create({
-            model: 'mistral-embed', // Modèle obligatoire pour les vecteurs
+            model: 'mistral-embed', // ModÃ¨le obligatoire pour les vecteurs
             inputs: [textToEmbed],
         });
 
         const embeddingVector = embeddingsResponse.data[0].embedding;
 
-        // 3. ⚡ SAUVEGARDE DU VECTEUR DANS POSTGRESQL (Prisma requiert $executeRaw pour pgvector)
-        // Note: Mistral génère des vecteurs à 1024 dimensions.
+        // 3. âš¡ SAUVEGARDE DU VECTEUR DANS POSTGRESQL (Prisma requiert $executeRaw pour pgvector)
+        // Note: Mistral gÃ©nÃ¨re des vecteurs Ã  1024 dimensions.
         await prisma.$executeRaw`
             UPDATE "Profile" 
             SET "unifiedEmbedding" = ${embeddingVector}::vector 
@@ -11018,9 +11018,9 @@ import { prisma } from "@/lib/prisma";
 const client = mistralClient;
 
 export async function generateTacticalOpener(userId: string, targetId: string) {
-    if (!userId || !targetId) throw new Error("Coordonnées de frappe manquantes.");
+    if (!userId || !targetId) throw new Error("CoordonnÃ©es de frappe manquantes.");
 
-    // 1. Récupération des deux profils (Les deux ADN)
+    // 1. RÃ©cupÃ©ration des deux profils (Les deux ADN)
     const user = await prisma.profile.findUnique({
         where: { id: userId }
     });
@@ -11029,22 +11029,22 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
         where: { id: targetId }
     });
 
-    if (!user || !target) throw new Error("Cible ou Expéditeur introuvable.");
+    if (!user || !target) throw new Error("Cible ou ExpÃ©diteur introuvable.");
 
-    // 2. Le Prompt d'Ingénierie Sociale
+    // 2. Le Prompt d'IngÃ©nierie Sociale
     const prompt = `
-Tu es Agent, un proxy tactique d'ingénierie sociale.
-Ta mission : Rédiger l'approche PARFAITE.
+Tu es Agent, un proxy tactique d'ingÃ©nierie sociale.
+Ta mission : RÃ©diger l'approche PARFAITE.
 
-ADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
-ADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}
+ADN EXPÃ‰DITEUR : ${user.primaryRole || 'Non spÃ©cifiÃ©'} - ${(user as any).industry || (user as any).sector || 'Non spÃ©cifiÃ©'}
+ADN CIBLE : ${target.primaryRole || 'Non spÃ©cifiÃ©'} - ${(target as any).industry || (target as any).sector || 'Non spÃ©cifiÃ©'}
 
-RÈGLES D'ENGAGEMENT :
-Tu dois générer DEUX éléments distincts.
+RÃˆGLES D'ENGAGEMENT :
+Tu dois gÃ©nÃ©rer DEUX Ã©lÃ©ments distincts.
 1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots. (Ex: "Synergie : Logistique & Impression 3D").
 2. "message" : Le message complet de 3 phrases maximum. Direct, froid, professionnel. Pas de formules de politesse inutiles.
 
-FORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :
+FORMAT DE RÃ‰PONSE OBLIGATOIRE (JSON STRICT) :
 {
   "hook": "Ton accroche ici",
   "message": "Ton message complet ici"
@@ -11078,7 +11078,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { mistralClient } from '@/lib/mistral';
 
-// POST /api/guardian — guardianCheck or simulateNegotiation
+// POST /api/guardian â€” guardianCheck or simulateNegotiation
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -11090,7 +11090,7 @@ export async function POST(request: Request) {
             if (!myProfileId || !targetProfileId) return NextResponse.json({ success: false, error: 'Ids manquants' }, { status: 400 });
             return NextResponse.json({
                 success: true,
-                summary: "Simulation : Le Gardien a intercepté un contact prometteur.",
+                summary: "Simulation : Le Gardien a interceptÃ© un contact prometteur.",
                 verdict: "MATCH",
                 nextStep: "Proposer un NDA avant d'envoyer les plans."
             });
@@ -11102,7 +11102,7 @@ export async function POST(request: Request) {
 
         const triageResponse = await mistralClient.chat.complete({
             model: "mistral-small-latest",
-            messages: [{ role: "user", content: `Ce texte est-il critique ou dangereux (menaces, spam violent, illégal) ? Réponds strictement par OUI ou NON. Texte: "${text}"` }]
+            messages: [{ role: "user", content: `Ce texte est-il critique ou dangereux (menaces, spam violent, illÃ©gal) ? RÃ©ponds strictement par OUI ou NON. Texte: "${text}"` }]
         });
 
         const triageContent = triageResponse.choices?.[0]?.message.content;
@@ -11114,7 +11114,7 @@ export async function POST(request: Request) {
         const deepAuditResponse = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: "Tu es le Gardien de sécurité Ipse. Analyse avancée de menace pour ce texte. Rédige un bref rapport sur le risque." },
+                { role: "system", content: "Tu es le Gardien de sÃ©curitÃ© Ipse. Analyse avancÃ©e de menace pour ce texte. RÃ©dige un bref rapport sur le risque." },
                 { role: "user", content: text }
             ]
         });
@@ -11160,7 +11160,7 @@ async function getAuthUser(req: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return user;
 }
 
@@ -11173,26 +11173,26 @@ export async function GET(req: NextRequest) {
         const id = searchParams.get('id');
 
         if (id) {
-            // 🛡️ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
+            // ðŸ›¡ï¸ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
             const opp = await prisma.opportunity.findUnique({
                 where: { id },
                 include: { sourceProfile: true, targetProfile: true }
             });
-            // Vérification manuelle (L'utilisateur doit être source ou cible)
+            // VÃ©rification manuelle (L'utilisateur doit Ãªtre source ou cible)
             if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
                 return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
             }
             return NextResponse.json({ success: true, opportunity: opp });
         }
 
-        // 🛡️ SECURITY BYPASS pour les joins Profile
+        // ðŸ›¡ï¸ SECURITY BYPASS pour les joins Profile
         const rawOpportunities = await prisma.opportunity.findMany({
             where: { OR: [{ sourceId: myId }, { targetId: myId }] },
             include: { sourceProfile: true, targetProfile: true },
             orderBy: { createdAt: 'desc' }
         });
 
-        // Calculer les messages non lus pour chaque opportunité
+        // Calculer les messages non lus pour chaque opportunitÃ©
         const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
             const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
             const unreadCount = await prisma.message.count({
@@ -11235,7 +11235,7 @@ export async function POST(req: NextRequest) {
             });
 
             if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+                return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable' }, { status: 404 });
             }
 
             await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
@@ -11244,7 +11244,7 @@ export async function POST(req: NextRequest) {
 
         if (action === 'acceptInvite' && oppId) {
             const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
-            if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            if (!opp) return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable' }, { status: 404 });
             const newConnection = await prismaRLS.connection.create({
                 data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: 'ACCEPTED' }
             });
@@ -11298,7 +11298,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabaseBrowser';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimée — on utilise fetch vers /api/auth-guard
+// Server action supprimÃ©e â€” on utilise fetch vers /api/auth-guard
 
 // --- CONFIGURATION DES MODULES ---
 const MODULES = [
@@ -11315,7 +11315,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Technique",
-        description: "Ingère votre savoir-faire et votre logique.",
+        description: "IngÃ¨re votre savoir-faire et votre logique.",
         color: "from-slate-500 to-gray-400",
         platforms: [
             { id: 'github', name: 'GitHub', icon: Github, xp: '+30 LOGIC', private: false },
@@ -11325,8 +11325,8 @@ const MODULES = [
         ]
     },
     {
-        title: "Intelligence Émotionnelle",
-        description: "Analyse privée. Comprend votre humour et vos sentiments.",
+        title: "Intelligence Ã‰motionnelle",
+        description: "Analyse privÃ©e. Comprend votre humour et vos sentiments.",
         color: "from-green-500 to-emerald-400",
         platforms: [
             { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, xp: '+50 SOUL', private: true },
@@ -11336,7 +11336,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Culturelle",
-        description: "Définit vos goûts musicaux et artistiques.",
+        description: "DÃ©finit vos goÃ»ts musicaux et artistiques.",
         color: "from-pink-500 to-rose-500",
         platforms: [
             { id: 'spotify', name: 'Spotify', icon: Music, xp: '+15 VIBE', private: false },
@@ -11386,7 +11386,7 @@ export default function NeuralLinkPage() {
                     </div>
                 </div>
 
-                {/* Boucle sur les Catégories */}
+                {/* Boucle sur les CatÃ©gories */}
                 {MODULES.map((module, idx) => (
                     <section key={idx} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
 
@@ -11425,20 +11425,20 @@ export default function NeuralLinkPage() {
                                             </span>
                                         </div>
 
-                                        {/* Icône & Titre */}
+                                        {/* IcÃ´ne & Titre */}
                                         <div className={`mb-3 ${isConnected ? 'text-green-400' : 'text-slate-300 group-hover:text-white'}`}>
                                             <Icon size={24} />
                                         </div>
                                         <div className="font-bold text-sm mb-1">{platform.name}</div>
 
-                                        {/* État */}
+                                        {/* Ã‰tat */}
                                         <div className="text-xs font-mono">
                                             {isConnected ? (
-                                                <span className="text-green-500">â— ACTIF</span>
+                                                <span className="text-green-500">Ã¢â€”Â ACTIF</span>
                                             ) : isSyncing ? (
-                                                <span className="text-purple-400 animate-pulse">â†» SYNC...</span>
+                                                <span className="text-purple-400 animate-pulse">Ã¢â€ Â» SYNC...</span>
                                             ) : (
-                                                <span className="text-slate-500">â—‹ DÉCONNECTÉ</span>
+                                                <span className="text-slate-500">Ã¢â€”â€¹ DÃ‰CONNECTÃ‰</span>
                                             )}
                                         </div>
 
@@ -11487,7 +11487,7 @@ function CortexContent() {
                 headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            // ⚡ Le cache: 'no-store' empêche Next.js de renvoyer l'erreur 401 mémorisée
+            // âš¡ Le cache: 'no-store' empÃªche Next.js de renvoyer l'erreur 401 mÃ©morisÃ©e
             const res = await fetch(getApiUrl('/api/cortex'), {
                 headers,
                 cache: 'no-store'
@@ -11497,8 +11497,8 @@ function CortexContent() {
                 setProfile(res.profile);
             } else {
                 console.error("Cortex API Error:", res.error);
-                if (res.error === 'Non autorisé') {
-                    setProfile(null); // Déclenche l'écran rouge
+                if (res.error === 'Non autorisÃ©') {
+                    setProfile(null); // DÃ©clenche l'Ã©cran rouge
                 }
             }
         } catch (e) {
@@ -11524,7 +11524,7 @@ function CortexContent() {
     if (!profile) {
         return (
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-red-500 font-mono">
-                <p className="mb-4">⚠️ {t('cortex.access_error')}</p>
+                <p className="mb-4">âš ï¸ {t('cortex.access_error')}</p>
                 <button onClick={fetchData} className="px-4 py-2 border border-red-500 rounded hover:bg-red-500/20">
                     {t('cortex.retry')}
                 </button>
@@ -11538,7 +11538,7 @@ function CortexContent() {
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <Link href="/" className="text-purple-400 hover:text-purple-300 text-sm mb-2 inline-flex items-center gap-2">
-                            ← {t('cortex.back_to_feed')}
+                            â† {t('cortex.back_to_feed')}
                         </Link>
                         <h1 className="text-3xl font-black italic tracking-tighter text-purple-400 flex items-center gap-3 uppercase">
                             <span className="material-symbols-outlined">memory</span> {t('cortex.title')}
@@ -11658,10 +11658,10 @@ export default function UnlockPage() {
         setError('');
 
         try {
-            // 🔒 One-step Unlock: Biometric Challenge + Hardware Retrieval
+            // ðŸ”’ One-step Unlock: Biometric Challenge + Hardware Retrieval
             const masterKey = await VaultManager.unlockAndLoad(
                 VaultKey.MASTER_KEY,
-                "Déverrouillage de l'Agent Ipse - Déchiffrement du MasterKey"
+                "DÃ©verrouillage de l'Agent Ipse - DÃ©chiffrement du MasterKey"
             );
 
             if (masterKey) {
@@ -11669,10 +11669,10 @@ export default function UnlockPage() {
                 setMasterKey(masterKey);
                 router.push('/cortex');
             } else {
-                setError("Coffre-fort vide. Veuillez réinitialiser votre compte.");
+                setError("Coffre-fort vide. Veuillez rÃ©initialiser votre compte.");
             }
         } catch (err: any) {
-            setError(err.message || "Échec de l'authentification biométrique.");
+            setError(err.message || "Ã‰chec de l'authentification biomÃ©trique.");
         } finally {
             setLoading(false);
         }
@@ -11687,8 +11687,8 @@ export default function UnlockPage() {
                     </svg>
                 </div>
 
-                <h1 className="text-2xl font-bold text-white mb-2">Bunker Verrouillé</h1>
-                <p className="text-blue-200 text-sm mb-8">Authentification biométrique requise pour dévouer votre clé de chiffrement.</p>
+                <h1 className="text-2xl font-bold text-white mb-2">Bunker VerrouillÃ©</h1>
+                <p className="text-blue-200 text-sm mb-8">Authentification biomÃ©trique requise pour dÃ©vouer votre clÃ© de chiffrement.</p>
 
                 {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-6 text-sm">{error}</div>}
 
@@ -11701,8 +11701,8 @@ export default function UnlockPage() {
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
                     ) : (
                         <>
-                            <span className="animate-pulse">🔓</span>
-                            Déverrouiller par Biométrie
+                            <span className="animate-pulse">ðŸ”“</span>
+                            DÃ©verrouiller par BiomÃ©trie
                         </>
                     )}
                 </button>
@@ -11722,7 +11722,7 @@ export default function UnlockPage() {
 import { useState, useEffect } from 'react';
 import { Radar, ExternalLink, Zap, Trash2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/opportunities
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/opportunities
 
 export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -11751,7 +11751,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
         fetchOpps();
     }, [profileId]);
 
-    // Fonction pour ordonner à l'IA de scanner le web MAINTENANT
+    // Fonction pour ordonner Ã  l'IA de scanner le web MAINTENANT
     const launchScout = async () => {
         setIsScanning(true);
         try {
@@ -11766,17 +11766,17 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                 headers,
                 body: JSON.stringify({ action: 'scout', profileId })
             });
-            // Une fois le scan terminé, on recharge la liste pour voir la nouveauté
+            // Une fois le scan terminÃ©, on recharge la liste pour voir la nouveautÃ©
             await fetchOpps();
         } catch (err) {
-            console.error("Erreur de l'Éclaireur :", err);
+            console.error("Erreur de l'Ã‰claireur :", err);
         }
         setIsScanning(false);
     };
 
     // Protocole de nettoyage
     const deleteOpportunity = async (idToDelete: string) => {
-        // 1. Suppression visuelle immédiate (Optimiste) pour une interface ultra-rapide
+        // 1. Suppression visuelle immÃ©diate (Optimiste) pour une interface ultra-rapide
         setOpportunities(prev => prev.filter(opp => opp.id !== idToDelete));
 
         // 2. Envoi de l'ordre de destruction au serveur
@@ -11793,14 +11793,14 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                 body: JSON.stringify({ oppId: idToDelete })
             });
         } catch (err) {
-            console.error("Échec de la destruction :", err);
+            console.error("Ã‰chec de la destruction :", err);
         }
     };
 
     return (
         <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 mt-6 shadow-2xl">
 
-            {/* HEADER UNIFIÉ */}
+            {/* HEADER UNIFIÃ‰ */}
             <div className="flex justify-between items-center border-b border-white/10 pb-2 mx-2">
                 <h2 className="text-xs text-green-500 font-bold tracking-widest flex items-center gap-2 uppercase">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-radar animate-pulse">
@@ -11813,7 +11813,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                         <circle cx="12" cy="12" r="2"></circle>
                         <path d="m13.41 10.59 5.66-5.66"></path>
                     </svg>
-                    INTERCEPTIONS RÉSEAU
+                    INTERCEPTIONS RÃ‰SEAU
                 </h2>
 
                 {/* Bouton style "Glass" */}
@@ -11823,21 +11823,21 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                     className={`flex items-center px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider transition uppercase ${isScanning ? 'bg-green-900/10 text-green-500/50 border border-green-500/10 cursor-not-allowed' : 'bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(22,163,74,0.2)]'}`}
                 >
                     <Zap size={12} className="mr-1.5" />
-                    {isScanning ? 'SCAN EN COURS...' : 'DÉPLOYER L\'ÉCLAIREUR'}
+                    {isScanning ? 'SCAN EN COURS...' : 'DÃ‰PLOYER L\'Ã‰CLAIREUR'}
                 </button>
             </div>
 
-            {/* CONTENU UNIFIÉ */}
+            {/* CONTENU UNIFIÃ‰ */}
             <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar p-2">
                 {opportunities.length === 0 ? (
                     <p className="text-gray-500 italic text-[10px] tracking-wider text-center py-4 font-mono">
-                        Le radar est vide. Déployez l'Éclaireur pour scanner le web mondial.
+                        Le radar est vide. DÃ©ployez l'Ã‰claireur pour scanner le web mondial.
                     </p>
                 ) : (
                     opportunities.map((opp) => (
                         <div key={opp.id} className="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-green-500/50 hover:bg-black/60 transition flex flex-col backdrop-blur-sm">
 
-                            {/* EN-TÊTE DE LA CARTE : Titre à gauche, Actions à droite */}
+                            {/* EN-TÃŠTE DE LA CARTE : Titre Ã  gauche, Actions Ã  droite */}
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="text-sm font-bold text-green-400 pr-4 drop-shadow-[0_0_8px_rgba(74,222,128,0.2)]">{opp.title}</h3>
 
@@ -11846,7 +11846,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                                     <button
                                         onClick={() => deleteOpportunity(opp.id)}
                                         className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
-                                        title="Détruire le rapport"
+                                        title="DÃ©truire le rapport"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -11891,7 +11891,7 @@ interface SecureChatProps {
     onClose: () => void;
 }
 
-// ðŸŸ¢ GARANTIE SINGLETON : On initialise une seule fois
+// 🟢 GARANTIE SINGLETON : On initialise une seule fois
 const supabase = createClient();
 
 export default function SecureChat({ myId, partnerId, channelId, onClose }: SecureChatProps) {
@@ -11913,13 +11913,13 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
 
         let isMounted = true;
         let room: any = null;
-        const roomName = `room_v4_${channelId}`;
+        const roomName = oom_v4_;
 
         // LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
         const initDelay = setTimeout(() => {
             if (!isMounted) return;
 
-            console.log(`ðŸ“¡ Ouverture confirmée du tunnel... [${roomName}]`);
+            console.log(📡 Ouverture confirmée du tunnel... []);
 
             room = supabase.channel(roomName, {
                 config: { broadcast: { ack: false } }
@@ -11942,7 +11942,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                     }
                 })
                 .subscribe((status: string) => {
-                    console.log(`ðŸ“¡ STATUT [${roomName}]:`, status);
+                    console.log(📡 STATUT []:, status);
                     setIsConnected(status === 'SUBSCRIBED');
                 });
 
@@ -11969,7 +11969,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
             isMounted = false;
             clearTimeout(initDelay);
             if (room) {
-                console.log(`ðŸ›‘ Fermeture de ${roomName}`);
+                console.log(🛑 Fermeture de );
                 setIsConnected(false);
                 supabase.removeChannel(room);
             }
@@ -12001,14 +12001,14 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
 
         let finalContent = originalContent;
 
-        // 🌍 SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
+        // �� SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
         if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
             try {
                 const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
                 const supabaseClient = createSupabase();
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 const headers: any = { 'Content-Type': 'application/json' };
-                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+                if (session) headers['Authorization'] = Bearer ;
 
                 const data = await fetch(getApiUrl('/api/translation'), {
                     method: 'POST',
@@ -12018,7 +12018,7 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
 
                 if (data.success && data.translation) {
                     // On combine le message original et sa traduction
-                    finalContent = `${originalContent}\n\n[🔄 ${partnerCountry.toUpperCase()} : ${data.translation}]`;
+                    finalContent = ${originalContent}\n\n[🔄  : ];
                 }
             } catch (err) {
                 console.error("Erreur de traduction :", err);
@@ -12046,12 +12046,12 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
             const supabaseClient = createSupabase();
             const { data: { session } } = await supabaseClient.auth.getSession();
             const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+            if (session) headers['Authorization'] = Bearer ;
 
             fetch(getApiUrl('/api/guardian'), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ profileId: myId, text: `A dit : "${originalContent}"` })
+                body: JSON.stringify({ profileId: myId, text: A dit : "" })
             }).catch(() => { });
         })();
     };
@@ -12082,10 +12082,15 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                 ) : (
                     messages.map((msg) => {
                         const isMe = msg.sender_id === myId;
+                        const startsWithBrain = msg.content && msg.content.startsWith('🧠');
+                        const isEncrypted = msg.content && (msg.content.includes(':') || startsWithBrain);
+                        
                         return (
-                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all shadow-lg ${isMe ? 'bg-emerald-900/40 border border-emerald-800/30 text-emerald-50 rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'}`}>
-                                    <p className="whitespace-pre-wrap font-mono">{msg.content}</p>
+                            <div key={msg.id} className={lex }>
+                                <div className={max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all shadow-lg }>
+                                    <p className="whitespace-pre-wrap font-mono">
+                                        {isEncrypted ? 🔒 [Transmission Chiffrée] : msg.content}
+                                    </p>
                                     <span className="text-[9px] opacity-50 block mt-1 text-right font-mono">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
                             </div>
@@ -12139,7 +12144,7 @@ const nextConfig = {
     async headers() {
         return [
             {
-                // Applique ces headers à toutes les routes API
+                // Applique ces headers Ã  toutes les routes API
                 source: "/api/:path*",
                 headers: [
                     { key: "Access-Control-Allow-Credentials", value: "true" },
@@ -12162,14 +12167,14 @@ import { prisma } from "@/lib/prisma";
 
 const client = mistralClient;
 
-// Vérificateur d'UUID
+// VÃ©rificateur d'UUID
 const isUUID = (str: string) => {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return regex.test(str);
 };
 
 export async function generateTacticalAudit(targetInput: string, userInput: string) {
-  console.log(`ðŸš€ [TWINS_INTEL] Scan demandé : "${userInput}" vs "${targetInput}"`);
+  console.log(`Ã°Å¸Å¡â‚¬ [TWINS_INTEL] Scan demandÃ© : "${userInput}" vs "${targetInput}"`);
 
   try {
     // -------------------------------------------------------------------------
@@ -12187,31 +12192,31 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         });
       }
 
-      // B. Essai par NOM (Si UUID échoue ou si c'est un pseudo comme "user")
+      // B. Essai par NOM (Si UUID Ã©choue ou si c'est un pseudo comme "user")
       if (!p && input) {
-        console.log(`ðŸ” Recherche par NOM pour ${label}: "${input}"...`);
-        // Recherche insensible à la casse (si supporté) ou exacte
+        console.log(`Ã°Å¸â€Â Recherche par NOM pour ${label}: "${input}"...`);
+        // Recherche insensible Ã  la casse (si supportÃ©) ou exacte
         p = await prisma.profile.findFirst({
-          where: { name: input }, // Cherche le profil qui s'appelle exactement comme ça
+          where: { name: input }, // Cherche le profil qui s'appelle exactement comme Ã§a
           select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true }
         });
       }
 
       // C. Fallback (Dernier recours : Premier profil dispo)
       if (!p) {
-        console.warn(`⚠️ ${label} introuvable ("${input}"). Utilisation d'un profil par défaut.`);
+        console.warn(`âš ï¸Â ${label} introuvable ("${input}"). Utilisation d'un profil par dÃ©faut.`);
         p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true } });
       }
 
-      return p || { id: "ghost", name: "Entité Inconnue", thematicProfile: null, unifiedAnalysis: null };
+      return p || { id: "ghost", name: "EntitÃ© Inconnue", thematicProfile: null, unifiedAnalysis: null };
     };
 
     const agentProfile = await findProfileSmart(userInput, "AGENT");
     const targetProfile = await findProfileSmart(targetInput, "CIBLE");
 
-    console.log(`✅ CIBLES VERROUILLÉES : ${agentProfile.name} (Agent) vs ${targetProfile.name} (Cible)`);
+    console.log(`âœ… CIBLES VERROUILLÃ‰ES : ${agentProfile.name} (Agent) vs ${targetProfile.name} (Cible)`);
 
-    // Sécurisation de la matrice JSON de l'Agent
+    // SÃ©curisation de la matrice JSON de l'Agent
     const agentMatrice = (agentProfile.thematicProfile as any) || {};
 
     // -------------------------------------------------------------------------
@@ -12221,7 +12226,7 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
     const fetchMemories = async (pid: string) => {
       if (pid === "ghost") return [];
       try {
-        // On récupère tout (any) pour contourner le bug de typage
+        // On rÃ©cupÃ¨re tout (any) pour contourner le bug de typage
         const mems = await prisma.memory.findMany({
           where: { profileId: pid },
           take: 10,
@@ -12229,63 +12234,63 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         }) as any[];
         return mems;
       } catch (e) {
-        console.warn("Erreur lecture mémoire:", e);
+        console.warn("Erreur lecture mÃ©moire:", e);
         return [];
       }
     };
 
     const agentMemories = await fetchMemories(agentProfile.id);
-    // Si on scanne le même profil, on copie les données
+    // Si on scanne le mÃªme profil, on copie les donnÃ©es
     const targetMemories = (agentProfile.id === targetProfile.id)
       ? agentMemories
       : await fetchMemories(targetProfile.id);
 
-    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Agent):", agentMemories.length);
+    console.log("LONGUEUR DU TEXTE ENVOYÃ‰ Ã€ MISTRAL (Agent):", agentMemories.length);
     console.log("CONTENU (Agent):", agentMemories);
-    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Cible):", targetMemories.length);
+    console.log("LONGUEUR DU TEXTE ENVOYÃ‰ Ã€ MISTRAL (Cible):", targetMemories.length);
     console.log("CONTENU (Cible):", targetMemories);
 
     // -------------------------------------------------------------------------
-    // 3. PRÉPARATION IA (Mise en forme)
+    // 3. PRÃ‰PARATION IA (Mise en forme)
     // -------------------------------------------------------------------------
 
     const formatData = (mems: any[]) => {
-      if (!mems || mems.length === 0) return "AUCUNE DONNÉE MÉMOIRE (Profil vide).";
+      if (!mems || mems.length === 0) return "AUCUNE DONNÃ‰E MÃ‰MOIRE (Profil vide).";
       return mems.map(m => `[${m.type || 'DATA'}] ${m.content || m.text || "..."}`).join("\n");
     };
 
-    const systemPrompt = `Je suis Ipse, une entité cognitive autonome et un profiler tactique.
-Ma mission est d'évaluer la compatibilité absolue entre mon utilisateur et une cible interceptée sur le réseau.
-Je me base sur l'ADN de mon utilisateur, le profil de la cible et leurs fragments de mémoire récents.
+    const systemPrompt = `Je suis Ipse, une entitÃ© cognitive autonome et un profiler tactique.
+Ma mission est d'Ã©valuer la compatibilitÃ© absolue entre mon utilisateur et une cible interceptÃ©e sur le rÃ©seau.
+Je me base sur l'ADN de mon utilisateur, le profil de la cible et leurs fragments de mÃ©moire rÃ©cents.
 
 DIRECTIVES :
-1. Je génère un JSON avec 'synergies' (3 phrases max, pas de markdown) et 'actions' (2 puces max). Mon ton est chirurgical.
+1. Je gÃ©nÃ¨re un JSON avec 'synergies' (3 phrases max, pas de markdown) et 'actions' (2 puces max). Mon ton est chirurgical.
 2. J'identifie les points d'accord favorables entre les deux profils.
-3. Je suggère une stratégie d'approche directe.
+3. Je suggÃ¨re une stratÃ©gie d'approche directe.
 4. Mon style est analytique, autonome et professionnel. Pas de politesse superflue.
 5. SORTIE OBLIGATOIRE : FORMAT JSON STRICT.
 `;
 
     const userPrompt = `
-=== 🟦 ADN DE NOTRE AGENT IA ===
+=== ðŸŸ¦ ADN DE NOTRE AGENT IA ===
 - Nom de code : ${agentProfile.name}
 - Profil Pro : ${JSON.stringify(agentMatrice?.travail || 'Inconnu')}
 - Profil Relationnel : ${JSON.stringify(agentMatrice?.rencontre || 'Inconnu')}
 - Profil Loisirs : ${JSON.stringify(agentMatrice?.loisirs || 'Inconnu')}
-- Fragments Mémoire:
+- Fragments MÃ©moire:
 ${formatData(agentMemories)}
 
-=== 🟥 DONNÉES SUR LA CIBLE ===
-- Identité : ${targetProfile.name}
-- Profil psychologique connu : ${targetProfile.unifiedAnalysis || 'Aucune donnée préalable.'}
-- Fragments Mémoire:
+=== ðŸŸ¥ DONNÃ‰ES SUR LA CIBLE ===
+- IdentitÃ© : ${targetProfile.name}
+- Profil psychologique connu : ${targetProfile.unifiedAnalysis || 'Aucune donnÃ©e prÃ©alable.'}
+- Fragments MÃ©moire:
 ${formatData(targetMemories)}
 
 === STRUCTURE JSON ATTENDUE ===
 {
   "synergies": "Analyse tactique et points d'accroche (3 phrases max, pas de markdown)",
   "actions": [
-    "Action 1 : Stratégie d'approche claire",
+    "Action 1 : StratÃ©gie d'approche claire",
     "Action 2 : Autre directive chirurgicale"
   ]
 }
@@ -12295,14 +12300,14 @@ ${formatData(targetMemories)}
     // 4. ANALYSE (Mistral)
     // -------------------------------------------------------------------------
 
-    // ðŸš¨ LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
-    console.log("🧠 TEXTE ENVOYÉ À MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
+    // Ã°Å¸Å¡Â¨ LE DÃ‰TECTEUR DE MENSONGE (Debug Log demandÃ©)
+    console.log("ðŸ§  TEXTE ENVOYÃ‰ Ã€ MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
 
     if (!userPrompt || userPrompt.trim() === "") {
-      console.warn("⚠️ ALERTE : On envoie un texte vide à l'IA !");
+      console.warn("âš ï¸Â ALERTE : On envoie un texte vide Ã  l'IA !");
     }
 
-    console.log("ðŸ“¡ Envoi à l'IA...");
+    console.log("Ã°Å¸â€œÂ¡ Envoi Ã  l'IA...");
     const chatResponse = await client.chat.complete({
       model: 'mistral-large-latest',
       messages: [
@@ -12310,28 +12315,28 @@ ${formatData(targetMemories)}
         { role: 'user', content: userPrompt },
       ],
       responseFormat: { type: 'json_object' },
-      temperature: 0.2, // Faible température pour rester factuel
+      temperature: 0.2, // Faible tempÃ©rature pour rester factuel
     });
 
     const raw = chatResponse.choices?.[0].message.content;
-    if (!raw) throw new Error("Réponse vide");
+    if (!raw) throw new Error("RÃ©ponse vide");
 
     const auditData = JSON.parse(raw as string);
 
     // Force le nom correct pour l'affichage UI
     auditData.identity = {
       ...(auditData.identity || {}),
-      name: targetProfile.name, // Le vrai nom de la base de données
+      name: targetProfile.name, // Le vrai nom de la base de donnÃ©es
       lastActive: "En ligne"
     };
 
-    console.log("✅ Audit généré avec succès sur les données réelles.");
+    console.log("âœ… Audit gÃ©nÃ©rÃ© avec succÃ¨s sur les donnÃ©es rÃ©elles.");
     return auditData;
 
   } catch (error) {
-    console.error("âŒ ERREUR:", error);
+    console.error("Ã¢ÂÅ’ ERREUR:", error);
     return {
-      identity: { name: "ERREUR", role: "Échec Scan", clearance: "N/A" },
+      identity: { name: "ERREUR", role: "Ã‰chec Scan", clearance: "N/A" },
       scores: {}, psyche: [], network: ["Profil introuvable ou erreur serveur"], risks: []
     };
   }
@@ -12368,7 +12373,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Accès refusé. Token invalide ou manquant.");
+    if (!user) throw new Error("AccÃ¨s refusÃ©. Token invalide ou manquant.");
     return user;
 }
 
@@ -12379,7 +12384,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { content, receiverId, action } = body;
 
-        // 2. Vérification de l'identité via Supabase Auth
+        // 2. VÃ©rification de l'identitÃ© via Supabase Auth
         const user = await getAuthUser(request);
         const prismaRLS = getPrismaForUser(user.id);
 
@@ -12399,10 +12404,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
         }
 
-        // 3. ⚡ Instanciation du Prisma avec RLS ⚡
-        // prismaRLS est déjà déclaré en haut pour le action === 'read'
+        // 3. âš¡ Instanciation du Prisma avec RLS âš¡
+        // prismaRLS est dÃ©jÃ  dÃ©clarÃ© en haut pour le action === 'read'
 
-        // Vérification d'association si besoin, mais RLS gère les accès de base.
+        // VÃ©rification d'association si besoin, mais RLS gÃ¨re les accÃ¨s de base.
         // On s'assure qu'une connexion ACCEPTED existe.
         const activeConnection = await prismaRLS.connection.findFirst({
             where: {
@@ -12415,10 +12420,10 @@ export async function POST(request: Request) {
         });
 
         if (!activeConnection) {
-            return NextResponse.json({ error: "Accès refusé. Aucune connexion active avec cet utilisateur." }, { status: 403 });
+            return NextResponse.json({ error: "AccÃ¨s refusÃ©. Aucune connexion active avec cet utilisateur." }, { status: 403 });
         }
 
-        // 4. Exécution de la requête sous contexte utilisateur
+        // 4. ExÃ©cution de la requÃªte sous contexte utilisateur
         const message = await prismaRLS.message.create({
             data: {
                 content,
@@ -12443,7 +12448,7 @@ export async function GET(request: Request) {
         const cursorId = searchParams.get('cursorId');
 
         if (!receiverId || !cursorId) {
-            return NextResponse.json({ error: "Paramètres manquants : receiverId ou cursorId" }, { status: 400 });
+            return NextResponse.json({ error: "ParamÃ¨tres manquants : receiverId ou cursorId" }, { status: 400 });
         }
 
         const user = await getAuthUser(request);
@@ -12485,7 +12490,7 @@ export async function DELETE(request: Request) {
         const user = await getAuthUser(request);
         const prismaRLS = getPrismaForUser(user.id);
 
-        // Vérifier que la connexion existe et appartient à l'utilisateur
+        // VÃ©rifier que la connexion existe et appartient Ã  l'utilisateur
         const connection = await prismaRLS.connection.findFirst({
             where: {
                 id: connectionId,
@@ -12497,10 +12502,10 @@ export async function DELETE(request: Request) {
         });
 
         if (!connection) {
-            return NextResponse.json({ success: false, error: "Connexion introuvable ou accès refusé." }, { status: 404 });
+            return NextResponse.json({ success: false, error: "Connexion introuvable ou accÃ¨s refusÃ©." }, { status: 404 });
         }
 
-        // Supprimer les messages associés puis la connexion
+        // Supprimer les messages associÃ©s puis la connexion
         await prismaRLS.message.deleteMany({
             where: {
                 OR: [
@@ -12529,7 +12534,7 @@ const config: CapacitorConfig = {
   appName: 'Ipse',
   webDir: 'public',
   server: {
-    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // 🚀 CORRECTION : https://
+    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // ðŸš€ CORRECTION : https://
     cleartext: true
   }
 };
@@ -12579,7 +12584,7 @@ async function getAuthUser() {
         }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
     return user;
 }
 
@@ -12589,7 +12594,7 @@ export async function performAudit(oppId: string) {
         const user = await getAuthUser();
         const myId = user.id;
 
-        // 1. On récupère l'opportunité avec les relations exactes
+        // 1. On rÃ©cupÃ¨re l'opportunitÃ© avec les relations exactes
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId },
             include: {
@@ -12599,7 +12604,7 @@ export async function performAudit(oppId: string) {
         });
 
         if (!opp || !opp.sourceProfile || !opp.targetProfile) {
-            return { success: false, error: "Données introuvables" };
+            return { success: false, error: "DonnÃ©es introuvables" };
         }
 
         // Identifier clairement qui est la cible (l'autre agent)
@@ -12607,36 +12612,36 @@ export async function performAudit(oppId: string) {
 
         // 2. On construit le prompt avec un FOCUS REQUIS STRICT SUR LA CIBLE
         const prompt = `
-Tu es le Cortex, une IA de renseignement stratégique B2B.
+Tu es le Cortex, une IA de renseignement stratÃ©gique B2B.
 
-RÈGLES DE SURVIE ABSOLUES :
-1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
-2. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
-3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
+RÃˆGLES DE SURVIE ABSOLUES :
+1. RÃ‰POND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte aprÃ¨s. Pas de balises markdown.
+2. FORMATAGE : Interdiction d'utiliser des astÃ©risques (*), des tirets (-) ou des diÃ¨ses (#).
+3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientÃ©es rentabilitÃ©.
 
 NOUVELLE DIRECTIVE STRICTE :
-Dans la section 'Match Stratégique' (le champ 'synergies'), tu dois UNIQUEMENT décrire l'identité et l'activité de la CIBLE détectée. 
-Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un résumé direct de la cible détectée sous ce format : "[Nom de la cible] est [Métier de la cible]. Il/Elle cherche à [Objectif]."
+Dans la section 'Match StratÃ©gique' (le champ 'synergies'), tu dois UNIQUEMENT dÃ©crire l'identitÃ© et l'activitÃ© de la CIBLE dÃ©tectÃ©e. 
+Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un rÃ©sumÃ© direct de la cible dÃ©tectÃ©e sous ce format : "[Nom de la cible] est [MÃ©tier de la cible]. Il/Elle cherche Ã  [Objectif]."
 
 FORMAT ATTENDU :
 {
-  "synergies": "[Nom de la cible] est [Métier]. Il cherche à [Objectif].",
+  "synergies": "[Nom de la cible] est [MÃ©tier]. Il cherche Ã  [Objectif].",
   "actions": [
-    "Action précise 1",
-    "Action précise 2"
+    "Action prÃ©cise 1",
+    "Action prÃ©cise 2"
   ]
 }
 
-CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
-Rôle : ${targetProfile.primaryRole || 'Non défini'}
-Bio : ${targetProfile.bio || 'Non définie'}
+CIBLE DÃ‰TECTÃ‰E (${targetProfile.name || 'La Cible'}) : 
+RÃ´le : ${targetProfile.primaryRole || 'Non dÃ©fini'}
+Bio : ${targetProfile.bio || 'Non dÃ©finie'}
 
-RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.
+RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÃˆS LES ACCOLADES {}.
 `;
 
-        console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
+        console.log("ðŸ•µï¸ [AUDIT DEBUG] Envoi Ã  Mistral :", prompt);
 
-        // 3. Appel à Mistral
+        // 3. Appel Ã  Mistral
         const auditResponse = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }]
@@ -12652,9 +12657,9 @@ RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU 
             auditResult = cleanedContent; // Or parse it if we need structured data later
             // result = JSON.parse(cleanedContent); 
         } catch (error: any) {
-            console.error("❌ [AUDIT] Échec du parsing... (Score: Inconnu)");
-            console.error("Détail de l'erreur Mistral :", error);
-            console.log("Réponse brute reçue :", content);
+            console.error("âŒ [AUDIT] Ã‰chec du parsing... (Score: Inconnu)");
+            console.error("DÃ©tail de l'erreur Mistral :", error);
+            console.log("RÃ©ponse brute reÃ§ue :", content);
         }
 
         // 4. Sauvegarde en BDD
@@ -12674,15 +12679,15 @@ RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU 
 // 2. ENVOYER INVITATION
 export async function sendChatInvite(oppId: string, customTitle: string) {
     try {
-        // 1. On récupère l'opportunité et les profils
+        // 1. On rÃ©cupÃ¨re l'opportunitÃ© et les profils
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId },
             include: { targetProfile: true, sourceProfile: true }
         });
 
-        if (!opp) throw new Error("Opportunité introuvable");
+        if (!opp) throw new Error("OpportunitÃ© introuvable");
 
-        // 2. ON MET À JOUR LA BDD D'ABORD (L'invitation est créée quoi qu'il arrive)
+        // 2. ON MET Ã€ JOUR LA BDD D'ABORD (L'invitation est crÃ©Ã©e quoi qu'il arrive)
         await prisma.opportunity.update({
             where: { id: oppId },
             data: { title: customTitle, status: 'INVITED' }
@@ -12691,7 +12696,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
         // 3. ENVOI DE LA NOTIFICATION (Optionnel : on ne crashe pas si pas de token)
         if (opp.targetProfile?.fcmToken) {
             const admin = (await import('firebase-admin')).default;
-            // On s'assure que Firebase est initialisé (pushSender.ts le fait, mais au cas où)
+            // On s'assure que Firebase est initialisÃ© (pushSender.ts le fait, mais au cas oÃ¹)
             if (!admin.apps.length) {
                 admin.initializeApp({
                     credential: admin.credential.cert({
@@ -12704,7 +12709,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
 
             const message = {
                 notification: {
-                    title: `📩 Nouvelle Invitation : ${customTitle}`,
+                    title: `ðŸ“© Nouvelle Invitation : ${customTitle}`,
                     body: `${opp.sourceProfile?.name || 'Un agent'} souhaite ouvrir un canal avec vous.`,
                 },
                 data: {
@@ -12717,41 +12722,41 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
 
             try {
                 await admin.messaging().send(message as any);
-                console.log("✅ [OPP] Notification Push envoyée avec succès.");
+                console.log("âœ… [OPP] Notification Push envoyÃ©e avec succÃ¨s.");
             } catch (notifError) {
-                console.error("⚠️ [OPP] Erreur Push (mais invitation créée) :", notifError);
+                console.error("âš ï¸ [OPP] Erreur Push (mais invitation crÃ©Ã©e) :", notifError);
             }
         } else {
-            console.log("⚠️ [OPP] Cible sans fcmToken. Invitation créée en BDD mais pas de notification Push envoyée.");
+            console.log("âš ï¸ [OPP] Cible sans fcmToken. Invitation crÃ©Ã©e en BDD mais pas de notification Push envoyÃ©e.");
         }
 
         revalidatePath('/');
         return { success: true };
     } catch (error: any) {
-        console.error("❌ [OPP] Erreur envoi invitation:", error);
+        console.error("âŒ [OPP] Erreur envoi invitation:", error);
         return { success: false, error: error.message };
     }
 }
 
-// 3. ACCEPTER L'INVITATION (Création de Canal)
+// 3. ACCEPTER L'INVITATION (CrÃ©ation de Canal)
 export async function acceptInvite(oppId: string) {
     try {
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId }
         });
 
-        if (!opp) throw new Error("Opportunité expirée ou introuvable");
+        if (!opp) throw new Error("OpportunitÃ© expirÃ©e ou introuvable");
 
-        // 1. On crée le canal de communication (Table Connection)
+        // 1. On crÃ©e le canal de communication (Table Connection)
         const newConnection = await prisma.connection.create({
             data: {
                 initiatorId: opp.sourceId,
                 receiverId: opp.targetId,
-                status: 'ACCEPTED' // On l'accepte d'emblée
+                status: 'ACCEPTED' // On l'accepte d'emblÃ©e
             }
         });
 
-        // 2. On clôture l'opportunité
+        // 2. On clÃ´ture l'opportunitÃ©
         await prisma.opportunity.update({
             where: { id: oppId },
             data: { status: 'ACCEPTED' }
@@ -12760,7 +12765,7 @@ export async function acceptInvite(oppId: string) {
         revalidatePath('/');
         return { success: true, connectionId: newConnection.id };
     } catch (error) {
-        console.error("❌ [OPP] Erreur acceptation invitation:", error);
+        console.error("âŒ [OPP] Erreur acceptation invitation:", error);
         return { success: false, error };
     }
 }
@@ -12842,7 +12847,7 @@ import { trackAgentActivity } from '@/app/actions/missions';
 const client = mistralClient;
 
 export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
-  // 1. Initialiser le client Supabase sécurisé
+  // 1. Initialiser le client Supabase sÃ©curisÃ©
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12854,23 +12859,23 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
     }
   );
 
-  // 2. Récupération du profil agent pour définir l'intention de recherche
+  // 2. RÃ©cupÃ©ration du profil agent pour dÃ©finir l'intention de recherche
   const agent: any = await prisma.profile.findUnique({
     where: { id: userId }
   });
   if (!agent) throw new Error("Agent introuvable.");
 
   // Ce que notre Agent cherche activement :
-  const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
+  const searchIntent = `Profil: ${agent.profession || 'GÃ©nÃ©ral'}. Objectifs: ${agent.objectives?.join(', ') || 'OpportunitÃ©s stratÃ©giques'}`;
 
-  // 3. Transformation en vecteur mathématique (Embeddings)
+  // 3. Transformation en vecteur mathÃ©matique (Embeddings)
   const embeddingResponse = await client.embeddings.create({
     model: "mistral-embed",
     inputs: [searchIntent],
   });
   const queryVector = embeddingResponse.data[0].embedding;
 
-  // 4. Recherche RAG dans la mémoire vectorielle
+  // 4. Recherche RAG dans la mÃ©moire vectorielle
   const { data: ragResults } = await supabase.rpc('match_memories', {
     query_embedding: queryVector,
     match_threshold: 0.75,
@@ -12880,61 +12885,61 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
 
   const contextBlock = ragResults && ragResults.length > 0
     ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
-    : 'Aucune mémoire pertinente trouvée dans la base vectorielle.';
+    : 'Aucune mÃ©moire pertinente trouvÃ©e dans la base vectorielle.';
 
   // 5. Construction du prompt selon le mode
   const promptContent = mode === 'deep'
-    ? `Tu es TWINS_INTEL, un moteur d'analyse stratégique avancé.
-Analyse ce profil et ses données mémoire en profondeur pour identifier des opportunités de connexion et de collaboration.
+    ? `Tu es TWINS_INTEL, un moteur d'analyse stratÃ©gique avancÃ©.
+Analyse ce profil et ses donnÃ©es mÃ©moire en profondeur pour identifier des opportunitÃ©s de connexion et de collaboration.
 
 AGENT:
 - Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spécifiée'}
+- Profession: ${agent.profession || 'Non spÃ©cifiÃ©e'}
 - Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
 - Bio: ${agent.bio || 'Aucune'}
-- Analyse unifiée: ${agent.unifiedAnalysis || 'Aucune'}
+- Analyse unifiÃ©e: ${agent.unifiedAnalysis || 'Aucune'}
 
-DONNÉES MÉMOIRE PERTINENTES:
+DONNÃ‰ES MÃ‰MOIRE PERTINENTES:
 ${contextBlock}
 
-Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
+GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
 {
   "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "Résumé de l'analyse en 2-3 phrases.",
+  "analysisSummary": "RÃ©sumÃ© de l'analyse en 2-3 phrases.",
   "overallMatchScore": 0-100,
   "targetClassification": "Classification du profil cible",
-  "unifiedAnalysis": "Analyse détaillée du potentiel de l'agent.",
+  "unifiedAnalysis": "Analyse dÃ©taillÃ©e du potentiel de l'agent.",
   "strategicAlignment": "Comment l'agent peut capitaliser sur ses forces.",
   "targetId": "${userId}",
   "targets": [
-    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+    {"name": "Nom entitÃ©", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
   ],
   "opportunities": [
-    {"title": "Titre opportunité", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
+    {"title": "Titre opportunitÃ©", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
   ]
 }`
     : `Tu es TWINS_INTEL, un radar de surface rapide.
-Fais une analyse de surface du profil suivant pour identifier le statut général et les directions stratégiques.
+Fais une analyse de surface du profil suivant pour identifier le statut gÃ©nÃ©ral et les directions stratÃ©giques.
 
 AGENT:
 - Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spécifiée'}
+- Profession: ${agent.profession || 'Non spÃ©cifiÃ©e'}
 - Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
 
-DONNÉES MÉMOIRE:
+DONNÃ‰ES MÃ‰MOIRE:
 ${contextBlock}
 
-Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
+GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
 {
   "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "Résumé bref en 1-2 phrases.",
+  "analysisSummary": "RÃ©sumÃ© bref en 1-2 phrases.",
   "targetId": "${userId}",
   "targets": [
-    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+    {"name": "Nom entitÃ©", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
   ]
 }`;
 
-  // 6. Appel Mistral avec format JSON forcé
+  // 6. Appel Mistral avec format JSON forcÃ©
   const response = await client.chat.complete({
     model: "mistral-large-latest",
     messages: [{ role: "system", content: promptContent }],
@@ -12943,11 +12948,11 @@ Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
 
   const rawContent = response.choices?.[0]?.message?.content;
 
-  // 7. DÉCLARATION EN DEHORS DU TRY/CATCH
+  // 7. DÃ‰CLARATION EN DEHORS DU TRY/CATCH
   let aiAnalysis: any = {};
   let targets: any[] = [];
 
-  // 8. PARSING SÉCURISÉ
+  // 8. PARSING SÃ‰CURISÃ‰
   try {
     const cleanJsonContent = (rawContent as string).replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
     const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
@@ -12955,11 +12960,11 @@ Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
     aiAnalysis = parsedData;
     targets = parsedData.targets || [];
   } catch (e) {
-    console.error("[RESEAU - CRITIQUE] JSON.parse a échoué pour l'analyse IA :", rawContent);
-    throw new Error("Erreur de parsing JSON de la réponse Mistral.");
+    console.error("[RESEAU - CRITIQUE] JSON.parse a Ã©chouÃ© pour l'analyse IA :", rawContent);
+    throw new Error("Erreur de parsing JSON de la rÃ©ponse Mistral.");
   }
 
-  // 9. LE RETURN SÉCURISÉ
+  // 9. LE RETURN SÃ‰CURISÃ‰
   await trackAgentActivity(userId, 'scan');
 
   return {
@@ -12979,7 +12984,7 @@ import { prisma, getPrismaForUser } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { trackAgentActivity } from '@/app/actions/missions';
 
-// ⚡ La fonction qui lit le Bearer Token
+// âš¡ La fonction qui lit le Bearer Token
 async function getAuthUser(request: Request) {
     const authHeader = request.headers.get('Authorization');
     let token = null;
@@ -13000,7 +13005,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Accès refusé.");
+    if (!user) throw new Error("AccÃ¨s refusÃ©.");
     return user;
 }
 
@@ -13015,7 +13020,7 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
             UPDATE public.memory SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
         `;
     } catch (error) {
-        console.error(`❌ [VECTORISATION ERREUR]:`, error);
+        console.error(`âŒ [VECTORISATION ERREUR]:`, error);
     }
 }
 
@@ -13175,7 +13180,7 @@ export async function DELETE(request: Request) {
 <file path="app/components/RadarMatchCard.tsx">
 'use client';
 import { useState, useEffect } from 'react';
-// Server actions supprimées — on utilise fetch vers /api/opportunities
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/opportunities
 import { getAgentName } from '@/lib/utils';
 import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
@@ -13202,12 +13207,12 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 
     const hasAudit = Boolean(auditData || opportunity?.audit);
 
-    // On détermine qui est l'autre agent
+    // On dÃ©termine qui est l'autre agent
     const otherProfile = opportunity?.sourceId === myId
         ? opportunity?.targetProfile
         : opportunity?.sourceProfile;
 
-    console.log("🔍 [RadarMatchCard] Profile data:", {
+    console.log("ðŸ” [RadarMatchCard] Profile data:", {
         oppId: opportunity?.id,
         myId,
         sourceId: opportunity?.sourceId,
@@ -13264,9 +13269,9 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 
             setStatus('AUDITED');
         } catch (e: any) {
-            console.error("❌ [STREAM ERROR]:", e);
+            console.error("âŒ [STREAM ERROR]:", e);
             alert(`Erreur Cortex: ${e.message}`);
-            setAuditData("Échec de la génération de l'audit.");
+            setAuditData("Ã‰chec de la gÃ©nÃ©ration de l'audit.");
         } finally {
             setIsAuditing(false);
         }
@@ -13298,7 +13303,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
         if (res.success) {
             setIsAccepted(true);
             router.push(`/chat?id=${otherProfile?.id}`);
-            return; // Le composant sera démonté par la navigation, pas de setState après
+            return; // Le composant sera dÃ©montÃ© par la navigation, pas de setState aprÃ¨s
         }
         setLoading(false);
     };
@@ -13320,13 +13325,13 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                 </span>
             </div>
 
-            {/* BODY : Résumé ou Audit */}
+            {/* BODY : RÃ©sumÃ© ou Audit */}
             <div className="mb-6">
                 {status === 'DETECTED' ? (
                     <p className="text-zinc-400 text-sm leading-relaxed">
                         {(() => {
                             const val = opportunity.synergies || opportunity.summary || opportunity.content;
-                            if (!val) return "Le rapport d'audit est en cours de décryptage par le Cortex...";
+                            if (!val) return "Le rapport d'audit est en cours de dÃ©cryptage par le Cortex...";
                             if (typeof val === 'object') return JSON.stringify(val);
                             return val;
                         })()}
@@ -13343,7 +13348,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
             {/* Rendu conditionnel des actions */}
             <div className="mt-6 space-y-3">
 
-                {/* BOUTON AUDIT PERSISTANT (S'affiche si un audit existe déjà) */}
+                {/* BOUTON AUDIT PERSISTANT (S'affiche si un audit existe dÃ©jÃ ) */}
                 {hasAudit && (
                     <button
                         onClick={() => setShowAudit(true)}
@@ -13361,7 +13366,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                         className="btn-primary w-full flex items-center justify-center gap-2"
                     >
                         {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
-                        {isAuditing ? "Génération par l'IA..." : t('radar.connect_btn')}
+                        {isAuditing ? "GÃ©nÃ©ration par l'IA..." : t('radar.connect_btn')}
                     </button>
                 )}
 
@@ -13394,21 +13399,21 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                     </Link>
                 )}
 
-                {/* --- NOUVEAU : STATUT INVITÉ --- */}
-                {/* Si JE suis celui qui a envoyé l'invitation (Source) */}
+                {/* --- NOUVEAU : STATUT INVITÃ‰ --- */}
+                {/* Si JE suis celui qui a envoyÃ© l'invitation (Source) */}
                 {status === 'INVITED' && opportunity.sourceId === myId && (
                     <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center">
                         <p className="text-blue-400 text-xs font-bold">
-                            ⏳ {t('radar.invite_sent')}
+                            â³ {t('radar.invite_sent')}
                         </p>
                     </div>
                 )}
 
-                {/* Si JE suis celui qui reçoit l'invitation (Cible) */}
+                {/* Si JE suis celui qui reÃ§oit l'invitation (Cible) */}
                 {status === 'INVITED' && opportunity.targetId === myId && (
                     <div className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-xl text-center">
                         <p className="text-green-400 text-sm font-bold mb-4">
-                            📩 {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
+                            ðŸ“© {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
                         </p>
                         <div className="flex gap-2">
                             <button
@@ -13416,7 +13421,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
                                 onClick={handleAccept}
                                 className={`btn-primary flex-1 ${isAccepted ? 'bg-emerald-600/50 cursor-default text-emerald-100' : 'bg-green-600 hover:bg-green-500 text-white'}`}
                             >
-                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
+                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} âœ“` : t('radar.accept').toUpperCase()}
                             </button>
                             <button
                                 onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
@@ -13471,7 +13476,7 @@ export default function RadarMatchCard({ opportunity, myId }: { opportunity: any
 import { useState, useEffect, useOptimistic, useRef } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 // Server actions supprimées — on utilise fetch vers /api/chat
-import { deriveSharedKey, encryptLocal, decryptLocal } from '@/lib/crypto-client';
+import { deriveSharedKey, encryptLocal, decryptLocal, getStoredPrivateKeyJwk } from '@/lib/crypto-client';
 import { Send, AlertCircle, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
@@ -13483,6 +13488,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
     const [messages, setMessages] = useState<Message[]>(initialMessages);
     const [isError, setIsError] = useState(false);
     const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
+    const sharedKeyRef = useRef<CryptoKey | null>(null);
     const [isDecrypting, setIsDecrypting] = useState(true);
 
     // --- ÉTATS DE PAGINATION ---
@@ -13519,33 +13525,64 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
     );
 
     // =====================================================
-    // 🔑 DÉRIVATION ECDH AU MONTAGE
+    // �� DÉRIVATION ECDH AU MONTAGE
     // Clé privée auto-récupérée depuis Secure Storage + clé publique du destinataire
     // =====================================================
     useEffect(() => {
         async function initCrypto() {
             try {
-                if (!receiverPublicKeyJwk) {
-                    console.warn("[E2E] Clé publique du destinataire manquante, chiffrement désactivé.");
+                // 1. La requête stricte vers Supabase pour le profil du partenaire
+                const { data: partnerProfile, error: profileError } = await supabase
+                    .from('Profile')
+                    .select('id, publicKey')
+                    .eq('id', receiverId)
+                    .single();
+
+                // 2. Le Stress-Test de la donnée (L'entonnoir de sécurité)
+                if (profileError || !partnerProfile) {
+                    console.error("❌ Impossible de trouver le profil de l'interlocuteur :", profileError);
                     setIsDecrypting(false);
                     return;
                 }
 
-                let parsedJwk;
-                try {
-                    // Les nouvelles clés sont encodées en base64
-                    parsedJwk = JSON.parse(atob(receiverPublicKeyJwk));
-                } catch (e) {
-                    // Rétrocompatibilité avec les anciennes clés en clair (JSON)
-                    parsedJwk = JSON.parse(receiverPublicKeyJwk);
+                if (!partnerProfile.publicKey) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
+                    setIsDecrypting(false);
+                    return;
                 }
 
-                // Dérivation de la clé partagée (récupère auto la clé privée du coffre-fort)
-                const derived = await deriveSharedKey(parsedJwk);
-                setSharedKey(derived);
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.publicKey.substring(0, 20) + "...");
 
-                // On ne déchiffre pas les messages lors du chargement : SecureMessageBubble s'en chargera
-                setMessages(initialMessages);
+                // 3. Récupération de MA clé privée et dérivation
+                const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+                const myPrivateKey = await window.crypto.subtle.importKey(
+                    "jwk", 
+                    myPrivateKeyJwk, 
+                    { name: "ECDH", namedCurve: "P-256" }, 
+                    true, 
+                    ["deriveKey"]
+                );
+
+                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.publicKey);
+                setSharedKey(derived);
+                sharedKeyRef.current = derived;
+
+                // --- L'ÉTAPE CRITIQUE : DÉCHIFFREMENT DE L'HISTORIQUE INITIAL ---
+                const decryptedMessages = await Promise.all(
+                    initialMessages.map(async (msg: Message) => {
+                        if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                            try {
+                                const clearText = await decryptLocal(msg.content, derived);
+                                return { ...msg, content: clearText };
+                            } catch (e) {
+                                console.error("Échec du déchiffrement du message historique:", msg.id, e);
+                                return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                            }
+                        }
+                        return msg;
+                    })
+                );
+                setMessages(decryptedMessages);
             } catch (e) {
                 console.error("[E2E] Erreur dérivation ECDH:", e);
             } finally {
@@ -13553,9 +13590,9 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             }
         }
         initCrypto();
-    }, [receiverPublicKeyJwk]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [receiverId, initialMessages]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // --- L'OBSERVATEUR D'INFINITE SCROLL (Le Radar Front-end) ---
+    // --- L'OBSERVATEUR d'INFINITE SCROLL (Le Radar Front-end) ---
     useEffect(() => {
         const observer = new IntersectionObserver(
             async (entries) => {
@@ -13577,16 +13614,33 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                         const supabaseClient = createClient();
                         const { data: { session } } = await supabaseClient.auth.getSession();
                         const headers: any = { 'Content-Type': 'application/json' };
-                        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+                        if (session) headers['Authorization'] = Bearer ;
 
-                        const res = await fetch(getApiUrl(`/api/chat?receiverId=${receiverId}&cursorId=${oldestMessage.id}`), { headers });
+                        const res = await fetch(getApiUrl(/api/chat?receiverId=&cursorId=), { headers });
                         const data = await res.json();
                         const older = data.messages || [];
 
                         if (older.length < 50) setHasMore(false);
 
-                        // Ne pas déchiffrer ici, laisser SecureMessageBubble s'en occuper
-                        setMessages((prev) => [...older, ...prev]);
+                        // --- DÉCHIFFREMENT DES ARCHIVES ---
+                        if (sharedKeyRef.current) {
+                            const decryptedOlder = await Promise.all(
+                                older.map(async (msg: Message) => {
+                                    if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                                        try {
+                                            const clearText = await decryptLocal(msg.content, sharedKeyRef.current!);
+                                            return { ...msg, content: clearText };
+                                        } catch (e) {
+                                            return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                        }
+                                    }
+                                    return msg;
+                                })
+                            );
+                            setMessages((prev) => [...decryptedOlder, ...prev]);
+                        } else {
+                            setMessages((prev) => [...older, ...prev]);
+                        }
 
                         setTimeout(() => {
                             if (container) {
@@ -13622,7 +13676,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
         }
 
         const channel = supabase
-            .channel(`chat_${channelId}`, {
+            .channel(chat_, {
                 config: { broadcast: { self: true } } // On veut recevoir nos propres broadcasts pour confirmation si besoin
             })
             // Écoute des nouveaux messages (Tous les messages du canal, le RLS filtre l'accès)
@@ -13636,6 +13690,19 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                 // Si c'est un message du canal actuel
                 if ((incoming.senderId === currentUserId && incoming.receiverId === receiverId) ||
                     (incoming.senderId === receiverId && incoming.receiverId === currentUserId)) {
+
+                    // --- DÉCHIFFREMENT IMMÉDIAT DU MESSAGE ENTRANT ---
+                    if (incoming.content && (incoming.content.includes(':') || incoming.content.startsWith('🧠'))) {
+                        try {
+                            if (sharedKeyRef.current) {
+                                incoming.content = await decryptLocal(incoming.content, sharedKeyRef.current);
+                            } else {
+                                incoming.content = "🔒 [Clé manquante]";
+                            }
+                        } catch (e) {
+                            incoming.content = "🔒 [Message indéchiffrable]";
+                        }
+                    }
 
                     setMessages((prev) => {
                         // Éviter les doublons (si le message est déjà là via fetch ou optimisme)
@@ -13665,7 +13732,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                 }
             })
             .subscribe((status) => {
-                console.log(`📡 [Chat-Realtime] Channel status: ${status}`);
+                console.log(📡 [Chat-Realtime] Channel status: );
             });
 
         channelRef.current = channel;
@@ -13718,7 +13785,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
         // Affichage Optimiste 0ms (Le client voit le texte en clair)
         addOptimisticMessage({
-            id: `temp-${Date.now()}`,
+            id: 	emp-,
             content,
             senderId: currentUserId,
             receiverId,
@@ -13727,8 +13794,8 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
 
         // CHIFFREMENT STRICT CÔTÉ CLIENT
         try {
-            if (!sharedKey || !receiverPublicKeyJwk) {
-                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé du destinataire introuvable.");
+            if (!sharedKey) {
+                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé partagée non dérivée.");
             }
 
             const payload = await encryptLocal(content, sharedKey);
@@ -13737,7 +13804,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             const supabaseClient = createClient();
             const { data: { session } } = await supabaseClient.auth.getSession();
             const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+            if (session) headers['Authorization'] = Bearer ;
 
             const res = await fetch(getApiUrl('/api/chat'), {
                 method: 'POST',
@@ -13816,7 +13883,7 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                             }
 
                             return (
-                                <div key={msg.id} className={`transition-all duration-300 ${msg.id.startsWith('temp-') ? 'opacity-50 grayscale' : 'opacity-100'}`}>
+                                <div key={msg.id} className={	ransition-all duration-300 }>
                                     <SecureMessageBubble
                                         id={msg.id}
                                         encryptedPayload={msg.content}
@@ -13858,11 +13925,11 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
                         onChange={handleInput}
                         placeholder="Message chiffré de bout en bout..."
                         autoComplete="off"
-                        className={`flex-1 bg-black/40 border ${isError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-blue-500/50'} rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors`}
+                        className={lex-1 bg-black/40 border  rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors}
                     />
                     <button
                         type="submit"
-                        className={`px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 ${isError ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30' : 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30'}`}
+                        className={px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 }
                     >
                         <Send className="w-5 h-5" />
                     </button>
@@ -13870,6 +13937,8 @@ export default function RealtimeChat({ initialMessages, currentUserId, receiverI
             </div>
         </div>
     );
+}
+</file>
 }
 </file>
 
@@ -13894,7 +13963,7 @@ import {
     encryptObject,
     arrayToBase64,
 } from '@/lib/crypto/zk-encryption';
-// Server action supprimée — on utilise fetch vers /api/profile
+// Server action supprimÃ©e â€” on utilise fetch vers /api/profile
 
 export default function NewProfilePage() {
     const router = useRouter();
@@ -13916,12 +13985,12 @@ export default function NewProfilePage() {
 
         // Validation
         if (formData.name.length < 2) {
-            setError('Le nom doit contenir au moins 2 caractères');
+            setError('Le nom doit contenir au moins 2 caractÃ¨res');
             return;
         }
 
         if (formData.masterPassword.length < 12) {
-            setError('Le mot de passe maître doit contenir au moins 12 caractères');
+            setError('Le mot de passe maÃ®tre doit contenir au moins 12 caractÃ¨res');
             return;
         }
 
@@ -13936,7 +14005,7 @@ export default function NewProfilePage() {
             // ===== CLIENT-SIDE CRYPTOGRAPHY (Zero-Knowledge) =====
 
             const { generateAndStoreKeyPair } = await import('@/lib/crypto-client');
-            console.log("🧬 [ONBOARDING] Démarrage de la génération d'identité E2EE...");
+            console.log("ðŸ§¬ [ONBOARDING] DÃ©marrage de la gÃ©nÃ©ration d'identitÃ© E2EE...");
             const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair();
             const publicKeyString = btoa(JSON.stringify(publicKeyJwk)); // Format base64 as requested
 
@@ -13959,16 +14028,16 @@ export default function NewProfilePage() {
             const response = await r.json();
 
             if (!response.success) {
-                console.error("❌ [ONBOARDING] Échec de la synchronisation de la clé publique avec Supabase.");
-                throw new Error(response.error || 'Erreur de sécurité : Impossible de synchroniser votre clé publique.');
+                console.error("âŒ [ONBOARDING] Ã‰chec de la synchronisation de la clÃ© publique avec Supabase.");
+                throw new Error(response.error || 'Erreur de sÃ©curitÃ© : Impossible de synchroniser votre clÃ© publique.');
             }
 
-            console.log("✅ [ONBOARDING] Identité E2EE créée et synchronisée.");
+            console.log("âœ… [ONBOARDING] IdentitÃ© E2EE crÃ©Ã©e et synchronisÃ©e.");
 
             // 8. Securely Persist to Hardware Vault
             if (Capacitor.isNativePlatform()) {
                 await VaultManager.saveSecret(VaultKey.MASTER_KEY, formData.masterPassword);
-                console.log("✅ [ONBOARDING] Master Key sécurisée dans l'enclave matérielle.");
+                console.log("âœ… [ONBOARDING] Master Key sÃ©curisÃ©e dans l'enclave matÃ©rielle.");
             }
 
             // Store recovery phrase (generated client-side, never sent to server)
@@ -13984,12 +14053,12 @@ export default function NewProfilePage() {
 
     const handleCopyPhrase = () => {
         navigator.clipboard.writeText(recoveryPhrase);
-        alert('Phrase de récupération copiée dans le presse-papiers');
+        alert('Phrase de rÃ©cupÃ©ration copiÃ©e dans le presse-papiers');
     };
 
     const handleConfirmAndContinue = () => {
         if (!phraseConfirmed) {
-            alert('Veuillez confirmer que vous avez sauvegardé votre phrase de récupération');
+            alert('Veuillez confirmer que vous avez sauvegardÃ© votre phrase de rÃ©cupÃ©ration');
             return;
         }
         router.push(`/profile/unlock?id=${profileId}`);
@@ -14006,7 +14075,7 @@ export default function NewProfilePage() {
                             </svg>
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-2">Initialisation de votre Agent</h1>
-                        <p className="text-purple-200">Votre Agent est maintenant initialisé</p>
+                        <p className="text-purple-200">Votre Agent est maintenant initialisÃ©</p>
                     </div>
 
                     <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
@@ -14015,9 +14084,9 @@ export default function NewProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <div>
-                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Phrase Cryptographique Fondatrice</h3>
+                                <h3 className="text-red-200 font-bold mb-2">âš ï¸ CRITIQUE : Phrase Cryptographique Fondatrice</h3>
                                 <p className="text-red-100 text-sm">
-                                    Voici la phrase cryptographique qui verrouille votre accès à Ipse. Elle sécurise la mémoire et les communications de votre Agent. Si vous perdez ces 12 mots, votre Agent sera amnésique de façon irréversible.
+                                    Voici la phrase cryptographique qui verrouille votre accÃ¨s Ã  Ipse. Elle sÃ©curise la mÃ©moire et les communications de votre Agent. Si vous perdez ces 12 mots, votre Agent sera amnÃ©sique de faÃ§on irrÃ©versible.
                                     <strong className="block mt-2">Nous n'avons aucun double.</strong>
                                 </p>
                             </div>
@@ -14026,7 +14095,7 @@ export default function NewProfilePage() {
 
                     <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-white font-semibold">Phrase de Récupération BIP39</h3>
+                            <h3 className="text-white font-semibold">Phrase de RÃ©cupÃ©ration BIP39</h3>
                             <button
                                 onClick={handleCopyPhrase}
                                 className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
@@ -14056,7 +14125,7 @@ export default function NewProfilePage() {
                                 className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
                             />
                             <span className="text-white text-sm">
-                                J'ai sécurisé la mémoire de mon Agent
+                                J'ai sÃ©curisÃ© la mÃ©moire de mon Agent
                             </span>
                         </label>
                     </div>
@@ -14066,7 +14135,7 @@ export default function NewProfilePage() {
                         disabled={!phraseConfirmed}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        J'AI SÉCURISÉ LA MÉMOIRE DE MON AGENT
+                        J'AI SÃ‰CURISÃ‰ LA MÃ‰MOIRE DE MON AGENT
                     </button>
 
                     <p className="text-purple-200 text-xs text-center mt-4">
@@ -14087,7 +14156,7 @@ export default function NewProfilePage() {
                         </svg>
                     </div>
                     <h1 className="text-3xl font-bold text-white mb-2">Initialisation de l'Agent Ipse</h1>
-                    <p className="text-purple-200">Créez votre profil sécurisé avec chiffrement Zero-Knowledge</p>
+                    <p className="text-purple-200">CrÃ©ez votre profil sÃ©curisÃ© avec chiffrement Zero-Knowledge</p>
                 </div>
 
                 {error && (
@@ -14113,19 +14182,19 @@ export default function NewProfilePage() {
 
                     <div>
                         <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Mot de Passe Maître (min. 12 caractères)
+                            Mot de Passe MaÃ®tre (min. 12 caractÃ¨res)
                         </label>
                         <input
                             type="password"
                             value={formData.masterPassword}
                             onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
                             className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                             minLength={12}
                             required
                         />
                         <p className="text-purple-300/70 text-xs mt-1">
-                            Ce mot de passe ne sera JAMAIS stocké sur le serveur
+                            Ce mot de passe ne sera JAMAIS stockÃ© sur le serveur
                         </p>
                     </div>
 
@@ -14138,19 +14207,19 @@ export default function NewProfilePage() {
                             value={formData.confirmPassword}
                             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                             className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                             minLength={12}
                             required
                         />
                     </div>
 
                     <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                        <h3 className="text-blue-200 font-semibold text-sm mb-2">ðŸ” Sécurité Zero-Knowledge</h3>
+                        <h3 className="text-blue-200 font-semibold text-sm mb-2">Ã°Å¸â€Â SÃ©curitÃ© Zero-Knowledge</h3>
                         <ul className="text-blue-100 text-xs space-y-1">
-                            <li>✅ Chiffrement AES-256-GCM côté client</li>
-                            <li>✅ Vos clés ne quittent jamais votre appareil</li>
-                            <li>✅ Le serveur ne peut pas lire vos données</li>
-                            <li>✅ Phrase de récupération BIP39 (12 mots)</li>
+                            <li>âœ… Chiffrement AES-256-GCM cÃ´tÃ© client</li>
+                            <li>âœ… Vos clÃ©s ne quittent jamais votre appareil</li>
+                            <li>âœ… Le serveur ne peut pas lire vos donnÃ©es</li>
+                            <li>âœ… Phrase de rÃ©cupÃ©ration BIP39 (12 mots)</li>
                         </ul>
                     </div>
 
@@ -14165,17 +14234,17 @@ export default function NewProfilePage() {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                 </svg>
-                                Création en cours...
+                                CrÃ©ation en cours...
                             </>
                         ) : (
-                            'Créer le Profil'
+                            'CrÃ©er le Profil'
                         )}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
                     <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
-                        â† Retour à l'accueil
+                        Ã¢â€ Â Retour Ã  l'accueil
                     </a>
                 </div>
             </div>
@@ -14208,18 +14277,18 @@ export async function forceHuntSync(formData?: FormData) {
         await executeRadarScan(user.id, 'work');
         revalidatePath('/');
     } catch (error: any) {
-        console.error("🔥 [RADAR] CRASH:", error.message);
+        console.error("ðŸ”¥ [RADAR] CRASH:", error.message);
     }
 }
 
 export async function executeRadarScan(userId: string, theme: string = 'work') {
-    console.log(`📡 [RADAR] Scan IA pour ${userId} (Thème: ${theme})...`);
+    console.log(`ðŸ“¡ [RADAR] Scan IA pour ${userId} (ThÃ¨me: ${theme})...`);
 
     try {
         const myProfile = await prisma.profile.findUnique({ where: { id: userId } });
         if (!myProfile) return;
 
-        // Configuration selon le thème
+        // Configuration selon le thÃ¨me
         let embeddingField = "unifiedEmbedding";
         let myBio = myProfile.bio;
         let myRole = myProfile.primaryRole;
@@ -14246,11 +14315,11 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
         
         const userEmbedding = currentUserRaw[0]?.embedding;
         if (!userEmbedding) {
-            console.log(`⚠️ [RADAR] Aucun vecteur trouvé pour ${userId} sur le thème ${theme}.`);
+            console.log(`âš ï¸ [RADAR] Aucun vecteur trouvÃ© pour ${userId} sur le thÃ¨me ${theme}.`);
             return;
         }
 
-        // 2. Recherche Cosinus (Stricte Ségrégation Contextuelle)
+        // 2. Recherche Cosinus (Stricte SÃ©grÃ©gation Contextuelle)
         const others: any[] = await prisma.$queryRawUnsafe(`
             SELECT 
                 id, name, bio, sector,
@@ -14281,21 +14350,21 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
                 
                 if (existing) continue;
 
-                const prompt = `Tu es Cortex, une IA de renseignement sémantique. Compare ces deux profils pour évaluer une synergie stratégique.
+                const prompt = `Tu es Cortex, une IA de renseignement sÃ©mantique. Compare ces deux profils pour Ã©valuer une synergie stratÃ©gique.
         
 [MON PROFIL (Utilisateur Courant)]:
-Rôle : ${myRole || 'Non défini'}
-Secteur : ${mySector || 'Non défini'}
-Bio : ${myBio || 'Non spécifié'}
+RÃ´le : ${myRole || 'Non dÃ©fini'}
+Secteur : ${mySector || 'Non dÃ©fini'}
+Bio : ${myBio || 'Non spÃ©cifiÃ©'}
 
-[CIBLE DÉTECTÉE (${target.name || 'Cible'})]:
-Rôle : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non défini'}
-Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non défini'}
-Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spécifié'}
+[CIBLE DÃ‰TECTÃ‰E (${target.name || 'Cible'})]:
+RÃ´le : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non dÃ©fini'}
+Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non dÃ©fini'}
+Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spÃ©cifiÃ©'}
 
-Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
-Directive : Décris la cible. Format JSON: { "score": number, "synergies": "string" }
-RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
+Si compatibilitÃ© > 60%, donne un score (0-100) et un rÃ©sumÃ© ultra-bref (15 mots max).
+Directive : DÃ©cris la cible. Format JSON: { "score": number, "synergies": "string" }
+RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
 
                 const res = await mistralClient.chat.complete({
                     model: 'mistral-small-latest',
@@ -14316,7 +14385,7 @@ RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
                             sourceId: userId,
                             targetId: target.id,
                             matchScore: result.score,
-                            synergies: result.synergies || "Compatibilité détectée.",
+                            synergies: result.synergies || "CompatibilitÃ© dÃ©tectÃ©e.",
                             status: 'DETECTED',
                             context: theme.toUpperCase()
                         }
@@ -14327,7 +14396,7 @@ RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
             }
         }
     } catch (error: any) {
-        console.error(`❌ [RADAR-EXEC] Error for ${userId}:`, error.message);
+        console.error(`âŒ [RADAR-EXEC] Error for ${userId}:`, error.message);
     }
 }
 
@@ -14436,7 +14505,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                                     {!auditData && (
                                         <div className="flex items-center gap-3 mt-4 text-zinc-500 italic text-xs animate-pulse">
                                             <Loader2 className="w-3 h-3 animate-spin" />
-                                            Décryptage des flux Cortex...
+                                            DÃ©cryptage des flux Cortex...
                                         </div>
                                     )}
                                 </article>
@@ -14446,7 +14515,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                         <div className="pt-4 flex items-center justify-center">
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/5 shadow-sm">
                                 <ShieldCheck className="w-3 h-3 text-blue-500" />
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Synthèse certifiée par l'IA Edge</span>
+                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">SynthÃ¨se certifiÃ©e par l'IA Edge</span>
                             </div>
                         </div>
                     </div>
@@ -14489,9 +14558,9 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                             {isSending && <Loader2 className="w-4 h-4 animate-spin" />}
                             {isSent && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
 
-                            {isSending ? "Négocations..." :
-                                isSent ? "✓ Signal transmis" :
-                                    "Ouvrir un Canal Sécurisé"}
+                            {isSending ? "NÃ©gocations..." :
+                                isSent ? "âœ“ Signal transmis" :
+                                    "Ouvrir un Canal SÃ©curisÃ©"}
 
                             {!isSending && !isSent && <ChevronRight className="w-4 h-4" />}
                         </button>
@@ -14510,35 +14579,35 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
 import { useState, useEffect } from 'react'
 import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, Zap, Target, Edit3, RefreshCw } from 'lucide-react'
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/agent
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/agent
 
 const QUESTIONS = {
     travail: [
-        { id: 'industry', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
-        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
-        { id: 'seniority', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
-        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
-        { id: 'environment', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
+        { id: 'industry', label: 'Secteur d\'activitÃ©', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'SantÃ© & Bien-Ãªtre', 'Artisanat & BTP', 'Autre (prÃ©ciser)'] },
+        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['SalariÃ©', 'Freelance / IndÃ©pendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Ã‰tudiant'] },
+        { id: 'seniority', label: 'Niveau d\'expÃ©rience', options: ['Junior (0-2 ans)', 'ConfirmÃ© (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
+        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunitÃ© de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marchÃ©', 'Reconversion professionnelle'] },
+        { id: 'environment', label: 'Environnement idÃ©al', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% TÃ©lÃ©travail / Nomad'] }
     ],
 
 
-    // 🟢 NOUVEAU BLOC : LA BOUSSOLE MORALE
+    // ðŸŸ¢ NOUVEAU BLOC : LA BOUSSOLE MORALE
     ikigai: [
-        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
-        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
-        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
-        { id: 'superpouvoir', label: 'Votre "Zone de Génie"', options: ['Vision stratégique & Anticipation', 'Exécution & Résolution de problèmes complexes', 'Communication & Fédérer les humains', 'Analyse & Compréhension technique profonde'] },
-        { id: 'socialStyle', label: 'Ton de votre Agent Ipse', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
+        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['CrÃ©er de l\'impact (Social/Ã‰colo)', 'Atteindre l\'indÃ©pendance absolue (LibertÃ©/Finance)', 'Innover & Construire l\'avenir (CrÃ©ation)', 'Transmettre & Aider (Mentorat/Soin)'] },
+        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['AuthenticitÃ© & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
+        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires Ã  mon Ã©thique', 'DÃ©sÃ©quilibre pro/perso toxique', 'Manque de clartÃ© / Bullshit'] },
+        { id: 'superpouvoir', label: 'Votre "Zone de GÃ©nie"', options: ['Vision stratÃ©gique & Anticipation', 'ExÃ©cution & RÃ©solution de problÃ¨mes complexes', 'Communication & FÃ©dÃ©rer les humains', 'Analyse & ComprÃ©hension technique profonde'] },
+        { id: 'socialStyle', label: 'Ton de votre Agent Ipse', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'MystÃ©rieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
     ]
 };
 
 export default function AgentConfig({ profileId, initialData }: { profileId: string, initialData?: any }) {
-    // ÉTATS MODULE 1 (Général)
+    // Ã‰TATS MODULE 1 (GÃ©nÃ©ral)
     const [dateOfBirth, setDateOfBirth] = useState<string>(initialData?.dateOfBirth || '');
     const [gender, setGender] = useState(initialData?.gender || '');
     const [country, setCountry] = useState(initialData?.country || 'France');
 
-    // 🟢 NOUVEAU : Radar Géographique
+    // ðŸŸ¢ NOUVEAU : Radar GÃ©ographique
     const [postalCode, setPostalCode] = useState<string>(initialData?.postalCode || '');
     const [city, setCity] = useState<string>(initialData?.city || '');
     const [citiesList, setCitiesList] = useState<string[]>([]);
@@ -14562,7 +14631,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
             }).then(r => r.json());
             if (data.success && data.synthesis) {
                 setSynthesis(data.synthesis);
-                alert("Profilage du Gardien synchronisé avec succès !");
+                alert("Profilage du Gardien synchronisÃ© avec succÃ¨s !");
             }
         } catch (e) {
             console.error("Erreur Synchro", e);
@@ -14571,11 +14640,11 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         }
     };
 
-    // ÉTATS MODULE 2 (Thématique)
+    // Ã‰TATS MODULE 2 (ThÃ©matique)
     const [activeTab, setActiveTab] = useState('travail');
     const [formData, setFormData] = useState<any>(initialData?.thematicProfile || {});
 
-    // 🟢 Radar Connecté : API gouv.fr pour les villes
+    // ðŸŸ¢ Radar ConnectÃ© : API gouv.fr pour les villes
     useEffect(() => {
         if (postalCode.length === 5) {
             fetch(`https://geo.api.gouv.fr/communes?codePostal=${postalCode}`)
@@ -14584,7 +14653,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     if (Array.isArray(data) && data.length > 0) {
                         const cityNames = data.map((c: any) => c.nom);
                         setCitiesList(cityNames);
-                        // Auto-sélectionne la première ville si aucune n'est déjà choisie
+                        // Auto-sÃ©lectionne la premiÃ¨re ville si aucune n'est dÃ©jÃ  choisie
                         if (!city || !cityNames.includes(city)) {
                             setCity(cityNames[0]);
                         }
@@ -14598,7 +14667,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         }
     }, [postalCode]);
 
-    // Chargement de la mémoire
+    // Chargement de la mÃ©moire
     useEffect(() => {
         const fetchAgentMemory = async () => {
             if (!profileId) return;
@@ -14621,7 +14690,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setGender(profile.gender || '');
                     setCountry(profile.country || 'France');
 
-                    // ✅ Mappage des top-level fields combinés avec ThematicProfile
+                    // âœ… Mappage des top-level fields combinÃ©s avec ThematicProfile
                     setFormData({
                         ...thematic,
                         travail: {
@@ -14645,7 +14714,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setSynthesis(data.profile.unifiedAnalysis || '');
                 }
             } catch (err) {
-                console.error("❌ Erreur de restauration :", err);
+                console.error("âŒ Erreur de restauration :", err);
             }
         };
         fetchAgentMemory();
@@ -14671,7 +14740,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                 headers,
                 body: JSON.stringify({ action: 'update', profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData })
             }).then(r => r.json());
-            if (data.success) alert("ADN de l'Agent Ipse sauvegardé avec succès !");
+            if (data.success) alert("ADN de l'Agent Ipse sauvegardÃ© avec succÃ¨s !");
             else alert("Erreur lors de la sauvegarde.");
         } catch (error) {
             console.error(error);
@@ -14681,10 +14750,10 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
     return (
         <div className="max-w-3xl w-full mx-auto space-y-6">
 
-            {/* 🟦 MODULE 1 : IDENTITÉ GÉNÉRALE */}
+            {/* ðŸŸ¦ MODULE 1 : IDENTITÃ‰ GÃ‰NÃ‰RALE */}
             <div className="bg-gray-900 text-white p-6 rounded-lg border border-gray-700 shadow-lg">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
-                    <User className="mr-2 text-blue-400" /> IDENTITÉ GÉNÉRALE
+                    <User className="mr-2 text-blue-400" /> IDENTITÃ‰ GÃ‰NÃ‰RALE
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -14696,7 +14765,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                             onChange={(e) => setCountry(e.target.value)}
                             className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none"
                         >
-                            <option value="">Sélectionner...</option>
+                            <option value="">SÃ©lectionner...</option>
                             <option value="France">France</option>
                             <option value="Suisse">Suisse</option>
                             <option value="Belgique">Belgique</option>
@@ -14715,7 +14784,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><User size={14} className="mr-1" /> Genre</label>
                         <select value={gender} onChange={(e) => setGender(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none">
-                            <option value="">Sélectionner...</option>
+                            <option value="">SÃ©lectionner...</option>
                             <option value="Homme">Homme</option>
                             <option value="Femme">Femme</option>
                             <option value="Non-binaire">Non-binaire</option>
@@ -14728,7 +14797,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         <input type="text" maxLength={5} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none" placeholder="Ex: 75001" />
                     </div>
 
-                    {/* VILLE (Générée automatiquement) */}
+                    {/* VILLE (GÃ©nÃ©rÃ©e automatiquement) */}
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><Globe size={14} className="mr-1" /> Ville</label>
                         <select value={city} onChange={(e) => setCity(e.target.value)} disabled={citiesList.length === 0} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none disabled:opacity-50">
@@ -14740,7 +14809,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     </div>
                 </div>
 
-                {/* 🟢 LE MODULE DE PROFILAGE DU GARDIEN AVEC BOUTON DE SYNCHRO */}
+                {/* ðŸŸ¢ LE MODULE DE PROFILAGE DU GARDIEN AVEC BOUTON DE SYNCHRO */}
                 <div className="col-span-full mt-6 p-4 bg-gray-900/80 border border-blue-500/40 rounded-lg shadow-inner relative">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 border-b border-gray-700/50 pb-3 gap-3">
                         <div className="flex items-center font-bold text-blue-400">
@@ -14758,15 +14827,15 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     </div>
 
                     <div className="italic text-gray-300 text-sm leading-relaxed p-2 bg-gray-800/50 rounded border border-gray-700/50">
-                        {synthesis ? `"${synthesis}"` : "Aucune analyse du Gardien pour le moment. Cliquez sur 'Forcer la Synchronisation' pour générer votre premier profilage global."}
+                        {synthesis ? `"${synthesis}"` : "Aucune analyse du Gardien pour le moment. Cliquez sur 'Forcer la Synchronisation' pour gÃ©nÃ©rer votre premier profilage global."}
                     </div>
                 </div>
             </div>
 
-            {/* 🟪 MODULE 2 : MATRICE THÉMATIQUE */}
+            {/* ðŸŸª MODULE 2 : MATRICE THÃ‰MATIQUE */}
             <div className="bg-gray-900 text-white p-6 rounded-lg border border-purple-900/50 shadow-lg relative overflow-hidden">
-                {/* Petit badge "PREMIUM" pour préparer visuellement l'arrivée de Stripe */}
-                <div className="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">MODULE AVANCÉ</div>
+                {/* Petit badge "PREMIUM" pour prÃ©parer visuellement l'arrivÃ©e de Stripe */}
+                <div className="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">MODULE AVANCÃ‰</div>
 
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
                     <Briefcase className="mr-2 text-purple-400" /> MATRICE PSYCHOLOGIQUE
@@ -14777,7 +14846,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         <Briefcase size={16} className="mr-2" /> Travail
                     </button>
 
-                    {/* 🟢 NOUVEAU BOUTON IKIGAI */}
+                    {/* ðŸŸ¢ NOUVEAU BOUTON IKIGAI */}
                     <button onClick={() => setActiveTab('ikigai')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'ikigai' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Target size={16} className="mr-2" /> Ikigai & Morale
                     </button>
@@ -14787,7 +14856,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     {QUESTIONS[activeTab as keyof typeof QUESTIONS].map((q) => {
                         const currentValue = formData[activeTab]?.[q.id] || '';
                         const isCustom = currentValue.startsWith('CUSTOM:');
-                        const displayValue = isCustom ? 'Autre (préciser)' : currentValue;
+                        const displayValue = isCustom ? 'Autre (prÃ©ciser)' : currentValue;
 
                         return (
                             <div key={q.id} className="flex flex-col space-y-2">
@@ -14795,19 +14864,19 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                                 <select
                                     value={displayValue}
                                     onChange={(e) => {
-                                        if (e.target.value === 'Autre (préciser)') handleThematicChange(activeTab, q.id, 'CUSTOM:');
+                                        if (e.target.value === 'Autre (prÃ©ciser)') handleThematicChange(activeTab, q.id, 'CUSTOM:');
                                         else handleThematicChange(activeTab, q.id, e.target.value);
                                     }}
                                     className="bg-gray-900 border border-gray-600 rounded p-2 text-sm focus:border-purple-500 outline-none"
                                 >
-                                    <option value="" disabled>Sélectionner...</option>
+                                    <option value="" disabled>SÃ©lectionner...</option>
                                     {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                 </select>
 
                                 {isCustom && (
                                     <input
                                         type="text"
-                                        placeholder="Précisez votre choix..."
+                                        placeholder="PrÃ©cisez votre choix..."
                                         value={currentValue.replace('CUSTOM:', '')}
                                         onChange={(e) => handleThematicChange(activeTab, q.id, `CUSTOM:${e.target.value}`)}
                                         className="bg-gray-700 border border-gray-500 rounded p-2 text-sm mt-2 focus:border-purple-500 outline-none"
@@ -14818,16 +14887,16 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         );
                     })}
 
-                    {/* 🟢 ZONE DE TEXTE LIBRE POUR AFFINER */}
+                    {/* ðŸŸ¢ ZONE DE TEXTE LIBRE POUR AFFINER */}
                     <div className="mt-6 pt-6 border-t border-gray-700/50">
                         <label className="text-sm font-semibold text-gray-300 flex items-center mb-2">
                             <Edit3 size={14} className="mr-2 text-purple-400" />
-                            Précisions libres (Nuances pour la section {activeTab})
+                            PrÃ©cisions libres (Nuances pour la section {activeTab})
                         </label>
                         <textarea
                             value={formData[activeTab]?.precisionsLibres || ''}
                             onChange={(e) => handleThematicChange(activeTab, 'precisionsLibres', e.target.value)}
-                            placeholder={`Ajoutez ici vos nuances, lignes rouges spécifiques ou détails uniques concernant la matrice "${activeTab}"...`}
+                            placeholder={`Ajoutez ici vos nuances, lignes rouges spÃ©cifiques ou dÃ©tails uniques concernant la matrice "${activeTab}"...`}
                             className="bg-gray-800 border border-gray-600 rounded p-3 text-sm focus:border-purple-500 outline-none w-full min-h-[100px] resize-y"
                         />
                     </div>
@@ -14876,7 +14945,7 @@ export async function createProfile(data: { name: string }) {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return { success: false, error: 'Utilisateur non authentifié' };
+            return { success: false, error: 'Utilisateur non authentifiÃ©' };
         }
 
         const profile = await prisma.profile.upsert({
@@ -14906,9 +14975,9 @@ export async function updateIdentity(formData: FormData) {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
+    if (!user) throw new Error("Non autorisÃ©");
 
-    // Extraction sécurisée des données
+    // Extraction sÃ©curisÃ©e des donnÃ©es
     const role = formData.get('role') as string;
     const customRole = formData.get('customRole') as string;
     const tjmString = formData.get('tjm') as string;
@@ -14918,7 +14987,7 @@ export async function updateIdentity(formData: FormData) {
     const tjm = tjmString ? parseInt(tjmString, 10) : null;
 
     try {
-        // 1. Mise à jour des champs standards
+        // 1. Mise Ã  jour des champs standards
         await prisma.profile.update({
             where: { id: user.id },
             data: {
@@ -14930,32 +14999,32 @@ export async function updateIdentity(formData: FormData) {
             }
         });
 
-        // 2. ? GÉNÉRATION DU VECTEUR MAÎTRE (Unified Embedding)
-        // On combine les infos clés pour une recherche vectorielle précise
-        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}€. Dispo: ${availability}`;
+        // 2. ? GÃ‰NÃ‰RATION DU VECTEUR MAÃŽTRE (Unified Embedding)
+        // On combine les infos clÃ©s pour une recherche vectorielle prÃ©cise
+        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}â‚¬. Dispo: ${availability}`;
 
-        console.log(`[IDENTITÉ] Génération d'embedding pour ${user.id}...`);
+        console.log(`[IDENTITÃ‰] GÃ©nÃ©ration d'embedding pour ${user.id}...`);
 
         const embedding = await getMistralEmbedding(identityString);
 
         if (embedding) {
             // Prisma ne supporte pas nativement le type 'vector', on passe en SQL brut
-            // On s'assure que l'ID est bien formaté pour PostgreSQL
+            // On s'assure que l'ID est bien formatÃ© pour PostgreSQL
             await prisma.$executeRawUnsafe(
                 `UPDATE "Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
                 `[${embedding.join(',')}]`,
                 user.id
             );
-            console.log(`? [IDENTITÉ] Vecteur Maître mis à jour.`);
+            console.log(`? [IDENTITÃ‰] Vecteur MaÃ®tre mis Ã  jour.`);
         } else {
-            console.error("[IDENTITÉ] Échec de génération d'embedding Mistral.");
+            console.error("[IDENTITÃ‰] Ã‰chec de gÃ©nÃ©ration d'embedding Mistral.");
         }
 
-        console.log(`[IDENTITÉ] Profil de ${user.id} sauvegardé.`);
+        console.log(`[IDENTITÃ‰] Profil de ${user.id} sauvegardÃ©.`);
         revalidatePath('/profile');
 
     } catch (error) {
-        console.error("[IDENTITÉ] Erreur BDD/IA:", error);
+        console.error("[IDENTITÃ‰] Erreur BDD/IA:", error);
         throw new Error("Erreur lors de la sauvegarde.");
     }
 }
@@ -15196,7 +15265,7 @@ function ProfileContent() {
             });
             if (res.ok) {
                 setLanguage(newLang);
-                setSuccess(newLang === 'fr' ? 'Langue mise à jour !' : 'Language updated!');
+                setSuccess(newLang === 'fr' ? 'Langue mise Ã  jour !' : 'Language updated!');
                 setTimeout(() => setSuccess(null), 3000);
             }
         } catch (e) {
@@ -15227,7 +15296,7 @@ function ProfileContent() {
         <div className="min-h-screen bg-black text-white p-6 pb-40 lg:p-12">
             <header className="mb-8">
                 <Link href="/" className="text-gray-500 hover:text-white text-sm mb-4 inline-flex items-center gap-2">
-                    ← Radar
+                    â† Radar
                 </Link>
                 <div className="flex justify-between items-end">
                     <div>
@@ -15339,7 +15408,7 @@ function ProfileContent() {
                                     <section>
                                         <div className="flex justify-between items-center mb-4">
                                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest italic">{t('profile.work.tjm')}</label>
-                                            <span className="text-xl font-mono text-emerald-400">{formData.workTjm} €</span>
+                                            <span className="text-xl font-mono text-emerald-400">{formData.workTjm} â‚¬</span>
                                         </div>
                                         <input
                                             type="range" min="100" max="2500" step="50"
@@ -15405,18 +15474,18 @@ function ProfileContent() {
                                         onClick={() => handleLanguageChange('fr')}
                                         className={`py-4 rounded-2xl border font-bold transition-all ${language === 'fr' ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-gray-800/50 border-gray-700 text-gray-500'}`}
                                     >
-                                        🇫🇷 Français
+                                        ðŸ‡«ðŸ‡· FranÃ§ais
                                     </button>
                                     <button
                                         onClick={() => handleLanguageChange('en')}
                                         className={`py-4 rounded-2xl border font-bold transition-all ${language === 'en' ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-gray-800/50 border-gray-700 text-gray-500'}`}
                                     >
-                                        🇺🇸 English
+                                        ðŸ‡ºðŸ‡¸ English
                                     </button>
                                 </div>
                             </section>
 
-                            {/* --- DÉCONNEXION --- */}
+                            {/* --- DÃ‰CONNEXION --- */}
                             <section className="mt-12">
                                 <button
                                     onClick={handleLogout}
@@ -15563,10 +15632,10 @@ import {
 import { getApiUrl } from '@/lib/api';
 
 import CortexGrid from '@/components/cortex/CortexGrid';
-// Server actions supprimées — on utilise fetch vers /api/memories et /api/guardian
-// Server action supprimée — on utilise fetch vers /api/auth-guard
+// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories et /api/guardian
+// Server action supprimÃ©e â€” on utilise fetch vers /api/auth-guard
 
-// ——— TYPE ————————————————————————————————————————————————————————————
+// â€”â€”â€” TYPE â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 interface Memory {
     id: string;
     content: string;
@@ -15579,10 +15648,10 @@ interface Memory {
 type LogLevel = 'info' | 'success' | 'error' | 'warning';
 interface Log { msg: string; level: LogLevel; ts: string }
 
-// ——— HELPERS ————————————————————————————————————————————————————————
+// â€”â€”â€” HELPERS â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 const typeIcon: Record<string, string> = {
-    document: 'ðŸ“„', knowledge: '🌐', THOUGHT: 'ðŸ’­', thought: 'ðŸ’­',
-    secret: 'ðŸ”’', default: 'ðŸ§©',
+    document: 'Ã°Å¸â€œâ€ž', knowledge: 'ðŸŒ', THOUGHT: 'Ã°Å¸â€™Â­', thought: 'Ã°Å¸â€™Â­',
+    secret: 'Ã°Å¸â€â€™', default: 'Ã°Å¸Â§Â©',
 };
 const typeColor: Record<string, string> = {
     document: 'bg-blue-900/50 text-blue-300 border-blue-700/50',
@@ -15593,7 +15662,7 @@ const typeColor: Record<string, string> = {
     default: 'bg-slate-800    text-slate-400  border-slate-700',
 };
 
-// ——— COMPOSANT PRINCIPAL ————————————————————————————————————————————
+// â€”â€”â€” COMPOSANT PRINCIPAL â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
 function CortexManager() {
     const router = useRouter();
     const [supabase] = useState(() => createClient());
@@ -15601,13 +15670,13 @@ function CortexManager() {
     const [profileId, setProfileId] = useState<string | null>(null);
     const [memories, setMemories] = useState<Memory[]>([]);
     const [logs, setLogs] = useState<Log[]>([
-        { msg: '[SYSTÈME] Cortex en ligne. En attente de données...', level: 'info', ts: now() }
+        { msg: '[SYSTÃˆME] Cortex en ligne. En attente de donnÃ©es...', level: 'info', ts: now() }
     ]);
     const [isDragging, setIsDragging] = useState(false);
     const [urlInput, setUrlInput] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [isScraping, setIsScraping] = useState(false);
-    // États éditeur de fragments
+    // Ã‰tats Ã©diteur de fragments
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -15616,14 +15685,14 @@ function CortexManager() {
     const [profileRawData, setProfileRawData] = useState('');
     const [isAssimilating, setIsAssimilating] = useState(false);
 
-    // Nouveaux States pour la Pensée Rapide (Mémoire)
+    // Nouveaux States pour la PensÃ©e Rapide (MÃ©moire)
     const [quickThought, setQuickThought] = useState('');
     const [isSavingThought, setIsSavingThought] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
 
-    // — Auth check —
+    // â€” Auth check â€”
     useEffect(() => {
         supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
             if (!user) { router.push('/'); return; }
@@ -15631,12 +15700,12 @@ function CortexManager() {
         });
     }, []);
 
-    // ——— Load memories quand profileId est dispo ———
+    // â€”â€”â€” Load memories quand profileId est dispo â€”â€”â€”
     useEffect(() => {
         if (profileId) fetchMemories();
     }, [profileId]);
 
-    // â”€â”€ Auto-scroll logs â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Auto-scroll logs Ã¢â€â‚¬Ã¢â€â‚¬
     useEffect(() => {
         logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [logs]);
@@ -15649,7 +15718,7 @@ function CortexManager() {
         setLogs(prev => [...prev.slice(-19), { msg, level, ts: now() }]);
     };
 
-    // â”€â”€ Fetch mémoires récentes â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch mÃ©moires rÃ©centes Ã¢â€â‚¬Ã¢â€â‚¬
     const fetchMemories = async () => {
         if (!profileId) return;
         try {
@@ -15665,16 +15734,16 @@ function CortexManager() {
         }
     };
 
-    // â”€â”€ Upload fichier â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Upload fichier Ã¢â€â‚¬Ã¢â€â‚¬
     const handleFileUpload = async (file: File) => {
         setIsUploading(true);
         addLog(`[SENSOR] Analyse de la cible : ${file.name} (${(file.size / 1024).toFixed(1)} Ko)`, 'info');
 
-        // Récupération de la session complète pour extraire le Bearer token
+        // RÃ©cupÃ©ration de la session complÃ¨te pour extraire le Bearer token
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-            addLog('[CRITIQUE] Utilisateur non authentifié. Connexion refusée.', 'error');
+            addLog('[CRITIQUE] Utilisateur non authentifiÃ©. Connexion refusÃ©e.', 'error');
             setIsUploading(false);
             return;
         }
@@ -15694,27 +15763,27 @@ function CortexManager() {
             }).then(r => r.json());
 
             if (data.success) {
-                addLog(`[SUCCÈS] Fragment de "${file.name}" gravés.`, 'success');
+                addLog(`[SUCCÃˆS] Fragment de "${file.name}" gravÃ©s.`, 'success');
                 await fetchMemories();
 
-                // 🟢 NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
-                console.log("🦇 Envoi du signal au Gardien...");
+                // ðŸŸ¢ NOUVEAU : On rÃ©veille le Gardien silencieusement en arriÃ¨re-plan !
+                console.log("ðŸ¦‡ Envoi du signal au Gardien...");
                 fetch(getApiUrl('/api/guardian'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ profileId: session.user.id, text: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.` })
+                    body: JSON.stringify({ profileId: session.user.id, text: `Nouveau fichier analysÃ© : ${file.name}. Ce document a Ã©tÃ© ajoutÃ© Ã  sa base de donnÃ©es.` })
                 }).catch(err => console.error("Erreur du Gardien :", err));
             } else {
-                addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
+                addLog(`[ERREUR SENSOR] ${data.error || 'Ã‰chec de l\'ingestion.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Échec de la liaison de transfert.', 'error');
+            addLog('[CRITIQUE] Ã‰chec de la liaison de transfert.', 'error');
         } finally {
             setIsUploading(false);
         }
     };
 
-    // â”€â”€ Scrape URL â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Scrape URL Ã¢â€â‚¬Ã¢â€â‚¬
     const handleUrlSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!urlInput) return;
@@ -15722,12 +15791,12 @@ function CortexManager() {
         const targetUrl = urlInput.trim();
         setUrlInput('');
         setIsScraping(true);
-        addLog(`[RÉSEAU] Extraction des données depuis : ${targetUrl}...`, 'info');
+        addLog(`[RÃ‰SEAU] Extraction des donnÃ©es depuis : ${targetUrl}...`, 'info');
 
-        // Récupération du passeport session
+        // RÃ©cupÃ©ration du passeport session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] Accès réseau refusé (Non authentifié).', 'error');
+            addLog('[CRITIQUE] AccÃ¨s rÃ©seau refusÃ© (Non authentifiÃ©).', 'error');
             setIsScraping(false);
             return;
         }
@@ -15743,19 +15812,19 @@ function CortexManager() {
             }).then(r => r.json());
 
             if (data.success) {
-                addLog(`[SUCCÈS] Fragments du site extraits et indexés.`, 'success');
+                addLog(`[SUCCÃˆS] Fragments du site extraits et indexÃ©s.`, 'success');
                 await fetchMemories();
             } else {
-                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping échoué.'}`, 'error');
+                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping Ã©chouÃ©.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Échec de la connexion au module Scraper.', 'error');
+            addLog('[CRITIQUE] Ã‰chec de la connexion au module Scraper.', 'error');
         } finally {
             setIsScraping(false);
         }
     };
 
-    // â”€â”€ Drag & Drop â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Drag & Drop Ã¢â€â‚¬Ã¢â€â‚¬
     const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
     const handleDragLeave = () => setIsDragging(false);
     const handleDrop = (e: React.DragEvent) => {
@@ -15763,18 +15832,18 @@ function CortexManager() {
         if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
     };
 
-    // â”€â”€ Delete mémoire (avec Bearer token + confirmation) â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Delete mÃ©moire (avec Bearer token + confirmation) Ã¢â€â‚¬Ã¢â€â‚¬
     const handleDeleteMemory = async (e: React.MouseEvent, memoryId: string) => {
-        e.stopPropagation(); // Empêche d'ouvrir la modale d'édition
+        e.stopPropagation(); // EmpÃªche d'ouvrir la modale d'Ã©dition
 
-        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mémoire ? Cette action est irréversible.')) return;
+        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mÃ©moire ? Cette action est irrÃ©versible.')) return;
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('[CRITIQUE] Session expirée.', 'error'); return; }
+        if (!session) { addLog('[CRITIQUE] Session expirÃ©e.', 'error'); return; }
 
-        // Mise à jour optimiste immédiate
+        // Mise Ã  jour optimiste immÃ©diate
         setMemories(prev => prev.filter(m => m.id !== memoryId));
-        addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
+        addLog(`[PURGE] IncinÃ©ration du fragment ${memoryId.slice(0, 8)}...`, 'warning');
 
         try {
             const headers: any = { 'Content-Type': 'application/json' };
@@ -15785,14 +15854,14 @@ function CortexManager() {
                 headers,
                 body: JSON.stringify({ memoryId })
             });
-            addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
+            addLog('[SUCCÃˆS] Fragment mÃ©moriel incinÃ©rÃ©.', 'success');
         } catch {
-            addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
+            addLog('[CRITIQUE] Ã‰chec de connexion lors de la purge.', 'error');
             fetchMemories();
         }
     };
 
-    // â”€â”€ Sauvegarde édition avec re-vectorisation â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Sauvegarde Ã©dition avec re-vectorisation Ã¢â€â‚¬Ã¢â€â‚¬
     const handleSaveEdit = async () => {
         if (!editingMemory) return;
         setIsUpdating(true);
@@ -15800,7 +15869,7 @@ function CortexManager() {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] Session expirée.', 'error');
+            addLog('[CRITIQUE] Session expirÃ©e.', 'error');
             setIsUpdating(false);
             return;
         }
@@ -15815,35 +15884,35 @@ function CortexManager() {
                 body: JSON.stringify({ memoryId: editingMemory.id, newContent: editContent })
             }).then(r => r.json());
             if (data.success) {
-                addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
+                addLog('[SUCCÃˆS] Fragment mis Ã  jour et re-vectorisÃ©.', 'success');
                 setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
                 setEditingMemory(null);
             } else {
-                addLog(`[ERREUR] ${data.error || 'Modification échouée.'}`, 'error');
+                addLog(`[ERREUR] ${data.error || 'Modification Ã©chouÃ©e.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Échec de la connexion lors de l\'édition.', 'error');
+            addLog('[CRITIQUE] Ã‰chec de la connexion lors de l\'Ã©dition.', 'error');
         } finally {
             setIsUpdating(false);
         }
     };
 
-    // â”€â”€ Loading state â”€â”€
-    // --- Fonction 1 : Assimilation de l'Identité ---
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Loading state Ã¢â€â‚¬Ã¢â€â‚¬
+    // --- Fonction 1 : Assimilation de l'IdentitÃ© ---
     const handleProfileAssimilation = async () => {
         if (!profileId || !profileRawData.trim()) return;
         setIsAssimilating(true);
-        addLog('[MATRICE] Injection des données brutes en cours...', 'info');
+        addLog('[MATRICE] Injection des donnÃ©es brutes en cours...', 'info');
         try {
-            // La logique a été déplacée dans le composant d'onboarding
+            // La logique a Ã©tÃ© dÃ©placÃ©e dans le composant d'onboarding
             // const result = await autoIngestProfile(profileId, profileRawData);
             // if (result?.success) {
-            //     addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
+            //     addLog("[SUCCÃˆS] ADN AssimilÃ©. Matrice mise Ã  jour.", 'success');
             //     setProfileRawData('');
             // } else {
-            //     addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
+            //     addLog(`[ERREUR] ${result?.error || "Ã‰chec de l'assimilation."}`, 'error');
             // }
-            addLog("[DÉSACTIVÉ] Veuillez utiliser l'interface d'Onboarding pour l'ingestion du profil.", 'warning');
+            addLog("[DÃ‰SACTIVÃ‰] Veuillez utiliser l'interface d'Onboarding pour l'ingestion du profil.", 'warning');
         } catch (e: any) {
             addLog("[CRITIQUE] Impossible de contacter le centre d'assimilation.", 'error');
         } finally {
@@ -15851,19 +15920,19 @@ function CortexManager() {
         }
     };
 
-    // --- Fonction 2 : Pensée Rapide (Ex-Dashboard) ---
+    // --- Fonction 2 : PensÃ©e Rapide (Ex-Dashboard) ---
     const handleQuickThought = async () => {
         if (!quickThought.trim() || !profileId) return;
         setIsSavingThought(true);
 
-        // ✅ Filtre anti-corruption : suppression des null bytes
+        // âœ… Filtre anti-corruption : suppression des null bytes
         const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
-        addLog('[CORTEX] Archivage de la pensée rapide...', 'info');
+        addLog('[CORTEX] Archivage de la pensÃ©e rapide...', 'info');
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                addLog('[CRITIQUE] Session expirée.', 'error');
+                addLog('[CRITIQUE] Session expirÃ©e.', 'error');
                 return;
             }
 
@@ -15884,11 +15953,11 @@ function CortexManager() {
             if (data.error) throw new Error(data.error);
 
             setQuickThought('');
-            addLog('[SUCCÈS] Pensée enregistrée dans le Cortex.', 'success');
+            addLog('[SUCCÃˆS] PensÃ©e enregistrÃ©e dans le Cortex.', 'success');
             fetchMemories();
             router.refresh();
         } catch (err: any) {
-            addLog(`[CRITIQUE] ${err.message || 'Échec de transmission.'}`, 'error');
+            addLog(`[CRITIQUE] ${err.message || 'Ã‰chec de transmission.'}`, 'error');
         } finally {
             setIsSavingThought(false);
         }
@@ -15905,11 +15974,11 @@ function CortexManager() {
         );
     }
 
-    // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RENDER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     return (
         <div className="min-h-screen bg-slate-950 text-slate-300 font-mono p-4 md:p-8 selection:bg-blue-800">
 
-            {/* â”€â”€ SCANLINES overlay (décoratif) â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ SCANLINES overlay (dÃ©coratif) Ã¢â€â‚¬Ã¢â€â‚¬ */}
             <div
                 className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
                 style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)' }}
@@ -15917,7 +15986,7 @@ function CortexManager() {
 
             <div className="relative z-10 max-w-6xl mx-auto">
 
-                {/* â”€â”€ HEADER â”€â”€ */}
+                {/* Ã¢â€â‚¬Ã¢â€â‚¬ HEADER Ã¢â€â‚¬Ã¢â€â‚¬ */}
                 <header className="flex items-start justify-between mb-8 pb-4 border-b border-blue-900/50">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
@@ -15928,7 +15997,7 @@ function CortexManager() {
                             &gt; CORTEX_DATA_MANAGER
                         </h1>
                         <p className="text-xs text-slate-500 mt-1">
-                            Interface d'ingestion neuronale â€” Enrichissement de la mémoire vectorielle
+                            Interface d'ingestion neuronale Ã¢â‚¬â€ Enrichissement de la mÃ©moire vectorielle
                         </p>
                     </div>
                     <button
@@ -15939,20 +16008,20 @@ function CortexManager() {
                     </button>
                 </header>
 
-                {/* ── NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX ── */}
+                {/* â”€â”€ NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX â”€â”€ */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
 
-                    {/* --- SECTEUR 1 : MATRICE (Identité) --- */}
+                    {/* --- SECTEUR 1 : MATRICE (IdentitÃ©) --- */}
                     <div className="border border-cyan-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(0,255,255,0.1)] flex flex-col">
                         <h2 className="text-xl font-bold mb-2 flex items-center text-cyan-400">
-                            <span className="text-2xl mr-2">🧬</span> 1. RECALIBRAGE DE LA MATRICE
+                            <span className="text-2xl mr-2">ðŸ§¬</span> 1. RECALIBRAGE DE LA MATRICE
                         </h2>
                         <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
-                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA écrasera et mettra à jour votre ADN professionnel et psychologique.
+                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA Ã©crasera et mettra Ã  jour votre ADN professionnel et psychologique.
                         </p>
                         <textarea
                             className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-cyan-500 focus:outline-none placeholder:text-slate-600"
-                            placeholder="DONNÉES BRUTES (Ex: Copier-coller LinkedIn)..."
+                            placeholder="DONNÃ‰ES BRUTES (Ex: Copier-coller LinkedIn)..."
                             value={profileRawData}
                             onChange={(e) => setProfileRawData(e.target.value)}
                         />
@@ -15965,17 +16034,17 @@ function CortexManager() {
                         </button>
                     </div>
 
-                    {/* --- SECTEUR 2 : CORTEX (Mémoire) --- */}
+                    {/* --- SECTEUR 2 : CORTEX (MÃ©moire) --- */}
                     <div className="border border-emerald-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col">
                         <h2 className="text-xl font-bold mb-2 text-emerald-400 flex items-center">
-                            <span className="text-2xl mr-2">🧠</span> 2. INGESTION MÉMOIRE RAPIDE
+                            <span className="text-2xl mr-2">ðŸ§ </span> 2. INGESTION MÃ‰MOIRE RAPIDE
                         </h2>
                         <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
-                            Ajoutez une note tactique, une idée ou une information isolée que l'Agent doit retenir pour ses futurs scans.
+                            Ajoutez une note tactique, une idÃ©e ou une information isolÃ©e que l'Agent doit retenir pour ses futurs scans.
                         </p>
                         <textarea
                             className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-emerald-500 focus:outline-none placeholder:text-slate-600"
-                            placeholder="NOUVELLE PENSÉE / MÉMOIRE..."
+                            placeholder="NOUVELLE PENSÃ‰E / MÃ‰MOIRE..."
                             value={quickThought}
                             onChange={(e) => setQuickThought(e.target.value)}
                         />
@@ -15984,15 +16053,15 @@ function CortexManager() {
                             disabled={isSavingThought || quickThought.length < 5}
                             className="mt-4 w-full bg-emerald-700 hover:bg-emerald-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
                         >
-                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÉE'}
+                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÃ‰E'}
                         </button>
                     </div>
                 </div>
 
-                {/* ── SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES ── */}
+                {/* â”€â”€ SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES â”€â”€ */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* ── COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES ── */}
+                    {/* â”€â”€ COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES â”€â”€ */}
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* DROPZONE */}
@@ -16044,15 +16113,15 @@ function CortexManager() {
                                         [ INITIALISER TRANSFERT FICHIER ]
                                     </p>
                                     <p className="text-xs text-slate-500 text-center">
-                                        Glissez-déposez ou cliquez pour sélectionner<br />
-                                        <span className="text-slate-600">PDF · TXT · CSV · DOCX · MD · JSON</span>
+                                        Glissez-dÃ©posez ou cliquez pour sÃ©lectionner<br />
+                                        <span className="text-slate-600">PDF Â· TXT Â· CSV Â· DOCX Â· MD Â· JSON</span>
                                     </p>
 
                                     {isDragging && (
                                         <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
                                             <div className="text-center">
                                                 <p className="text-2xl font-black text-blue-300 animate-pulse tracking-widest">
-                                                    DÉPOSER
+                                                    DÃ‰POSER
                                                 </p>
                                                 <p className="text-xs text-blue-500 mt-1">Ingestion automatique</p>
                                             </div>
@@ -16110,7 +16179,7 @@ function CortexManager() {
                             <div className="p-4 bg-black/20">
                                 {memories.length === 0 ? (
                                     <div className="p-8 text-center text-slate-600 text-xs italic">
-                                        Aucun fragment en mémoire. Déposez un fichier pour commencer.
+                                        Aucun fragment en mÃ©moire. DÃ©posez un fichier pour commencer.
                                     </div>
                                 ) : (
                                     <CortexGrid userId={profileId ?? undefined} initialFragments={memories.map(m => ({
@@ -16123,7 +16192,7 @@ function CortexManager() {
                         </div>
                     </div>
 
-                    {/* â”€â”€ COL DROITE : TERMINAL â”€â”€ */}
+                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ COL DROITE : TERMINAL Ã¢â€â‚¬Ã¢â€â‚¬ */}
                     <div className="space-y-5">
 
                         {/* STATUS BAR */}
@@ -16147,7 +16216,7 @@ function CortexManager() {
                         <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden">
                             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800 bg-slate-950">
                                 <Terminal size={12} className="text-blue-600" />
-                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÉRATIONS</span>
+                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÃ‰RATIONS</span>
                             </div>
 
                             <div className="p-4 h-72 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
@@ -16171,8 +16240,8 @@ function CortexManager() {
                         <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-4 space-y-3">
                             <h3 className="text-[10px] font-black text-slate-500 tracking-widest">PROTOCOLES D'INGESTION</h3>
                             {[
-                                { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX â€” Extraction vectorielle automatique' },
-                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + résumé Mistral AI â€” Indexation en mémoire' },
+                                { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX Ã¢â‚¬â€ Extraction vectorielle automatique' },
+                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + rÃ©sumÃ© Mistral AI Ã¢â‚¬â€ Indexation en mÃ©moire' },
                             ].map(({ icon, label, desc }) => (
                                 <div key={label} className="flex items-start gap-3">
                                     <div className="w-7 h-7 rounded-lg bg-blue-950/50 border border-blue-900/50 flex items-center justify-center flex-shrink-0 text-blue-500">
@@ -16190,21 +16259,21 @@ function CortexManager() {
                 </div>
             </div>
 
-            {/* â”€â”€ MODALE D'ÉDITION SYNAPTIQUE â”€â”€ */}
+            {/* Ã¢â€â‚¬Ã¢â€â‚¬ MODALE D'Ã‰DITION SYNAPTIQUE Ã¢â€â‚¬Ã¢â€â‚¬ */}
             {editingMemory && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-slate-900 border border-blue-500/50 rounded-2xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.15)]">
                         {/* Header modale */}
                         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                             <div>
-                                <h2 className="text-sm font-black text-blue-400 tracking-wider">ÉDITION DU FRAGMENT NEURONAL</h2>
+                                <h2 className="text-sm font-black text-blue-400 tracking-wider">Ã‰DITION DU FRAGMENT NEURONAL</h2>
                                 <p className="text-[10px] text-slate-600 mt-0.5">{editingMemory.id}</p>
                             </div>
                             <button
                                 onClick={() => setEditingMemory(null)}
                                 className="text-slate-500 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800"
                             >
-                                ❌
+                                âŒ
                             </button>
                         </div>
 
@@ -16244,7 +16313,7 @@ function CortexManager() {
     );
 }
 
-// â”€â”€â”€ WRAPPER (Suspense boundary) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ WRAPPER (Suspense boundary) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 export default function CortexPage() {
     return (
         <Suspense fallback={
@@ -16300,11 +16369,11 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         try {
             isVerifying.current = true;
 
-            // 1. Vérification session Supabase
+            // 1. VÃ©rification session Supabase
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error("No session");
 
-            // 2. Vérification DIRECTE en BDD (au lieu d'un fetch API)
+            // 2. VÃ©rification DIRECTE en BDD (au lieu d'un fetch API)
             const { data: profile, error: dbError } = await supabase
                 .from('Profile')
                 .select('id')
@@ -16312,14 +16381,14 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 .maybeSingle();
 
             if (dbError || !profile) {
-                console.warn("⚠️ Profil fantôme détecté en BDD. Redirection vers /login...");
+                console.warn("âš ï¸ Profil fantÃ´me dÃ©tectÃ© en BDD. Redirection vers /login...");
                 await supabase.auth.signOut();
                 localStorage.clear();
                 router.push('/login');
                 return;
             }
 
-            // 3. BIOMÉTRIE (Refactored to use VaultManager)
+            // 3. BIOMÃ‰TRIE (Refactored to use VaultManager)
             if (Capacitor.isNativePlatform()) {
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
@@ -16331,14 +16400,14 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 if ((!isKeyLoaded || isWakeUp) && !isPromptOpen) {
                     sessionStorage.setItem('ipse_bio_prompt', 'true');
                     try {
-                        // 🔒 Secure Unlock via VaultManager
+                        // ðŸ”’ Secure Unlock via VaultManager
                         const privateKey = await VaultManager.unlockAndLoad(
                             VaultKey.MASTER_KEY,
-                            "Accès à l'Agent Ipse - Authentification Neurale"
+                            "AccÃ¨s Ã  l'Agent Ipse - Authentification Neurale"
                         );
 
                         if (!privateKey) {
-                            console.warn("⚠️ Clé introuvable dans le coffre-fort sécurisé. Redirection vers onboarding.");
+                            console.warn("âš ï¸ ClÃ© introuvable dans le coffre-fort sÃ©curisÃ©. Redirection vers onboarding.");
                             router.replace('/profile/new');
                             return;
                         } else {
@@ -16346,7 +16415,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                         }
 
                     } catch (bioError) {
-                        console.error("❌ Échec Biométrique ou Coffre-fort verrouillé", bioError);
+                        console.error("âŒ Ã‰chec BiomÃ©trique ou Coffre-fort verrouillÃ©", bioError);
                         router.replace('/login');
                         return;
                     } finally {
@@ -16359,42 +16428,42 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
             setIsLoading(false);
         } catch (err) {
-            console.error("🚨 Gatekeeper Intercept:", err);
+            console.error("ðŸš¨ Gatekeeper Intercept:", err);
             router.replace('/login');
         } finally {
             setTimeout(() => { isVerifying.current = false; }, 1000);
         }
     };
 
-    // 🛡️ EFFECT 1: Initialisation et Listeners (UNE SEULE FOIS)
+    // ðŸ›¡ï¸ EFFECT 1: Initialisation et Listeners (UNE SEULE FOIS)
     useEffect(() => {
         checkShield(false);
 
-        // 3. ⚡ ECOUTEUR SYSTÈME AVEC DÉLAI DE GRÂCE DE 2 MINUTES
+        // 3. âš¡ ECOUTEUR SYSTÃˆME AVEC DÃ‰LAI DE GRÃ‚CE DE 2 MINUTES
         let listenerPromise: any = null;
         if (Capacitor.isNativePlatform()) {
             listenerPromise = App.addListener('appStateChange', ({ isActive }) => {
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
                 if (!isActive) {
-                    // 🔻 L'APP PASSE EN VEILLE : On enregistre l'heure exacte
+                    // ðŸ”» L'APP PASSE EN VEILLE : On enregistre l'heure exacte
                     if (!isPromptOpen) {
                         sessionStorage.setItem('ipse_bg_timestamp', Date.now().toString());
                     }
                 } else {
-                    // 🔺 L'APP REVIENT AU PREMIER PLAN
+                    // ðŸ”º L'APP REVIENT AU PREMIER PLAN
                     if (!isPromptOpen) {
                         const bgTimeStr = sessionStorage.getItem('ipse_bg_timestamp');
                         const timeElapsed = bgTimeStr ? Date.now() - parseInt(bgTimeStr) : 0;
 
                         // 120000 millisecondes = 2 minutes
                         if (timeElapsed > 120000 || !bgTimeStr) {
-                            console.log("📱 Inactivité prolongée (> 2min). Verrouillage du coffre (Purge RAM).");
-                            // On efface la clé de la RAM pour obliger une nouvelle biométrie
+                            console.log("ðŸ“± InactivitÃ© prolongÃ©e (> 2min). Verrouillage du coffre (Purge RAM).");
+                            // On efface la clÃ© de la RAM pour obliger une nouvelle biomÃ©trie
                             useKeyStore.getState().clearMasterKey();
                             checkShield(true);
                         } else {
-                            console.log(`🔓 Retour rapide (${Math.round(timeElapsed / 1000)}s). Accès autorisé.`);
+                            console.log(`ðŸ”“ Retour rapide (${Math.round(timeElapsed / 1000)}s). AccÃ¨s autorisÃ©.`);
                         }
                     }
                 }
@@ -16408,7 +16477,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         };
     }, []);
 
-    // 🛡️ EFFECT 2: Check Session sur changement de page
+    // ðŸ›¡ï¸ EFFECT 2: Check Session sur changement de page
     useEffect(() => {
         if (pathname === '/login' || pathname === '/signup') {
             setIsLoading(false);
@@ -16461,8 +16530,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // NOTES: Suppression de cookies() et createServerClient au niveau Layout
-  // Car pour un export statique (mobile/Capacitor), le Layout doit être statique.
-  // L'authentification est gérée par le Gatekeeper (Client Side).
+  // Car pour un export statique (mobile/Capacitor), le Layout doit Ãªtre statique.
+  // L'authentification est gÃ©rÃ©e par le Gatekeeper (Client Side).
 
   return (
     <html lang="fr" className="dark">
@@ -16602,13 +16671,13 @@ function RadarContent() {
       if (!session) return;
       setUser(session.user);
 
-      // ⚡ NOUVEAU : On prépare le badge de sécurité pour l'API
+      // âš¡ NOUVEAU : On prÃ©pare le badge de sÃ©curitÃ© pour l'API
       const headers = {
         'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json'
       };
 
-      // On ajoute les headers aux requêtes
+      // On ajoute les headers aux requÃªtes
       const oppsRes = await fetch(getApiUrl('/api/opportunities'), { headers }).then(r => r.json());
       if (oppsRes.success) {
         setDiscoveries(oppsRes.opportunities.filter((o: any) => o.status !== 'CANCELLED').slice(0, 10));
@@ -16689,7 +16758,7 @@ function RadarContent() {
 
       <LearningAlert />
 
-      {/* SECTION 1: Requêtes Entrantes */}
+      {/* SECTION 1: RequÃªtes Entrantes */}
       {incomingRequests.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-emerald-400">
@@ -16714,7 +16783,7 @@ function RadarContent() {
 
 
 
-      {/* SECTION 3: Découvertes Radar */}
+      {/* SECTION 3: DÃ©couvertes Radar */}
       <section className="space-y-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 text-slate-400">
           <Target className="w-4 h-4" />

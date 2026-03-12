@@ -1,7 +1,8 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ClientLayout from './components/ClientLayout';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { PrismProvider } from '@/components/providers/PrismProvider';
 
 export const metadata: Metadata = {
   title: "Ipse",
@@ -39,9 +40,11 @@ export default function RootLayout({
       </head>
       <body className="bg-slate-950 text-slate-300 antialiased pb-20">
         <LanguageProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <PrismProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </PrismProvider>
         </LanguageProvider>
       </body>
     </html>
