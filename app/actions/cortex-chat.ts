@@ -66,7 +66,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             select: { fcmToken: true }
         });
 
-        const tokens = participants.map(p => p.fcmToken).filter(Boolean) as string[];
+        const tokens = participants.map((p: any) => p.fcmToken).filter(Boolean) as string[];
 
         if (tokens.length > 0) {
             const payload = {
@@ -94,7 +94,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
 
 export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
     try {
-        const historyText = lastMessages.map(m => `${m.senderId}: ${m.content}`).join('\n');
+        const historyText = lastMessages.map((m: any) => `${m.senderId}: ${m.content}`).join('\n');
 
         const evolutionPrompt = `
             Je suis Ipse. Ma mission est de synthétiser l'évolution cognitive de l'utilisateur (ID: ${userId}).
