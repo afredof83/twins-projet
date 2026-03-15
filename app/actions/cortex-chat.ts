@@ -21,7 +21,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             orderBy: { createdAt: 'desc' }
         });
 
-        const contextText = recentMessages.reverse().map(m => `${m.senderId}: ${decryptMessage(m.content)}`).join('\n');
+        const contextText = recentMessages.reverse().map((m: any) => `${m.senderId}: ${decryptMessage(m.content)}`).join('\n');
 
         // 2. Interrogation de Mistral AI (Le cerveau)
         const systemPrompt = `
