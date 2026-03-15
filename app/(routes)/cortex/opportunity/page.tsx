@@ -167,7 +167,7 @@ function OpportunityContent() {
 
                     <div className="flex items-center gap-3 mb-6">
                         <Zap className="w-8 h-8 text-green-400" />
-                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
+                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.match_score}%</h1>
                     </div>
 
                     <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>

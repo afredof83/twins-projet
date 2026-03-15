@@ -20,7 +20,7 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
     // -------------------------------------------------------------------------
 
     const findProfileSmart = async (input: string, label: string) => {
-      let p = null;
+      let p: any = null;
 
       // A. Essai par UUID (si le format correspond)
       if (input && isUUID(input)) {

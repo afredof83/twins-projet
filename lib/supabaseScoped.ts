@@ -10,7 +10,7 @@ export async function createClientServer(req?: Request) {
     const cookieStore = await cookies();
     
     // 1. Extract Bearer Token from headers if Request is provided
-    let token = null;
+    let token: any = null;
     if (req) {
         const authHeader = req.headers.get('Authorization');
         if (authHeader && authHeader.startsWith('Bearer ')) {

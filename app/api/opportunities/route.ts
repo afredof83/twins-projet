@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ success: true, message: "Aucune nouvelle synergie", created: 0 });
             }
 
-            const createdOpps = [];
+            const createdOpps: any[] = [];
 
             for (const target of potentialTargets) {
                 // FIX: Score en ENTIER pour plaire à PostgreSQL (ex: 85)

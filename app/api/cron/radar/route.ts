@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
         const opportunitiesData = newMatches.map(m => ({
             sourceId: m.sourceId,
             targetId: m.targetId,
-            matchScore: Math.round(m.similarity * 100),
+            match_score: Math.round(m.similarity * 100),
             synergies: "Synergie sémantique détectée par le Radar (Auto-Detection).",
             status: 'DETECTED',
             audit: null,

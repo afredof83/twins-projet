@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { sendCortexAlert } from '@/lib/pushSender';
 import { prisma } from '@/lib/prisma';

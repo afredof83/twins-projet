@@ -128,7 +128,7 @@ RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
                         data: {
                             sourceId: userId,
                             targetId: target.id,
-                            matchScore: result.score,
+                            match_score: result.score,
                             synergies: result.synergies || "Compatibilité détectée.",
                             status: 'DETECTED',
                             context: theme.toUpperCase()
@@ -154,7 +154,7 @@ export async function getRadarResults(profileId: string) {
                 status: 'DETECTED'
             },
             include: { sourceProfile: true },
-            orderBy: { matchScore: 'desc' }
+            orderBy: { match_score: 'desc' }
         });
         return { success: true, results };
     } catch (error: any) {

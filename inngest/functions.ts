@@ -84,7 +84,7 @@ Format JSON strict: { "score": number, "synergies": "string" }`;
                         data: {
                             sourceId: userId,
                             targetId: target.id,
-                            matchScore: result.score,
+                            match_score: result.score,
                             synergies: result.synergies || result.summary || result.content || "Analyse sémantique non fournie par l'IA.",
                             status: 'DETECTED'
                         }

@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import admin from 'firebase-admin';
 
-// Initialisation sécurisée de Firebase Admin (s'assure qu'il n'est pas initialisé 2 fois)
-if (!admin.apps.length) {
+// Initialisation sécurisée de Firebase Admin (s'assure qu'il n'est pas initialisé 2 fois et que les secrets sont là)
+if (!admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
