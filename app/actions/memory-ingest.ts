@@ -137,7 +137,7 @@ export async function ingestKnowledge(profileId: string) {
         if (!profileId) throw new Error("Missing Profile ID");
 
         const memories = await prisma.memory.findMany({ where: { profileId } });
-        const combined = memories.map(m => m.content).join('\n');
+        const combined = memories.map((m: any) => m.content).join('\n');
 
         const prompt = `Fais une synthèse de ces mémoires en un profil cohérent:\n${combined}`;
         const res = await mistralClient.chat.complete({
