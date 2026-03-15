@@ -37,8 +37,9 @@ export async function POST(request: Request) {
 
         if (action === 'confirmIngestion') {
             const { userId, validatedData } = body;
+            // Target the 'WORK' profile by default for initial ingestion
             await prisma.profile.update({
-                where: { id: userId },
+                where: { userId_type: { userId: userId, type: 'WORK' } },
                 data: {
                     primaryRole: validatedData.primaryRole,
                     thematicProfile: {
@@ -52,8 +53,17 @@ export async function POST(request: Request) {
             });
             const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
             const embeddingsResponse = await mistralClient.embeddings.create({ model: 'mistral-embed', inputs: [textToEmbed] });
-            const embeddingVector = embeddingsResponse.data[0].embedding;
-            await prisma.$executeRaw`UPDATE "Profile" SET "unifiedEmbedding" = ${embeddingVector}::vector WHERE id = ${userId}`;
+            const embeddingVector = embeddingsResponse.data?.[0]?.embedding;
+            
+            if (embeddingVector && Array.isArray(embeddingVector)) {
+                const vectorString = `[${embeddingVector.join(',')}]`;
+                
+                await prisma.$executeRawUnsafe(
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE user_id = $2 AND type = 'WORK'`,
+                    vectorString,
+                    userId
+                );
+            }
             return NextResponse.json({ success: true });
         }
 

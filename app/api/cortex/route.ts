@@ -1,56 +1,17 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'; // ⚡ LE CORRECTIF ANTI-CACHE EST ICI
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getPrismaForUser } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
-
-// ⚡ Fonction robuste qui lit le Bearer Token et configure Supabase
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: {
-                headers: token ? { Authorization: `Bearer ${token}` } : {}
-            },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-
-    try {
-        const { data: { user }, error } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-        if (error) console.error("🚨 Supabase Auth Error:", error.message);
-        if (!user) return null;
-        return { user, supabase };
-    } catch (e) {
-        console.error("🚨 Fatal Auth Error:", e);
-        return null;
-    }
-}
+import { createClientServer } from '@/lib/supabaseScoped';
 
 // GET /api/cortex
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, profile: { files: [], memories: [] } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const { user } = auth;
-        const prismaRLS = getPrismaForUser(user.id);
-
-        const profile = await prismaRLS.profile.findUnique({
-            where: { id: user.id },
+        const { user } = await createClientServer(request);
+        const profile = await prisma.profile.findUnique({
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             include: {
                 files: { orderBy: { createdAt: 'desc' } },
                 memories: { orderBy: { createdAt: 'desc' } }
@@ -60,6 +21,9 @@ export async function GET(request: Request) {
         if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
         return NextResponse.json({ success: true, profile });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+            return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -68,11 +32,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
-
-        const { user, supabase } = auth;
-        const prismaRLS = getPrismaForUser(user.id);
+        const { user, supabase } = await createClientServer(request);
         const body = await request.json();
         const { action } = body;
 
@@ -80,26 +40,43 @@ export async function POST(request: Request) {
             const { fileId, fileUrl } = body;
             if (!fileId || !fileUrl) return NextResponse.json({ success: false, error: 'Params manquants' }, { status: 400 });
             await supabase.storage.from('cortex_files').remove([fileUrl]);
-            await prismaRLS.fileArchive.delete({ where: { id: fileId, profileId: user.id } });
+            await prisma.fileArchive.deleteMany({ 
+                where: { 
+                    id: fileId, 
+                    profile: { userId: user.id } 
+                } 
+            });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'deleteNote') {
             const { noteId } = body;
             if (!noteId) return NextResponse.json({ success: false, error: 'noteId manquant' }, { status: 400 });
-            await prismaRLS.cortexNote.delete({ where: { id: noteId, profileId: user.id } });
+            await prisma.cortexNote.deleteMany({ 
+                where: { 
+                    id: noteId, 
+                    profile: { userId: user.id } 
+                } 
+            });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'deleteCortexMemory') {
             const { memoryId } = body;
             if (!memoryId) return NextResponse.json({ success: false, error: 'memoryId manquant' }, { status: 400 });
-            await prismaRLS.memory.delete({ where: { id: memoryId, profileId: user.id } });
+            await prisma.memory.deleteMany({ 
+                where: { 
+                    id: memoryId, 
+                    profile: { userId: user.id } 
+                } 
+            });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'analyzeGaps') {
-            const profile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
+            const profile = await prisma.profile.findUnique({ 
+                where: { userId_type: { userId: user.id, type: 'WORK' } } 
+            });
             if (!profile) return NextResponse.json(null);
 
             let missingField: 'bio' | 'primaryRole' | 'tjm' | null = null;
@@ -128,18 +105,28 @@ export async function POST(request: Request) {
             let updateData: any = {};
             if (field === 'tjm') updateData.tjm = parseInt(answer, 10);
             else {
-                const currentProfile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
+                const currentProfile = await prisma.profile.findUnique({ 
+                    where: { userId_type: { userId: user.id, type: 'WORK' } } 
+                });
                 if (field === 'bio' && currentProfile?.bio) updateData.bio = `${currentProfile.bio}\n\n[Mise à jour Agent]: ${answer}`;
                 else updateData[field] = answer;
             }
-            await prismaRLS.profile.update({ where: { id: user.id }, data: updateData });
+            await prisma.profile.update({ 
+                where: { userId_type: { userId: user.id, type: 'WORK' } }, 
+                data: updateData 
+            });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'deleteDiscovery') {
             const { id } = body;
             if (!id) return NextResponse.json({ success: false, error: 'id manquant' }, { status: 400 });
-            await prismaRLS.discovery.delete({ where: { id, profileId: user.id } });
+            await prisma.discovery.deleteMany({ 
+                where: { 
+                    id, 
+                    profile: { userId: user.id } 
+                } 
+            });
             return NextResponse.json({ success: true });
         }
 

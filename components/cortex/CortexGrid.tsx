@@ -125,7 +125,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
             await fetch(getApiUrl('/api/memories'), {
                 method: 'DELETE',
                 headers,
-                body: JSON.stringify({ memoryId: id })
+                body: JSON.stringify({ id: id })
             });
             router.refresh();
         } catch (error) {

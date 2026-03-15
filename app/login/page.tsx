@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
-import { getApiUrl } from '@/lib/api';
-import { generateAndStoreKeyPair } from '@/lib/crypto-client';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -25,7 +23,9 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // 1. Authentification Supabase
+    // ==========================================
+    // 1. BLOC CONNEXION (LOGIN)
+    // ==========================================
     if (actionType === 'login') {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -41,8 +41,9 @@ export default function LoginPage() {
       if (authData.user && authData.session) {
         try {
           console.log("🔍 Vérification du profil côté client...");
-          
-          await fetch(getApiUrl('/api/auth/sync-profile'), {
+
+          // 🛡️ FIX : Utilisation de l'URL relative pour éviter l'erreur "Failed to fetch" (CORS)
+          await fetch('/api/auth/sync-profile', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -52,7 +53,7 @@ export default function LoginPage() {
 
           const { unlockLocalVault, wrapKeyWithSession } = await import('@/lib/crypto-client');
 
-          // 2. Le bloc de SURVIE CRYPTOGRAPHIQUE (Le fameux Fallback)
+          // Le bloc de SURVIE CRYPTOGRAPHIQUE (Fallback)
           try {
             console.log("Tentative de déverrouillage du coffre local...");
             const privateKey = await unlockLocalVault(password);
@@ -64,12 +65,13 @@ export default function LoginPage() {
               const { generateAndStoreKeyPair, unlockLocalVault: unlockAfterGen } = await import('@/lib/crypto-client');
               const { publicKeyJwk } = await generateAndStoreKeyPair(password);
               const newPublicKeyBase64 = btoa(JSON.stringify(publicKeyJwk));
-              
+
               await supabase
-                .from('Profile')
-                .update({ publicKey: newPublicKeyBase64 })
-                .eq('id', authData.user.id);
-                
+                .from('profiles')
+                .update({ public_key: newPublicKeyBase64 })
+                .eq('user_id', authData.user.id)
+                .eq('type', 'WORK');
+
               const newPrivateKey = await unlockAfterGen(password);
               await wrapKeyWithSession(newPrivateKey, authData.session.access_token);
             } else {
@@ -92,8 +94,11 @@ export default function LoginPage() {
         setError("⚠️ Agent Ipse : Session invalide ou email non confirmé.");
         setLoading(false);
       }
-    } else {
-      // --- BLOC STRICT INSCRIPTION ---
+    }
+    // ==========================================
+    // 2. BLOC INSCRIPTION (SIGNUP)
+    // ==========================================
+    else {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -110,10 +115,10 @@ export default function LoginPage() {
       if (authData.user) {
         try {
           console.log("🚀 Nouvel utilisateur créé. Génération de l'identité cryptographique (E2EE)...");
-          
-          // On s'assure d'abord que le profil existe (via notre API interne qui handle le insert ou upsert)
+
           if (authData.session) {
-            await fetch(getApiUrl('/api/auth/sync-profile'), {
+            // 🛡️ FIX : Utilisation de l'URL relative ici aussi
+            await fetch('/api/auth/sync-profile', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -124,15 +129,16 @@ export default function LoginPage() {
 
           const { generateAndStoreKeyPair, wrapKeyWithSession, unlockLocalVault } = await import('@/lib/crypto-client');
 
-          // 2. Création du Coffre Local et des Clés (avec le mot de passe fraîchement tapé)
+          // Création du Coffre Local et des Clés
           const { publicKeyJwk } = await generateAndStoreKeyPair(password);
           const newPublicKey = btoa(JSON.stringify(publicKeyJwk));
 
-          // 3. On pousse la Clé Publique fraîchement générée dans la table Profile
+          // On pousse la Clé Publique fraîchement générée dans la table profiles
           const { error: updateError } = await supabase
-            .from('Profile')
-            .update({ publicKey: newPublicKey })
-            .eq('id', authData.user.id);
+            .from('profiles')
+            .update({ public_key: newPublicKey })
+            .eq('user_id', authData.user.id)
+            .eq('type', 'WORK');
 
           if (updateError) {
             console.error("❌ Échec de la sauvegarde de la clé publique dans Supabase :", updateError);
@@ -140,7 +146,7 @@ export default function LoginPage() {
             console.log("✅ Profil E2EE initialisé avec succès !");
           }
 
-          // 4. (Optionnel) Si Supabase auto-connecte l'utilisateur après le signUp, on sécurise la session (F5 survival)
+          // Si Supabase auto-connecte l'utilisateur, on sécurise la session
           if (authData.session) {
             const privateKey = await unlockLocalVault(password);
             await wrapKeyWithSession(privateKey, authData.session.access_token);

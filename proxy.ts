@@ -1,69 +1,79 @@
-// proxy.ts
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Proxy de protection des routes et rafraîchissement de session Supabase
+ * Rôle : Assurer que les cookies de session sont à jour et protéger les accès privés.
+ * Remplace middleware.ts pour éviter les conflits dans cette architecture.
+ */
 export async function proxy(request: NextRequest) {
-    try {
-        let supabaseResponse = NextResponse.next({ request })
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
 
-        // VÉRIFICATION N°1 : Les variables d'environnement
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-            console.error("🔴 ERREUR CRITIQUE : Variables d'environnement Supabase manquantes !")
-            return supabaseResponse
-        }
-
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            {
-                cookies: {
-                    getAll() {
-                        return request.cookies.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-                            supabaseResponse = NextResponse.next({ request })
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                supabaseResponse.cookies.set(name, value, options)
-                            )
-                        } catch (error) {
-                            // Ignore les erreurs de set cookie sur les chemins statiques
-                        }
-                    },
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return request.cookies.getAll()
                 },
-            }
-        )
-
-        // VÉRIFICATION N°2 : Lecture du User
-        const { data: { user } } = await supabase.auth.getUser()
-
-        const isProtectedRoute = request.nextUrl.pathname === '/' ||
-            request.nextUrl.pathname.startsWith('/cortex');
-
-        if (!user && isProtectedRoute) {
-            const url = request.nextUrl.clone()
-            url.pathname = '/login'
-            return NextResponse.redirect(url)
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+                    response = NextResponse.next({
+                        request,
+                    })
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    )
+                },
+            },
         }
+    )
 
-        if (user && request.nextUrl.pathname === '/login') {
-            const url = request.nextUrl.clone()
-            url.pathname = '/'
-            return NextResponse.redirect(url)
-        }
+    // IMPORTANT : Utilisation de getUser() pour une vérification côté serveur sécurisée
+    const { data: { user } } = await supabase.auth.getUser()
 
-        return supabaseResponse
+    // Définition des zones sécurisées
+    const protectedRoutes = [
+        '/chat',
+        '/profile',
+        '/radar',
+        '/memories',
+        '/cortex',
+        '/connections'
+    ]
 
-    } catch (error) {
-        // Si ça plante, on l'affiche en rouge vif dans ton terminal
-        console.error("🔴 CRASH PROXY.TS :", error)
-        return NextResponse.next({ request })
+    const path = request.nextUrl.pathname
+    const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route))
+
+    // Redirection si accès non autorisé
+    if (!user && isProtectedRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('next', path)
+        return NextResponse.redirect(url)
     }
+
+    // Protection inverse : rediriger vers / si déjà connecté et tente d'aller sur /login
+    if (user && path === '/login') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/'
+        return NextResponse.redirect(url)
+    }
+
+    return response
 }
 
 export const config = {
     matcher: [
+        /*
+         * Matcher optimisé : exécution sur les routes applicatives
+         * tout en ignorant les fichiers statiques et images.
+         */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

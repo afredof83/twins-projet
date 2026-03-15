@@ -1,39 +1,14 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
-
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    if (token) return undefined;
-                    return cookieStore.get(name)?.value;
-                },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
-    return user;
-}
+import { createClientServer } from '@/lib/supabaseScoped';
 
 // GET /api/agent?profileId=xxx
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
+        const { user } = await createClientServer(request);
         const { searchParams } = new URL(request.url);
         const profileId = searchParams.get('profileId');
         if (!profileId) return NextResponse.json({ success: false, error: 'profileId manquant' }, { status: 400 });
@@ -41,6 +16,9 @@ export async function GET(request: Request) {
         if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
         return NextResponse.json({ success: true, profile });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+            return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -49,7 +27,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        await getAuthUser(request);
+        await createClientServer(request);
         const body = await request.json();
         const { action } = body;
 
@@ -75,14 +53,27 @@ export async function POST(request: Request) {
             const synthesis = response.choices?.[0]?.message.content as string;
 
             const embedResponse = await mistralClient.embeddings.create({ model: "mistral-embed", inputs: [synthesis] });
-            const masterVector = embedResponse.data[0].embedding;
-            await prisma.profile.update({ where: { id: profileId }, data: { unifiedAnalysis: synthesis } });
-            await prisma.$executeRaw`UPDATE "Profile" SET "unifiedEmbedding" = ${masterVector}::vector WHERE id = ${profileId}`;
+            const masterVector = embedResponse.data?.[0]?.embedding;
+            
+            if (masterVector && Array.isArray(masterVector)) {
+                const vectorString = `[${masterVector.join(',')}]`;
+
+                await prisma.profile.update({ where: { id: profileId }, data: { unifiedAnalysis: synthesis } });
+                await prisma.$executeRawUnsafe(
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE id = $2`,
+                    vectorString,
+                    profileId
+                );
+            }
+
             return NextResponse.json({ success: true, synthesis });
         }
 
         return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+            return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }

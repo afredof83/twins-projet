@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres.dtfvaywluoufnzutlqdc:ProjetTwins2026@aws-1-eu-central-2.pooler.supabase.com:5432/postgres"
+}
+
+model P {
+  id String @id
+}
+ admissions
+ admission
+ admissions
+ admission
+ admissions
+ admission
+ admission
+ admissions
+ admission
+ admissions
+ admission
+ admissions
+ adm

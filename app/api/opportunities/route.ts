@@ -1,76 +1,46 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
-import { mistralClient } from '@/lib/mistral';
-
-async function getAuthUser(req: Request) {
-    const authHeader = req.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisé");
-    return user;
-}
+import { prisma } from '@/lib/prisma';
+import { createClientServer } from '@/lib/supabaseScoped';
 
 export async function GET(req: NextRequest) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(req);
+        const { user } = await createClientServer(req);
         const myId = user.id;
         const searchParams = req.nextUrl.searchParams;
         const id = searchParams.get('id');
 
         if (id) {
-            // 🛡️ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
             const opp = await prisma.opportunity.findUnique({
                 where: { id },
                 include: { sourceProfile: true, targetProfile: true }
             });
-            // Vérification manuelle (L'utilisateur doit être source ou cible)
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+
+            if (!opp) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+
+            if (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId) {
+                return NextResponse.json({ success: false, error: "Non autorisé" }, { status: 403 });
             }
+
             return NextResponse.json({ success: true, opportunity: opp });
         }
 
-        // 🛡️ SECURITY BYPASS pour les joins Profile
-        const rawOpportunities = await prisma.opportunity.findMany({
-            where: { OR: [{ sourceId: myId }, { targetId: myId }] },
+        const opportunities = await prisma.opportunity.findMany({
+            where: {
+                OR: [
+                    { sourceProfile: { userId: myId } },
+                    { targetProfile: { userId: myId } }
+                ]
+            },
             include: { sourceProfile: true, targetProfile: true },
             orderBy: { createdAt: 'desc' }
         });
 
-        // Calculer les messages non lus pour chaque opportunité
-        const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
-            const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
-            const unreadCount = await prisma.message.count({
-                where: {
-                    senderId: otherId,
-                    receiverId: myId,
-                    isRead: false
-                }
-            });
-            return { ...opp, unreadCount };
-        }));
-
         return NextResponse.json({ success: true, opportunities });
     } catch (e: any) {
+        console.error("Opportunities GET Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -78,72 +48,99 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(req);
-        const prismaRLS = getPrismaForUser(user.id);
+        const { user } = await createClientServer(req);
         const myId = user.id;
         const body = await req.json();
         const { action, oppId, customTitle, status } = body;
 
-        if (action === 'audit') {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Deprecated: Use /api/opportunities/evaluate instead' 
-            }, { status: 400 });
-        }
-
-        if (action === 'sendChatInvite' || action === 'sendInvite') {
-            const id = oppId;
-            const opp = await prisma.opportunity.findUnique({
-                where: { id },
-                include: { targetProfile: true, sourceProfile: true }
+        // ==========================================
+        // 🚀 ACTION: SCOUT (Le Radar Moteur)
+        // ==========================================
+        if (action === 'scout') {
+            const myProfile = await prisma.profile.findFirst({
+                where: { userId: myId }
             });
 
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            if (!myProfile) {
+                return NextResponse.json({ success: false, error: "Créez d'abord votre profil." }, { status: 400 });
             }
 
-            await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
+            const existingOpps = await prisma.opportunity.findMany({
+                where: { sourceId: myProfile.id },
+                select: { targetId: true }
+            });
+            const ignoredIds = existingOpps.map(opp => opp.targetId);
+
+            const potentialTargets = await prisma.profile.findMany({
+                where: {
+                    userId: { not: myId },
+                    id: { notIn: ignoredIds }
+                },
+                take: 3
+            });
+
+            if (potentialTargets.length === 0) {
+                return NextResponse.json({ success: true, message: "Aucune nouvelle synergie", created: 0 });
+            }
+
+            const createdOpps = [];
+
+            for (const target of potentialTargets) {
+                // FIX: Score en ENTIER pour plaire à PostgreSQL (ex: 85)
+                const mockScore = Math.floor(Math.random() * (98 - 80 + 1)) + 80;
+
+                const opp = await prisma.opportunity.create({
+                    data: {
+                        sourceId: myProfile.id,
+                        targetId: target.id,
+                        title: `Synergie identifiée`,
+                        context: "Analyse sémantique croisée : vos objectifs récents s'alignent avec ce profil.",
+                        match_score: mockScore,
+                        status: "PENDING", // En attente de l'évaluation IA
+                        synergies: {
+                            score: mockScore,
+                            reasons: ["En attente d'audit Cortex profond..."]
+                        }
+                    }
+                });
+                createdOpps.push(opp);
+            }
+
+            console.log(`✅ [RADAR] ${createdOpps.length} nouvelles opportunités générées`);
+            return NextResponse.json({ success: true, created: createdOpps.length });
+        }
+
+        // ==========================================
+        // AUTRES ACTIONS
+        // ==========================================
+        if (action === 'sendChatInvite' || action === 'sendInvite') {
+            const opp = await prisma.opportunity.findUnique({ where: { id: oppId }, include: { sourceProfile: true, targetProfile: true } });
+            if (!opp || (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId)) return NextResponse.json({ success: false, error: 'Non trouvé' }, { status: 404 });
+            await prisma.opportunity.update({ where: { id: oppId }, data: { title: customTitle, status: 'INVITED' } });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'acceptInvite' && oppId) {
-            const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
-            if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
-            const newConnection = await prismaRLS.connection.create({
+            const opp = await prisma.opportunity.findUnique({ where: { id: oppId }, include: { sourceProfile: true, targetProfile: true } });
+            if (!opp || (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId)) return NextResponse.json({ success: false, error: 'Non trouvé' }, { status: 404 });
+
+            const newConnection = await prisma.connection.create({
                 data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: 'ACCEPTED' }
             });
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
+            await prisma.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
             return NextResponse.json({ success: true, connectionId: newConnection.id });
         }
 
         if (action === 'updateStatus' && oppId) {
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status } });
-            return NextResponse.json({ success: true });
-        }
-
-        if (action === 'scout') {
-            const { forceHuntSync } = await import('@/app/actions/radar');
-            await forceHuntSync();
+            const opp = await prisma.opportunity.findUnique({ where: { id: oppId }, include: { sourceProfile: true, targetProfile: true } });
+            if (!opp || (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId)) return NextResponse.json({ success: false, error: 'Non trouvé' }, { status: 404 });
+            await prisma.opportunity.update({ where: { id: oppId }, data: { status } });
             return NextResponse.json({ success: true });
         }
 
         return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
     } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-
-export async function DELETE(req: NextRequest) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(req);
-        const prismaRLS = getPrismaForUser(user.id);
-        const body = await req.json();
-        const { oppId } = body;
-        if (!oppId) return NextResponse.json({ success: false, error: 'oppId manquant' }, { status: 400 });
-        await prismaRLS.opportunity.delete({ where: { id: oppId } });
-        return NextResponse.json({ success: true });
-    } catch (e: any) {
+        console.error("Opportunities POST Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }

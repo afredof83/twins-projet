@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // 1. Initialisation du Client Mistral (Senior Backend Standard)
 const mistral = new Mistral({
@@ -42,12 +42,12 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Hard filters missing (Role/Availability)' }, { status: 400 });
         }
 
-        const prismaRLS = getPrismaForUser(user.id);
+
         const tjmValue = typeof tjm === 'number' ? tjm : parseInt(tjm, 10) || 0;
 
         // 5. Étape A : Mise à jour des données classiques (Prisma)
-        await prismaRLS.profile.update({
-            where: { id: user.id },
+        await prisma.profile.update({
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             data: {
                 sector,
                 primaryRole,
@@ -75,11 +75,11 @@ export async function PATCH(req: Request) {
                     // On utilise format standard [x,y,z] pour pgvector
                     const vectorString = `[${vector.join(',')}]`;
 
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "bioEmbedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "profiles" SET "bio_embedding" = $1::vector WHERE user_id = $2 AND type = 'WORK'`,
+                        vectorString,
+                        user.id
+                    );
                     vectorized = true;
                 }
             } catch (iaError) {

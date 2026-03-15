@@ -1,52 +1,45 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
-
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) return null;
-    return user;
-}
+import { prisma } from '@/lib/prisma';
+import { createClientServer } from '@/lib/supabaseScoped';
 
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, incoming: [], active: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        const { user } = await createClientServer(request);
 
-        const prismaRLS = getPrismaForUser(user.id);
-        const incoming = await prismaRLS.connection.findMany({
-            where: { receiverId: user.id, status: "PENDING" },
+
+        
+        // On cherche les profils WORK de l'utilisateur pour servir de base aux connexions (si l'app est mono-prism-UI pour l'instant)
+        // Mais techniquement une connexion lie deux Profile.id.
+        // On récupère toutes les connexions impliquant l'USER ID via ses profils.
+        
+        const incoming = await prisma.connection.findMany({
+            where: { 
+                receiver: { userId: user.id }, 
+                status: "PENDING" 
+            },
             include: { initiator: true },
             orderBy: { createdAt: 'desc' }
         });
-        const active = await prismaRLS.connection.findMany({
-            where: { OR: [{ initiatorId: user.id }, { receiverId: user.id }], status: "ACCEPTED" },
+        const active = await prisma.connection.findMany({
+            where: { 
+                OR: [
+                    { initiator: { userId: user.id } }, 
+                    { receiver: { userId: user.id } }
+                ], 
+                status: "ACCEPTED" 
+            },
             include: { initiator: true, receiver: true },
             orderBy: { createdAt: 'desc' }
         });
 
         return NextResponse.json({ success: true, incoming, active });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+            return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
+        console.error("Connection GET Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -54,60 +47,87 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        const { user } = await createClientServer(request);
 
-        const prismaRLS = getPrismaForUser(user.id);
+
         const idempotencyKey = request.headers.get('x-idempotency-key');
         const body = await request.json();
         const { action } = body;
 
         if (action === 'request') {
-            const { targetId } = body;
-            if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
-            if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
+            const { targetId, oppId } = body;
+            console.log(`[API Connection] Processing request: targetId=${targetId}, oppId=${oppId}, userId=${user.id}`);
+            
+            if (!targetId) {
+                console.error("[API Connection] Target ID missing");
+                return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
+            }
 
-            // On utilise prisma (global) pour bypasser RLS sur la vérification de l'existence
-            // (car on peut vouloir savoir si on est déjà connecté à quelqu'un d'autre)
-            const existing = await prisma.connection.findFirst({
-                where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
+            // On doit identifier NOTRE profile ID source (celui avec lequel on envoie l'invite)
+            // Par défaut, on prend le WORK profile de l'initiateur
+            console.log(`[API Connection] Fetching myWorkProfile for userId: ${user.id}`);
+            const myWorkProfile = await prisma.profile.findUnique({
+                where: { userId_type: { userId: user.id, type: 'WORK' } }
             });
+
+            if (!myWorkProfile) {
+                console.error(`[API Connection] Source profile (WORK) not found for user ${user.id}`);
+                return NextResponse.json({ success: false, error: 'Profil source non trouvé' }, { status: 404 });
+            }
+            
+            console.log(`[API Connection] Source profile found: ${myWorkProfile.id}`);
+            if (myWorkProfile.id === targetId) {
+                console.warn("[API Connection] Self connection attempt");
+                return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
+            }
+
+            const existing = await prisma.connection.findFirst({
+                where: { OR: [{ initiatorId: myWorkProfile.id, receiverId: targetId }, { initiatorId: targetId, receiverId: myWorkProfile.id }] }
+            });
+            
             if (existing) {
-                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
+                console.log(`🛡️ [IDEMPOTENCY] Request already exists: ${myWorkProfile.id} <-> ${targetId}. Status: ${existing.status}`);
                 return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
             }
 
-            await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
-
-            // Si on vient d'un Radar, on met à jour le statut de l'opportunité
-            const { oppId } = body;
-            if (oppId) {
-                await prisma.opportunity.update({
-                    where: { id: oppId },
-                    data: { status: 'INVITED' }
+            try {
+                console.log(`[API Connection] Creating connection: ${myWorkProfile.id} -> ${targetId}`);
+                await prisma.connection.create({ 
+                    data: { initiatorId: myWorkProfile.id, receiverId: targetId, status: "PENDING" } 
                 });
-            }
 
-            return NextResponse.json({ success: true });
+                if (oppId) {
+                    console.log(`[API Connection] Updating opportunity ${oppId} to INVITED`);
+                    await prisma.opportunity.update({
+                        where: { id: oppId },
+                        data: { status: 'INVITED' }
+                    });
+                }
+
+                console.log("[API Connection] Request successful");
+                return NextResponse.json({ success: true });
+            } catch (dbError: any) {
+                console.error("[API Connection] Database error during creation:", dbError);
+                return NextResponse.json({ success: false, error: 'Erreur lors de la création de la connexion' }, { status: 500 });
+            }
         }
 
         if (action === 'accept') {
             const { connectionId, oppId } = body;
 
             if (oppId) {
-                // 🛡️ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
-                const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
-                if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
-                    return NextResponse.json({ success: false, error: 'Opportunité introuvable ou non autorisée pour acceptation' }, { status: 404 });
-                }
+                const opp = await prisma.opportunity.findUnique({ 
+                    where: { id: oppId },
+                    include: { sourceProfile: true, targetProfile: true }
+                });
+                if (!opp || (opp.sourceProfile.userId !== user.id && opp.targetProfile.userId !== user.id)) return NextResponse.json({ success: false, error: 'Accès refusé ou opportunité introuvable' }, { status: 403 });
 
                 // Check if opportunity is already accepted
                 if (opp.status === 'ACCEPTED') {
-                    console.log(`🛡️ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
                     return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
                 }
 
-                // Acceptation idempotente : on cherche si une connexion existe déjà
+                // Ici opp.sourceId et opp.targetId sont des Profile.id
                 const existing = await prisma.connection.findFirst({
                     where: {
                         OR: [
@@ -136,20 +156,50 @@ export async function POST(request: Request) {
             if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
             
             if (conn.status === 'ACCEPTED') {
-                console.log(`🛡️ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
                 return NextResponse.json({ success: true, message: 'Already accepted' });
             }
 
-            const result = await prisma.connection.updateMany({
-                where: { id: connectionId, receiverId: user.id, status: "PENDING" },
+            // Vérifier que le receiverId de la connexion appartient bien à l'utilisateur courant (via un profile)
+            const myTargetProfile = await prisma.profile.findFirst({
+                where: { id: conn.receiverId, userId: user.id }
+            });
+            if (!myTargetProfile) return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+
+            await prisma.connection.update({
+                where: { id: connectionId },
                 data: { status: "ACCEPTED" }
             });
-            if (result.count === 0) return NextResponse.json({ success: false, error: 'Accès refusé ou statut invalide' }, { status: 403 });
+            
+            return NextResponse.json({ success: true });
+        }
+
+        if (action === 'reject') {
+            const { connectionId } = body;
+            const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
+            
+            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
+
+            // Vérifier que le receveur est bien l'utilisateur courant
+            const myTargetProfile = await prisma.profile.findFirst({
+                where: { id: conn.receiverId, userId: user.id }
+            });
+            if (!myTargetProfile) return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+
+            // On passe la connexion en REJECTED
+            await prisma.connection.update({
+                where: { id: connectionId },
+                data: { status: "REJECTED" }
+            });
+            
             return NextResponse.json({ success: true });
         }
 
         return NextResponse.json({ success: false, error: `Action non reconnue: ${action}` }, { status: 400 });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+            return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
+        console.error("Connection POST Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }

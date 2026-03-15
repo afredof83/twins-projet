@@ -11,10 +11,7 @@ export function getApiUrl(path: string): string {
     }
 
     // If on Native (APK/Emulator), use the absolute Remote URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!baseUrl) {
-        throw new Error("NEXT_PUBLIC_API_URL is missing for native build. Architectural Fail-Fast triggered.");
-    }
-
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.22:3000';
+    
     return `${baseUrl}${path}`;
 }

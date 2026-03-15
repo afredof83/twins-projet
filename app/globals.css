@@ -4,12 +4,29 @@
 @import "tailwindcss";
 
 :root {
+  /* Defaut (WORK) */
   --background: #09090b;
   --foreground: #f4f4f5;
   --card: #18181b;
   --card-border: #27272a;
-  --primary: #2563eb;
-  --cortex: #6366f1;
+  
+  /* Dynamic Theme Variables - Pointing to theme defaults */
+  --primary: var(--blue-500);
+  --accent: var(--blue-400);
+  --bg-main: #0F172A;
+  --bg-card: #1E293B;
+  --text-main: #F8FAFC;
+  --radius: 8px;
+}
+
+/* Base Tailwind Colors reference */
+:root {
+  --blue-500: #3B82F6;
+  --blue-400: #60A5FA;
+  --emerald-500: #10B981;
+  --emerald-400: #34D399;
+  --pink-500: #EC4899;
+  --pink-400: #F472B6;
 }
 
 @layer base {
@@ -22,38 +39,38 @@
 
 /* Thème WORK : Focus, Rigueur */
 .theme-work {
-  --primary: #3B82F6;
+  --primary: var(--blue-500);
+  --accent: var(--blue-400);
   --bg-main: #0F172A;
   --bg-card: #1E293B;
   --text-main: #F8FAFC;
-  --accent: #60A5FA;
   --radius: 4px;
   --font-main: 'Inter';
-  --density: 0.75rem; /* Haute densité */
+  --density: 0.75rem;
 }
 
 /* Thème HOBBY : Énergie, Partage */
 .theme-hobby {
-  --primary: #10B981;
+  --primary: var(--emerald-500);
+  --accent: var(--emerald-400);
   --bg-main: #064E3B;
   --bg-card: #065F46;
   --text-main: #ECFDF5;
-  --accent: #34D399;
   --radius: 12px;
   --font-main: 'Quicksand';
-  --density: 1rem; /* Densité moyenne */
+  --density: 1rem;
 }
 
 /* Thème DATING : Intimité, Mystère */
 .theme-dating {
-  --primary: #EC4899;
+  --primary: var(--pink-500);
+  --accent: var(--pink-400);
   --bg-main: #2E1065;
   --bg-card: #4C1D95;
   --text-main: #FDF2F8;
-  --accent: #F472B6;
   --radius: 24px;
   --font-main: 'Playfair Display';
-  --density: 1.5rem; /* Basse densité */
+  --density: 1.5rem;
 }
 
 @layer components {

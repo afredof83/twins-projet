@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
 import { prisma } from '@/lib/prisma';
+import { createClientServer } from '@/lib/supabaseScoped';
 
 // 1. Initialisation de l'Agent Ipse (Mistral AI)
 const mistral = new Mistral({
@@ -16,22 +16,8 @@ const mistral = new Mistral({
  */
 export async function POST(req: Request) {
     try {
-        // 2. Extraction & Validation du Token Bearer
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Authorization token required' }, { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
-
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized credentials' }, { status: 401 });
-        }
+        // 2. Authentification & Client Scoped
+        const { user, supabase } = await createClientServer(req);
 
         // 3. Récupération des paramètres (Query / Filtres)
         const body = await req.json();

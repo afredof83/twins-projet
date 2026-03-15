@@ -7,6 +7,8 @@ import SplashHider from './SplashHider';
 import PushManager from './PushManager';
 import Gatekeeper from '@/app/components/auth/Gatekeeper';
 import { useLanguage } from '@/context/LanguageContext';
+import PrismIndicator from '@/components/PrismIndicator';
+import PrismSwipeContainer from './PrismSwipeContainer';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -20,8 +22,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {!isAuthPage && <PushManager />}
 
             <Gatekeeper>
-                <div className="relative z-0">
-                    {children}
+                <div className="relative z-0 min-h-screen">
+                    {!isAuthPage && <PrismIndicator />}
+                    {isAuthPage ? (
+                        children
+                    ) : (
+                        <PrismSwipeContainer>
+                            {children}
+                        </PrismSwipeContainer>
+                    )}
                 </div>
             </Gatekeeper>
 

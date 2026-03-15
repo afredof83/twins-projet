@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
@@ -52,7 +52,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
             const data = await fetch(getApiUrl('/api/memories'), {
                 method: 'DELETE',
                 headers,
-                body: JSON.stringify({ memoryId: id })
+                body: JSON.stringify({ id: id })
             }).then(r => r.json());
             if (data.success) {
                 if (onRefresh) onRefresh();

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Mistral } from '@mistralai/mistralai';
-import { getPrismaForUser, prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 // 1. Initialisation du Client Mistral
 const mistral = new Mistral({
@@ -35,15 +35,15 @@ export async function PATCH(req: Request) {
         const body = await req.json();
         const { sector, role, bio, activePrism } = body;
 
-        const prismaRLS = getPrismaForUser(user.id);
+
 
         // 5. Étape A : Mise à jour des données classiques
-        await prismaRLS.profile.update({
-            where: { id: user.id },
+        await prisma.profile.update({
+            where: { userId_type: { userId: user.id, type: 'SOCIAL' } },
             data: {
-                socialSector: sector,
-                socialRole: role,
-                socialBio: bio,
+                sector: sector,
+                primaryRole: role,
+                bio: bio,
                 activePrism: activePrism || 'SOCIAL'
             }
         });
@@ -62,11 +62,11 @@ export async function PATCH(req: Request) {
                 if (vector && vector.length === 1024) {
                     const vectorString = `[${vector.join(',')}]`;
 
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "social_embedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "profiles" SET "bio_embedding" = $1::vector WHERE user_id = $2 AND type = 'SOCIAL'`,
+                        vectorString,
+                        user.id
+                    );
                     vectorized = true;
                 }
             } catch (iaError) {

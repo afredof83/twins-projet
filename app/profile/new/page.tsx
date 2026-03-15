@@ -77,7 +77,7 @@ export default function NewProfilePage() {
                 body: JSON.stringify({ 
                     action: 'create', 
                     name: formData.name,
-                    publicKey: publicKeyString
+                    public_key: publicKeyString
                 })
             });
             const response = await r.json();

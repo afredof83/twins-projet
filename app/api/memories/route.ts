@@ -1,35 +1,9 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { prisma, getPrismaForUser } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { trackAgentActivity } from '@/app/actions/missions';
-
-// ⚡ La fonction qui lit le Bearer Token
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-            cookies: {
-                get(name: string) { return cookieStore.get(name)?.value; },
-                set() { }, remove() { }
-            }
-        }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Accès refusé.");
-    return user;
-}
+import { createClientServer } from '@/lib/supabaseScoped';
 
 async function vectorizeAndStoreMemory(memoryId: string, content: string) {
     try {
@@ -39,7 +13,7 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
         });
         const embeddingVector = embeddingsResponse.data[0].embedding;
         await prisma.$executeRaw`
-            UPDATE public.memory SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
+            UPDATE memories SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
         `;
     } catch (error) {
         console.error(`❌ [VECTORISATION ERREUR]:`, error);
@@ -49,21 +23,37 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
 // GET /api/memories
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    
     try {
         const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
-        if (!profileId) return NextResponse.json({ success: false, error: 'profileId manquant' }, { status: 400 });
+        const currentPrism = searchParams.get('currentPrism') || 'WORK';
+        
+        // 1. Authentification & Extraction JWT
+        const { user } = await createClientServer(request);
 
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
+        // 2. Déduction automatique du profil cible
+        const profile = await prisma.profile.findFirst({
+            where: { userId: user.id, type: currentPrism }
+        });
 
-        const memories = await prismaRLS.memory.findMany({
-            where: { profileId },
+        if (!profile) {
+            return NextResponse.json({ success: false, error: 'Profil introuvable pour ce prisme.' }, { status: 404 });
+        }
+
+        // 3. Récupération des mémoires sécurisées
+        const memories = await prisma.memory.findMany({
+            where: { 
+                profileId: profile.id, // On utilise l'ID certifié par la DB
+            },
             orderBy: { createdAt: 'desc' },
             take: 50
         });
+
         return NextResponse.json({ success: true, memories });
     } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+             return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
+        }
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -72,17 +62,22 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(request);
+        const { user } = await createClientServer(request);
         const contentType = request.headers.get('content-type') || '';
 
         // FILE UPLOAD (FormData)
         if (contentType.includes('multipart/form-data')) {
             const formData = await request.formData();
             const file = formData.get('file') as File;
-            const profileId = formData.get('profileId') as string || user.id;
             const textContext = formData.get('textContext') as string;
             const fileName = formData.get('fileName') as string;
             const hasFile = formData.get('hasFile') === 'true';
+            const currentPrism = formData.get('currentPrism') as string;
+            const profile = await prisma.profile.findUnique({
+                where: { userId_type: { userId: user.id, type: currentPrism || 'WORK' } }
+            });
+
+            if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
             if (textContext) {
                 const cleanContent = textContext.replace(/\0/g, '');
@@ -90,7 +85,7 @@ export async function POST(request: Request) {
 
                 const memory = await prisma.memory.create({
                     data: {
-                        profileId: user.id,
+                        profileId: profile.id,
                         content: cleanContent,
                         type: hasFile ? 'document' : 'thought',
                         source: fileName || 'manual'
@@ -106,7 +101,7 @@ export async function POST(request: Request) {
             const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
 
             const memory = await prisma.memory.create({
-                data: { profileId, content: memoryContent, type: 'document', source: file.name }
+                data: { profileId: profile.id, content: memoryContent, type: 'document', source: file.name }
             });
             await vectorizeAndStoreMemory(memory.id, memoryContent);
             return NextResponse.json({ success: true, memory });
@@ -117,17 +112,27 @@ export async function POST(request: Request) {
         const { action } = body;
 
         if (action === 'addMemory') {
-            const { profileId, content, type = 'thought', source = 'manual' } = body;
+            const { currentPrism, content, type = 'thought', source = 'manual' } = body;
+            const profile = await prisma.profile.findUnique({
+                where: { userId_type: { userId: user.id, type: currentPrism || 'WORK' } }
+            });
+            if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
+
             const memory = await prisma.memory.create({
-                data: { profileId: profileId || user.id, content, type, source }
+                data: { profileId: profile.id, content, type, source }
             });
             await vectorizeAndStoreMemory(memory.id, content);
             return NextResponse.json({ success: true, memory });
         }
 
         if (action === 'scrapeUrl') {
-            const { url, profileId } = body;
+            const { url, currentPrism } = body;
             if (!url) return NextResponse.json({ success: false, error: 'URL manquante' }, { status: 400 });
+
+            const profile = await prisma.profile.findUnique({
+                where: { userId_type: { userId: user.id, type: currentPrism || 'WORK' } }
+            });
+            if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
             const response = await fetch('https://api.tavily.com/extract', {
                 method: 'POST',
@@ -141,7 +146,7 @@ export async function POST(request: Request) {
             const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
 
             const memory = await prisma.memory.create({
-                data: { profileId: profileId || user.id, content: memoryContent, type: 'scraped', source: url }
+                data: { profileId: profile.id, content: memoryContent, type: 'scraped', source: url }
             });
             await vectorizeAndStoreMemory(memory.id, memoryContent);
             return NextResponse.json({ success: true, content, memory });
@@ -157,7 +162,7 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(request);
+        const { user } = await createClientServer(request);
         const body = await request.json();
         const { memoryId, newContent } = body;
 
@@ -169,8 +174,14 @@ export async function PATCH(request: Request) {
         });
         const newVector = embedResponse.data[0].embedding;
 
+        // Vérifier l'appartenance avant mise à jour
+        const memory = await prisma.memory.findFirst({
+            where: { id: memoryId, profile: { userId: user.id } }
+        });
+        if (!memory) return NextResponse.json({ success: false, error: 'Mémoire introuvable ou non autorisée' }, { status: 404 });
+
         await prisma.$executeRaw`
-            UPDATE public.memory SET content = ${newContent}, embedding = ${newVector}::vector WHERE id = ${memoryId}
+            UPDATE memories SET content = ${newContent}, embedding = ${newVector}::vector WHERE id = ${memoryId}
         `;
 
         return NextResponse.json({ success: true });
@@ -179,21 +190,38 @@ export async function PATCH(request: Request) {
     }
 }
 
-// DELETE /api/memories
 export async function DELETE(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        const user = await getAuthUser(request);
+        const { user } = await createClientServer(request);
         const body = await request.json();
-        const { memoryId } = body;
+        
+        // 🛡️ Logique d'extraction multi-niveaux (Bulletproof)
+        // Cherche 'id' ou 'memoryId' à la racine OU dans 'payload'
+        const id = body.id || 
+                   body.memoryId || 
+                   body.payload?.id || 
+                   body.payload?.memoryId;
 
-        if (!memoryId) return NextResponse.json({ success: false, error: 'memoryId manquant' }, { status: 400 });
+        if (!id) {
+            console.error("❌ [DELETE] ID introuvable dans le body reçu:", JSON.stringify(body, null, 2));
+            return NextResponse.json({ success: false, error: "ID de mémoire manquant" }, { status: 400 });
+        }
 
-        await prisma.memory.delete({ where: { id: memoryId } });
-        await trackAgentActivity(user.id, 'memory_delete');
+        const result = await (prisma.memory as any).deleteMany({
+            where: { 
+                id: id,
+                userId: user.id 
+            }
+        });
+
+        if (result.count === 0) {
+            return NextResponse.json({ success: false, error: "Non autorisé ou déjà supprimé" }, { status: 403 });
+        }
 
         return NextResponse.json({ success: true });
+
     } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
+        console.error("🔥 [DELETE ERROR]:", e.message);
+        return NextResponse.json({ success: false, error: "Erreur serveur" }, { status: 500 });
     }
 }

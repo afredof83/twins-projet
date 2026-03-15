@@ -4,7 +4,18 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 const mistral = mistralClient;
 
 // Récupère le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
-async function getContext(profileId: string) {
+async function getContext(profileId: string, userId: string) {
+    // SECURITY: Verify profile ownership first
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', profileId)
+        .single();
+    
+    if (!profile || profile.user_id !== userId) {
+        throw new Error('Unauthorized: Profile does not belong to user.');
+    }
+
     const { data: memories } = await supabase
         .from('Memory')
         .select('content')
@@ -12,8 +23,6 @@ async function getContext(profileId: string) {
         .order('createdAt', { ascending: false })
         .limit(5);
 
-    // On suppose qu'on peut récupérer quelques mots-clés du profil ou des souvenirs récents
-    // Pour l'instant, hardcodé ou dérivé simplement
     return {
         recentMemories: memories?.map(m => m.content).join('\n') || "",
         keywords: ["pêche", "innovation", "brevet", "industrie", "var"]
@@ -26,11 +35,11 @@ async function getRadarSignals() {
     return [];
 }
 
-export async function guardianSelfReflection(profileId: string) {
-    console.log(`🤖 [GARDIEN] Cycle de réflexion pour ${profileId}...`);
+export async function guardianSelfReflection(profileId: string, userId: string) {
+    console.log(`🤖 [GARDIEN] Cycle de réflexion pour ${profileId} (user: ${userId})...`);
 
     // 1. Récupérer tes dernières données (Brevets, Radar, Humeur)
-    const myContext = await getContext(profileId);
+    const myContext = await getContext(profileId, userId);
     const externalSignals = await getRadarSignals();
 
     // 2. Chercher des matchs avec d'autres Agents (via Intentions)

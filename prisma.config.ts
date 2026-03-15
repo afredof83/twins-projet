@@ -1,10 +1,8 @@
-import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from '@prisma/config';
+import 'dotenv/config'; // Crucial to load .env variables in the config file itself
 
 export default defineConfig({
-    schema: "prisma/schema.prisma",
-    datasource: {
-        url: env("DATABASE_URL"),
-        // directUrl: env("DIRECT_URL") is not passed this way, Prisma 7 uses url for migrations
-    },
+  datasource: {
+    url: process.env.DIRECT_URL,
+  }
 });

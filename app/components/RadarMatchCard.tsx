@@ -1,291 +1,215 @@
 'use client';
-import { useState, useEffect } from 'react';
-// Server actions supprimées — on utilise fetch vers /api/opportunities
-import { getAgentName } from '@/lib/utils';
-import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import AuditPanel from './AuditPanel';
-import { useLanguage } from '@/context/LanguageContext';
 
-export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
-    const { t } = useLanguage();
-    const router = useRouter();
-    const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
-    const [loading, setLoading] = useState(false);
-    const [isAuditing, setIsAuditing] = useState(false);
-    const [auditData, setAuditData] = useState(opportunity.audit);
-    const [showAudit, setShowAudit] = useState(false);
-    const [isAccepted, setIsAccepted] = useState(false);
+import { useState } from 'react';
+import { Target, Zap, ChevronDown, ChevronUp, BrainCircuit, Check, X, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
-    // Sync state with props
-    useEffect(() => {
-        setStatus(opportunity.status);
-        setAuditData(opportunity.audit);
-    }, [opportunity.status, opportunity.audit]);
+interface RadarMatchCardProps {
+    opportunity: any;
+    myId: string;
+}
 
-    const hasAudit = Boolean(auditData || opportunity?.audit);
+export default function RadarMatchCard({ opportunity, myId }: RadarMatchCardProps) {
+    const [expanded, setExpanded] = useState(false);
+    const [auditStream, setAuditStream] = useState<string>(opportunity.audit || '');
+    const [isEvaluating, setIsEvaluating] = useState(false);
 
-    // On détermine qui est l'autre agent
-    const otherProfile = opportunity?.sourceId === myId
-        ? opportunity?.targetProfile
-        : opportunity?.sourceProfile;
+    // Nouveaux états pour gérer les actions des boutons
+    const [localStatus, setLocalStatus] = useState(opportunity.status);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    console.log("🔍 [RadarMatchCard] Profile data:", {
-        oppId: opportunity?.id,
-        myId,
-        sourceId: opportunity?.sourceId,
-        targetId: opportunity?.targetId,
-        hasTargetProfile: !!opportunity?.targetProfile,
-        hasSourceProfile: !!opportunity?.sourceProfile,
-        otherId: otherProfile?.id
-    });
+    const isSource = opportunity.sourceProfile?.userId === myId;
+    const targetProfile = isSource ? opportunity.targetProfile : opportunity.sourceProfile;
 
-    // --- LOGIQUE AUDIT ---
-    const getOppHeaders = async () => {
-        const { createClient } = await import('@/lib/supabaseBrowser');
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const headers: any = { 'Content-Type': 'application/json' };
-        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-        return headers;
+    // 1. Fonction pour l'IA (inchangée)
+    const evaluateSynergy = async () => {
+        if (isEvaluating) return;
+        setIsEvaluating(true);
+        setExpanded(true);
+        setAuditStream('');
+
+        try {
+            const response = await fetch('/api/opportunities/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ opportunityId: opportunity.id }),
+            });
+
+            if (!response.body) throw new Error("Pas de flux de données");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunkText = decoder.decode(value, { stream: true });
+                setAuditStream((prev) => prev + chunkText);
+            }
+        } catch (error) {
+            console.error("Erreur de streaming:", error);
+            setAuditStream((prev) => prev + "\n\n❌ *Erreur de communication avec le Cortex IA.*");
+        } finally {
+            setIsEvaluating(false);
+        }
     };
 
-    const handleAudit = async () => {
-        setIsAuditing(true);
-        setAuditData(''); // Reset for typewriter effect
-        setShowAudit(true); // Immediate UI feedback
-        
+    // 2. 🚀 FONCTION CORRIGÉE : Avec le Token de Sécurité Supabase !
+    const handleAction = async (actionType: 'sendInvite' | 'updateStatus', newStatus?: string) => {
+        setIsProcessing(true);
         try {
+            // 1. On récupère le badge de sécurité (Session) avant de taper à la porte de l'API
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabase = createClient();
             const { data: { session } } = await supabase.auth.getSession();
+            
             const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ opportunityId: opportunity.id })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
-                throw new Error(errorData.error || `HTTP ${response.status}`);
+            if (session) {
+                headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            if (!reader) throw new Error('No stream reader available');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                setAuditData((prev: string) => prev + chunk);
+            let response;
+            
+            if (actionType === 'sendInvite') {
+                // Envoi avec les headers sécurisés
+                response = await fetch('/api/connection', {
+                    method: 'POST',
+                    headers, // <-- LE FIX EST ICI
+                    body: JSON.stringify({
+                        action: 'request',
+                        targetId: targetProfile.id,
+                        oppId: opportunity.id
+                    })
+                });
+            } else {
+                // Refus avec les headers sécurisés
+                response = await fetch('/api/opportunities', {
+                    method: 'POST',
+                    headers, // <-- ET ICI
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        oppId: opportunity.id,
+                        status: newStatus
+                    })
+                });
             }
-
-            setStatus('AUDITED');
-        } catch (e: any) {
-            console.error("❌ [STREAM ERROR]:", e);
-            alert(`Erreur Cortex: ${e.message}`);
-            setAuditData("Échec de la génération de l'audit.");
+            
+            const data = await response.json();
+            if (data.success) {
+                // On met à jour l'état local pour changer l'UI instantanément
+                setLocalStatus(newStatus || 'INVITED');
+            } else {
+                console.error("Erreur lors de l'action :", data.error);
+            }
+        } catch (error) {
+            console.error("Échec de la requête réseau :", error);
         } finally {
-            setIsAuditing(false);
+            setIsProcessing(false);
         }
     };
+    if (!targetProfile) return null;
 
-    const handleConnect = async () => {
-        setLoading(true);
-        const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/connection'), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ action: 'request', targetId: otherProfile?.id, oppId: opportunity.id })
-        }).then(r => r.json());
-        if (res.success) {
-            setStatus('INVITED');
-        }
-        setLoading(false);
-    };
+    // Si on a refusé, on cache complètement la carte
+    if (localStatus === 'CANCELLED' || localStatus === 'REJECTED') {
+        return null;
+    }
 
-    const handleAccept = async () => {
-        if (!opportunity?.id || !otherProfile?.id) return;
-        setLoading(true);
-        const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/connection'), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ action: 'accept', oppId: opportunity.id })
-        }).then(r => r.json());
-        if (res.success) {
-            setIsAccepted(true);
-            router.push(`/chat?id=${otherProfile?.id}`);
-            return; // Le composant sera démonté par la navigation, pas de setState après
-        }
-        setLoading(false);
-    };
+    // Si on a envoyé la requête, on affiche un message de succès
+    if (localStatus === 'INVITED') {
+        return (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 text-center backdrop-blur-md">
+                <Check className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                <h3 className="text-emerald-300 font-bold">Requête envoyée à {targetProfile.name}</h3>
+                <p className="text-emerald-400/70 text-sm mt-1">En attente de son acceptation.</p>
+            </div>
+        );
+    }
+
+    const hasAudit = auditStream.length > 0;
 
     return (
-        <div className="b2b-card p-8 mb-6 transition-all hover:bg-zinc-900/40">
-            {/* HEADER : Nom + Score */}
-            <div className="flex items-start justify-between mb-4">
-                <div>
-                    <h3 className="text-xl font-bold tracking-tight text-white">{getAgentName(otherProfile)}</h3>
-                    <p className="text-xs text-zinc-400 line-clamp-1 mt-1 font-mono italic">
-                        {typeof (otherProfile?.bio || otherProfile?.primaryRole) === 'object'
-                            ? JSON.stringify(otherProfile?.bio || otherProfile?.primaryRole)
-                            : (otherProfile?.bio || otherProfile?.primaryRole || "Agent Digital Twin")}
-                    </p>
+        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md transition-all hover:border-white/20">
+
+            {/* En-tête */}
+            <div className="p-5 flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-lg shadow-lg">
+                        {targetProfile.name ? targetProfile.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-white text-lg">{targetProfile.name || 'Agent Inconnu'}</h3>
+                        <p className="text-sm text-indigo-300 font-mono flex items-center gap-1">
+                            <Target className="w-3 h-3" /> {targetProfile.primary_role || 'Rôle non spécifié'}
+                        </p>
+                    </div>
                 </div>
-                <span className="badge-status border-[var(--primary)]/20 text-[var(--primary)] shrink-0 ml-4">
-                    {opportunity.matchScore}% {t('radar.match_score')}
-                </span>
+
+                <div className="flex items-center gap-4">
+                    <div className="text-right">
+                        <span className="text-xs uppercase tracking-widest text-slate-400 block mb-1">Score Synergie</span>
+                        <span className="text-2xl font-black text-emerald-400">{opportunity.match_score || '??'}%</span>
+                    </div>
+                    {expanded ? <ChevronUp className="text-slate-500" /> : <ChevronDown className="text-slate-500" />}
+                </div>
             </div>
 
-            {/* BODY : Résumé ou Audit */}
-            <div className="mb-6">
-                {status === 'DETECTED' ? (
-                    <p className="text-zinc-400 text-sm leading-relaxed">
-                        {(() => {
-                            const val = opportunity.synergies || opportunity.summary || opportunity.content;
-                            if (!val) return "Le rapport d'audit est en cours de décryptage par le Cortex...";
-                            if (typeof val === 'object') return JSON.stringify(val);
-                            return val;
-                        })()}
-                    </p>
-                ) : (
-                    <div className="bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
-                        <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold text-center">
-                            {t('radar.audit_ready')}
-                        </p>
-                    </div>
-                )}
-            </div>
+            {/* Corps étendu */}
+            {expanded && (
+                <div className="p-5 border-t border-white/10 bg-black/20">
 
-            {/* Rendu conditionnel des actions */}
-            <div className="mt-6 space-y-3">
-
-                {/* BOUTON AUDIT PERSISTANT (S'affiche si un audit existe déjà) */}
-                {hasAudit && (
-                    <button
-                        onClick={() => setShowAudit(true)}
-                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-xs py-2 h-auto"
-                    >
-                        <Target className="w-3 h-3" />
-                        {t('radar.read_audit')}
-                    </button>
-                )}
-
-                {status === 'DETECTED' && !hasAudit && (
-                    <button
-                        disabled={isAuditing}
-                        onClick={handleAudit}
-                        className="btn-primary w-full flex items-center justify-center gap-2"
-                    >
-                        {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
-                        {isAuditing ? "Génération par l'IA..." : t('radar.connect_btn')}
-                    </button>
-                )}
-
-                {status === 'AUDITED' && !hasAudit && (
-                    <button
-                        onClick={() => setShowAudit(true)}
-                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
-                    >
-                        <Target className="w-4 h-4" />
-                        {t('radar.read_audit')}
-                    </button>
-                )}
-
-                {status === 'ACCEPTED' && (
-                    <Link
-                        href={`/chat?id=${otherProfile?.id}`}
-                        className="btn-primary w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(var(--accent-rgb,16,185,129),0.3)] relative"
-                    >
-                        <MessageSquare className="w-4 h-4" />
-                        {t('radar.join_chat')}
-
-                        {opportunity.unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] font-bold items-center justify-center text-white">
-                                    {opportunity.unreadCount}
-                                </span>
-                            </span>
-                        )}
-                    </Link>
-                )}
-
-                {/* --- NOUVEAU : STATUT INVITÉ --- */}
-                {/* Si JE suis celui qui a envoyé l'invitation (Source) */}
-                {status === 'INVITED' && opportunity.sourceId === myId && (
-                    <div className="w-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 p-3 rounded text-center">
-                        <p className="text-[var(--primary)] text-xs font-bold">
-                            ⏳ {t('radar.invite_sent')}
-                        </p>
-                    </div>
-                )}
-
-                {/* Si JE suis celui qui reçoit l'invitation (Cible) */}
-                {status === 'INVITED' && opportunity.targetId === myId && (
-                    <div className="w-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-4 rounded-xl text-center">
-                        <p className="text-[var(--accent)] text-sm font-bold mb-4">
-                            📩 {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
-                        </p>
-                        <div className="flex gap-2">
+                    {/* Lancement Audit */}
+                    {!hasAudit && !isEvaluating && (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                            <BrainCircuit className="w-12 h-12 text-slate-500 mb-3" />
+                            <p className="text-slate-400 mb-4 text-sm max-w-sm">
+                                Aucune analyse profonde n'a encore été générée. Lancer le Cortex IA pour évaluer les synergies exactes.
+                            </p>
                             <button
-                                disabled={loading || isAccepted}
-                                onClick={handleAccept}
-                                className={`btn-primary flex-1 ${isAccepted ? 'opacity-50 cursor-default' : ''}`}
-                                style={isAccepted ? { backgroundColor: 'var(--accent)' } : { backgroundColor: 'var(--accent)' }}
+                                onClick={(e) => { e.stopPropagation(); evaluateSynergy(); }}
+                                className="flex items-center gap-2 px-6 py-3 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-[0_0_15px_rgba(79,70,229,0.5)]"
                             >
-                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
-                            </button>
-                            <button
-                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
-                                className="btn-outline flex-1 border-white/10 text-red-400 hover:bg-red-500/10"
-                            >
-                                {t('radar.refuse')}
+                                <Zap className="w-4 h-4" /> Activer l'Audit IA
                             </button>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
-                    <div className="flex gap-2 mt-6">
+                    {/* Audit Streaming */}
+                    {(hasAudit || isEvaluating) && (
+                        <div className="prose prose-invert max-w-none prose-sm font-mono text-slate-300
+                            prose-headings:text-indigo-300 prose-headings:font-bold prose-headings:uppercase tracking-wide
+                            prose-strong:text-emerald-400 prose-p:leading-relaxed bg-black/40 p-6 rounded-xl border border-white/5">
+                            <ReactMarkdown>{auditStream}</ReactMarkdown>
+
+                            {isEvaluating && (
+                                <span className="inline-block w-2 h-4 bg-emerald-400 animate-pulse ml-1 align-middle"></span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 🚀 BOUTONS D'ACTION CÂBLÉS */}
+                    <div className="mt-6 flex gap-3 pt-4 border-t border-white/5">
                         <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
-                            className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
+                            onClick={() => handleAction('sendInvite')}
+                            disabled={isProcessing}
+                            className="flex-1 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center gap-2 font-bold text-sm transition disabled:opacity-50"
                         >
-                            {t('radar.ignore')}
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            Envoyer une requête
                         </button>
+
                         <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'BLOCKED' }) })}
-                            className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
+                            onClick={() => handleAction('updateStatus', 'CANCELLED')}
+                            disabled={isProcessing}
+                            title="Ignorer ce profil"
+                            className="px-4 py-2 rounded-lg bg-red-500/5 text-red-400 hover:bg-red-500/10 border border-red-500/10 flex items-center justify-center transition disabled:opacity-50"
                         >
-                            {t('radar.block')}
+                            {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                         </button>
                     </div>
-                )}
 
-            </div>
-
-            <AuditPanel
-                isOpen={showAudit}
-                onClose={() => setShowAudit(false)}
-                auditData={auditData}
-                targetName={getAgentName(otherProfile)}
-                opportunityId={opportunity?.id}
-                status={status}
-                targetId={otherProfile?.id}
-                onInviteSuccess={() => {
-                    setStatus('INVITED');
-                    setShowAudit(false);
-                }}
-            />
+                </div>
+            )}
         </div>
     );
 }

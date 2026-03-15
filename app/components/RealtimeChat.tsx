@@ -63,8 +63,8 @@ export default function RealtimeChat({ initialMessages, receiverId, receiverPubl
             try {
                 // 1. La requête stricte vers Supabase pour le profil du partenaire
                 const { data: partnerProfile, error: profileError } = await supabase
-                    .from('Profile')
-                    .select('id, publicKey')
+                    .from('profiles')
+                    .select('id, public_key')
                     .eq('id', receiverId)
                     .single();
 
@@ -75,13 +75,13 @@ export default function RealtimeChat({ initialMessages, receiverId, receiverPubl
                     return;
                 }
 
-                if (!partnerProfile.publicKey) {
-                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
+                if (!partnerProfile.public_key) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa public_key est VIDE (null) !");
                     setIsDecrypting(false);
                     return;
                 }
 
-                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.publicKey.substring(0, 20) + "...");
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.public_key.substring(0, 20) + "...");
 
                 // 3. Récupération de MA clé privée et dérivation
                 const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
@@ -93,7 +93,7 @@ export default function RealtimeChat({ initialMessages, receiverId, receiverPubl
                     ["deriveKey"]
                 );
 
-                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.publicKey);
+                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.public_key);
                 setSharedKey(derived);
                 sharedKeyRef.current = derived;
 

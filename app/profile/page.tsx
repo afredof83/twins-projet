@@ -110,7 +110,7 @@ function ProfileContent() {
                 const headers: any = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                const apiUrl = getApiUrl(`/api/profile?id=${user.id}`);
+                const apiUrl = getApiUrl(`/api/profile`);
                 const res = await fetch(apiUrl, { headers });
                 const data = await res.json();
 

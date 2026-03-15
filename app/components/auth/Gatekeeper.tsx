@@ -41,21 +41,37 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
             // 1. Vérification session Supabase
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("No session");
+            if (!session) {
+                console.log("🛡️ Gatekeeper : Aucune session active. Accès refusé.");
+                router.replace('/login');
+                return;
+            }
 
             // 2. Vérification DIRECTE en BDD (au lieu d'un fetch API)
             const { data: profile, error: dbError } = await supabase
-                .from('Profile')
+                .from('profiles')
                 .select('id')
-                .eq('id', session.user.id)
+                .eq('user_id', session.user.id)
+                .eq('type', 'WORK')
                 .maybeSingle();
 
-            if (dbError || !profile) {
-                console.warn("⚠️ Profil fantôme détecté en BDD. Redirection vers /login...");
-                await supabase.auth.signOut();
-                localStorage.clear();
-                router.push('/login');
+            // MODIFICATION ICI : On log l'erreur pour comprendre
+            if (dbError) {
+                console.error("🚨 Erreur RLS ou Base de données :", dbError.message);
+                // Si c'est une erreur de permission (403), on ne redirige pas forcément tout de suite
+            }
+
+            if (!profile && !dbError) {
+                console.warn("⚠️ Aucun profil trouvé. Redirection vers onboarding.");
+                if (pathname !== '/profile/new') {
+                    router.push('/profile/new');
+                }
                 return;
+            }
+
+            // Si on a un profil, on arrête le chargement et on laisse passer
+            if (profile) {
+                setIsLoading(false);
             }
 
             // 3. BIOMÉTRIE (Refactored to use VaultManager)

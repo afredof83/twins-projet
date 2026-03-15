@@ -3,10 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-export async function processDeepNegotiation(negotiationId: string) {
+export async function processDeepNegotiation(negotiationId: string, userId: string) {
     // 1. Récupérer les détails de la négociation
     const { data: neg, error: negError } = await supabase.from('Negotiation').select('*').eq('id', negotiationId).single();
     if (negError || !neg) return null;
+
+    // SECURITY: Verify user is a participant
+    if (neg.initiatorId !== userId && neg.receiverId !== userId) {
+        throw new Error('Unauthorized: User is not a participant of this negotiation.');
+    }
 
     // 2. DEEP SCAN : On extrait les mémoires des deux Agents
     const { data: myMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.initiatorId).limit(20);

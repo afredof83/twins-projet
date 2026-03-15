@@ -1,114 +1,85 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { mistralClient } from '@/lib/mistral';
 
-export const runtime = 'edge';
+export const runtime = 'edge'; // Utilise 'nodejs' si Edge pose problème avec ton infrastructure
 
-/**
- * 🔥 [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
- * Purpose: High-performance streaming synergy analysis using Edge Runtime.
- * Flow: Mistral Stream -> ReadableStream -> Post-stream Update (WaitUntil).
- */
 export async function POST(req: NextRequest) {
     try {
-        // 1. Auth & Request
+        // 1. Authentification
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { opportunityId } = await req.json();
         if (!opportunityId) {
-            return new Response(JSON.stringify({ error: 'Missing opportunityId' }), { status: 400 });
+            return NextResponse.json({ error: 'Missing opportunityId' }, { status: 400 });
         }
 
-        // 2. Data Retrieval (Direct Supabase for Edge compatibility)
-        // Fetch opportunity + profiles in parallel
-        const { data: opportunity, error: oppError } = await supabase
-            .from('Opportunity')
-            .select(`
-                *,
-                sourceProfile:sourceId (*),
-                targetProfile:targetId (*)
-            `)
-            .eq('id', opportunityId)
-            .single();
-
-        if (oppError || !opportunity) {
-            return new Response(JSON.stringify({ error: 'Opportunity not found' }), { status: 404 });
+        // 2. Récupération des données via RPC (Optimisé pour Edge)
+        const { data: ctx, error: rpcError } = await supabase.rpc('get_synergy_context', { p_opportunity_id: opportunityId });
+        if (rpcError || !ctx) {
+            console.error("❌ [RPC-ERROR]:", rpcError);
+            return NextResponse.json({ error: 'Context aggregation failed' }, { status: 500 });
         }
 
-        if (opportunity.sourceId !== user.id && opportunity.targetId !== user.id) {
-            return new Response(JSON.stringify({ error: 'Access denied' }), { status: 403 });
+        const { opportunity, source_profile, target_profile, source_cortex, target_cortex } = ctx;
+
+        // 3. Vérification de sécurité (Appartenance de l'opportunité)
+        if (source_profile.user_id !== user.id && target_profile.user_id !== user.id) {
+            return NextResponse.json({ error: 'Forbidden: Access denied' }, { status: 403 });
         }
 
-        const source = opportunity.sourceProfile;
-        const target = opportunity.targetProfile;
-
-        // Fetch Cortex data (Memories & Notes)
-        const [sourceCortex, targetCortex] = await Promise.all([
-            fetchCortexData(supabase, source.id),
-            fetchCortexData(supabase, target.id)
-        ]);
-
-        console.log(`📡 [EDGE-STREAM] Starting stream for ${opportunityId}`);
-
-        // 3. Hermetic Prompt with Markdown Constraint & Contextual Tone
+        // 4. Préparation du Prompt
         const isWork = (opportunity.context || 'WORK') === 'WORK';
-        const toneDirective = isWork 
+        const toneDirective = isWork
             ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratégiques."
-            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagées.";
+            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs et les passions partagées.";
+
+        const sCortexText = `${(source_cortex?.memories || []).join('; ')}; ${(source_cortex?.notes || []).join('; ')}`.trim();
+        const tCortexText = `${(target_cortex?.memories || []).join('; ')}; ${(target_cortex?.notes || []).join('; ')}`.trim();
 
         const prompt = `Tu es Cortex, une IA de renseignement sémantique spécialisée dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
         ${toneDirective}
-        Analyse la synergie ENTRE deux entités distinctes. 
+        Analyse la synergie ENTRE ces deux profils.
 
         <Profil_A>
-        [INITIATEUR]
-        Nom: ${source.name || 'Agent Furtif'}
-        Rôle: ${source.primaryRole || 'Non défini'}
-        Secteur: ${source.sector || 'Non défini'}
-        Bio: ${source.bio || 'Non spécifiée'}
-        Cortex Data: ${sourceCortex || 'Aucune donnée.'}
+        Nom: ${source_profile.name || 'Agent A'}
+        Rôle: ${source_profile.primary_role || 'Non défini'}
+        Cortex: ${sCortexText || 'Aucune donnée'}
         </Profil_A>
 
         <Profil_B>
-        [CIBLE / TOI]
-        Nom: ${target.name || 'Agent Furtif'}
-        Rôle: ${target.primaryRole || 'Non défini'}
-        Secteur: ${target.sector || 'Non défini'}
-        Bio: ${target.bio || 'Non spécifiée'}
-        Cortex Data: ${targetCortex || 'Aucune donnée.'}
+        Nom: ${target_profile.name || 'Agent B'}
+        Rôle: ${target_profile.primary_role || 'Non défini'}
+        Cortex: ${tCortexText || 'Aucune donnée'}
         </Profil_B>
 
         INSTRUCTION: Génère un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
 
-        🎯 QUI EST ${source.name || 'Profil A'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
+        🎯 QUI EST ${source_profile.name || 'Profil A'} ?
+        [1 phrase impactante résumant son rôle]
 
-        🎯 QUI EST ${target.name || 'Profil B'} ?
-        [1 phrase impactante résumant son rôle et son expertise]
+        🎯 QUI EST ${target_profile.name || 'Profil B'} ?
+        [1 phrase impactante résumant son rôle]
 
         ⚡ POTENTIEL DE SYNERGIE
-        [1 seul paragraphe très direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
+        [1 seul paragraphe très direct expliquant le projet commun potentiel]
 
-        🚀 CE QUE ${source.name || 'Profil A'} APPORTE À ${target.name || 'Profil B'}
+        🚀 CE QUE ${source_profile.name || 'Profil A'} APPORTE À ${target_profile.name || 'Profil B'}
+        🔹 [Atout clé 1] : [Bénéfice direct]
+        🔹 [Atout clé 2] : [Bénéfice direct]
 
-        🔹 [Atout clé 1] : [Bénéfice direct, très court]
-
-        🔹 [Atout clé 2] : [Bénéfice direct, très court]
-
-        💎 CE QUE ${target.name || 'Profil B'} APPORTE À ${source.name || 'Profil A'}
-
-        🔸 [Atout clé 1] : [Bénéfice direct, très court]
-
-        🔸 [Atout clé 2] : [Bénéfice direct, très court]
+        💎 CE QUE ${target_profile.name || 'Profil B'} APPORTE À ${source_profile.name || 'Profil A'}
+        🔸 [Atout clé 1] : [Bénéfice direct]
+        🔸 [Atout clé 2] : [Bénéfice direct]
 
         RÉPOND UNIQUEMENT EN MARKDOWN.`;
 
-        // 4. Mistral Streaming
+        // 5. Appel au modèle Mistral en mode Stream
         const responseStream = await mistralClient.chat.stream({
             model: 'mistral-small-latest',
             messages: [{ role: 'user', content: prompt }],
@@ -117,33 +88,54 @@ export async function POST(req: NextRequest) {
         const encoder = new TextEncoder();
         let fullAudit = '';
 
+        // 6. Création du flux de lecture (ReadableStream)
         const stream = new ReadableStream({
             async start(controller) {
-                for await (const chunk of responseStream) {
-                    // @ts-ignore - Mistral SDK typing can be tricky in Edge
-                    const contentDelta = chunk.data?.choices?.[0]?.delta?.content;
-                    
-                    let contentString = '';
-                    if (typeof contentDelta === 'string') {
-                        contentString = contentDelta;
-                    } else if (Array.isArray(contentDelta)) {
-                        contentString = contentDelta.map((c: any) => c.text || '').join('');
-                    }
+                try {
+                    for await (const chunk of responseStream) {
+                        // 🛡️ FIX TYPESCRIPT MISTRAL SDK : Contournement de l'interface CompletionEvent
+                        const chunkAny = chunk as any;
+                        const contentDelta = chunkAny.choices?.[0]?.delta?.content || chunkAny.data?.choices?.[0]?.delta?.content || chunkAny.data;
 
-                    if (contentString) {
-                        fullAudit += contentString;
-                        controller.enqueue(encoder.encode(contentString));
+                        let contentString = '';
+                        if (typeof contentDelta === 'string') {
+                            contentString = contentDelta;
+                        } else if (Array.isArray(contentDelta)) {
+                            contentString = contentDelta.map((c: any) => c.text || '').join('');
+                        }
+
+                        // Si on a du texte, on l'envoie au navigateur
+                        if (contentString) {
+                            fullAudit += contentString;
+                            controller.enqueue(encoder.encode(contentString));
+                        }
                     }
+                } catch (e) {
+                    console.error("❌ Erreur pendant la lecture du stream Mistral:", e);
+                } finally {
+                    controller.close();
                 }
-                controller.close();
 
-                // 5. Post-stream Update (Database)
-                // In Edge runtime, we perform the update after the stream finishes within the generator
-                // to avoid blocking the initial response.
-                await updateAuditDatabase(supabase, opportunityId, fullAudit);
+                // 7. Sauvegarde asynchrone dans Supabase une fois le stream terminé
+                if (typeof after === 'function') {
+                    after(async () => {
+                        await supabase
+                            .from('opportunities')
+                            .update({ audit: fullAudit, status: 'ANALYZED' })
+                            .eq('id', opportunityId);
+                        console.log(`✅ [EDGE] Opportunity ${opportunityId} audit sauvegardé via after()`);
+                    });
+                } else {
+                    await supabase
+                        .from('opportunities')
+                        .update({ audit: fullAudit, status: 'ANALYZED' })
+                        .eq('id', opportunityId);
+                    console.log(`✅ [NODE] Opportunity ${opportunityId} audit sauvegardé`);
+                }
             },
         });
 
+        // 8. Retourner la réponse en streaming au Front-End
         return new Response(stream, {
             headers: {
                 'Content-Type': 'text/event-stream',
@@ -153,33 +145,7 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("🔥 [EDGE-FAILURE]:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-    }
-}
-
-async function fetchCortexData(supabase: any, profileId: string): Promise<string> {
-    const [memories, notes] = await Promise.all([
-        supabase.from('memory').select('content').eq('profile_id', profileId).order('created_at', { ascending: false }).limit(10),
-        supabase.from('CortexNote').select('content').eq('profileId', profileId).order('createdAt', { ascending: false }).limit(5)
-    ]);
-
-    const mText = (memories.data || []).map((m: any) => m.content).join('; ');
-    const nText = (notes.data || []).map((n: any) => n.content).join('; ');
-
-    return `${mText} ${nText}`.trim();
-}
-
-async function updateAuditDatabase(supabase: any, opportunityId: string, audit: string) {
-    try {
-        const { error } = await supabase
-            .from('Opportunity')
-            .update({ audit, status: 'ANALYZED' })
-            .eq('id', opportunityId);
-        
-        if (error) console.error("❌ [DB-UPDATE] Failed:", error.message);
-        else console.log(`✅ [DB-UPDATE] Opportunity ${opportunityId} persists.`);
-    } catch (e) {
-        console.error("❌ [DB-UPDATE] Critical Error:", e);
+        console.error("🔥 [EVALUATE-FAILURE]:", error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,8 +1,9 @@
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { prisma } from '@/lib/prisma';
+import { createClientServer } from '@/lib/supabaseScoped';
 
 /**
  * IPSE - Auth Profile Synchronization Route
@@ -10,42 +11,44 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(req: Request) {
     try {
-        // 1. Bearer Token Extraction
-        const authHeader = req.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
-        }
-        const token = authHeader.split(' ')[1];
-
-        // 2. Supabase Token Validation
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-        if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
-        }
+        // 1. Authentification & Client Scoped (RLS Enforced)
+        const { user } = await createClientServer(req);
 
         // 3. Prisma Profile Upsert
         // We use the ID and Email from Supabase to create or refresh the profile.
-        await prisma.profile.upsert({
-            where: { id: user.id },
-            update: {
-                updatedAt: new Date() // Updates at the Prisma level
-            },
-            create: {
-                id: user.id,
-                email: user.email!
-            },
-        });
+        console.log(`[SYNC-PROFILE] Syncing profile for user ${user.id} (${user.email})`);
+        
+        try {
+          await prisma.profile.upsert({
+              where: { 
+                  userId_type: { 
+                      userId: user.id, 
+                      type: 'WORK' 
+                  } 
+              },
+              update: {
+                  updatedAt: new Date()
+              },
+              create: {
+                  userId: user.id,
+                  email: user.email!,
+                  type: 'WORK',
+                  name: 'Agent Furtif'
+              },
+          });
+          console.log(`[SYNC-PROFILE] Successfully synced WORK profile for ${user.id}`);
+        } catch (prismaError: any) {
+          console.error("[SYNC-PROFILE] Prisma Upsert Failed:", prismaError);
+          throw prismaError;
+        }
 
         return NextResponse.json({ success: true });
 
     } catch (err: any) {
-        // Fail-Safe: Don't leak internal details
-        return NextResponse.json({ error: 'An internal error occurred during profile synchronization' }, { status: 500 });
+        console.error("Sync Profile Error (Full Trace):", err);
+        return NextResponse.json({ 
+            error: 'An internal error occurred during profile synchronization',
+            details: err.message
+        }, { status: 500 });
     }
 }

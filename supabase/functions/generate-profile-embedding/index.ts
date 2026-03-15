@@ -1,12 +1,13 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+// @ts-nocheck
+import { createClient } from "@supabase/supabase-js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+// @ts-ignore: Deno is available in Supabase Edge Functions
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -36,7 +37,7 @@ serve(async (req) => {
 
     // Verify ownership of the profile
     const { data: profile, error: profileError } = await supabaseClient
-      .from("Profile")
+      .from("profiles")
       .select("id, userId")
       .eq("id", profileId)
       .eq("userId", user.id)
@@ -47,6 +48,7 @@ serve(async (req) => {
     }
 
     // Generate embedding using OpenAI
+    // @ts-ignore
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     const response = await fetch("https://api.openai.com/v1/embeddings", {
       method: "POST",
@@ -71,7 +73,7 @@ serve(async (req) => {
     // Note: We use the service role client for direct vector insertion if RLS is tricky for vectors via JS client, 
     // but here we try the user context first.
     const { error: updateError } = await supabaseClient
-      .from("Profile")
+      .from("profiles")
       .update({ metadata_vector: vector })
       .eq("id", profileId);
 

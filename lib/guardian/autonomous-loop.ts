@@ -42,11 +42,18 @@ async function createGuardianIntervention(profileId: string, content: string) {
 export async function runGuardianCycle(profileId: string) {
     console.log(`🔄 [GARDIEN] Cycle autonome démarré pour ${profileId}`);
 
+    // 0. SECURITY: Resolve userId for this profile
+    const { data: profile } = await supabase.from('profiles').select('user_id').eq('id', profileId).single();
+    if (!profile) return { intervention: null };
+    const userId = profile.user_id;
+
     // 1. PERCEPTION (Ancien Radar/Sentinelle maintenant invisible)
     const internalMatches = await scanOtherAgents(profileId); // Cherche les autres humains compatibles
     const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblée (uniquement ce qui te concerne)
 
     // 2. RÉFLEXION (L'Oracle interne)
+    // Ici, on pourrait aussi appeler guardianSelfReflection(profileId, userId) si on veut une analyse Mistral complexe
+    // Pour l'instant on garde la logique de décision directe ou on délègue
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [

@@ -1,46 +1,42 @@
-﻿This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+The content has been processed where security check has been disabled.
 
-<file_summary>
-This section contains a summary of this file.
+# File Summary
 
-<purpose>
+## Purpose
 This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
 It is designed to be easily consumable by AI systems for analysis, code review,
 or other automated processes.
-</purpose>
 
-<file_format>
+## File Format
 The content is organized as follows:
 1. This summary section
 2. Repository information
 3. Directory structure
 4. Repository files (if enabled)
 5. Multiple file entries, each consisting of:
-  - File path as an attribute
-  - Full contents of the file
-</file_format>
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
 
-<usage_guidelines>
+## Usage Guidelines
 - This file should be treated as read-only. Any changes should be made to the
   original repository files, not this packed version.
 - When processing this file, use the file path to distinguish
   between different files in the repository.
 - Be aware that this file may contain sensitive information. Handle it with
   the same level of security as you would the original repository.
-</usage_guidelines>
 
-<notes>
+## Notes
 - Some files may have been excluded based on .gitignore rules and Repomix's configuration
 - Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
-- Only files matching these patterns are included: app/**, lib/**, components/**, inngest/**, public/messages/**, prisma/schema.prisma, tsconfig.json, package.json, vercel.json, capacitor.config.ts, android/app/src/main/assets/capacitor.config.json, next.config.js, .gitignore
+- Only files matching these patterns are included: app/**, lib/**, components/**, inngest/**, public/messages/**, prisma/schema.prisma, tsconfig.json, package.json, vercel.json, capacitor.config.ts, android/app/src/main/assets/capacitor.config.json, next.config.js, .gitignore, prisma.config.ts, *.md, eslint.config.mjs, store/**, scripts/**
 - Files matching patterns in .gitignore are excluded
 - Files matching default ignore patterns are excluded
+- Security check has been disabled - content may contain sensitive information
 - Files are sorted by Git change count (files with more changes are at the bottom)
-</notes>
 
-</file_summary>
-
-<directory_structure>
+# Directory Structure
+```
 .gitignore
 app/(routes)/cortex/invitation/page.tsx
 app/(routes)/cortex/opportunity/page.tsx
@@ -121,6 +117,7 @@ app/components/RealtimeChat.tsx
 app/components/SecureMessageBubble.tsx
 app/components/SplashHider.tsx
 app/components/TacticalEarpiece.tsx
+app/components/ThemeTransition.tsx
 app/connections/page.tsx
 app/cortex/loading.tsx
 app/cortex/page.tsx
@@ -162,6 +159,7 @@ components/NetworkPing.tsx
 components/NeuralLink.tsx
 components/NotificationDecision.tsx
 components/OpportunityRadar.tsx
+components/providers/PrismProvider.tsx
 components/RadarManager.tsx
 components/RadarWidget.tsx
 components/SecureChat.tsx
@@ -169,6 +167,7 @@ components/social-bridge.tsx
 components/TacticalOpenerModule.tsx
 components/TopNav.tsx
 components/VoiceOutput.tsx
+eslint.config.mjs
 inngest/client.ts
 inngest/functions.ts
 lib/api.ts
@@ -209,17 +208,53 @@ lib/vector/supabase-pgvector.ts
 lib/vector/vector-store.ts
 next.config.js
 package.json
+prisma.config.ts
 prisma/schema.prisma
 public/messages/en.json
 public/messages/fr.json
+QUICKSTART.md
+README.md
+scripts/add_expires_column.sql
+scripts/create_access_request_tables.sql
+scripts/create_radar_source_table.sql
+scripts/enable_realtime_radar.sql
+scripts/get_prisma_err.js
+scripts/init_cortex_maintenance.sql
+scripts/init.js
+scripts/update_all_code.ps1
+SECURITY_REFACTORING_SUMMARY.md
+store/keyStore.ts
+store/prismStore.ts
 tsconfig.json
 vercel.json
-</directory_structure>
+```
 
-<files>
-This section contains the contents of the repository's files.
+# Files
 
-<file path="lib/crypto/zk-encryption.ts">
+## File: eslint.config.mjs
+````javascript
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+````
+
+## File: lib/crypto/zk-encryption.ts
+````typescript
 // Fix build dependencies Vercel
 /**
  * Zero-Knowledge Encryption Module
@@ -404,9 +439,10 @@ export function arrayToBase64(array: Uint8Array): string {
 export function base64ToArray(base64: string): Uint8Array {
   return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 }
-</file>
+````
 
-<file path="lib/db/supabase.ts">
+## File: lib/db/supabase.ts
+````typescript
 /**
  * Supabase Client Configuration
  * Configured for Zero-Knowledge architecture with pgvector support
@@ -448,9 +484,10 @@ export function getSupabaseAdmin() {
         },
     });
 }
-</file>
+````
 
-<file path="lib/hooks/use-speech.ts">
+## File: lib/hooks/use-speech.ts
+````typescript
 import { useState, useEffect, useRef } from 'react';
 
 export function useSpeech() {
@@ -458,15 +495,15 @@ export function useSpeech() {
     const [transcript, setTranscript] = useState('');
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    // RÃ©fÃ©rence pour la reconnaissance vocale
+    // Référence pour la reconnaissance vocale
     const recognitionRef = useRef<any>(null);
 
     useEffect(() => {
-        // Initialisation (seulement cÃ´tÃ© client)
+        // Initialisation (seulement côté client)
         if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
             // @ts-ignore
             const recognition = new window.webkitSpeechRecognition();
-            recognition.continuous = false; // On arrÃªte d'Ã©couter quand la phrase finit
+            recognition.continuous = false; // On arrête d'écouter quand la phrase finit
             recognition.lang = 'fr-FR';
             recognition.interimResults = false;
 
@@ -482,7 +519,7 @@ export function useSpeech() {
         }
     }, []);
 
-    // DÃ©marrer l'Ã©coute
+    // Démarrer l'écoute
     const startListening = () => {
         if (recognitionRef.current) {
             setTranscript(''); // Reset
@@ -492,7 +529,7 @@ export function useSpeech() {
         }
     };
 
-    // ArrÃªter l'Ã©coute
+    // Arrêter l'écoute
     const stopListening = () => {
         if (recognitionRef.current) recognitionRef.current.stop();
     };
@@ -500,13 +537,13 @@ export function useSpeech() {
     // Faire parler le Jumeau
     const speak = (text: string) => {
         if ('speechSynthesis' in window) {
-            // On arrÃªte s'il parle dÃ©jÃ 
+            // On arrête s'il parle déjà
             window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'fr-FR';
             utterance.rate = 1.0; // Vitesse normale
-            utterance.pitch = 1.0; // TonalitÃ© normale
+            utterance.pitch = 1.0; // Tonalité normale
 
             utterance.onstart = () => setIsSpeaking(true);
             utterance.onend = () => setIsSpeaking(false);
@@ -524,33 +561,34 @@ export function useSpeech() {
         isSpeaking
     };
 }
-</file>
+````
 
-<file path="lib/oracle/alchemy.ts">
+## File: lib/oracle/alchemy.ts
+````typescript
 // lib/oracle/alchemy.ts
 
-// 1. DÃ‰FINITION DES OUTILS (Ce que l'IA voit)
+// 1. DÉFINITION DES OUTILS (Ce que l'IA voit)
 export const ALCHEMIST_TOOLS = [
     {
         type: "function",
         function: {
             name: "simulate_future_career",
-            description: "Projette l'avenir professionnel de FrÃ©dÃ©ric sur 1 Ã  5 ans. Calcule le salaire potentiel, le risque de burnout et la pertinence du marchÃ©.",
+            description: "Projette l'avenir professionnel de Frédéric sur 1 à 5 ans. Calcule le salaire potentiel, le risque de burnout et la pertinence du marché.",
             parameters: {
                 type: "object",
                 properties: {
                     path_name: {
                         type: "string",
-                        description: "La voie envisagÃ©e (ex: 'Rester chez Qualitat', 'Freelance Drone', 'Expert NuclÃ©aire')"
+                        description: "La voie envisagée (ex: 'Rester chez Qualitat', 'Freelance Drone', 'Expert Nucléaire')"
                     },
                     timeframe_years: {
                         type: "integer",
-                        description: "Horizon de temps en annÃ©es (1 Ã  10)."
+                        description: "Horizon de temps en années (1 à 10)."
                     },
                     risk_tolerance: {
                         type: "string",
                         enum: ["low", "medium", "high"],
-                        description: "Niveau de risque acceptÃ©."
+                        description: "Niveau de risque accepté."
                     }
                 },
                 required: ["path_name", "timeframe_years", "risk_tolerance"]
@@ -561,12 +599,12 @@ export const ALCHEMIST_TOOLS = [
         type: "function",
         function: {
             name: "analyze_market_trend",
-            description: "Analyse la demande actuelle du marchÃ© pour une compÃ©tence spÃ©cifique dans le Var (83) ou en France.",
+            description: "Analyse la demande actuelle du marché pour une compétence spécifique dans le Var (83) ou en France.",
             parameters: {
                 type: "object",
                 properties: {
-                    skill: { type: "string", description: "La compÃ©tence ou le mÃ©tier (ex: 'Amiante', 'Logistique', 'IA')" },
-                    location: { type: "string", description: "Zone gÃ©ographique" }
+                    skill: { type: "string", description: "La compétence ou le métier (ex: 'Amiante', 'Logistique', 'IA')" },
+                    location: { type: "string", description: "Zone géographique" }
                 },
                 required: ["skill"]
             }
@@ -574,46 +612,47 @@ export const ALCHEMIST_TOOLS = [
     }
 ];
 
-// 2. EXÃ‰CUTION DES OUTILS (Ce que le code fait rÃ©ellement)
+// 2. EXÉCUTION DES OUTILS (Ce que le code fait réellement)
 export async function executeAlchemyTool(toolName: string, args: any) {
-    console.log(`âš—ï¸ [ALCHIMISTE] Activation de l'outil : ${toolName}`, args);
+    console.log(`⚗️ [ALCHIMISTE] Activation de l'outil : ${toolName}`, args);
 
     if (toolName === "simulate_future_career") {
-        // SIMULATION MATHÃ‰MATIQUE
-        const baseIncome = 32000; // Revenu de base fictif ou rÃ©el
+        // SIMULATION MATHÉMATIQUE
+        const baseIncome = 32000; // Revenu de base fictif ou réel
         const growthRate = args.risk_tolerance === 'high' ? 1.25 : 1.05; // 25% vs 5% croissance
         const futureIncome = Math.round(baseIncome * Math.pow(growthRate, args.timeframe_years));
 
-        const successProb = args.risk_tolerance === 'high' ? "45% (RisquÃ© mais rentable)" : "92% (SÃ©curisÃ©)";
+        const successProb = args.risk_tolerance === 'high' ? "45% (Risqué mais rentable)" : "92% (Sécurisé)";
 
         return JSON.stringify({
-            scÃ©nario: args.path_name,
+            scénario: args.path_name,
             horizon: `${args.timeframe_years} ans`,
-            revenu_projetÃ©: `${futureIncome} â‚¬ / an`,
-            probabilitÃ©_succÃ¨s: successProb,
+            revenu_projeté: `${futureIncome} € / an`,
+            probabilité_succès: successProb,
             conseil_oracle: args.risk_tolerance === 'high'
-                ? "Cette voie demande une rÃ©silience extrÃªme. PrÃ©pare un filet de sÃ©curitÃ©."
-                : "C'est la voie de la sagesse, mais attention Ã  l'ennui."
+                ? "Cette voie demande une résilience extrême. Prépare un filet de sécurité."
+                : "C'est la voie de la sagesse, mais attention à l'ennui."
         });
     }
 
     if (toolName === "analyze_market_trend") {
         // Ici on pourrait appeler une vraie API (Google Trends, LinkedIn), on simule pour l'instant
-        const isHot = ["IA", "Drone", "NuclÃ©aire", "Logistique"].some(k => args.skill.includes(k));
+        const isHot = ["IA", "Drone", "Nucléaire", "Logistique"].some(k => args.skill.includes(k));
 
         return JSON.stringify({
-            compÃ©tence: args.skill,
+            compétence: args.skill,
             demande: isHot ? "EXPLOSIVE (+40% sur 6 mois)" : "STAGNANTE (-2%)",
             concurrents_locaux: Math.floor(Math.random() * 100),
-            verdict: isHot ? "C'est le moment d'investir massivement." : "Attention, ocÃ©an rouge."
+            verdict: isHot ? "C'est le moment d'investir massivement." : "Attention, océan rouge."
         });
     }
 
-    return "Outil inconnu ou cassÃ©.";
+    return "Outil inconnu ou cassé.";
 }
-</file>
+````
 
-<file path="lib/profile/profile-schema.ts">
+## File: lib/profile/profile-schema.ts
+````typescript
 /**
  * Profile Schema and Types
  * TypeScript interfaces for profile data structures
@@ -672,13 +711,14 @@ export interface VectorStoreConfig {
     dimension: number;
     model: string;
 }
-</file>
+````
 
-<file path="lib/security/crypto.ts">
+## File: lib/security/crypto.ts
+````typescript
 // lib/security/crypto.ts
 
-// Pour faire simple dans ce prototype, on va dÃ©river une clÃ© Ã  partir d'un mot de passe fixe
-// Dans une version prod, ce mot de passe serait demandÃ© Ã  l'utilisateur Ã  chaque session.
+// Pour faire simple dans ce prototype, on va dériver une clé à partir d'un mot de passe fixe
+// Dans une version prod, ce mot de passe serait demandé à l'utilisateur à chaque session.
 const MASTER_KEY_PASSWORD = "MON_SECRET_TRES_SECURISE_123";
 
 async function getKey() {
@@ -694,7 +734,7 @@ async function getKey() {
     return window.crypto.subtle.deriveKey(
         {
             name: "PBKDF2",
-            salt: enc.encode("salt_fixe_pour_proto"), // Ã€ randomiser en prod
+            salt: enc.encode("salt_fixe_pour_proto"), // À randomiser en prod
             iterations: 100000,
             hash: "SHA-256",
         },
@@ -718,13 +758,13 @@ export const cryptoManager = {
             encoded
         );
 
-        // On combine IV + Texte chiffrÃ© pour le stockage
+        // On combine IV + Texte chiffré pour le stockage
         const ivArray = Array.from(iv);
         const encryptedArray = Array.from(new Uint8Array(encrypted));
         return JSON.stringify({ iv: ivArray, data: encryptedArray });
     },
 
-    // DÃ‰CHIFFRER (Charabia -> Texte)
+    // DÉCHIFFRER (Charabia -> Texte)
     async decrypt(cipherText: string): Promise<string> {
         try {
             const { iv, data } = JSON.parse(cipherText);
@@ -738,20 +778,22 @@ export const cryptoManager = {
 
             return new TextDecoder().decode(decrypted);
         } catch (e) {
-            return "ðŸ”’ [Contenu VerrouillÃ© - ClÃ© invalide]";
+            return "🔒 [Contenu Verrouillé - Clé invalide]";
         }
     }
 };
-</file>
+````
 
-<file path="lib/sfx.ts">
+## File: lib/sfx.ts
+````typescript
 export const SFX = {
     // Sonar BEEP (Format WAV Universel - 100% Compatible)
     BEEP: 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YV9vT18AAAAAAP////////////////////////////////////////////////////'
 };
-</file>
+````
 
-<file path="lib/supabaseServer.ts">
+## File: lib/supabaseServer.ts
+````typescript
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -781,44 +823,46 @@ export async function createClient() {
         }
     )
 }
-</file>
+````
 
-<file path="lib/tools/network-scanner.ts">
+## File: lib/tools/network-scanner.ts
+````typescript
 export async function scanNetworkForAgents(sector: string) {
-    console.log(`ðŸ“¡ [SONAR] Scan du secteur : ${sector}...`);
+    console.log(`📡 [SONAR] Scan du secteur : ${sector}...`);
 
     // Ici, on simule ce que le web renverrait. 
-    // IdÃ©alement, tu ferais un fetch vers une API de recherche ici.
-    // Pour l'instant, c'est codÃ© en dur pour la dÃ©mo "FisherMade".
+    // Idéalement, tu ferais un fetch vers une API de recherche ici.
+    // Pour l'instant, c'est codé en dur pour la démo "FisherMade".
 
     const simulatedSignals = [
         {
-            name: "VMC PÃªche (Groupe Rapala)",
+            name: "VMC Pêche (Groupe Rapala)",
             type: "Partner",
-            context: "Leader mondial de l'hameÃ§on, usine en France (Territoire de Belfort). Cherche innovations acier."
+            context: "Leader mondial de l'hameçon, usine en France (Territoire de Belfort). Cherche innovations acier."
         },
         {
             name: "Decathlon Innovation (Caperlan)",
             type: "Client",
-            context: "Leur centre de conception Ã  Cestas cherche des brevets Ã©co-conÃ§us pour 2027."
+            context: "Leur centre de conception à Cestas cherche des brevets éco-conçus pour 2027."
         },
         {
             name: "Blue Ocean Partners",
             type: "Investor",
-            context: "Fonds VC spÃ©cialisÃ© dans la Tech Maritime et la protection des ocÃ©ans."
+            context: "Fonds VC spécialisé dans la Tech Maritime et la protection des océans."
         }
     ];
 
     return simulatedSignals; // Retourne l'objet directement, pas JSON.stringify ici car c'est une fonction interne pour l'instant
 }
-</file>
+````
 
-<file path="lib/tools/web-reader.ts">
+## File: lib/tools/web-reader.ts
+````typescript
 import * as cheerio from 'cheerio';
 
 export async function readUrlContent(url: string): Promise<string | null> {
     try {
-        console.log(`ðŸŒ [ORACLE] Tentative de lecture : ${url}`);
+        console.log(`🌐 [ORACLE] Tentative de lecture : ${url}`);
 
         const response = await fetch(url, {
             headers: {
@@ -834,19 +878,20 @@ export async function readUrlContent(url: string): Promise<string | null> {
         // Nettoyage : on vire les pubs, scripts et styles
         $('script, style, nav, footer, iframe, noscript').remove();
 
-        // On rÃ©cupÃ¨re le texte pur
+        // On récupère le texte pur
         let content = $('body').text().replace(/\s+/g, ' ').trim();
 
-        // On limite Ã  6000 caractÃ¨res pour ne pas saturer Mistral
+        // On limite à 6000 caractères pour ne pas saturer Mistral
         return content.substring(0, 6000);
     } catch (error) {
-        console.error("âŒ Erreur Web Reader:", error);
+        console.error("❌ Erreur Web Reader:", error);
         return null;
     }
 }
-</file>
+````
 
-<file path="lib/vector/embedding-service.ts">
+## File: lib/vector/embedding-service.ts
+````typescript
 /**
  * Embedding Service
  * Generates vector embeddings for text using Mistral AI
@@ -958,9 +1003,10 @@ export class EmbeddingService {
 
 // Singleton instance
 export const embeddingService = new EmbeddingService();
-</file>
+````
 
-<file path="lib/vector/supabase-pgvector.ts">
+## File: lib/vector/supabase-pgvector.ts
+````typescript
 import { createClient } from '@supabase/supabase-js';
 
 // Configuration
@@ -993,10 +1039,10 @@ export class SupabasePgVectorStore {
         let safeType = memory.type || 'MEMORY';
         const safeTags = [...(memory.tags || [])];
 
-        // SÃ©curitÃ© au cas oÃ¹ on retombe sur une base stricte un jour
+        // Sécurité au cas où on retombe sur une base stricte un jour
         if (safeType === 'file_upload') {
             // On laisse passer file_upload maintenant que la base est libre
-            // Mais on garde la logique de tag par sÃ©curitÃ©
+            // Mais on garde la logique de tag par sécurité
             safeTags.push('file_upload');
         }
 
@@ -1025,12 +1071,12 @@ export class SupabasePgVectorStore {
     async query(vector: number[], filter: { profileId: string }): Promise<MemoryQueryResult[]> {
 
         // --- CORRECTION CRITIQUE ICI ---
-        // On appelle la fonction SQL avec les noms de paramÃ¨tres EXACTS
+        // On appelle la fonction SQL avec les noms de paramètres EXACTS
         const { data, error } = await this.client.rpc('match_memories', {
             query_embedding: vector,
-            match_threshold: 0.4,       // Seuil tolÃ©rant pour trouver le souvenir
+            match_threshold: 0.4,       // Seuil tolérant pour trouver le souvenir
             match_count: 5,
-            query_profile_id: filter.profileId // <--- C'est la clÃ© du succÃ¨s !
+            query_profile_id: filter.profileId // <--- C'est la clé du succès !
         });
 
         if (error) {
@@ -1061,9 +1107,10 @@ export class SupabasePgVectorStore {
 }
 
 export const vectorStore = new SupabasePgVectorStore();
-</file>
+````
 
-<file path="lib/vector/vector-store.ts">
+## File: lib/vector/vector-store.ts
+````typescript
 /**
  * Vector Store Interface
  * Abstraction layer for vector database operations with encryption support
@@ -1112,9 +1159,662 @@ export interface VectorStore {
      */
     deleteByProfile(profileId: string): Promise<void>;
 }
-</file>
+````
 
-<file path="tsconfig.json">
+## File: QUICKSTART.md
+````markdown
+# 🚀 Guide de Démarrage Rapide
+
+## Installation en 5 Minutes
+
+### 1. Configuration de l'Environnement
+
+```bash
+cd digital-twin-profile
+cp .env.example .env.local
+```
+
+Éditez `.env.local` et remplissez :
+```env
+DATABASE_URL="postgresql://user:password@host:5432/db"
+NEXT_PUBLIC_SUPABASE_URL="https://xxx.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+OPENAI_API_KEY="sk-..."
+```
+
+### 2. Initialisation Automatique
+
+```bash
+npm run init
+```
+
+Cette commande va :
+- ✅ Générer le client Prisma
+- ✅ Créer les tables dans la base de données
+- ⚠️ Vous demander d'exécuter la migration pgvector manuellement
+
+### 3. Migration pgvector (Supabase SQL Editor)
+
+Copiez et exécutez le contenu de :
+```
+prisma/migrations/001_setup_pgvector.sql
+```
+
+### 4. Lancer l'Application
+
+```bash
+npm run dev
+```
+
+Ouvrez [http://localhost:3000/profile/new](http://localhost:3000/profile/new)
+
+### 5. Créer Votre Premier Profil
+
+1. Entrez un nom et un mot de passe maître (12+ caractères)
+2. **IMPORTANT** : Sauvegardez votre phrase de récupération BIP39 !
+3. Confirmez et accédez à votre profil
+
+---
+
+## 🔐 Sécurité Zero-Knowledge
+
+### Ce qui est chiffré
+- ✅ Contenu des mémoires
+- ✅ Métadonnées des profils
+- ✅ Phrase de récupération BIP39
+- ✅ Embeddings vectoriels
+
+### Ce qui N'EST PAS chiffré
+- ❌ Nom du profil (pour affichage)
+- ❌ Timestamps
+- ❌ ID du profil
+
+### Garanties
+- 🔒 Le serveur ne peut JAMAIS déchiffrer vos données
+- 🔑 Seul votre mot de passe maître dérive la clé
+- 💾 Aucune clé stockée sur le serveur
+- 🔄 Phrase BIP39 pour récupération
+
+---
+
+## 📝 Commandes Utiles
+
+```bash
+# Développement
+npm run dev              # Lancer le serveur de dev
+
+# Base de données
+npm run db:generate      # Générer le client Prisma
+npm run db:push          # Push le schéma vers la DB
+npm run db:studio        # Ouvrir Prisma Studio
+
+# Production
+npm run build            # Build pour production
+npm run start            # Démarrer en production
+```
+
+---
+
+## ⚠️ AVERTISSEMENTS CRITIQUES
+
+### Perte de Données Irréversible
+
+Si vous perdez **À LA FOIS** :
+- ❌ Votre mot de passe maître
+- ❌ Votre phrase de récupération BIP39
+
+→ **VOS DONNÉES SONT PERDUES DÉFINITIVEMENT**
+
+### Sauvegarde de la Phrase BIP39
+
+✅ **À FAIRE** :
+- Écrire sur papier et stocker en lieu sûr
+- Utiliser un gestionnaire de mots de passe chiffré
+- Faire plusieurs copies dans des endroits différents
+
+❌ **À NE PAS FAIRE** :
+- Stocker en clair sur votre ordinateur
+- Envoyer par email ou message
+- Partager avec qui que ce soit
+- Prendre une photo non chiffrée
+
+---
+
+## 🆘 Dépannage
+
+### Erreur : "Module not found @prisma/client"
+```bash
+npm run db:generate
+```
+
+### Erreur : "Extension vector does not exist"
+Exécutez dans Supabase SQL Editor :
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+### Erreur : "Function match_memories does not exist"
+Exécutez la migration complète :
+```sql
+-- Contenu de prisma/migrations/001_setup_pgvector.sql
+```
+
+### L'application ne démarre pas
+Vérifiez que toutes les variables d'environnement sont définies dans `.env.local`
+
+---
+
+## 📚 Documentation Complète
+
+- **README.md** : Documentation complète du projet
+- **walkthrough.md** : Guide détaillé de l'implémentation
+- **implementation_plan.md** : Plan d'architecture original
+
+---
+
+## 🎯 Prochaines Fonctionnalités Suggérées
+
+1. **Page de déverrouillage** (`/profile/unlock`)
+2. **Dashboard du profil** avec liste des mémoires
+3. **Ajout de mémoires** avec génération d'embeddings
+4. **Recherche sémantique** dans les mémoires
+5. **Export/Import de profil** chiffré
+6. **Récupération via phrase BIP39**
+
+---
+
+**Bon développement ! 🚀**
+````
+
+## File: README.md
+````markdown
+# Digital Twin Profile - Zero-Knowledge Architecture
+
+Un système de gestion de profils de jumeaux numériques avec chiffrement Zero-Knowledge et mémoire vectorielle isolée.
+
+## 🔐 Caractéristiques de Sécurité
+
+- **Chiffrement Zero-Knowledge** : AES-256-GCM avec dérivation de clés PBKDF2 (100k itérations)
+- **Isolation stricte** : Chaque profil dispose de son propre espace vectoriel et clés de chiffrement
+- **Phrase de récupération BIP39** : 12 mots pour la récupération du profil
+- **Aucune clé sur le serveur** : Toutes les clés restent côté client
+- **Mémoire vectorielle sécurisée** : Supabase pgvector avec recherche sémantique chiffrée
+
+## 📦 Architecture
+
+```
+digital-twin-profile/
+├── lib/
+│   ├── crypto/
+│   │   ├── zk-encryption.ts      # Chiffrement AES-256-GCM
+│   │   └── key-manager.ts        # Gestion de session sécurisée
+│   ├── vector/
+│   │   ├── vector-store.ts       # Interface abstraite
+│   │   ├── supabase-pgvector.ts  # Implémentation Supabase
+│   │   └── embedding-service.ts  # Génération d'embeddings
+│   ├── profile/
+│   │   ├── profile-manager.ts    # Gestion des profils
+│   │   └── profile-schema.ts     # Types TypeScript
+│   └── db/
+│       └── supabase.ts           # Client Supabase
+├── app/
+│   ├── profile/
+│   │   └── new/
+│   │       └── page.tsx          # Création de profil
+│   └── api/
+│       └── profile/
+│           └── create/
+│               └── route.ts      # API de création
+└── prisma/
+    ├── schema.prisma             # Schéma de base de données
+    └── migrations/
+        └── 001_setup_pgvector.sql # Migration pgvector
+```
+
+## 🚀 Installation
+
+### 1. Installer les dépendances
+
+```bash
+npm install
+```
+
+### 2. Configurer les variables d'environnement
+
+Copiez `.env.example` vers `.env.local` et remplissez les valeurs :
+
+```bash
+cp .env.example .env.local
+```
+
+Variables requises :
+- `DATABASE_URL` : URL PostgreSQL
+- `NEXT_PUBLIC_SUPABASE_URL` : URL de votre projet Supabase
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` : Clé anonyme Supabase
+- `SUPABASE_SERVICE_ROLE_KEY` : Clé de rôle de service Supabase
+- `OPENAI_API_KEY` : Clé API OpenAI (pour les embeddings)
+
+### 3. Configurer la base de données
+
+#### a. Activer pgvector dans Supabase
+
+Dans le SQL Editor de Supabase, exécutez :
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+#### b. Exécuter les migrations Prisma
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+#### c. Exécuter la migration pgvector
+
+Dans le SQL Editor de Supabase, exécutez le contenu de :
+`prisma/migrations/001_setup_pgvector.sql`
+
+### 4. Lancer l'application
+
+```bash
+npm run dev
+```
+
+Accédez à [http://localhost:3000/profile/new](http://localhost:3000/profile/new) pour créer votre premier profil.
+
+## 🔑 Utilisation
+
+### Créer un nouveau profil
+
+1. Naviguez vers `/profile/new`
+2. Entrez un nom et un mot de passe maître (min. 12 caractères)
+3. **IMPORTANT** : Sauvegardez votre phrase de récupération BIP39 (12 mots)
+4. Confirmez et accédez à votre profil
+
+### Sécurité Zero-Knowledge
+
+- **Chiffrement côté client** : Toutes les données sont chiffrées avant d'être envoyées au serveur
+- **Pas de clé sur le serveur** : Le serveur ne peut jamais déchiffrer vos données
+- **Phrase de récupération** : Seule façon de récupérer votre profil si vous oubliez votre mot de passe
+- **Perte irréversible** : Si vous perdez votre phrase de récupération ET votre mot de passe, vos données sont perdues définitivement
+
+## 🧠 Mémoire Vectorielle
+
+Le système utilise Supabase pgvector pour stocker et rechercher des embeddings :
+
+- **Dimension** : 1536 (OpenAI text-embedding-3-small)
+- **Recherche sémantique** : Cosine similarity avec seuil configurable
+- **Isolation stricte** : Chaque profil a son propre namespace vectoriel
+
+## 📚 API
+
+### POST `/api/profile/create`
+
+Crée un nouveau profil.
+
+**Body** :
+```json
+{
+  "name": "Mon Jumeau",
+  "masterPassword": "mot-de-passe-très-sécurisé"
+}
+```
+
+**Response** :
+```json
+{
+  "success": true,
+  "profileId": "clx...",
+  "recoveryPhrase": "word1 word2 word3 ... word12",
+  "salt": "base64-encoded-salt"
+}
+```
+
+## 🛡️ Sécurité
+
+### Bonnes pratiques
+
+1. **Mot de passe maître** : Utilisez un mot de passe fort (min. 12 caractères, idéalement 20+)
+2. **Phrase de récupération** : Stockez-la dans un endroit sûr (coffre-fort, gestionnaire de mots de passe)
+3. **Ne partagez jamais** : Ni votre mot de passe ni votre phrase de récupération
+4. **Auto-lock** : Le système verrouille automatiquement après 30 minutes d'inactivité
+
+### Architecture de chiffrement
+
+- **Algorithme** : AES-256-GCM (authentification intégrée)
+- **Dérivation de clé** : PBKDF2-SHA256 avec 100 000 itérations
+- **Salt** : 32 bytes aléatoires cryptographiquement sécurisés
+- **IV** : 12 bytes aléatoires par opération de chiffrement
+
+## 📝 Licence
+
+MIT
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! Veuillez ouvrir une issue avant de soumettre une PR.
+
+---
+
+**⚠️ AVERTISSEMENT** : Ce système utilise un chiffrement Zero-Knowledge. La perte de votre mot de passe maître ET de votre phrase de récupération entraînera une perte IRRÉVERSIBLE de toutes vos données. Sauvegardez votre phrase de récupération en lieu sûr !
+````
+
+## File: scripts/add_expires_column.sql
+````sql
+-- Ajout de la colonne d'expiration pour les souvenirs éphémères (news, etc.)
+ALTER TABLE "Memory" ADD COLUMN IF NOT EXISTS "expires_at" TIMESTAMP WITH TIME ZONE;
+
+-- Index pour nettoyer efficacement les souvenirs expirés
+CREATE INDEX IF NOT EXISTS "Memory_expires_at_idx" ON "Memory" ("expires_at");
+````
+
+## File: scripts/create_access_request_tables.sql
+````sql
+-- Création de la table AccessRequest si elle n'existe pas
+CREATE TABLE IF NOT EXISTS "AccessRequest" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "requester_id" TEXT NOT NULL,
+  "provider_id" TEXT NOT NULL,
+  "topic" TEXT,
+  "match_score" INTEGER,
+  "status" TEXT DEFAULT 'pending',
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Index pour des recherches rapides
+CREATE INDEX IF NOT EXISTS "AccessRequest_provider_id_idx" ON "AccessRequest"("provider_id");
+CREATE INDEX IF NOT EXISTS "AccessRequest_requester_id_idx" ON "AccessRequest"("requester_id");
+
+-- Création de la table DirectMessage si elle n'existe pas (pour l'étape 4)
+CREATE TABLE IF NOT EXISTS "DirectMessage" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "sender_id" TEXT NOT NULL,
+  "receiver_id" TEXT NOT NULL,
+  "content" TEXT NOT NULL,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "DirectMessage_sender_receiver_idx" ON "DirectMessage"("sender_id", "receiver_id");
+````
+
+## File: scripts/create_radar_source_table.sql
+````sql
+-- Table pour gérer les sources dynamiques du Radar
+CREATE TABLE IF NOT EXISTS "RadarSource" (
+  "id" UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  "profileId" TEXT NOT NULL,
+  "name" TEXT NOT NULL,
+  "url" TEXT NOT NULL,
+  "isActive" BOOLEAN DEFAULT TRUE,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS "RadarSource_profileId_idx" ON "RadarSource" ("profileId");
+````
+
+## File: scripts/init_cortex_maintenance.sql
+````sql
+-- Fonction de maintenance du Cortex (Nettoyage)
+CREATE OR REPLACE FUNCTION run_cortex_maintenance(p_profile_id TEXT)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- 1. Supprimer les souvenirs expirés (ex: News de plus de 7 jours)
+  DELETE FROM "Memory"
+  WHERE "profileId" = p_profile_id
+    AND "expires_at" < NOW();
+
+  -- 2. Supprimer les doublons exacts (on garde le plus récent grace à l'ID ou CreatedAt)
+  -- Ici on supprime A si B existe avec le même content et un ID plus "grand" (ou créé après)
+  DELETE FROM "Memory" a
+  USING "Memory" b
+  WHERE a.id < b.id
+    AND a."profileId" = p_profile_id
+    AND b."profileId" = p_profile_id
+    AND a.content = b.content;
+END;
+$$;
+````
+
+## File: scripts/init.js
+````javascript
+#!/usr/bin/env node
+
+/**
+ * Initialization Script for Digital Twin Profile System
+ * Run this after setting up your environment variables
+ */
+
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+console.log('🚀 Initializing Digital Twin Profile System...\n');
+
+// Check if .env.local exists
+const envPath = path.join(__dirname, '..', '.env.local');
+if (!fs.existsSync(envPath)) {
+    console.error('❌ Error: .env.local file not found!');
+    console.log('📝 Please copy .env.example to .env.local and fill in your values:');
+    console.log('   cp .env.example .env.local\n');
+    process.exit(1);
+}
+
+console.log('✅ Environment file found\n');
+
+// Step 1: Generate Prisma Client
+console.log('📦 Step 1: Generating Prisma Client...');
+try {
+    execSync('npx prisma generate', { stdio: 'inherit' });
+    console.log('✅ Prisma Client generated\n');
+} catch (error) {
+    console.error('❌ Failed to generate Prisma Client');
+    process.exit(1);
+}
+
+// Step 2: Push database schema
+console.log('🗄️  Step 2: Pushing database schema...');
+try {
+    execSync('npx prisma db push', { stdio: 'inherit' });
+    console.log('✅ Database schema pushed\n');
+} catch (error) {
+    console.error('❌ Failed to push database schema');
+    console.log('💡 Make sure your DATABASE_URL is correct in .env.local');
+    process.exit(1);
+}
+
+// Step 3: Instructions for pgvector migration
+console.log('🧠 Step 3: pgvector Setup');
+console.log('⚠️  MANUAL STEP REQUIRED:');
+console.log('   1. Open your Supabase SQL Editor');
+console.log('   2. Run the SQL from: prisma/migrations/001_setup_pgvector.sql');
+console.log('   3. This will enable pgvector and create the semantic search function\n');
+
+// Step 4: Verify installation
+console.log('✅ Core setup complete!\n');
+console.log('📋 Next steps:');
+console.log('   1. Complete the pgvector migration (see Step 3 above)');
+console.log('   2. Run: npm run dev');
+console.log('   3. Navigate to: http://localhost:3000/profile/new');
+console.log('   4. Create your first digital twin profile!\n');
+
+console.log('🔐 Security Reminder:');
+console.log('   - Your master password is NEVER stored on the server');
+console.log('   - Save your BIP39 recovery phrase in a safe place');
+console.log('   - Loss of both = permanent data loss\n');
+
+console.log('🎉 Happy coding!\n');
+````
+
+## File: SECURITY_REFACTORING_SUMMARY.md
+````markdown
+# 🔐 Security Refactoring Summary
+
+## Mission Accomplished ✅
+
+Successfully refactored the digital twin profile system to achieve **true Zero-Knowledge security** and **data sovereignty**.
+
+---
+
+## 🎯 Three Critical Fixes Implemented
+
+### 1️⃣ Client-Side Encryption (Zero-Knowledge)
+**Problem:** Server was generating cryptographic secrets (salt, BIP39 phrase) and receiving plaintext passwords.
+
+**Solution:** Moved ALL cryptography to the browser.
+- ✅ Salt generation in browser
+- ✅ BIP39 recovery phrase generation in browser  
+- ✅ Password hashing in browser
+- ✅ Master key derivation in browser
+- ✅ Data encryption in browser
+- ✅ Server receives ONLY encrypted/hashed data
+
+**Files Modified:**
+- [`app/profile/new/page.tsx`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/app/profile/new/page.tsx)
+
+---
+
+### 2️⃣ Trustless Server Architecture
+**Problem:** Server had access to encryption keys and could decrypt user data.
+
+**Solution:** Server is now a "dumb" data persistence layer.
+- ✅ Removed all crypto operations from server
+- ✅ Server accepts only pre-encrypted data
+- ✅ Server cannot decrypt anything
+- ✅ API enforces encrypted-only contract
+
+**Files Modified:**
+- [`lib/profile/profile-manager.ts`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/lib/profile/profile-manager.ts)
+- [`app/api/profile/create/route.ts`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/app/api/profile/create/route.ts)
+
+---
+
+### 3️⃣ Data Sovereignty (Mistral AI)
+**Problem:** Dependency on US-based OpenAI for embeddings.
+
+**Solution:** Migrated to European provider Mistral AI.
+- ✅ API endpoint: `api.mistral.ai`
+- ✅ Model: `mistral-embed`
+- ✅ Dimension: 1024 (down from 1536)
+- ✅ Provider: Mistral AI (France 🇫🇷)
+
+**Files Modified:**
+- [`lib/vector/embedding-service.ts`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/lib/vector/embedding-service.ts)
+- [`prisma/schema.prisma`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/prisma/schema.prisma)
+- [`prisma/migrations/001_setup_pgvector.sql`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/prisma/migrations/001_setup_pgvector.sql)
+- [`prisma/migrations/002_update_vector_dimension.sql`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/prisma/migrations/002_update_vector_dimension.sql) ✨ NEW
+- [`.env.example`](file:///c:/Users/Frédéric/.gemini/antigravity/scratch/digital-twin-profile/.env.example)
+
+---
+
+## 📊 Security Impact
+
+| Metric | Before | After |
+|--------|--------|-------|
+| **Password Transmission** | ❌ Plaintext to server | ✅ Never sent |
+| **Server Knowledge** | ❌ Has encryption keys | ✅ Zero knowledge |
+| **Crypto Location** | ❌ Server-side | ✅ Client-side |
+| **Data Decryption** | ❌ Server can decrypt | ✅ Server cannot decrypt |
+| **AI Provider** | ❌ OpenAI (US) | ✅ Mistral AI (EU) |
+| **Vector Dimension** | 1536 | 1024 |
+
+---
+
+## 🚀 Next Steps for Deployment
+
+1. **Get Mistral API Key:**
+   - Visit [console.mistral.ai](https://console.mistral.ai/)
+   - Create account and generate API key
+
+2. **Configure Environment:**
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local and add:
+   # MISTRAL_API_KEY="your-key-here"
+   # DATABASE_URL="your-postgres-url"
+   ```
+
+3. **Run Database Migration:**
+   ```bash
+   npm run db:push
+   # Or manually run: prisma/migrations/002_update_vector_dimension.sql
+   ```
+
+4. **Generate Prisma Client:**
+   ```bash
+   npm run db:generate
+   ```
+
+5. **Test Locally:**
+   ```bash
+   npm run dev
+   # Navigate to /profile/new
+   # Create a test profile
+   # Verify network requests contain only encrypted data
+   ```
+
+6. **Deploy:**
+   - Update production environment variables
+   - Run migrations
+   - Deploy application
+
+---
+
+## 📁 Files Changed
+
+### Core Application (3 files)
+- ✅ `app/profile/new/page.tsx` - Client-side crypto
+- ✅ `lib/profile/profile-manager.ts` - Trustless server
+- ✅ `app/api/profile/create/route.ts` - API security
+
+### Vector/AI Layer (1 file)
+- ✅ `lib/vector/embedding-service.ts` - Mistral AI
+
+### Database Schema (4 files)
+- ✅ `prisma/schema.prisma` - Vector dimension
+- ✅ `prisma/migrations/001_setup_pgvector.sql` - Updated
+- ✨ `prisma/migrations/002_update_vector_dimension.sql` - NEW
+- ✅ `.env.example` - Mistral API key
+
+**Total: 8 files modified/created**
+
+---
+
+## 🔒 Security Guarantees
+
+✅ **Zero-Knowledge:** Server cannot decrypt user data  
+✅ **Client-Side Encryption:** All secrets generated in browser  
+✅ **No Password Transmission:** Master password never sent to server  
+✅ **Trustless Architecture:** Server is a dumb data store  
+✅ **Data Sovereignty:** European AI provider (Mistral AI)  
+✅ **AES-256-GCM:** Military-grade encryption  
+✅ **PBKDF2:** 100,000 iterations for key derivation  
+✅ **BIP39:** Industry-standard recovery phrase  
+
+---
+
+## 📚 Documentation Created
+
+- ✅ [`implementation_plan.md`](file:///C:/Users/Frédéric/.gemini/antigravity/brain/a76e5658-a524-4559-9526-c229831234a4/implementation_plan.md) - Detailed technical plan
+- ✅ [`task.md`](file:///C:/Users/Frédéric/.gemini/antigravity/brain/a76e5658-a524-4559-9526-c229831234a4/task.md) - Task checklist (all complete)
+- ✅ [`walkthrough.md`](file:///C:/Users/Frédéric/.gemini/antigravity/brain/a76e5658-a524-4559-9526-c229831234a4/walkthrough.md) - Comprehensive walkthrough
+- ✅ `refactored_code.txt` - Backup of modified files
+
+---
+
+## ✨ Ready for Production
+
+All implementation tasks completed. Code is ready for deployment after environment configuration.
+
+**Status:** ✅ **COMPLETE**
+````
+
+## File: tsconfig.json
+````json
 {
   "compilerOptions": {
     "target": "ES2017",
@@ -1147,46 +1847,48 @@ export interface VectorStore {
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "supabase/functions"]
 }
-</file>
+````
 
-<file path="app/actions/ipse-advisor.ts">
+## File: app/actions/ipse-advisor.ts
+````typescript
 'use server'
 import { mistralClient } from "@/lib/mistral";
 
 export async function askIpseAdvice(decryptedContext: string) {
     try {
         const prompt = `
-    Tu es Ipse, le conseiller stratÃ©gique B2B de cet utilisateur.
-    Il est actuellement dans une nÃ©gociation confidentielle en Dark Room (Chat E2EE).
+    Tu es Ipse, le conseiller stratégique B2B de cet utilisateur.
+    Il est actuellement dans une négociation confidentielle en Dark Room (Chat E2EE).
     
-    Voici les 5 derniers Ã©changes de la conversation :
+    Voici les 5 derniers échanges de la conversation :
     """
     ${decryptedContext}
     """
     
     MISSION :
-    Fournis UNE SEULE PHRASE (courte, percutante, pragmatique) pour lui suggÃ©rer quoi rÃ©pondre.
-    Cherche Ã  identifier un levier de persuasion, un angle mort de l'interlocuteur, ou une maniÃ¨re de closer la discussion.
+    Fournis UNE SEULE PHRASE (courte, percutante, pragmatique) pour lui suggérer quoi répondre.
+    Cherche à identifier un levier de persuasion, un angle mort de l'interlocuteur, ou une manière de closer la discussion.
     Ne sois pas poli, sois tactique.
     `;
 
         const response = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
-            messages: [{ role: 'user', content: prompt }], // Utilise 'user' role par sÃ©curitÃ© car 'system' est gÃ©rÃ© diffÃ©remment parfois.
+            messages: [{ role: 'user', content: prompt }], // Utilise 'user' role par sécurité car 'system' est géré différemment parfois.
             temperature: 0.3,
         });
 
         return { success: true, advice: response.choices?.[0].message?.content as string };
     } catch (error) {
         console.error("Erreur Ipse Advisor:", error);
-        return { success: false, error: "InterfÃ©rence rÃ©seau avec Ipse." };
+        return { success: false, error: "Interférence réseau avec Ipse." };
     }
 }
-</file>
+````
 
-<file path="app/api/auth-guard/route.ts">
+## File: app/api/auth-guard/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getPrismaForUser } from '@/lib/prisma';
@@ -1209,7 +1911,7 @@ async function getAuthUser(request: Request) {
         {
             cookies: {
                 get(name: string) {
-                    // âš¡ CORRECTION : Si on a un Bearer Token, on ignore les vieux cookies
+                    // ⚡ CORRECTION : Si on a un Bearer Token, on ignore les vieux cookies
                     if (token) return undefined;
                     return cookieStore.get(name)?.value;
                 },
@@ -1248,9 +1950,10 @@ export async function GET(request: Request) {
         return NextResponse.json({ exists: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/auth/init-profile/route.ts">
+## File: app/api/auth/init-profile/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -1268,7 +1971,7 @@ export async function POST(request: Request) {
 
         if (!token) return NextResponse.json({ error: "Token manquant" }, { status: 401 });
 
-        // On ignore volontairement les cookies pour Ã©viter le crash "Invalid Refresh Token"
+        // On ignore volontairement les cookies pour éviter le crash "Invalid Refresh Token"
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -1283,13 +1986,15 @@ export async function POST(request: Request) {
 
         const body = await request.json();
 
-        // âš¡ BYPASS RLS : Utilisation de Prisma Admin pour forcer la crÃ©ation
+        // ⚡ BYPASS RLS : Utilisation de Prisma Admin pour forcer la création
         const profile = await prisma.profile.upsert({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             update: {},
             create: {
                 id: user.id,
+                userId: user.id,
                 email: user.email!,
+                type: 'WORK',
                 name: body.name || "Agent Furtif"
             }
         });
@@ -1300,10 +2005,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: err.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/auth/sync-profile/route.ts">
+## File: app/api/auth/sync-profile/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -1336,27 +2043,46 @@ export async function POST(req: Request) {
 
         // 3. Prisma Profile Upsert
         // We use the ID and Email from Supabase to create or refresh the profile.
-        await prisma.profile.upsert({
-            where: { id: user.id },
-            update: {
-                updatedAt: new Date() // Updates at the Prisma level
-            },
-            create: {
-                id: user.id,
-                email: user.email!
-            },
-        });
+        console.log(`[SYNC-PROFILE] Syncing profile for user ${user.id} (${user.email})`);
+        
+        try {
+          await prisma.profile.upsert({
+              where: { 
+                  userId_type: { 
+                      userId: user.id, 
+                      type: 'WORK' 
+                  } 
+              },
+              update: {
+                  updatedAt: new Date()
+              },
+              create: {
+                  userId: user.id,
+                  email: user.email!,
+                  type: 'WORK',
+                  name: 'Agent Furtif'
+              },
+          });
+          console.log(`[SYNC-PROFILE] Successfully synced WORK profile for ${user.id}`);
+        } catch (prismaError: any) {
+          console.error("[SYNC-PROFILE] Prisma Upsert Failed:", prismaError);
+          throw prismaError;
+        }
 
         return NextResponse.json({ success: true });
 
     } catch (err: any) {
-        // Fail-Safe: Don't leak internal details
-        return NextResponse.json({ error: 'An internal error occurred during profile synchronization' }, { status: 500 });
+        console.error("Sync Profile Error (Full Trace):", err);
+        return NextResponse.json({ 
+            error: 'An internal error occurred during profile synchronization',
+            details: err.message
+        }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/chat/history/route.ts">
+## File: app/api/chat/history/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -1412,9 +2138,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/ipse-advisor/route.ts">
+## File: app/api/ipse-advisor/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { mistralClient } from '@/lib/mistral';
@@ -1426,7 +2153,7 @@ export async function POST(request: Request) {
         const { decryptedContext } = body;
         if (!decryptedContext) return NextResponse.json({ success: false, error: 'Contexte manquant' }, { status: 400 });
 
-        const prompt = `Tu es Ipse, le conseiller stratÃ©gique B2B.\nVoici les 5 derniers Ã©changes :\n"""${decryptedContext}"""\nFournis UNE SEULE PHRASE tactique pour lui suggÃ©rer quoi rÃ©pondre.`;
+        const prompt = `Tu es Ipse, le conseiller stratégique B2B.\nVoici les 5 derniers échanges :\n"""${decryptedContext}"""\nFournis UNE SEULE PHRASE tactique pour lui suggérer quoi répondre.`;
         const response = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }],
@@ -1437,17 +2164,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/opportunities/evaluate/route.ts">
+## File: app/api/opportunities/evaluate/route.ts
+````typescript
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabaseServer';
 import { mistralClient } from '@/lib/mistral';
 
-export const runtime = 'edge';
 
 /**
- * ðŸ”¥ [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
+ * 🔥 [EDGE-STREAM] Lazy Evaluation - Streaming Markdown Audit
  * Purpose: High-performance streaming synergy analysis using Edge Runtime.
  * Flow: Mistral Stream -> ReadableStream -> Post-stream Update (WaitUntil).
  */
@@ -1495,60 +2222,60 @@ export async function POST(req: NextRequest) {
             fetchCortexData(supabase, target.id)
         ]);
 
-        console.log(`ðŸ“¡ [EDGE-STREAM] Starting stream for ${opportunityId}`);
+        console.log(`📡 [EDGE-STREAM] Starting stream for ${opportunityId}`);
 
         // 3. Hermetic Prompt with Markdown Constraint & Contextual Tone
         const isWork = (opportunity.context || 'WORK') === 'WORK';
         const toneDirective = isWork 
-            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratÃ©giques."
-            : "Adopte un ton dÃ©contractÃ©, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagÃ©es.";
+            ? "Adopte un ton formel, professionnel et B2B. Concentre-toi sur l'expertise, le ROI et les synergies stratégiques."
+            : "Adopte un ton décontracté, chaleureux et personnel. Concentre-toi sur les points communs, les valeurs humaines et les passions partagées.";
 
-        const prompt = `Tu es Cortex, une IA de renseignement sÃ©mantique spÃ©cialisÃ©e dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
+        const prompt = `Tu es Cortex, une IA de renseignement sémantique spécialisée dans l'analyse de synergies ${isWork ? 'professionnelles' : 'personnelles'}.
         ${toneDirective}
-        Analyse la synergie ENTRE deux entitÃ©s distinctes. 
+        Analyse la synergie ENTRE deux entités distinctes. 
 
         <Profil_A>
         [INITIATEUR]
         Nom: ${source.name || 'Agent Furtif'}
-        RÃ´le: ${source.primaryRole || 'Non dÃ©fini'}
-        Secteur: ${source.sector || 'Non dÃ©fini'}
-        Bio: ${source.bio || 'Non spÃ©cifiÃ©e'}
-        Cortex Data: ${sourceCortex || 'Aucune donnÃ©e.'}
+        Rôle: ${source.primaryRole || 'Non défini'}
+        Secteur: ${source.sector || 'Non défini'}
+        Bio: ${source.bio || 'Non spécifiée'}
+        Cortex Data: ${sourceCortex || 'Aucune donnée.'}
         </Profil_A>
 
         <Profil_B>
         [CIBLE / TOI]
         Nom: ${target.name || 'Agent Furtif'}
-        RÃ´le: ${target.primaryRole || 'Non dÃ©fini'}
-        Secteur: ${target.sector || 'Non dÃ©fini'}
-        Bio: ${target.bio || 'Non spÃ©cifiÃ©e'}
-        Cortex Data: ${targetCortex || 'Aucune donnÃ©e.'}
+        Rôle: ${target.primaryRole || 'Non défini'}
+        Secteur: ${target.sector || 'Non défini'}
+        Bio: ${target.bio || 'Non spécifiée'}
+        Cortex Data: ${targetCortex || 'Aucune donnée.'}
         </Profil_B>
 
-        INSTRUCTION: GÃ©nÃ¨re un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
+        INSTRUCTION: Génère un rapport d'audit "Executive Summary" ultra-concis. Utilise EXACTEMENT ce template Markdown, sans modifier les titres. Sois percutant (2 lignes max par point). Ne confonds pas les profils.
 
-        ðŸŽ¯ QUI EST ${source.name || 'Profil A'} ?
-        [1 phrase impactante rÃ©sumant son rÃ´le et son expertise]
+        🎯 QUI EST ${source.name || 'Profil A'} ?
+        [1 phrase impactante résumant son rôle et son expertise]
 
-        ðŸŽ¯ QUI EST ${target.name || 'Profil B'} ?
-        [1 phrase impactante rÃ©sumant son rÃ´le et son expertise]
+        🎯 QUI EST ${target.name || 'Profil B'} ?
+        [1 phrase impactante résumant son rôle et son expertise]
 
-        âš¡ POTENTIEL DE SYNERGIE
-        [1 seul paragraphe trÃ¨s direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
+        ⚡ POTENTIEL DE SYNERGIE
+        [1 seul paragraphe très direct de 3 lignes maximum expliquant le projet ${isWork ? 'commun' : 'de rencontre'} potentiel]
 
-        ðŸš€ CE QUE ${source.name || 'Profil A'} APPORTE Ã€ ${target.name || 'Profil B'}
+        🚀 CE QUE ${source.name || 'Profil A'} APPORTE À ${target.name || 'Profil B'}
 
-        ðŸ”¹ [Atout clÃ© 1] : [BÃ©nÃ©fice direct, trÃ¨s court]
+        🔹 [Atout clé 1] : [Bénéfice direct, très court]
 
-        ðŸ”¹ [Atout clÃ© 2] : [BÃ©nÃ©fice direct, trÃ¨s court]
+        🔹 [Atout clé 2] : [Bénéfice direct, très court]
 
-        ðŸ’Ž CE QUE ${target.name || 'Profil B'} APPORTE Ã€ ${source.name || 'Profil A'}
+        💎 CE QUE ${target.name || 'Profil B'} APPORTE À ${source.name || 'Profil A'}
 
-        ðŸ”¸ [Atout clÃ© 1] : [BÃ©nÃ©fice direct, trÃ¨s court]
+        🔸 [Atout clé 1] : [Bénéfice direct, très court]
 
-        ðŸ”¸ [Atout clÃ© 2] : [BÃ©nÃ©fice direct, trÃ¨s court]
+        🔸 [Atout clé 2] : [Bénéfice direct, très court]
 
-        RÃ‰POND UNIQUEMENT EN MARKDOWN.`;
+        RÉPOND UNIQUEMENT EN MARKDOWN.`;
 
         // 4. Mistral Streaming
         const responseStream = await mistralClient.chat.stream({
@@ -1595,7 +2322,7 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("ðŸ”¥ [EDGE-FAILURE]:", error.message);
+        console.error("🔥 [EDGE-FAILURE]:", error.message);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }
@@ -1619,15 +2346,16 @@ async function updateAuditDatabase(supabase: any, opportunityId: string, audit: 
             .update({ audit, status: 'ANALYZED' })
             .eq('id', opportunityId);
         
-        if (error) console.error("âŒ [DB-UPDATE] Failed:", error.message);
-        else console.log(`âœ… [DB-UPDATE] Opportunity ${opportunityId} persists.`);
+        if (error) console.error("❌ [DB-UPDATE] Failed:", error.message);
+        else console.log(`✅ [DB-UPDATE] Opportunity ${opportunityId} persists.`);
     } catch (e) {
-        console.error("âŒ [DB-UPDATE] Critical Error:", e);
+        console.error("❌ [DB-UPDATE] Critical Error:", e);
     }
 }
-</file>
+````
 
-<file path="app/api/profile/settings/route.ts">
+## File: app/api/profile/settings/route.ts
+````typescript
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getPrismaForUser } from '@/lib/prisma';
@@ -1657,7 +2385,7 @@ export async function PATCH(req: Request) {
 
         const prismaRLS = getPrismaForUser(user.id);
         await prismaRLS.profile.update({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'WORK' } }, // Assuming settings apply to WORK profile or are global
             data: { language }
         });
 
@@ -1667,9 +2395,10 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/radar/route.ts">
+## File: app/api/radar/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
@@ -1683,8 +2412,8 @@ const mistral = new Mistral({
 });
 
 /**
- * API Radar - Matchmaking SÃ©mantique
- * GÃ¨re la recherche par phrase ou la recommandation basÃ©e sur le profil.
+ * API Radar - Matchmaking Sémantique
+ * Gère la recherche par phrase ou la recommandation basée sur le profil.
  */
 export async function POST(req: Request) {
     try {
@@ -1705,7 +2434,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized credentials' }, { status: 401 });
         }
 
-        // 3. RÃ©cupÃ©ration des paramÃ¨tres (Query / Filtres)
+        // 3. Récupération des paramètres (Query / Filtres)
         const body = await req.json();
         const {
             query,
@@ -1719,7 +2448,7 @@ export async function POST(req: Request) {
 
         let targetEmbedding: number[] | null = null;
 
-        // 4. StratÃ©gie SÃ©mantique
+        // 4. Stratégie Sémantique
         if (query && query.trim().length > 3) {
             // Cas A : Recherche textuelle active
             const embeddingResponse = await mistral.embeddings.create({
@@ -1728,8 +2457,8 @@ export async function POST(req: Request) {
             });
             targetEmbedding = embeddingResponse.data[0].embedding ?? null;
         } else {
-            // Cas B : Recommandation passive (basÃ©e sur le profil utilisateur)
-            // On sÃ©lectionne la colonne correspondante au type de prisme
+            // Cas B : Recommandation passive (basée sur le profil utilisateur)
+            // On sélectionne la colonne correspondante au type de prisme
             let embeddingColumn = "bioEmbedding";
             if (prismType === 'SOCIAL') embeddingColumn = "social_embedding";
             if (prismType === 'HOBBY') embeddingColumn = "hobby_embedding";
@@ -1751,7 +2480,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to generate search vector' }, { status: 500 });
         }
 
-        // 5. Appel au moteur SQL Radar (RPC match_profiles_v2 ou gÃ©nÃ©rique)
+        // 5. Appel au moteur SQL Radar (RPC match_profiles_v2 ou générique)
         // On passe le vecteur et le type de prisme pour que le SQL cherche le bon match
         const { data: matches, error: rpcError } = await supabase.rpc('match_profiles', {
             query_embedding: targetEmbedding,
@@ -1760,17 +2489,17 @@ export async function POST(req: Request) {
             min_tjm: minTjm,
             max_tjm: maxTjm,
             target_role: role,
-            prism_type: prismType // On suppose que match_profiles est mis Ã  jour pour filtrer par prisme
+            prism_type: prismType // On suppose que match_profiles est mis à jour pour filtrer par prisme
         });
 
         if (rpcError) {
             console.error('[RADAR_RPC_ERROR]', rpcError);
-            return NextResponse.json({ error: 'Le moteur Radar a rencontrÃ© une erreur technique.' }, { status: 500 });
+            return NextResponse.json({ error: 'Le moteur Radar a rencontré une erreur technique.' }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            query: query || 'Recommendation basÃ©e sur votre profil',
+            query: query || 'Recommendation basée sur votre profil',
             results: matches || []
         });
 
@@ -1779,9 +2508,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Synchronisation avec Ipse interrompue.' }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/scan-network/route.ts">
+## File: app/api/scan-network/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -1811,7 +2541,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return { user, supabase };
 }
 
@@ -1826,7 +2556,7 @@ export async function POST(request: Request) {
         const agent: any = await prisma.profile.findUnique({ where: { id: userId || user.id } });
         if (!agent) return NextResponse.json({ success: false, error: 'Agent introuvable' }, { status: 404 });
 
-        const searchIntent = `Profil: ${agent.profession || 'GÃ©nÃ©ral'}. Objectifs: ${agent.objectives?.join(', ') || 'OpportunitÃ©s stratÃ©giques'}`;
+        const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
         const embeddingResponse = await mistralClient.embeddings.create({ model: "mistral-embed", inputs: [searchIntent] });
         const queryVector = embeddingResponse.data[0].embedding;
 
@@ -1836,11 +2566,11 @@ export async function POST(request: Request) {
 
         const contextBlock = ragResults?.length > 0
             ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
-            : 'Aucune mÃ©moire pertinente trouvÃ©e.';
+            : 'Aucune mémoire pertinente trouvée.';
 
         const promptContent = mode === 'deep'
-            ? `Tu es TWINS_INTEL. Analyse approfondie.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÃ‰ES:\n${contextBlock}\nGÃ©nÃ¨re JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","overallMatchScore":0-100,"targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}],"opportunities":[{"title":"..","reasoning":"..","priority":1}]}`
-            : `Tu es TWINS_INTEL, radar de surface rapide.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÃ‰ES:\n${contextBlock}\nGÃ©nÃ¨re JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}]}`;
+            ? `Tu es TWINS_INTEL. Analyse approfondie.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÉES:\n${contextBlock}\nGénère JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","overallMatchScore":0-100,"targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}],"opportunities":[{"title":"..","reasoning":"..","priority":1}]}`
+            : `Tu es TWINS_INTEL, radar de surface rapide.\nAGENT: ${agent.name}, ${agent.profession}\nDONNÉES:\n${contextBlock}\nGénère JSON: {"globalStatus":"GREEN|ORANGE|RED","analysisSummary":"..","targets":[{"name":"..","lat":0,"lng":0,"type":"contact"}]}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -1864,9 +2594,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/terminal/route.ts">
+## File: app/api/terminal/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -1895,11 +2626,11 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return { user, supabase };
 }
 
-// POST /api/terminal â€” executeTerminalCommand
+// POST /api/terminal — executeTerminalCommand
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -1923,12 +2654,12 @@ export async function POST(request: Request) {
         }
         const [internalRes, externalData] = await Promise.all([internalSearch, externalSearch]);
 
-        let internalContext = "Aucune donnÃ©e interne trouvÃ©e.";
-        if (internalRes.data?.length > 0) internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - MÃ©moire: ${m.content}`).join('\n');
-        let externalContext = "Aucune donnÃ©e externe trouvÃ©e.";
+        let internalContext = "Aucune donnée interne trouvée.";
+        if (internalRes.data?.length > 0) internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - Mémoire: ${m.content}`).join('\n');
+        let externalContext = "Aucune donnée externe trouvée.";
         if (externalData.results?.length > 0) externalContext = externalData.results.map((r: any) => `[Web] ${r.title}\nURL: ${r.url}\nExtrait: ${r.content}`).join('\n\n');
 
-        const aiPrompt = `Tu es l'unitÃ© de ciblage d'un systÃ¨me radar.\nOrdre : "${prompt}"\nCAPTEURS INTERNES:\n"""${internalContext}"""\nCAPTEURS EXTERNES:\n"""${externalContext}"""\n[TARGETS: [{"name": "Nom RÃ©el", "lat": 48.6, "lng": -2.0}]]`;
+        const aiPrompt = `Tu es l'unité de ciblage d'un système radar.\nOrdre : "${prompt}"\nCAPTEURS INTERNES:\n"""${internalContext}"""\nCAPTEURS EXTERNES:\n"""${externalContext}"""\n[TARGETS: [{"name": "Nom Réel", "lat": 48.6, "lng": -2.0}]]`;
 
         const response = await mistralClient.chat.complete({ model: "mistral-large-latest", messages: [{ role: "system", content: aiPrompt }] });
         const rawContent = (response.choices?.[0].message.content as string) || "";
@@ -1943,9 +2674,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/translation/route.ts">
+## File: app/api/translation/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { mistralClient } from '@/lib/mistral';
@@ -1960,7 +2692,7 @@ export async function POST(request: Request) {
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: `Tu es un traducteur de l'extrÃªme. Traduis fidÃ¨lement ce texte en ${targetCountry}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.` },
+                { role: "system", content: `Tu es un traducteur de l'extrême. Traduis fidèlement ce texte en ${targetCountry}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.` },
                 { role: "user", content: text }
             ]
         });
@@ -1971,9 +2703,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/components/auth/LogoutButton.tsx">
+## File: app/components/auth/LogoutButton.tsx
+````typescript
 'use client';
 
 import { createClient } from '@/lib/supabaseBrowser';
@@ -1996,18 +2729,18 @@ export default function LogoutButton() {
             // 1. Tuer la session Supabase sur le serveur
             await supabase.auth.signOut();
 
-            // 2. âš¡ Purger la mÃ©moire du coffre-fort biomÃ©trique
+            // 2. ⚡ Purger la mémoire du coffre-fort biométrique
             sessionStorage.clear();
 
-            // 3. Purger les donnÃ©es locales Ã©ventuelles
+            // 3. Purger les données locales éventuelles
             localStorage.clear();
 
             // 4. Hard Redirect : on force le rechargement de la page vers /login
-            // Cela dÃ©truit toute la mÃ©moire RAM de Next.js et des composants React
+            // Cela détruit toute la mémoire RAM de Next.js et des composants React
             window.location.href = '/login';
 
         } catch (error) {
-            console.error("Erreur lors de la dÃ©connexion:", error);
+            console.error("Erreur lors de la déconnexion:", error);
             setIsLoggingOut(false);
         }
     };
@@ -2020,151 +2753,15 @@ export default function LogoutButton() {
         >
             <LogOut size={20} className={isLoggingOut ? "animate-pulse" : ""} />
             <span className="font-bold tracking-widest uppercase text-sm">
-                {isLoggingOut ? "Purge en cours..." : "DÃ©connexion Spatiale"}
+                {isLoggingOut ? "Purge en cours..." : "Déconnexion Spatiale"}
             </span>
         </button>
     );
 }
-</file>
+````
 
-<file path="app/components/opportunities/AuditStreamer.tsx">
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Loader2, Zap, AlertCircle } from 'lucide-react';
-
-interface AuditStreamerProps {
-    opportunityId: string;
-    onComplete?: (finalAudit: string) => void;
-}
-
-/**
- * ðŸ›°ï¸ AuditStreamer
- * Consumes the Edge-streamed Markdown audit from Mistral AI.
- */
-export default function AuditStreamer({ opportunityId, onComplete }: AuditStreamerProps) {
-    const [streamedText, setStreamedText] = useState('');
-    const [status, setStatus] = useState<'idle' | 'streaming' | 'completed' | 'error'>('idle');
-    const [error, setError] = useState<string | null>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const startStream = async () => {
-            setStatus('streaming');
-            setError(null);
-            setStreamedText('');
-
-            try {
-                const response = await fetch('/api/opportunities/evaluate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ opportunityId }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to start evaluation');
-                }
-
-                const reader = response.body?.getReader();
-                const decoder = new TextDecoder();
-
-                if (!reader) throw new Error('No stream reader available');
-
-                let accumulatedText = '';
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    accumulatedText += chunk;
-                    setStreamedText(accumulatedText);
-                    
-                    // Auto-scroll to bottom
-                    if (scrollRef.current) {
-                        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-                    }
-                }
-
-                setStatus('completed');
-                if (onComplete) onComplete(accumulatedText);
-
-            } catch (err: any) {
-                console.error("âŒ [STREAM ERROR]:", err);
-                setError(err.message);
-                setStatus('error');
-            }
-        };
-
-        startStream();
-    }, [opportunityId, onComplete]);
-
-    return (
-        <div className="flex flex-col h-full bg-slate-950 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
-            {/* Header */}
-            <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-yellow-400 animate-pulse' : 'text-blue-400'}`} />
-                    <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                        Analyse Cortex en temps rÃ©el
-                    </span>
-                </div>
-                {status === 'streaming' && (
-                    <div className="flex items-center gap-2 text-[10px] text-yellow-400 font-mono">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        STREAMING_ACTIVE
-                    </div>
-                )}
-            </div>
-
-            {/* Content Area */}
-            <div 
-                ref={scrollRef}
-                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-blue-500/30"
-            >
-                {status === 'error' ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-                        <AlertCircle className="w-8 h-8 text-red-500" />
-                        <p className="text-sm text-red-200 font-medium">{error}</p>
-                    </div>
-                ) : streamedText ? (
-                    <article className="prose prose-invert prose-blue max-w-none">
-                        <ReactMarkdown 
-                            components={{
-                                h3: ({node, ...props}) => <h3 className="text-blue-400 border-l-2 border-blue-500 pl-4 mt-8 mb-4 tracking-tight" {...props} />,
-                                p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />,
-                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-blue-500" {...props} />,
-                            }}
-                        >
-                            {streamedText}
-                        </ReactMarkdown>
-                        {status === 'streaming' && (
-                            <span className="inline-block w-2 h-4 bg-blue-500 animate-pulse ml-1 align-middle" />
-                        )}
-                    </article>
-                ) : (
-                    <div className="flex flex-col items-center justify-center h-full space-y-4">
-                        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                        <p className="text-xs text-blue-400 font-mono animate-pulse">
-                            Initialisation du moteur de synergie...
-                        </p>
-                    </div>
-                )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-4 py-2 bg-black/40 border-t border-white/5 text-[10px] text-slate-500 font-mono flex justify-between">
-                <span>Mistral-Small-Latest</span>
-                <span>{streamedText.length} bytes received</span>
-            </div>
-        </div>
-    );
-}
-</file>
-
-<file path="app/components/PushNotifInit.tsx">
+## File: app/components/PushNotifInit.tsx
+````typescript
 'use client';
 
 import { usePushNotifications } from '@/app/hooks/usePushNotifications';
@@ -2173,9 +2770,10 @@ export default function PushNotifInit({ userId }: { userId: string }) {
     usePushNotifications(userId);
     return null;
 }
-</file>
+````
 
-<file path="app/components/RadarPoller.tsx">
+## File: app/components/RadarPoller.tsx
+````typescript
 'use client';
 
 import { useEffect } from 'react';
@@ -2185,7 +2783,7 @@ export default function RadarPoller() {
     const router = useRouter();
 
     useEffect(() => {
-        // RafraÃ®chir la page toutes les 15 secondes pour voir les nouvelles invitations
+        // Rafraîchir la page toutes les 15 secondes pour voir les nouvelles invitations
         const interval = setInterval(() => {
             router.refresh();
         }, 15000);
@@ -2195,9 +2793,10 @@ export default function RadarPoller() {
 
     return null;
 }
-</file>
+````
 
-<file path="app/components/RadarRealtimeListener.tsx">
+## File: app/components/RadarRealtimeListener.tsx
+````typescript
 'use client';
 
 import { useEffect } from 'react';
@@ -2212,8 +2811,8 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
     useEffect(() => {
         const supabase = createClient();
 
-        // On Ã©coute tout changement sur Connection et Opportunity 
-        // Le filtrage se fera par l'accÃ¨s RLS (l'utilisateur ne reÃ§oit que ce qu'il peut voir)
+        // On écoute tout changement sur Connection et Opportunity 
+        // Le filtrage se fera par l'accès RLS (l'utilisateur ne reçoit que ce qu'il peut voir)
         const channel = supabase
             .channel(`radar_realtime_${currentUserId}`)
             .on('postgres_changes', {
@@ -2221,7 +2820,7 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 schema: 'public',
                 table: 'Connection'
             }, (payload: any) => {
-                console.log('ðŸ”” [Realtime] Connection update detected', payload);
+                console.log('🔔 [Realtime] Connection update detected', payload);
                 onUpdate();
             })
             .on('postgres_changes', {
@@ -2229,7 +2828,7 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 schema: 'public',
                 table: 'Opportunity'
             }, (payload: any) => {
-                console.log('ðŸ”” [Realtime] Opportunity update detected', payload);
+                console.log('🔔 [Realtime] Opportunity update detected', payload);
                 onUpdate();
             })
             .on('postgres_changes', {
@@ -2238,11 +2837,11 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
                 table: 'Message',
                 filter: `receiverId=eq.${currentUserId}`
             }, (payload: any) => {
-                console.log('ðŸ”” [Realtime] New message detected for Radar', payload);
+                console.log('🔔 [Realtime] New message detected for Radar', payload);
                 onUpdate();
             })
             .subscribe((status: any) => {
-                console.log(`ðŸ“¡ [Realtime] Status for ${currentUserId}:`, status);
+                console.log(`📡 [Realtime] Status for ${currentUserId}:`, status);
             });
 
         return () => {
@@ -2252,9 +2851,10 @@ export default function RadarRealtimeListener({ onUpdate, currentUserId }: Radar
 
     return null;
 }
-</file>
+````
 
-<file path="app/components/SplashHider.tsx">
+## File: app/components/SplashHider.tsx
+````typescript
 'use client';
 
 import { useEffect } from 'react';
@@ -2270,9 +2870,75 @@ export default function SplashHider() {
 
     return null;
 }
-</file>
+````
 
-<file path="app/cortex/loading.tsx">
+## File: app/components/ThemeTransition.tsx
+````typescript
+'use client';
+
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { PrismType } from '@/components/providers/PrismProvider';
+
+interface ThemeTransitionProps {
+    prism: PrismType;
+}
+
+const THEME_COLORS = {
+    WORK: '#0F172A',
+    HOBBY: '#064E3B',
+    DATING: '#2E1065',
+};
+
+export default function ThemeTransition({ prism }: ThemeTransitionProps) {
+    const [displayPrism, setDisplayPrism] = useState(prism);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    useEffect(() => {
+        if (prism !== displayPrism) {
+            setIsAnimating(true);
+            const timer = setTimeout(() => {
+                setDisplayPrism(prism);
+                setIsAnimating(false);
+            }, 800); // Durée de l'animation
+            return () => clearTimeout(timer);
+        }
+    }, [prism, displayPrism]);
+
+    return (
+        <AnimatePresence>
+            {isAnimating && (
+                <motion.div
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{ scale: 4, opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ 
+                        duration: 0.8, 
+                        ease: [0.4, 0, 0.2, 1], // Cubic bezier pour un effet premium
+                    }}
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        width: '100vmax',
+                        height: '100vmax',
+                        marginLeft: '-50vmax',
+                        marginTop: '-50vmax',
+                        backgroundColor: THEME_COLORS[prism],
+                        borderRadius: '50%',
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                        backdropFilter: 'blur(10px)',
+                    }}
+                />
+            )}
+        </AnimatePresence>
+    );
+}
+````
+
+## File: app/cortex/loading.tsx
+````typescript
 export default function Loading() {
     return (
         <div className="p-6 space-y-8 animate-pulse bg-zinc-950 min-h-screen">
@@ -2285,9 +2951,10 @@ export default function Loading() {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/profile/loading.tsx">
+## File: app/profile/loading.tsx
+````typescript
 export default function Loading() {
     return (
         <div className="p-6 space-y-8 animate-pulse bg-zinc-950 min-h-screen">
@@ -2300,9 +2967,10 @@ export default function Loading() {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/radar/loading.tsx">
+## File: app/radar/loading.tsx
+````typescript
 export default function Loading() {
     return (
         <div className="p-6 space-y-8 animate-pulse bg-zinc-950 min-h-screen">
@@ -2315,9 +2983,10 @@ export default function Loading() {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/workers/translation.worker.ts">
+## File: app/workers/translation.worker.ts
+````typescript
 import { pipeline, env } from '@huggingface/transformers';
 
 // Configuration pour le Web Worker
@@ -2326,7 +2995,7 @@ env.useBrowserCache = true;
 
 let translationPipeline: any = null;
 
-// ModÃ¨le lÃ©ger pour la traduction
+// Modèle léger pour la traduction
 const MODEL_NAME = 'Xenova/t5-small';
 
 async function getPipeline(progressCallback: (data: any) => void) {
@@ -2337,22 +3006,22 @@ async function getPipeline(progressCallback: (data: any) => void) {
         translationPipeline = await pipeline('translation', MODEL_NAME, {
             progress_callback: progressCallback,
         });
-        console.log('[WORKER] ModÃ¨le chargÃ© et prÃªt.');
+        console.log('[WORKER] Modèle chargé et prêt.');
         return translationPipeline;
     } catch (err) {
-        console.error('[WORKER] Erreur lors du chargement du modÃ¨le:', err);
+        console.error('[WORKER] Erreur lors du chargement du modèle:', err);
         throw err;
     }
 }
 
 self.onmessage = async (event) => {
     const { text, targetLanguage, sourceLanguage } = event.data;
-    console.log(`[WORKER] Message reÃ§u pour traduction vers ${targetLanguage}`);
+    console.log(`[WORKER] Message reçu pour traduction vers ${targetLanguage}`);
 
     try {
         const pipe = await getPipeline((data: any) => {
             if (data.status === 'progress') {
-                console.log(`[WORKER] TÃ©lÃ©chargement du modÃ¨le: ${Math.round(data.progress * 100)}% (${data.file})`);
+                console.log(`[WORKER] Téléchargement du modèle: ${Math.round(data.progress * 100)}% (${data.file})`);
                 self.postMessage({
                     type: 'progress',
                     status: 'loading',
@@ -2364,12 +3033,12 @@ self.onmessage = async (event) => {
 
         const task = `translate ${sourceLanguage || 'auto'} to ${targetLanguage}`;
         
-        console.log(`[WORKER] DÃ©marrage de l'infÃ©rence...`);
+        console.log(`[WORKER] Démarrage de l'inférence...`);
         const result = await pipe(text, {
             src_lang: sourceLanguage,
             tgt_lang: targetLanguage,
         });
-        console.log(`[WORKER] InfÃ©rence terminÃ©e avec succÃ¨s.`);
+        console.log(`[WORKER] Inférence terminée avec succès.`);
 
         self.postMessage({
             type: 'result',
@@ -2384,9 +3053,10 @@ self.onmessage = async (event) => {
         });
     }
 };
-</file>
+````
 
-<file path="components/CommlinkButton.tsx">
+## File: components/CommlinkButton.tsx
+````typescript
 'use client';
 export default function CommlinkButton({ profileId }: { profileId: string | null }) {
     return (
@@ -2396,9 +3066,10 @@ export default function CommlinkButton({ profileId }: { profileId: string | null
         </div>
     );
 }
-</file>
+````
 
-<file path="components/NeuralLink.tsx">
+## File: components/NeuralLink.tsx
+````typescript
 import React from 'react';
 
 export const NeuralLink: React.FC = () => {
@@ -2440,17 +3111,139 @@ export const NeuralLink: React.FC = () => {
         </div>
     );
 };
-</file>
+````
 
-<file path="inngest/client.ts">
+## File: components/providers/PrismProvider.tsx
+````typescript
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import ThemeTransition from '@/app/components/ThemeTransition';
+
+export type PrismType = 'WORK' | 'HOBBY' | 'DATING';
+
+interface Profile {
+  id: string;
+  type: PrismType;
+  display_name: string;
+  avatar_url: string;
+}
+
+interface PrismContextType {
+  activePrism: PrismType;
+  activeProfile: Profile | null;
+  switchPrism: (prism: PrismType) => Promise<void>;
+  isLoading: boolean;
+  prismProfiles: Profile[];
+}
+
+const PrismContext = createContext<PrismContextType | undefined>(undefined);
+
+export function PrismProvider({ children }: { children: React.ReactNode }) {
+  const [activePrism, setActivePrism] = useState<PrismType>('WORK');
+  const [prismProfiles, setPrismProfiles] = useState<Profile[]>([]);
+  const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // 1. Initialisation : Charger les 3 profils du Triad
+  useEffect(() => {
+    async function initPrisms() {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, type, display_name, avatar_url')
+        .eq('user_id', user.id);
+
+      if (profiles && profiles.length > 0) {
+        setPrismProfiles(profiles);
+        // On essaye de trouver le prisme actif stocké ou par défaut WORK
+        const storedPrism = localStorage.getItem('ipse_active_prism') as PrismType;
+        const initial = profiles.find(p => p.type === (storedPrism || 'WORK')) || profiles[0];
+        if (initial) {
+          setActivePrism(initial.type);
+          setActiveProfile(initial);
+          document.documentElement.className = `theme-${initial.type.toLowerCase()}`;
+        }
+      }
+      setIsLoading(false);
+    }
+    initPrisms();
+  }, [supabase]);
+
+  // 2. Changement de Prisme
+  const switchPrism = async (newPrism: PrismType) => {
+    const targetProfile = prismProfiles.find(p => p.type === newPrism);
+    if (!targetProfile) return;
+
+    // L'animation ThemeTransition se déclenche car on va changer activePrism.
+    // Mais on veut que le changement de thème (CSS) se produise au milieu de l'anim.
+    
+    // 1. On lance l'identité pour les clés tout de suite
+    localStorage.setItem('ipse_active_prism', newPrism);
+
+    // 2. On attend le pic de l'animation de cercle (400ms sur 800ms)
+    setTimeout(async () => {
+      setActivePrism(newPrism);
+      setActiveProfile(targetProfile);
+      document.documentElement.className = `theme-${newPrism.toLowerCase()}`;
+      await supabase.rpc('set_config', { name: 'app.current_prism', value: newPrism });
+    }, 400);
+
+    // Gestion des clés E2EE
+    const vault = JSON.parse(localStorage.getItem('ipse_jwt_vault') || '{}');
+    if (vault[targetProfile.id]) {
+      console.log(`🔑 Clé du prisme ${newPrism} chargée.`);
+    }
+  };
+
+  const value = useMemo(() => ({
+    activePrism,
+    activeProfile,
+    switchPrism,
+    isLoading,
+    prismProfiles
+  }), [activePrism, activeProfile, prismProfiles, isLoading]);
+
+  return (
+    <PrismContext.Provider value={value}>
+      <ThemeTransition prism={activePrism} />
+      <div className={`prism-content rounded-[var(--radius)] min-h-screen transition-all duration-700 ease-in-out`}>
+        {children}
+      </div>
+    </PrismContext.Provider>
+  );
+}
+
+export const usePrismManager = () => {
+  const context = useContext(PrismContext);
+  if (!context) throw new Error('usePrismManager must be used within a PrismProvider');
+  return context;
+};
+````
+
+## File: inngest/client.ts
+````typescript
 // inngest/client.ts
 import { Inngest } from "inngest";
 
-// âš¡ ANTIGRAVITY: On dÃ©finit l'ID de notre application
+// ⚡ ANTIGRAVITY: On définit l'ID de notre application
 export const inngest = new Inngest({ id: "ipse-digital-twin" });
-</file>
+````
 
-<file path="lib/api.ts">
+## File: lib/api.ts
+````typescript
 import { Capacitor } from '@capacitor/core';
 
 /**
@@ -2471,9 +3264,10 @@ export function getApiUrl(path: string): string {
 
     return `${baseUrl}${path}`;
 }
-</file>
+````
 
-<file path="lib/auth.ts">
+## File: lib/auth.ts
+````typescript
 import { createClient } from './supabaseBrowser';
 
 /**
@@ -2490,39 +3284,41 @@ export async function getSessionToken(): Promise<string | null> {
         return null;
     }
 }
-</file>
+````
 
-<file path="lib/biometrics.ts">
+## File: lib/biometrics.ts
+````typescript
 import { NativeBiometric } from 'capacitor-native-biometric';
 
 export const performBiometricVaultUnlock = async (): Promise<boolean> => {
     try {
-        // 1. VÃ©rifier si la biomÃ©trie est disponible sur ce tÃ©lÃ©phone
+        // 1. Vérifier si la biométrie est disponible sur ce téléphone
         const result = await NativeBiometric.isAvailable();
 
         if (!result.isAvailable) {
-            console.warn("BiomÃ©trie non disponible. Passage en mode dÃ©gradÃ© (code secret uniquement).");
+            console.warn("Biométrie non disponible. Passage en mode dégradé (code secret uniquement).");
             return false;
         }
 
-        // 2. Lancer le scan (Empreinte ou Visage selon le tÃ©lÃ©phone)
+        // 2. Lancer le scan (Empreinte ou Visage selon le téléphone)
         await NativeBiometric.verifyIdentity({
-            reason: "AccÃ¨s Ã  l'Agent Ipse - DÃ©chiffrement du MasterKey",
-            title: "IdentitÃ© requise",
+            reason: "Accès à l'Agent Ipse - Déchiffrement du MasterKey",
+            title: "Identité requise",
             subtitle: "Veuillez vous authentifier pour ouvrir le coffre-fort local",
-            description: "Votre clÃ© de chiffrement reste protÃ©gÃ©e dans l'enclave sÃ©curisÃ©e.",
+            description: "Votre clé de chiffrement reste protégée dans l'enclave sécurisée.",
             negativeButtonText: "Annuler",
         });
 
         return true;
     } catch (error) {
-        console.error("Ã‰chec de l'authentification biomÃ©trique :", error);
+        console.error("Échec de l'authentification biométrique :", error);
         return false;
     }
 };
-</file>
+````
 
-<file path="lib/crypto.ts">
+## File: lib/crypto.ts
+````typescript
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -2567,17 +3363,18 @@ export function decryptMessage(encryptedData: string) {
         return decrypted;
     } catch (e) {
         console.error("Failed to decrypt message:", e, encryptedData);
-        return "ðŸ”’ Message chiffrÃ© illisible";
+        return "🔒 Message chiffré illisible";
     }
 }
-</file>
+````
 
-<file path="lib/crypto/key-manager.ts">
+## File: lib/crypto/key-manager.ts
+````typescript
 import { Capacitor } from '@capacitor/core';
 import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
 /**
- * ðŸ” SECURE KEY MANAGER - BlindÃ©
+ * 🔐 SECURE KEY MANAGER - Blindé
  * Handles private key storage using native Keychain (iOS) and Keystore (Android).
  * Fallback to encrypted memory for Web/Dev.
  */
@@ -2592,7 +3389,7 @@ class KeyManager {
      * Store private key in the most secure location available
      */
     async storePrivateKey(key: string): Promise<void> {
-        if (!key) throw new Error("Tentative de stockage d'une clÃ© vide.");
+        if (!key) throw new Error("Tentative de stockage d'une clé vide.");
 
         if (this.isNative) {
             try {
@@ -2601,12 +3398,12 @@ class KeyManager {
                     value: key
                 });
             } catch (error) {
-                console.error("âŒ Ã‰chec du stockage natif sÃ©curisÃ©.");
+                console.error("❌ Échec du stockage natif sécurisé.");
                 throw error;
             }
         } else {
             // Web/Dev Fallback: Store in memory only (no persistence in localStorage)
-            console.warn("ðŸ› ï¸ Mode Web : ClÃ© stockÃ©e en mÃ©moire volatile uniquement.");
+            console.warn("🛠️ Mode Web : Clé stockée en mémoire volatile uniquement.");
             this.webFallbackKey = key;
         }
     }
@@ -2617,20 +3414,20 @@ class KeyManager {
     async getPrivateKey(): Promise<string | null> {
         if (this.isNative) {
             try {
-                // 1. VÃ©rification proactive pour Ã©viter le crash natif
+                // 1. Vérification proactive pour éviter le crash natif
                 const { value: keys } = await SecureStoragePlugin.keys();
                 if (!keys.includes(PRIVATE_KEY_ALIAS)) {
-                    console.log(`[VAULT] ClÃ© '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (IgnorÃ© en douceur).`);
+                    console.log(`[VAULT] Clé '${PRIVATE_KEY_ALIAS}' introuvable dans l'enclave (Ignoré en douceur).`);
                     return null;
                 }
 
-                // 2. Lecture sÃ©curisÃ©e sans risque de crash
+                // 2. Lecture sécurisée sans risque de crash
                 const { value } = await SecureStoragePlugin.get({
                     key: PRIVATE_KEY_ALIAS
                 });
                 return value || null;
             } catch (error) {
-                console.log("Coffre vide ou erreur matÃ©rielle (IgnorÃ© en douceur) :", error);
+                console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
                 return null;
             }
         } else {
@@ -2647,11 +3444,11 @@ class KeyManager {
                 await SecureStoragePlugin.remove({ key: PRIVATE_KEY_ALIAS });
                 await SecureStoragePlugin.clear(); // Clear all for extra safety
             } catch (error) {
-                console.error("âŒ Erreur lors de la purge d'urgence.");
+                console.error("❌ Erreur lors de la purge d'urgence.");
             }
         }
         this.webFallbackKey = null;
-        console.log("ðŸ§¹ Vault purgÃ© avec succÃ¨s.");
+        console.log("🧹 Vault purgé avec succès.");
     }
 
     /**
@@ -2665,32 +3462,34 @@ class KeyManager {
 
 // Singleton for consistency
 export const keyManager = new KeyManager();
-</file>
+````
 
-<file path="lib/guardian/discovery.ts">
+## File: lib/guardian/discovery.ts
+````typescript
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function findInternalAgent(myProfileId: string) {
-    // 1. On rÃ©cupÃ¨re TOUT pour voir ce qui bloque
-    const { data: allProfiles } = await supabase.from('Profile').select('id, name');
-    console.log("ðŸ“Š [DIAGNOSTIC] Profils en base :", allProfiles);
+    // 1. On récupère TOUT pour voir ce qui bloque
+    const { data: allProfiles } = await supabase.from('profiles').select('id, name');
+    console.log("📊 [DIAGNOSTIC] Profils en base :", allProfiles);
 
-    // 2. Recherche plus souple (insensible Ã  la casse)
+    // 2. Recherche plus souple (insensible à la casse)
     const { data: partner, error } = await supabase
-        .from('Profile')
+        .from('profiles')
         .select('id, name, bio')
         .neq('id', myProfileId)
-        .ilike('name', '%user%') // 'ilike' ignore la casse et cherche "user" n'importe oÃ¹
+        .ilike('name', '%user%') // 'ilike' ignore la casse et cherche "user" n'importe où
         .maybeSingle();
 
     if (error) return null;
     return partner;
 }
-</file>
+````
 
-<file path="lib/mistral.ts">
+## File: lib/mistral.ts
+````typescript
 import { Mistral } from '@mistralai/mistralai';
 
 const apiKey = process.env.MISTRAL_API_KEY;
@@ -2699,7 +3498,7 @@ if (!apiKey) {
     throw new Error("[CRITIQUE] MISTRAL_API_KEY est manquante dans les variables d'environnement.");
 }
 
-// Singleton pattern pour Ã©viter de multiples instanciations en serverless
+// Singleton pattern pour éviter de multiples instanciations en serverless
 const globalForMistral = global as unknown as { mistralClient: Mistral };
 
 export const mistralClient = globalForMistral.mistralClient || new Mistral({ apiKey });
@@ -2719,13 +3518,14 @@ export async function getMistralEmbedding(text: string) {
         return null;
     }
 }
-</file>
+````
 
-<file path="lib/pdf-client.ts">
+## File: lib/pdf-client.ts
+````typescript
 import * as pdfjsLib from 'pdfjs-dist';
 
-// âš¡ ANTIGRAVITY: Le worker est hÃ©bergÃ© localement. 
-// ZÃ©ro dÃ©pendance externe. ImmunisÃ© contre les pannes rÃ©seau et les bloqueurs.
+// ⚡ ANTIGRAVITY: Le worker est hébergé localement. 
+// Zéro dépendance externe. Immunisé contre les pannes réseau et les bloqueurs.
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 export async function extractTextFromPdf(file: File): Promise<string> {
@@ -2736,24 +3536,25 @@ export async function extractTextFromPdf(file: File): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        // ConcatÃ¨ne les lignes de la page
+        // Concatène les lignes de la page
         const pageText = textContent.items.map((item: any) => item.str).join(' ');
         fullText += pageText + '\n';
     }
 
     return fullText;
 }
-</file>
+````
 
-<file path="lib/supabaseBrowser.ts">
+## File: lib/supabaseBrowser.ts
+````typescript
 import { createBrowserClient } from '@supabase/ssr'
 
 // Variable pour stocker l'instance unique (Singleton Pattern)
 let supabaseBrowserClient: ReturnType<typeof createBrowserClient> | undefined
 
 export function createClient() {
-    // 1. Si nous ne sommes pas dans un navigateur (SSR), on crÃ©e un client standard
-    //    (pas de singleton cÃ´tÃ© serveur, chaque requÃªte est indÃ©pendante)
+    // 1. Si nous ne sommes pas dans un navigateur (SSR), on crée un client standard
+    //    (pas de singleton côté serveur, chaque requête est indépendante)
     if (typeof window === 'undefined') {
         return createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2761,7 +3562,7 @@ export function createClient() {
         )
     }
 
-    // 2. CÃ´tÃ© navigateur : on ne crÃ©e l'instance qu'une seule fois
+    // 2. Côté navigateur : on ne crée l'instance qu'une seule fois
     if (!supabaseBrowserClient) {
         supabaseBrowserClient = createBrowserClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -2769,12 +3570,13 @@ export function createClient() {
         )
     }
 
-    // 3. On retourne toujours la mÃªme instance
+    // 3. On retourne toujours la même instance
     return supabaseBrowserClient
 }
-</file>
+````
 
-<file path="lib/translation-client.ts">
+## File: lib/translation-client.ts
+````typescript
 /**
  * Local Translation Manager
  * Manages the Web Worker lifecycle and provides a clean API for components.
@@ -2795,7 +3597,7 @@ export class TranslationManager {
             const { type, status, progress, translation, error } = event.data;
             
             if (type === 'progress' && this.progressCallback) {
-                console.log(`[TRADUCTION-CLIENT] ProgrÃ¨s: ${Math.round(progress * 100)}% (${status})`);
+                console.log(`[TRADUCTION-CLIENT] Progrès: ${Math.round(progress * 100)}% (${status})`);
                 this.progressCallback(progress * 100, status);
             }
         };
@@ -2806,7 +3608,7 @@ export class TranslationManager {
     }
 
     static async translate(text: string, targetLang: string, sourceLang?: string): Promise<string> {
-        console.log(`[TRADUCTION-CLIENT] RequÃªte de traduction envoyÃ©e au worker (${targetLang})`);
+        console.log(`[TRADUCTION-CLIENT] Requête de traduction envoyée au worker (${targetLang})`);
         return new Promise((resolve, reject) => {
             if (!this.worker) this.init();
 
@@ -2839,15 +3641,16 @@ export class TranslationManager {
         return mapping[code] || 'english';
     }
 }
-</file>
+````
 
-<file path="lib/vault-manager.ts">
+## File: lib/vault-manager.ts
+````typescript
 import { Capacitor } from '@capacitor/core';
 import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 import { NativeBiometric } from 'capacitor-native-biometric';
 
 /**
- * ðŸ”’ VAULT MANAGER
+ * 🔒 VAULT MANAGER
  * Centralized security layer for native hardware-protected key storage.
  * Ensures private keys never touch localStorage or non-secure memory.
  */
@@ -2860,72 +3663,72 @@ export enum VaultKey {
 
 export const VaultManager = {
     /**
-     * ðŸ” Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
+     * 🔐 Save a sensitive secret to the native Keystore (Android) or Keychain (iOS).
      */
     async saveSecret(key: VaultKey, value: string): Promise<void> {
         if (!Capacitor.isNativePlatform()) {
-            console.warn(`âš ï¸ [VAULT] Platform non-native. Le stockage de ${key} est simulÃ© (NON SÃ‰CURISÃ‰).`);
+            console.warn(`⚠️ [VAULT] Platform non-native. Le stockage de ${key} est simulé (NON SÉCURISÉ).`);
             // En dev/web, on pourrait utiliser SessionStorage ou autre, mais ici on reste strict.
             return;
         }
 
         await SecureStoragePlugin.set({ key, value });
-        console.log(`âœ… [VAULT] Secret '${key}' verrouillÃ© dans l'enclave matÃ©rielle.`);
+        console.log(`✅ [VAULT] Secret '${key}' verrouillé dans l'enclave matérielle.`);
     },
 
     /**
-     * ðŸ”“ Load a secret from the vault.
+     * 🔓 Load a secret from the vault.
      */
     async loadSecret(key: VaultKey): Promise<string | null> {
         if (!Capacitor.isNativePlatform()) return null;
 
         try {
-            // 1. VÃ©rification proactive pour Ã©viter le crash natif
+            // 1. Vérification proactive pour éviter le crash natif
             const { value: keys } = await SecureStoragePlugin.keys();
             if (!keys.includes(key)) {
-                console.log(`[VAULT] ClÃ© '${key}' introuvable dans l'enclave (IgnorÃ© en douceur).`);
+                console.log(`[VAULT] Clé '${key}' introuvable dans l'enclave (Ignoré en douceur).`);
                 return null;
             }
 
-            // 2. Lecture sÃ©curisÃ©e sans risque de crash
+            // 2. Lecture sécurisée sans risque de crash
             const result = await SecureStoragePlugin.get({ key });
             return result.value || null;
         } catch (error) {
-            console.log("Coffre vide ou erreur matÃ©rielle (IgnorÃ© en douceur) :", error);
+            console.log("Coffre vide ou erreur matérielle (Ignoré en douceur) :", error);
             return null;
         }
     },
 
     /**
-     * ðŸ§¬ Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
+     * 🧬 Unlock and Load: Combined Biometric Challenge + Vault Retrieval.
      * Use this whenever highly sensitive keys are needed.
      */
-    async unlockAndLoad(key: VaultKey, reason: string = "AccÃ¨s sÃ©curisÃ© requis"): Promise<string | null> {
+    async unlockAndLoad(key: VaultKey, reason: string = "Accès sécurisé requis"): Promise<string | null> {
         try {
             // 1. Biometric Challenge
             const available = await NativeBiometric.isAvailable();
             if (available.isAvailable) {
                 await NativeBiometric.verifyIdentity({
                     reason,
-                    title: "Authentification Cyber-SÃ©curitÃ©",
-                    subtitle: "DÃ©verrouillage de l'enclave biomÃ©trique",
-                    description: "AccÃ¨s requis pour le dÃ©chiffrement des donnÃ©es.",
+                    title: "Authentification Cyber-Sécurité",
+                    subtitle: "Déverrouillage de l'enclave biométrique",
+                    description: "Accès requis pour le déchiffrement des données.",
                     negativeButtonText: "Annuler"
                 });
             } else {
-                console.warn("âš ï¸ BiomÃ©trie indisponible. Tentative de lecture directe (Mode dÃ©gradÃ©).");
+                console.warn("⚠️ Biométrie indisponible. Tentative de lecture directe (Mode dégradé).");
             }
 
             // 2. Retrieval
             return await this.loadSecret(key);
         } catch (error) {
-            console.error("âŒ [VAULT] Ã‰chec du dÃ©verrouillage :", error);
-            throw new Error("Authentification Ã©chouÃ©e. AccÃ¨s au coffre-fort refusÃ©.");
+            console.error("❌ [VAULT] Échec du déverrouillage :", error);
+            throw new Error("Authentification échouée. Accès au coffre-fort refusé.");
         }
     },
 
     /**
-     * ðŸ§¹ Emergency Purge: Wipe ALL keys from the vault.
+     * 🧹 Emergency Purge: Wipe ALL keys from the vault.
      * To be called on logout or security breach detection.
      */
     async wipeKeys(): Promise<void> {
@@ -2936,15 +3739,120 @@ export const VaultManager = {
             for (const key of keys) {
                 await SecureStoragePlugin.remove({ key });
             }
-            console.log("ðŸ§¨ [VAULT] Purge d'urgence effectuÃ©e. Toutes les clÃ©s supprimÃ©es.");
+            console.log("🧨 [VAULT] Purge d'urgence effectuée. Toutes les clés supprimées.");
         } catch (error) {
-            console.error("âŒ [VAULT] Erreur lors de la purge :", error);
+            console.error("❌ [VAULT] Erreur lors de la purge :", error);
         }
     }
 };
-</file>
+````
 
-<file path="app/(routes)/cortex/invitation/page.tsx">
+## File: scripts/enable_realtime_radar.sql
+````sql
+-- Enable Realtime for Connection and Opportunity tables
+-- This adds the tables to the supabase_realtime publication
+
+BEGIN;
+  -- Remove if already exists to avoid duplicates
+  ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS "Connection";
+  ALTER PUBLICATION supabase_realtime DROP TABLE IF EXISTS "Opportunity";
+  
+  -- Add tables to the publication
+  ALTER PUBLICATION supabase_realtime ADD TABLE "Connection";
+  ALTER PUBLICATION supabase_realtime ADD TABLE "Opportunity";
+COMMIT;
+
+-- Ensure RLS allows reading these tables for authenticated users
+-- (Simple policies for testing, adjust as needed)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view connections' AND tablename = 'Connection') THEN
+        CREATE POLICY "Anyone can view connections" ON "Connection" FOR SELECT USING (true);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Anyone can view opportunities' AND tablename = 'Opportunity') THEN
+        CREATE POLICY "Anyone can view opportunities" ON "Opportunity" FOR SELECT USING (true);
+    END IF;
+END
+$$;
+````
+
+## File: scripts/get_prisma_err.js
+````javascript
+const { execSync } = require('child_process');
+const fs = require('fs');
+try {
+    execSync('npx prisma validate', { stdio: 'pipe' });
+    console.log("Success");
+} catch (e) {
+    fs.writeFileSync('error_out.txt', e.stderr.toString() + e.stdout.toString());
+}
+````
+
+## File: scripts/update_all_code.ps1
+````powershell
+$targetFile = Join-Path $PSScriptRoot "..\all_code.txt"
+$rootPath = Join-Path $PSScriptRoot ".."
+
+Write-Host "Target File: $targetFile"
+Write-Host "Root Path: $rootPath"
+
+# Clear file
+$null | Out-File -FilePath $targetFile -Encoding UTF8
+
+function Add-ProjectFile {
+    param ([string]$Path)
+    Write-Host "Processing: $Path"
+    "--- FILE: $Path ---" | Out-File -FilePath $targetFile -Append -Encoding UTF8
+    "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
+    Get-Content -LiteralPath $Path | Out-File -FilePath $targetFile -Append -Encoding UTF8
+    "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
+    "" | Out-File -FilePath $targetFile -Append -Encoding UTF8
+}
+
+# Root files
+$rootFiles = @("package.json", "tsconfig.json", "next.config.ts", "README.md", ".env.example", "next-env.d.ts", "postcss.config.mjs", "tailwind.config.ts")
+foreach ($file in $rootFiles) {
+    $p = Join-Path $rootPath $file
+    if (Test-Path $p) { Add-ProjectFile -Path $p }
+}
+
+# Directories
+$dirs = @("app", "components", "lib", "prisma", "scripts", "styles", "utils")
+foreach ($d in $dirs) {
+    $dp = Join-Path $rootPath $d
+    if (Test-Path $dp) {
+        Get-ChildItem -Path $dp -Recurse -File | Where-Object {
+            $_.FullName -notmatch "node_modules" -and
+            $_.Extension -match "^\.(ts|tsx|js|jsx|mjs|cjs|css|scss|sass|less|html|md|json|prisma|sql)$"
+        } | ForEach-Object {
+            Add-ProjectFile -Path $_.FullName
+        }
+    }
+}
+
+Write-Host "Done."
+````
+
+## File: store/keyStore.ts
+````typescript
+import { create } from 'zustand';
+
+interface KeyState {
+    masterKey: string | null;
+    setMasterKey: (key: string | null) => void;
+    clearMasterKey: () => void;
+}
+
+export const useKeyStore = create<KeyState>((set) => ({
+    masterKey: null,
+    setMasterKey: (key) => set({ masterKey: key }),
+    clearMasterKey: () => set({ masterKey: null }),
+}));
+````
+
+## File: app/(routes)/cortex/invitation/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -3003,7 +3911,7 @@ function InvitationContent() {
             }).then(r => r.json());
 
             if (res.success && res.connectionId) {
-                // L'opportunitÃ© contient sourceId, on peut rediriger vers le chat avec cet utilisateur
+                // L'opportunité contient sourceId, on peut rediriger vers le chat avec cet utilisateur
                 router.push(`/chat?id=${opp.sourceId}`);
             } else {
                 setActionLoading(false);
@@ -3035,19 +3943,19 @@ function InvitationContent() {
     };
 
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-    if (!oppId || !opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirÃ©e</div>;
+    if (!oppId || !opp) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Invitation introuvable ou expirée</div>;
 
     if (opp.status !== 'INVITED') {
         return (
             <div className="min-h-screen bg-black p-6 flex flex-col items-center justify-center text-center">
                 <ShieldCheck className="w-16 h-16 text-zinc-600 mb-4" />
-                <h1 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Canal SÃ©curisÃ©</h1>
-                <p className="text-zinc-400">Cette invitation a dÃ©jÃ  Ã©tÃ© traitÃ©e (Statut: {opp.status}).</p>
+                <h1 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Canal Sécurisé</h1>
+                <p className="text-zinc-400">Cette invitation a déjà été traitée (Statut: {opp.status}).</p>
                 <button
                     onClick={() => router.push('/cortex')}
                     className="mt-8 text-blue-400 hover:text-blue-300 font-mono text-sm underline"
                 >
-                    Retour au systÃ¨me central
+                    Retour au système central
                 </button>
             </div>
         );
@@ -3056,7 +3964,7 @@ function InvitationContent() {
     return (
         <div className="min-h-screen bg-black p-4 flex flex-col items-center justify-center font-mono">
             <div className="w-full max-w-lg border border-blue-500/30 p-8 rounded-2xl bg-zinc-950 shadow-2xl relative overflow-hidden">
-                {/* DÃ©coration cyber */}
+                {/* Décoration cyber */}
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                     <UserPlus className="w-32 h-32" />
                 </div>
@@ -3067,10 +3975,10 @@ function InvitationContent() {
                         <h1 className="text-blue-400 text-xs text-left uppercase tracking-widest font-bold">Protocole de Liaison Entrant</h1>
                     </div>
 
-                    <h2 className="text-2xl text-white font-bold mb-6">RE: {opp.title || 'Nouvelle OpportunitÃ©'}</h2>
+                    <h2 className="text-2xl text-white font-bold mb-6">RE: {opp.title || 'Nouvelle Opportunité'}</h2>
 
                     <div className="bg-black/80 border border-zinc-800 p-5 rounded-lg mb-8">
-                        <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wide">RÃ©sumÃ© StratÃ©gique :</p>
+                        <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wide">Résumé Stratégique :</p>
                         <p className="text-zinc-300 text-sm leading-relaxed italic">
                             "{opp.summary}"
                         </p>
@@ -3105,17 +4013,18 @@ export default function InvitationPage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/actions/auth-guard.ts">
+## File: app/actions/auth-guard.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
 
 /**
- * âš¡ ANTIGRAVITY: AuthGuard cÃ´tÃ© client.
- * VÃ©rifie qu'un profil existe en BDD pour l'utilisateur connectÃ©.
- * Retourne false si le profil n'existe pas (session fantÃ´me).
+ * ⚡ ANTIGRAVITY: AuthGuard côté client.
+ * Vérifie qu'un profil existe en BDD pour l'utilisateur connecté.
+ * Retourne false si le profil n'existe pas (session fantôme).
  */
 export async function checkProfileExists(userId: string): Promise<boolean> {
     if (!userId) return false;
@@ -3125,9 +4034,10 @@ export async function checkProfileExists(userId: string): Promise<boolean> {
     });
     return !!profile;
 }
-</file>
+````
 
-<file path="app/actions/guardian.ts">
+## File: app/actions/guardian.ts
+````typescript
 // 'use server' (static build fix)
 
 import { mistralClient } from '@/lib/mistral';
@@ -3137,8 +4047,8 @@ export async function guardianCheck(profileId: string, text: string) {
         // NIVEAU 1 : Filtrage algorithmique gratuit
         if (!text || text.length < 5) return { success: true, isSafe: true, intervention: false };
 
-        // NIVEAU 2 : Triage avec Mistral Small (Faible coÃ»t, haute vitesse)
-        const triagePrompt = `Ce texte est-il critique ou dangereux (menaces, spam violent, illÃ©gal) ? RÃ©ponds strictement par OUI ou NON. Texte: "${text}"`;
+        // NIVEAU 2 : Triage avec Mistral Small (Faible coût, haute vitesse)
+        const triagePrompt = `Ce texte est-il critique ou dangereux (menaces, spam violent, illégal) ? Réponds strictement par OUI ou NON. Texte: "${text}"`;
 
         const triageResponse = await mistralClient.chat.complete({
             model: "mistral-small-latest",
@@ -3149,14 +4059,14 @@ export async function guardianCheck(profileId: string, text: string) {
         const triageDecision = typeof triageContent === 'string' ? triageContent : "";
         const isCritical = triageDecision.includes("OUI") || triageDecision.includes("oui");
 
-        // ArrÃªt prÃ©maturÃ© : Ã©conomie d'API
+        // Arrêt prématuré : économie d'API
         if (!isCritical) return { success: true, isSafe: true, intervention: false };
 
         // NIVEAU 3 : Analyse profonde avec Mistral Large UNIQUEMENT si critique
         const deepAuditResponse = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: "Tu es le Gardien de sÃ©curitÃ© Ipse. Analyse avancÃ©e de menace pour ce texte. RÃ©dige un bref rapport sur le risque." },
+                { role: "system", content: "Tu es le Gardien de sécurité Ipse. Analyse avancée de menace pour ce texte. Rédige un bref rapport sur le risque." },
                 { role: "user", content: text }
             ]
         });
@@ -3177,24 +4087,25 @@ export async function guardianCheck(profileId: string, text: string) {
 
 export async function simulateNegotiation(myProfileId: string, targetProfileId: string) {
     if (!myProfileId || !targetProfileId) return { success: false, error: 'Ids manquants' };
-    // Simulation simple pour la dÃ©mo UI de la Boucle du Gardien
+    // Simulation simple pour la démo UI de la Boucle du Gardien
     return {
         success: true,
-        summary: "Simulation : Le Gardien a interceptÃ© un contact prometteur.",
+        summary: "Simulation : Le Gardien a intercepté un contact prometteur.",
         verdict: "MATCH",
         nextStep: "Proposer un NDA avant d'envoyer les plans."
     };
 }
-</file>
+````
 
-<file path="app/actions/keys.ts">
+## File: app/actions/keys.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
 
 /**
- * Enregistre la clÃ© publique ECDH d'un profil dans l'annuaire Prisma.
- * AppelÃ© une seule fois Ã  l'inscription (ou si la clÃ© est regÃ©nÃ©rÃ©e).
+ * Enregistre la clé publique ECDH d'un profil dans l'annuaire Prisma.
+ * Appelé une seule fois à l'inscription (ou si la clé est regénérée).
  */
 export async function registerPublicKey(profileId: string, publicKeyJwk: string) {
     try {
@@ -3204,13 +4115,13 @@ export async function registerPublicKey(profileId: string, publicKeyJwk: string)
         });
         return { success: true };
     } catch (error) {
-        console.error("[ECDH] Erreur enregistrement clÃ© publique:", error);
-        return { success: false, error: "Ã‰chec de l'enregistrement de la clÃ© publique." };
+        console.error("[ECDH] Erreur enregistrement clé publique:", error);
+        return { success: false, error: "Échec de l'enregistrement de la clé publique." };
     }
 }
 
 /**
- * RÃ©cupÃ¨re la clÃ© publique d'un autre utilisateur pour la dÃ©rivation ECDH.
+ * Récupère la clé publique d'un autre utilisateur pour la dérivation ECDH.
  */
 export async function getPublicKey(profileId: string): Promise<string | null> {
     try {
@@ -3220,13 +4131,14 @@ export async function getPublicKey(profileId: string): Promise<string | null> {
         });
         return profile?.publicKey ?? null;
     } catch (error) {
-        console.error("[ECDH] Erreur rÃ©cupÃ©ration clÃ© publique:", error);
+        console.error("[ECDH] Erreur récupération clé publique:", error);
         return null;
     }
 }
-</file>
+````
 
-<file path="app/actions/missions.ts">
+## File: app/actions/missions.ts
+````typescript
 'use server'
 import { prisma } from "@/lib/prisma";
 
@@ -3237,7 +4149,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
     const stats = ((profile as any).stats) || { messages: 0, memories: 0, scans: 0 };
 
     if (action === 'memory' || action === 'memory_delete') {
-        // VÃ‰RITÃ‰ ABSOLUE : On compte physiquement les lignes en base
+        // VÉRITÉ ABSOLUE : On compte physiquement les lignes en base
         console.time('[PERF] memory.count');
         stats.memories = await prisma.memory.count({ where: { profileId: userId } });
         console.timeEnd('[PERF] memory.count');
@@ -3247,7 +4159,7 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
         stats.scans = (stats.scans || 0) + 1;
     }
 
-    // Calcul du Level et mise Ã  jour
+    // Calcul du Level et mise à jour
     const totalActions = (stats.messages || 0) + (stats.memories || 0) + (stats.scans || 0);
     const newLevel = Math.floor(totalActions / 10) + 1;
 
@@ -3257,12 +4169,13 @@ export async function trackAgentActivity(userId: string, action: 'message' | 'me
         //     data: { stats, syncLevel: newLevel }
         // });
     } catch (err) {
-        console.error('[MISSIONS] Ã‰chec mise Ã  jour profil :', err);
+        console.error('[MISSIONS] Échec mise à jour profil :', err);
     }
 }
-</file>
+````
 
-<file path="app/actions/translation.ts">
+## File: app/actions/translation.ts
+````typescript
 // 'use server' (static build fix)
 
 import { mistralClient } from '@/lib/mistral';
@@ -3275,7 +4188,7 @@ export async function translateMessage(text: string, targetLanguage: string) {
             model: "mistral-large-latest",
             messages: [{
                 role: "system",
-                content: `Tu es un traducteur de l'extrÃªme. Traduis fidÃ¨lement ce texte en ${targetLanguage}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.`
+                content: `Tu es un traducteur de l'extrême. Traduis fidèlement ce texte en ${targetLanguage}. Renvoie UNIQUEMENT la traduction, sans aucun commentaire.`
             }, {
                 role: "user",
                 content: text
@@ -3288,9 +4201,10 @@ export async function translateMessage(text: string, targetLanguage: string) {
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/actions/update-memory.ts">
+## File: app/actions/update-memory.ts
+````typescript
 // 'use server' (static build fix)
 import { createClient } from '@/lib/supabaseServer';
 import { mistralClient } from '@/lib/mistral';
@@ -3299,9 +4213,9 @@ import { revalidatePath } from 'next/cache';
 export async function updateMemoryAndVector(memoryId: string, newContent: string) {
     const supabase = await createClient();
 
-    // 1. VÃ©rification stricte de l'authentification
+    // 1. Vérification stricte de l'authentification
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('[SÃ‰CURITÃ‰] AccÃ¨s refusÃ©. Utilisateur non authentifiÃ©.');
+    if (!user) throw new Error('[SÉCURITÉ] Accès refusé. Utilisateur non authentifié.');
 
     try {
         // 2. Re-vectorisation via Mistral
@@ -3312,7 +4226,7 @@ export async function updateMemoryAndVector(memoryId: string, newContent: string
 
         const newVector = embedResponse.data[0].embedding;
 
-        // 3. Mise Ã  jour transactionnelle dans Supabase
+        // 3. Mise à jour transactionnelle dans Supabase
         const { error } = await supabase
             .from('memory')
             .update({
@@ -3326,13 +4240,14 @@ export async function updateMemoryAndVector(memoryId: string, newContent: string
         revalidatePath('/memories');
         return { success: true };
     } catch (error: any) {
-        console.error('[CRITIQUE] Ã‰chec de la mise Ã  jour mÃ©moire :', error);
+        console.error('[CRITIQUE] Échec de la mise à jour mémoire :', error);
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/api/agent/route.ts">
+## File: app/api/agent/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -3361,7 +4276,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
@@ -3380,7 +4295,7 @@ export async function GET(request: Request) {
     }
 }
 
-// POST /api/agent â€” updateAgentProfile or reflectAgent
+// POST /api/agent — updateAgentProfile or reflectAgent
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3405,14 +4320,24 @@ export async function POST(request: Request) {
             const profile = await prisma.profile.findUnique({ where: { id: profileId } });
             if (!profile) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
-            const prompt = `Tu es le Cortex de l'application Ipse. Fais une synthÃ¨se de ce profil en 3 phrases maximum.\nProfil: ${JSON.stringify(profile.thematicProfile || {})}\nBio: ${profile.bio || "Non renseignÃ©e"}`;
+            const prompt = `Tu es le Cortex de l'application Ipse. Fais une synthèse de ce profil en 3 phrases maximum.\nProfil: ${JSON.stringify(profile.thematicProfile || {})}\nBio: ${profile.bio || "Non renseignée"}`;
             const response = await mistralClient.chat.complete({ model: "mistral-large-latest", messages: [{ role: "user", content: prompt }] });
             const synthesis = response.choices?.[0]?.message.content as string;
 
             const embedResponse = await mistralClient.embeddings.create({ model: "mistral-embed", inputs: [synthesis] });
-            const masterVector = embedResponse.data[0].embedding;
-            await prisma.profile.update({ where: { id: profileId }, data: { unifiedAnalysis: synthesis } });
-            await prisma.$executeRaw`UPDATE "Profile" SET "unifiedEmbedding" = ${masterVector}::vector WHERE id = ${profileId}`;
+            const masterVector = embedResponse.data?.[0]?.embedding;
+            
+            if (masterVector && Array.isArray(masterVector)) {
+                const vectorString = `[${masterVector.join(',')}]`;
+
+                await prisma.profile.update({ where: { id: profileId }, data: { unifiedAnalysis: synthesis } });
+                await prisma.$executeRawUnsafe(
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE id = $2`,
+                    vectorString,
+                    profileId
+                );
+            }
+
             return NextResponse.json({ success: true, synthesis });
         }
 
@@ -3421,15 +4346,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/auto-ingest/route.ts">
+## File: app/api/auto-ingest/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 
-// POST /api/auto-ingest â€” extractText, extractProfileData, confirmIngestion
+// POST /api/auto-ingest — extractText, extractProfileData, confirmIngestion
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3448,7 +4374,7 @@ export async function POST(request: Request) {
 
         if (action === 'extractProfileData') {
             const { rawData } = body;
-            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÃ‰ES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"primaryRole":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
+            const prompt = `Tu es le Cortex de l'application Ipse.\nDONNÉES : """${rawData}"""\nFORMAT JSON ATTENDU STRICT :\n{"primaryRole":"Titre","industry":"Secteur","seniority":"Niveau","objectives":["Obj1"],"ikigaiMission":"Mission","socialStyle":"Style"}`;
             const chatResponse = await mistralClient.chat.complete({
                 model: 'mistral-large-latest',
                 messages: [{ role: 'user', content: prompt }],
@@ -3456,15 +4382,16 @@ export async function POST(request: Request) {
                 temperature: 0.1,
             });
             const rawContent = chatResponse.choices?.[0].message.content;
-            if (!rawContent) return NextResponse.json({ success: false, error: 'RÃ©ponse vide' }, { status: 500 });
+            if (!rawContent) return NextResponse.json({ success: false, error: 'Réponse vide' }, { status: 500 });
             const profileData = JSON.parse(rawContent as string);
             return NextResponse.json({ success: true, data: profileData });
         }
 
         if (action === 'confirmIngestion') {
             const { userId, validatedData } = body;
+            // Target the 'WORK' profile by default for initial ingestion
             await prisma.profile.update({
-                where: { id: userId },
+                where: { userId_type: { userId: userId, type: 'WORK' } },
                 data: {
                     primaryRole: validatedData.primaryRole,
                     thematicProfile: {
@@ -3478,8 +4405,17 @@ export async function POST(request: Request) {
             });
             const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
             const embeddingsResponse = await mistralClient.embeddings.create({ model: 'mistral-embed', inputs: [textToEmbed] });
-            const embeddingVector = embeddingsResponse.data[0].embedding;
-            await prisma.$executeRaw`UPDATE "Profile" SET "unifiedEmbedding" = ${embeddingVector}::vector WHERE id = ${userId}`;
+            const embeddingVector = embeddingsResponse.data?.[0]?.embedding;
+            
+            if (embeddingVector && Array.isArray(embeddingVector)) {
+                const vectorString = `[${embeddingVector.join(',')}]`;
+                
+                await prisma.$executeRawUnsafe(
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE user_id = $2 AND type = 'WORK'`,
+                    vectorString,
+                    userId
+                );
+            }
             return NextResponse.json({ success: true });
         }
 
@@ -3488,23 +4424,24 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/cron/daily-report/route.ts">
+## File: app/api/cron/daily-report/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    // ðŸ›¡ï¸ SÃ©curitÃ© : VÃ©rifie que l'appel vient bien de Vercel Cron
+    // 🛡️ Sécurité : Vérifie que l'appel vient bien de Vercel Cron
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return new Response('Unauthorized', { status: 401 });
     }
 
     try {
-        // ðŸ” Logique : RÃ©cupÃ©rer les opportunitÃ©s "AUDITED" non encore traitÃ©es
+        // 🔍 Logique : Récupérer les opportunités "AUDITED" non encore traitées
         const topMatches = await prisma.opportunity.findMany({
             where: { status: 'AUDITED' },
             take: 3,
@@ -3512,8 +4449,8 @@ export async function GET(request: Request) {
         });
 
         if (topMatches.length > 0) {
-            // ðŸ“² Ici : Appel Ã  ton service de notification (Push/Email)
-            console.log(`[CRON] Envoi du briefing pour ${topMatches.length} opportunitÃ©s.`);
+            // 📲 Ici : Appel à ton service de notification (Push/Email)
+            console.log(`[CRON] Envoi du briefing pour ${topMatches.length} opportunités.`);
         }
 
         return NextResponse.json({ success: true, processed: topMatches.length });
@@ -3521,9 +4458,10 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: false, error: e }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/cron/radar/route.ts">
+## File: app/api/cron/radar/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -3538,7 +4476,7 @@ export async function GET(req: NextRequest) {
     const secret = process.env.CRON_SECRET;
 
     if (!secret || authHeader !== `Bearer ${secret}`) {
-        console.error("ðŸš¨ [CRON-RADAR] Unauthorized access blocked.");
+        console.error("🚨 [CRON-RADAR] Unauthorized access blocked.");
         return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -3546,7 +4484,7 @@ export async function GET(req: NextRequest) {
     const theme = req.nextUrl.searchParams.get('theme') || 'work';
     const embeddingField = theme === 'dating' ? 'social_embedding' : (theme === 'hobby' ? 'hobby_embedding' : 'unifiedEmbedding');
 
-    console.log(`ðŸš€ [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
+    console.log(`🚀 [CRON-RADAR] Strategic scan START | Theme: ${theme} | Field: ${embeddingField}`);
 
     try {
         // 3. Optimized Vector Cross-Matching
@@ -3579,10 +4517,10 @@ export async function GET(req: NextRequest) {
             sourceId: m.sourceId,
             targetId: m.targetId,
             matchScore: Math.round(m.similarity * 100),
-            synergies: "Synergie sÃ©mantique dÃ©tectÃ©e par le Radar (Auto-Detection).",
+            synergies: "Synergie sémantique détectée par le Radar (Auto-Detection).",
             status: 'DETECTED',
             audit: null,
-            title: `OpportunitÃ© ${theme.toUpperCase()}`
+            title: `Opportunité ${theme.toUpperCase()}`
         }));
 
         // Efficient batch insert to minimize DB roundtrips
@@ -3591,7 +4529,7 @@ export async function GET(req: NextRequest) {
             skipDuplicates: true
         });
 
-        console.log(`âœ… [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
+        console.log(`✅ [CRON-RADAR] Strategic scan COMPLETE | New opportunities: ${result.count}`);
 
         return NextResponse.json({
             success: true,
@@ -3601,13 +4539,14 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("ðŸ”¥ [CRON-RADAR] Critical Failure:", error.message);
+        console.error("🔥 [CRON-RADAR] Critical Failure:", error.message);
         return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/generate-opener/route.ts">
+## File: app/api/generate-opener/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -3624,7 +4563,7 @@ export async function POST(request: Request) {
         const target = await prisma.profile.findUnique({ where: { id: targetId } });
         if (!user || !target) return NextResponse.json({ success: false, error: 'Profil introuvable' }, { status: 404 });
 
-        const prompt = `Tu es Agent, un proxy tactique d'ingÃ©nierie sociale.\nTa mission : RÃ©diger l'approche PARFAITE.\n\nADN EXPÃ‰DITEUR : ${user.primaryRole || 'Non spÃ©cifiÃ©'} - ${(user as any).industry || (user as any).sector || 'Non spÃ©cifiÃ©'}\nADN CIBLE : ${target.primaryRole || 'Non spÃ©cifiÃ©'} - ${(target as any).industry || (target as any).sector || 'Non spÃ©cifiÃ©'}\n\nRÃˆGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÃ‰PONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
+        const prompt = `Tu es Agent, un proxy tactique d'ingénierie sociale.\nTa mission : Rédiger l'approche PARFAITE.\n\nADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}\nADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}\n\nRÈGLES D'ENGAGEMENT :\n1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots.\n2. "message" : Le message complet de 3 phrases maximum.\n\nFORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :\n{"hook": "Ton accroche ici", "message": "Ton message complet ici"}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -3639,24 +4578,26 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/inngest/route.ts">
+## File: app/api/inngest/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
 import { processRadarMatch } from "../../../inngest/functions";
 
-// âš¡ ANTIGRAVITY: C'est ici que Next.js "Ã©coute" Inngest
+// ⚡ ANTIGRAVITY: C'est ici que Next.js "écoute" Inngest
 export const { GET, POST, PUT } = serve({
     client: inngest,
     functions: [
         processRadarMatch,
     ],
 });
-</file>
+````
 
-<file path="app/api/profile/hobby/route.ts">
+## File: app/api/profile/hobby/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
@@ -3696,18 +4637,18 @@ export async function PATCH(req: Request) {
 
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques
+        // 5. Étape A : Mise à jour des données classiques
         await prismaRLS.profile.update({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'HOBBY' } },
             data: {
-                hobbySector: sector,
-                hobbyRole: role,
-                hobbyBio: bio,
+                sector: sector,
+                primaryRole: role,
+                bio: bio,
                 activePrism: activePrism || 'HOBBY'
             }
         });
 
-        // 6. Ã‰tape B : Vectorisation Mistral
+        // 6. Étape B : Vectorisation Mistral
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
@@ -3721,11 +4662,11 @@ export async function PATCH(req: Request) {
                 if (vector && vector.length === 1024) {
                     const vectorString = `[${vector.join(',')}]`;
 
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "hobby_embedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "profiles" SET "bio_embedding" = $1::vector WHERE user_id = $2 AND type = 'HOBBY'`,
+                        vectorString,
+                        user.id
+                    );
                     vectorized = true;
                 }
             } catch (iaError) {
@@ -3736,7 +4677,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: 'Profil Hobbies synchronisÃ©'
+            message: 'Profil Hobbies synchronisé'
         });
 
     } catch (error: any) {
@@ -3745,9 +4686,10 @@ export async function PATCH(req: Request) {
     }
 }
 export const POST = PATCH;
-</file>
+````
 
-<file path="app/api/profile/social/route.ts">
+## File: app/api/profile/social/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
@@ -3787,18 +4729,18 @@ export async function PATCH(req: Request) {
 
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques
+        // 5. Étape A : Mise à jour des données classiques
         await prismaRLS.profile.update({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'SOCIAL' } },
             data: {
-                socialSector: sector,
-                socialRole: role,
-                socialBio: bio,
+                sector: sector,
+                primaryRole: role,
+                bio: bio,
                 activePrism: activePrism || 'SOCIAL'
             }
         });
 
-        // 6. Ã‰tape B : Vectorisation Mistral
+        // 6. Étape B : Vectorisation Mistral
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
@@ -3812,11 +4754,11 @@ export async function PATCH(req: Request) {
                 if (vector && vector.length === 1024) {
                     const vectorString = `[${vector.join(',')}]`;
 
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "social_embedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "profiles" SET "bio_embedding" = $1::vector WHERE user_id = $2 AND type = 'SOCIAL'`,
+                        vectorString,
+                        user.id
+                    );
                     vectorized = true;
                 }
             } catch (iaError) {
@@ -3827,7 +4769,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: vectorized ? 'Profil Social synchronisÃ© et vectorisÃ©' : 'Profil Social synchronisÃ© (Vecteur ignorÃ© ou erreur AI)'
+            message: vectorized ? 'Profil Social synchronisé et vectorisé' : 'Profil Social synchronisé (Vecteur ignoré ou erreur AI)'
         });
 
     } catch (error: any) {
@@ -3836,9 +4778,10 @@ export async function PATCH(req: Request) {
     }
 }
 export const POST = PATCH;
-</file>
+````
 
-<file path="app/api/profile/work/route.ts">
+## File: app/api/profile/work/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
@@ -3886,9 +4829,9 @@ export async function PATCH(req: Request) {
         const prismaRLS = getPrismaForUser(user.id);
         const tjmValue = typeof tjm === 'number' ? tjm : parseInt(tjm, 10) || 0;
 
-        // 5. Ã‰tape A : Mise Ã  jour des donnÃ©es classiques (Prisma)
+        // 5. Étape A : Mise à jour des données classiques (Prisma)
         await prismaRLS.profile.update({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             data: {
                 sector,
                 primaryRole,
@@ -3899,11 +4842,11 @@ export async function PATCH(req: Request) {
             }
         });
 
-        // 6. Ã‰tape B : Vectorisation Mistral (pgvector 1024d)
+        // 6. Étape B : Vectorisation Mistral (pgvector 1024d)
         let vectorized = false;
         if (bio && bio.trim().length > 10) {
             try {
-                // Appel au modÃ¨le mistral-embed (OptimisÃ© pour RAG)
+                // Appel au modèle mistral-embed (Optimisé pour RAG)
                 const embeddingResponse = await mistral.embeddings.create({
                     model: 'mistral-embed',
                     inputs: [bio],
@@ -3912,19 +4855,19 @@ export async function PATCH(req: Request) {
                 const vector = embeddingResponse.data[0].embedding;
 
                 if (vector && vector.length === 1024) {
-                    // Injection SQL brute sÃ©curisÃ©e pour le type 'vector' de pgvector
+                    // Injection SQL brute sécurisée pour le type 'vector' de pgvector
                     // On utilise format standard [x,y,z] pour pgvector
                     const vectorString = `[${vector.join(',')}]`;
 
-                    await prisma.$executeRaw`
-                        UPDATE "Profile" 
-                        SET "bioEmbedding" = ${vectorString}::vector 
-                        WHERE id = ${user.id}
-                    `;
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "profiles" SET "bio_embedding" = $1::vector WHERE user_id = $2 AND type = 'WORK'`,
+                        vectorString,
+                        user.id
+                    );
                     vectorized = true;
                 }
             } catch (iaError) {
-                // L'IA est optionnelle : on ne bloque pas l'expÃ©rience utilisateur si Mistral est offline
+                // L'IA est optionnelle : on ne bloque pas l'expérience utilisateur si Mistral est offline
                 console.error('[MISTRAL_AI_ERROR] Vectorization skipped:', iaError);
             }
         }
@@ -3932,7 +4875,7 @@ export async function PATCH(req: Request) {
         return NextResponse.json({
             success: true,
             vectorized,
-            message: vectorized ? 'Profil synchronisÃ© et vectorisÃ©' : 'Profil synchronisÃ© (Vecteur ignorÃ© ou erreur AI)'
+            message: vectorized ? 'Profil synchronisé et vectorisé' : 'Profil synchronisé (Vecteur ignoré ou erreur AI)'
         });
 
     } catch (error: any) {
@@ -3941,9 +4884,10 @@ export async function PATCH(req: Request) {
     }
 }
 export const POST = PATCH;
-</file>
+````
 
-<file path="app/api/sync-cortex/route.ts">
+## File: app/api/sync-cortex/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -3973,11 +4917,11 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return { user, supabase };
 }
 
-// POST /api/sync-cortex â€” syncWebDataToCortex
+// POST /api/sync-cortex — syncWebDataToCortex
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -3985,7 +4929,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { title, url, content } = body;
 
-        const formattedContent = `[Ã‰CLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
+        const formattedContent = `[ÉCLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
         const embRes = await mistralClient.embeddings.create({ model: 'mistral-embed', inputs: [formattedContent] });
 
         const { error } = await supabase.from('memory').insert({
@@ -3999,16 +4943,20 @@ export async function POST(request: Request) {
         if (error) throw new Error(error.message);
 
         await trackAgentActivity(user.id, 'memory');
-        const updatedProfile = await prisma.profile.findUnique({ where: { id: user.id }, select: { name: true, primaryRole: true } });
+        const updatedProfile = await prisma.profile.findUnique({ 
+            where: { userId_type: { userId: user.id, type: 'WORK' } }, 
+            select: { name: true, primaryRole: true } 
+        });
 
         return NextResponse.json({ success: true, newStats: updatedProfile });
     } catch (e: any) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/chat/page.tsx">
+## File: app/chat/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -4076,7 +5024,7 @@ function ChatContent() {
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
                 <Shield className="w-12 h-12 text-slate-800 mb-4" />
                 <h1 className="text-xl font-bold text-white mb-2">Canal Introuvable</h1>
-                <p className="text-slate-500 mb-8">Le profil de l'agent est inaccessible ou la liaison a Ã©tÃ© rompue.</p>
+                <p className="text-slate-500 mb-8">Le profil de l'agent est inaccessible ou la liaison a été rompue.</p>
                 <Link href="/" className="text-emerald-400 hover:text-emerald-300 font-mono text-sm underline">
                     Retour au Tactical Feed
                 </Link>
@@ -4094,7 +5042,7 @@ function ChatContent() {
                     <div>
                         <div className="flex items-center gap-2 text-emerald-400 mb-1">
                             <Shield className="w-3 h-3" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison ChiffrÃ©e E2E</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Liaison Chiffrée E2E</span>
                         </div>
                         <h1 className="text-xl font-black italic tracking-tighter text-white">
                             {receiverProfile?.name || "Agent Industriel"}
@@ -4127,9 +5075,10 @@ export default function ChatPage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/components/ClientLayout.tsx">
+## File: app/components/ClientLayout.tsx
+````typescript
 "use client";
 
 import { usePathname } from 'next/navigation';
@@ -4179,9 +5128,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </>
     );
 }
-</file>
+````
 
-<file path="app/components/CortexDeleteButton.tsx">
+## File: app/components/CortexDeleteButton.tsx
+````typescript
 "use client";
 
 import { useState } from "react";
@@ -4253,181 +5203,148 @@ export default function CortexDeleteButton({
         </button>
     );
 }
-</file>
+````
 
-<file path="app/components/NavBadge.tsx">
-"use client";
-
-import React from "react";
-import { useCortexGaps } from "@/app/hooks/useCortexGaps";
-
-export default function NavBadge() {
-    const { gaps, isLoading } = useCortexGaps();
-
-    // Si Ã§a charge ou qu'il n'y a pas de question, on ne montre pas le badge
-    if (isLoading || !gaps?.question) return null;
-
-    return (
-        <span className="absolute top-1 right-1/4 translate-x-1/2 -translate-y-1/2 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-        </span>
-    );
-}
-</file>
-
-<file path="app/components/SecureMessageBubble.tsx">
+## File: app/components/opportunities/AuditStreamer.tsx
+````typescript
 'use client';
 
-import { useState, useEffect } from 'react';
-import { decryptLocal } from '@/lib/crypto-client';
-import { TranslationManager } from '@/lib/translation-client';
-import { Loader2, Lock, Languages } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Loader2, Zap, AlertCircle } from 'lucide-react';
 
-export function SecureMessageBubble({
-    id,
-    encryptedPayload,
-    sharedKey,
-    isSender,
-    onDecrypted
-}: {
-    id: string,
-    encryptedPayload: string,
-    sharedKey: CryptoKey | null,
-    isSender: boolean,
-    onDecrypted?: (id: string, clearText: string, isSender: boolean) => void
-}) {
-    const [clearText, setClearText] = useState<string | null>(null);
-    const [translatedText, setTranslatedText] = useState<string | null>(null);
-    const [isTranslating, setIsTranslating] = useState(false);
-    const [translationProgress, setTranslationProgress] = useState(0);
-    const [error, setError] = useState(false);
+interface AuditStreamerProps {
+    opportunityId: string;
+    onComplete?: (finalAudit: string) => void;
+}
+
+/**
+ * 🛰️ AuditStreamer
+ * Consumes the Edge-streamed Markdown audit from Mistral AI.
+ */
+export default function AuditStreamer({ opportunityId, onComplete }: AuditStreamerProps) {
+    const [streamedText, setStreamedText] = useState('');
+    const [status, setStatus] = useState<'idle' | 'streaming' | 'completed' | 'error'>('idle');
+    const [error, setError] = useState<string | null>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        let isMounted = true;
-
-        async function decode() {
-            if (!encryptedPayload.startsWith('ðŸ§ ')) {
-                if (isMounted) {
-                    setClearText(encryptedPayload);
-                    if (onDecrypted) onDecrypted(id, encryptedPayload, isSender);
-                }
-                return;
-            }
-
-            if (!sharedKey) return;
+        const startStream = async () => {
+            setStatus('streaming');
+            setError(null);
+            setStreamedText('');
 
             try {
-                const decrypted = await decryptLocal(encryptedPayload, sharedKey);
-                console.log(`[TRADUCTION] Texte dÃ©chiffrÃ©: "${decrypted.substring(0, 30)}..."`);
-                console.log(`[TRADUCTION] Langue cible: ${TranslationManager.getTargetLanguage()}`);
-
-                if (isMounted) {
-                    setClearText(decrypted);
-                    if (onDecrypted) onDecrypted(id, decrypted, isSender);
-
-                    if (!isSender) {
-                        tryAutoTranslate(decrypted);
-                    }
-                }
-            } catch (err) {
-                console.error("Ã‰chec du dÃ©chiffrement", err);
-                if (isMounted) setError(true);
-            }
-        }
-
-        async function tryAutoTranslate(text: string) {
-            const targetLang = TranslationManager.getTargetLanguage();
-            
-            if (text.length > 3) {
-                console.log(`[TRADUCTION] Tentative de traduction vers: ${targetLang}`);
-                
-                setIsTranslating(true);
-                TranslationManager.init((progress) => {
-                    if (isMounted) setTranslationProgress(progress);
+                const response = await fetch('/api/opportunities/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ opportunityId }),
                 });
 
-                try {
-                    const result = await TranslationManager.translate(text, targetLang);
-                    
-                    if (isMounted) {
-                        if (result.trim().toLowerCase() === text.trim().toLowerCase()) {
-                            console.log('[TRADUCTION] IgnorÃ©e: Langue source = Langue cible');
-                            setTranslatedText(null);
-                        } else {
-                            console.log(`[TRADUCTION] SuccÃ¨s: "${result.substring(0, 30)}..."`);
-                            setTranslatedText(result);
-                        }
-                    }
-                } catch (e) {
-                    console.error("[TRADUCTION] Erreur critique:", e);
-                } finally {
-                    if (isMounted) setIsTranslating(false);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to start evaluation');
                 }
-            } else {
-                console.log('[TRADUCTION] Texte trop court, ignorÃ©.');
+
+                const reader = response.body?.getReader();
+                const decoder = new TextDecoder();
+
+                if (!reader) throw new Error('No stream reader available');
+
+                let accumulatedText = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    accumulatedText += chunk;
+                    setStreamedText(accumulatedText);
+                    
+                    // Auto-scroll to bottom
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                    }
+                }
+
+                setStatus('completed');
+                if (onComplete) onComplete(accumulatedText);
+
+            } catch (err: any) {
+                console.error("❌ [STREAM ERROR]:", err);
+                setError(err.message);
+                setStatus('error');
             }
-        }
+        };
 
-        decode();
-        return () => { isMounted = false; };
-    }, [encryptedPayload, sharedKey, isSender]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const bubbleAlignClass = isSender ? 'self-end items-end' : 'self-start items-start';
-    const bubbleColorClass = isSender
-        ? 'bg-blue-600/20 border-blue-500/30 text-blue-100'
-        : 'bg-zinc-800/50 border-zinc-700 text-zinc-300';
+        startStream();
+    }, [opportunityId, onComplete]);
 
     return (
-        <div className={`flex flex-col max-w-[80%] mb-4 ${bubbleAlignClass}`}>
-            <div className={`px-4 py-3 rounded-2xl shadow-lg border relative group ${bubbleColorClass}`}>
-                {error ? (
-                    <span className="text-red-400 text-sm flex items-center gap-2">
-                        <Lock className="w-4 h-4" /> <i>VerrouillÃ© (ClÃ© manquante)</i>
+        <div className="flex flex-col h-full bg-slate-950 rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="bg-white/5 px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Zap className={`w-4 h-4 ${status === 'streaming' ? 'text-[var(--accent)] animate-pulse' : 'text-[var(--primary)]'}`} />
+                    <span className="text-xs font-bold uppercase tracking-widest text-white/70">
+                        Analyse Cortex en temps réel
                     </span>
-                ) : clearText === null ? (
-                    <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                        <span className="text-xs text-zinc-400">DÃ©chiffrement...</span>
+                </div>
+                {status === 'streaming' && (
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--accent)] font-mono">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        STREAMING_ACTIVE
                     </div>
-                ) : (
-                    <>
-                        <p className="text-sm md:text-base whitespace-pre-wrap">{clearText}</p>
-                        
-                        {/* Affichage de la traduction si disponible */}
-                        {translatedText && (
-                            <div className="mt-2 pt-2 border-t border-white/5 animate-in fade-in duration-500">
-                                <p className="text-sm text-zinc-400 italic font-light">{translatedText}</p>
-                                <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1 uppercase tracking-widest font-bold opacity-60">
-                                    <Languages className="w-3 h-3" /> (traduit)
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Barre de progression du tÃ©lÃ©chargement de modÃ¨le */}
-                        {isTranslating && !translatedText && translationProgress > 0 && translationProgress < 100 && (
-                            <div className="mt-2 text-[9px] text-emerald-500 uppercase font-mono tracking-tighter flex flex-col gap-1">
-                                <div className="flex justify-between">
-                                    <span>TÃ©lÃ©chargement module IA...</span>
-                                    <span>{Math.round(translationProgress)}%</span>
-                                </div>
-                                <div className="w-full h-0.5 bg-zinc-900 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-emerald-500 transition-all duration-300" 
-                                        style={{ width: `${translationProgress}%` }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </>
                 )}
+            </div>
+
+            {/* Content Area */}
+            <div 
+                ref={scrollRef}
+                className="flex-1 p-6 overflow-y-auto font-sans text-slate-200 selection:bg-[var(--primary)]/30"
+            >
+                {status === 'error' ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+                        <AlertCircle className="w-8 h-8 text-red-500" />
+                        <p className="text-sm text-red-200 font-medium">{error}</p>
+                    </div>
+                ) : streamedText ? (
+                    <article className="prose prose-invert max-w-none">
+                        <ReactMarkdown 
+                            components={{
+                                h3: ({node, ...props}) => <h3 className="text-[var(--primary)] border-l-2 border-[var(--primary)] pl-4 mt-8 mb-4 tracking-tight" {...props} />,
+                                p: ({node, ...props}) => <p className="leading-relaxed text-slate-300 mb-4" {...props} />,
+                                li: ({node, ...props}) => <li className="text-slate-300 marker:text-[var(--primary)]" {...props} />,
+                            }}
+                        >
+                            {streamedText}
+                        </ReactMarkdown>
+                        {status === 'streaming' && (
+                            <span className="inline-block w-2 h-4 bg-[var(--primary)] animate-pulse ml-1 align-middle" />
+                        )}
+                    </article>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full space-y-4">
+                        <Loader2 className="w-10 h-10 text-[var(--primary)] animate-spin" />
+                        <p className="text-xs text-[var(--primary)] font-mono animate-pulse">
+                            Initialisation du moteur de synergie...
+                        </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-2 bg-black/40 border-t border-white/5 text-[10px] text-slate-500 font-mono flex justify-between">
+                <span>Mistral-Small-Latest</span>
+                <span>{streamedText.length} bytes received</span>
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/AudioInput.tsx">
+## File: components/AudioInput.tsx
+````typescript
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
@@ -4447,9 +5364,9 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognitionRef.current = new SpeechRecognition();
-                recognitionRef.current.continuous = false; // ArrÃªt auto aprÃ¨s la phrase
+                recognitionRef.current.continuous = false; // Arrêt auto après la phrase
                 recognitionRef.current.interimResults = false;
-                recognitionRef.current.lang = 'fr-FR'; // Langue FranÃ§aise
+                recognitionRef.current.lang = 'fr-FR'; // Langue Française
 
                 recognitionRef.current.onresult = (event: any) => {
                     const transcript = event.results[0][0].transcript;
@@ -4480,7 +5397,7 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
                     recognitionRef.current.start();
                     setIsListening(true);
                 } catch (e) {
-                    console.error("Erreur dÃ©marrage micro", e);
+                    console.error("Erreur démarrage micro", e);
                 }
             } else {
                 alert("Votre navigateur ne supporte pas la reconnaissance vocale.");
@@ -4511,9 +5428,10 @@ export default function AudioInput({ onTranscript, isProcessing }: AudioInputPro
         </button>
     );
 }
-</file>
+````
 
-<file path="components/cortex/GuardianFeed.tsx">
+## File: components/cortex/GuardianFeed.tsx
+````typescript
 'use client';
 
 import { ShieldCheck, AlertTriangle, FileText, Activity } from 'lucide-react';
@@ -4532,8 +5450,8 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
             <div className="h-full flex flex-col items-center justify-center text-slate-700 space-y-4">
                 <ShieldCheck size={48} className="opacity-20" />
                 <div className="text-center space-y-1">
-                    <p className="text-xs font-mono uppercase tracking-widest">SystÃ¨me Nominal</p>
-                    <p className="text-[10px] opacity-60">Aucune menace active dÃ©tectÃ©e par le Gardien.</p>
+                    <p className="text-xs font-mono uppercase tracking-widest">Système Nominal</p>
+                    <p className="text-[10px] opacity-60">Aucune menace active détectée par le Gardien.</p>
                 </div>
                 <button
                     onClick={onRefresh}
@@ -4562,12 +5480,12 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
 
                     <div className="flex-1">
                         <div className="flex justify-between items-start">
-                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention SystÃ¨me"}</h4>
+                            <h4 className="text-sm font-bold text-slate-200">{item.title || "Intervention Système"}</h4>
                             <span className="text-[9px] font-mono text-slate-600">{new Date().toLocaleTimeString()}</span>
                         </div>
 
                         <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                            {item.description || "Une anomalie a Ã©tÃ© dÃ©tectÃ©e et isolÃ©e par le protocole de sÃ©curitÃ©."}
+                            {item.description || "Une anomalie a été détectée et isolée par le protocole de sécurité."}
                         </p>
 
                         {/* Actions Contextuelles */}
@@ -4591,13 +5509,14 @@ export default function GuardianFeed({ interventions, profileId, onClear, onRefr
         </div>
     );
 }
-</file>
+````
 
-<file path="components/cortex/GuardianIntervention.tsx">
+## File: components/cortex/GuardianIntervention.tsx
+````typescript
 'use client';
 import { ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
 
-// L'unique fenÃªtre entre toi et l'autonomie de ton Agent IA
+// L'unique fenêtre entre toi et l'autonomie de ton Agent IA
 export default function GuardianIntervention({ intervention, onDismiss }: { intervention: any, onDismiss: () => void }) {
     if (!intervention) return null;
 
@@ -4631,9 +5550,10 @@ export default function GuardianIntervention({ intervention, onDismiss }: { inte
         </div>
     );
 }
-</file>
+````
 
-<file path="components/CortexInput.tsx">
+## File: components/CortexInput.tsx
+````typescript
 'use client';
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabaseBrowser';
@@ -4645,7 +5565,7 @@ export default function CortexInput({ userId }: { userId: string }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
 
-    // --- 1. ENVOI D'UNE PENSÃ‰E MANUELLE (TEXTE) ---
+    // --- 1. ENVOI D'UNE PENSÉE MANUELLE (TEXTE) ---
     const handleSendThought = async () => {
         if (!text.trim() || !userId) return;
         setIsUploading(true);
@@ -4662,8 +5582,8 @@ export default function CortexInput({ userId }: { userId: string }) {
             ]);
 
             if (error) throw error;
-            setText(''); // On vide le champ si succÃ¨s
-            alert("PensÃ©e encodÃ©e dans le Cortex.");
+            setText(''); // On vide le champ si succès
+            alert("Pensée encodée dans le Cortex.");
         } catch (err: any) {
             console.error("Erreur Encodage Manuel:", err);
             alert("Erreur d'encodage : " + err.message);
@@ -4682,13 +5602,13 @@ export default function CortexInput({ userId }: { userId: string }) {
 
         // ICI : Ajoutez votre logique existante d'upload de PDF
         // (Upload vers Storage -> Extraction texte -> Insertion dans Memory)
-        // Pour l'instant, on simule la rÃ©ussite
+        // Pour l'instant, on simule la réussite
         // TODO: Connecter avec l'API /api/sensors/upload
 
         // Simulate upload for now as requested
         setTimeout(() => {
             setIsUploading(false);
-            alert(`${file.name} envoyÃ© au radar.`);
+            alert(`${file.name} envoyé au radar.`);
         }, 2000);
     };
 
@@ -4701,7 +5621,7 @@ export default function CortexInput({ userId }: { userId: string }) {
                     <textarea
                         value={text}
                         onChange={(e) => setText(e.target.value)}
-                        placeholder="Encoder une pensÃ©e manuelle dans le Cortex..."
+                        placeholder="Encoder une pensée manuelle dans le Cortex..."
                         className="w-full bg-slate-800 text-slate-100 p-4 rounded-xl border border-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none resize-none min-h-[100px] text-sm"
                     />
 
@@ -4743,9 +5663,10 @@ export default function CortexInput({ userId }: { userId: string }) {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/dashboard/DeepAuditReport.tsx">
+## File: components/dashboard/DeepAuditReport.tsx
+````typescript
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -4889,9 +5810,10 @@ export default function DeepAuditReport({ data, onAction }: { data: any, onActio
         </motion.div>
     );
 }
-</file>
+````
 
-<file path="components/MessageBubble.tsx">
+## File: components/MessageBubble.tsx
+````typescript
 // components/MessageBubble.tsx
 'use client';
 import { Shield } from 'lucide-react';
@@ -4922,13 +5844,13 @@ export default function MessageBubble({ message, onSendPing }: MessageBubbleProp
             {pingMatch && onSendPing && (
                 <div className="mt-4 p-3 border border-blue-500/30 bg-blue-500/10 rounded-lg flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2">
                     <p className="text-[10px] text-blue-300 font-bold uppercase tracking-widest flex items-center gap-1">
-                        <Shield size={12} className="text-blue-400" /> Action de sÃ©curitÃ© disponible
+                        <Shield size={12} className="text-blue-400" /> Action de sécurité disponible
                     </p>
                     <button
                         onClick={() => onSendPing(pingMatch[1])}
                         className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                     >
-                        Ã°Å¸â€â€ ENVOYER UN PING AU Agent IA
+                        ðŸ”” ENVOYER UN PING AU Agent IA
                         <span className="bg-black/20 px-1 py-0.5 rounded text-[10px] opacity-80">
                             (Sujet: {pingMatch[1]})
                         </span>
@@ -4938,9 +5860,10 @@ export default function MessageBubble({ message, onSendPing }: MessageBubbleProp
         </div>
     );
 }
-</file>
+````
 
-<file path="components/NetworkPing.tsx">
+## File: components/NetworkPing.tsx
+````typescript
 import { useMemo } from 'react';
 import { Send, X, MessageSquare, Shield } from 'lucide-react';
 
@@ -4968,14 +5891,14 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                 <div className="flex items-center gap-3 mb-1">
                     <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1">
                         <Shield size={12} className="text-blue-500 animate-pulse" />
-                        RequÃªte Inter-Agent IAs
+                        Requête Inter-Agent IAs
                     </span>
                     <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${scoreBg} ${scoreColor}`}>
                         [{matchPercentage}% MATCH]
                     </span>
                 </div>
                 <p className="text-slate-200 text-sm leading-tight">
-                    Sujet dÃ©tectÃ© : <span className="font-bold text-white">"{request.topic}"</span>
+                    Sujet détecté : <span className="font-bold text-white">"{request.topic}"</span>
                 </p>
             </div>
 
@@ -4990,15 +5913,16 @@ export default function NetworkPing({ request, onAccept, onDecline }: NetworkPin
                     onClick={() => onAccept(request)}
                     className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-xs font-bold transition-all shadow-md hover:shadow-green-500/20 flex items-center gap-2 group animate-pulse"
                 >
-                    âœ… ACCEPTER
+                    ✅ ACCEPTER
                 </button>
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/NotificationDecision.tsx">
+## File: components/NotificationDecision.tsx
+````typescript
 'use client';
 import { Shield, Check, X, Bell } from 'lucide-react';
 import { useState } from 'react';
@@ -5019,7 +5943,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
 
             <div className="flex justify-between items-start mb-3 relative z-10">
                 <h4 className="font-bold text-blue-400 text-xs uppercase flex items-center gap-2">
-                    <Shield size={14} className="animate-pulse" /> Signal de RÃ©seau
+                    <Shield size={14} className="animate-pulse" /> Signal de Réseau
                 </h4>
                 <span className={`text-[10px] font-bold px-2 py-1 rounded border ${request.match_score > 80 ? 'bg-green-900/50 text-green-300 border-green-500' : 'bg-orange-900/50 text-orange-300 border-orange-500'}`}>
                     MATCH : {request.match_score}%
@@ -5027,7 +5951,7 @@ export default function NotificationDecision({ request, onAction }: { request: a
             </div>
 
             <p className="text-xs text-slate-300 mb-4 relative z-10">
-                Un Agent IA demande Ã  ouvrir une discussion sur le sujet : <br />
+                Un Agent IA demande à ouvrir une discussion sur le sujet : <br />
                 <span className="font-mono text-white bg-slate-950 px-2 py-1 rounded mt-1 inline-block border border-slate-700">"{request.topic}"</span>
             </p>
 
@@ -5050,9 +5974,10 @@ export default function NotificationDecision({ request, onAction }: { request: a
         </div>
     );
 }
-</file>
+````
 
-<file path="components/RadarManager.tsx">
+## File: components/RadarManager.tsx
+````typescript
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -5066,7 +5991,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
     const [loading, setLoading] = useState(false)
     const supabase = createClient()
 
-    // Charger les sources au dÃ©marrage
+    // Charger les sources au démarrage
     useEffect(() => {
         if (profileId) fetchSources()
     }, [profileId])
@@ -5130,7 +6055,7 @@ export default function RadarManager({ profileId }: { profileId: string | null }
 
             {/* Liste des sources */}
             <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1">
-                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisÃ©.</p>}
+                {sources.length === 0 && <p className="text-[10px] text-slate-500 text-center italic">Aucun flux personnalisé.</p>}
                 {sources.map(s => (
                     <div key={s.id} className="flex justify-between items-center p-2 bg-slate-800/50 hover:bg-slate-800 rounded border border-slate-800 hover:border-slate-600 transition group">
                         <div className="overflow-hidden">
@@ -5146,9 +6071,10 @@ export default function RadarManager({ profileId }: { profileId: string | null }
         </div>
     )
 }
-</file>
+````
 
-<file path="components/social-bridge.tsx">
+## File: components/social-bridge.tsx
+````typescript
 'use client';
 import { useState } from 'react';
 import { Zap } from 'lucide-react';
@@ -5168,7 +6094,7 @@ export default function SocialBridge({ profileId, onSyncComplete }: any) {
         <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-4 flex items-center justify-between backdrop-blur-sm">
             <div>
                 <h4 className="text-xs font-bold text-cyan-400">PONT SOCIAL</h4>
-                <p className="text-[10px] text-slate-500">Synchronisation Flux & CompÃ©tences</p>
+                <p className="text-[10px] text-slate-500">Synchronisation Flux & Compétences</p>
             </div>
             <button onClick={handleSync} disabled={loading} className={`p-2 rounded-lg border transition-all ${loading ? 'bg-cyan-900 text-white animate-spin' : 'bg-slate-800 text-cyan-500 border-slate-600 hover:border-cyan-400'}`}>
                 <Zap size={18} />
@@ -5176,9 +6102,10 @@ export default function SocialBridge({ profileId, onSyncComplete }: any) {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/VoiceOutput.tsx">
+## File: components/VoiceOutput.tsx
+````typescript
 'use client';
 import { useEffect, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -5189,11 +6116,11 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
     useEffect(() => {
         if (!textToSpeak || !enabled) return;
 
-        // Annuler la parole prÃ©cÃ©dente
+        // Annuler la parole précédente
         window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'fr-FR'; // Voix franÃ§aise
+        utterance.lang = 'fr-FR'; // Voix française
         utterance.rate = 1.1; // Un peu plus rapide et dynamique
         utterance.pitch = 1.0; // Ton naturel
 
@@ -5214,7 +6141,7 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
         <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-cyan-900/80 backdrop-blur border border-cyan-500 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)] z-50 animate-in fade-in slide-in-from-bottom-4">
             <Volume2 className="text-cyan-300 animate-pulse" size={20} />
             <div className="flex gap-1 h-3 items-center">
-                {/* ONDES SONORES ANIMÃ‰ES */}
+                {/* ONDES SONORES ANIMÉES */}
                 {[...Array(5)].map((_, i) => (
                     <div
                         key={i}
@@ -5230,23 +6157,24 @@ export default function VoiceOutput({ textToSpeak, enabled = true }: { textToSpe
         </div>
     );
 }
-</file>
+````
 
-<file path="lib/firebase-admin.ts">
+## File: lib/firebase-admin.ts
+````typescript
 import * as admin from 'firebase-admin';
 
-// Initialisation Singleton pour Ã©viter les fuites de mÃ©moire dans Next.js
+// Initialisation Singleton pour éviter les fuites de mémoire dans Next.js
 if (!admin.apps.length) {
     try {
         admin.initializeApp({
             credential: admin.credential.cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // On gÃ¨re les sauts de ligne dans la clÃ© privÃ©e
+                // On gère les sauts de ligne dans la clé privée
                 privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
             }),
         });
-        console.log('ðŸ”¥ Firebase Admin initialisÃ© avec succÃ¨s.');
+        console.log('🔥 Firebase Admin initialisé avec succès.');
     } catch (error) {
         console.error('Erreur d\'initialisation Firebase Admin:', error);
     }
@@ -5259,21 +6187,22 @@ export async function sendPushNotification(token: string, title: string, body?: 
             token: token,
             notification: {
                 title: title,
-                body: body || 'Cliquez pour voir les dÃ©tails de cette opportunitÃ©.',
+                body: body || 'Cliquez pour voir les détails de cette opportunité.',
             },
-            // Configuration pour rÃ©veiller l'app en arriÃ¨re-plan
+            // Configuration pour réveiller l'app en arrière-plan
             android: { priority: 'high' },
             apns: { payload: { aps: { contentAvailable: true } } }
         });
         return { success: true, messageId: response };
     } catch (error) {
-        console.error('âŒ Erreur d\'envoi Push:', error);
+        console.error('❌ Erreur d\'envoi Push:', error);
         return { success: false, error };
     }
 }
-</file>
+````
 
-<file path="lib/guardian/autonomous-loop.ts">
+## File: lib/guardian/autonomous-loop.ts
+````typescript
 import { mistralClient } from "@/lib/mistral";
 import { createClient } from '@supabase/supabase-js';
 import { guardianSelfReflection } from '@/lib/guardian/brain';
@@ -5281,9 +6210,9 @@ import { guardianSelfReflection } from '@/lib/guardian/brain';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-// Simulation simplifiÃ©e des fonctions internes pour l'instant
+// Simulation simplifiée des fonctions internes pour l'instant
 async function scanOtherAgents(profileId: string) {
-    // RÃ©utilise la logique de l'intention ou du radar interne
+    // Réutilise la logique de l'intention ou du radar interne
     const { data: intentions } = await supabase
         .from('Intention')
         .select('*')
@@ -5295,46 +6224,46 @@ async function scanOtherAgents(profileId: string) {
 }
 
 async function ingestSecretlyRelevantNews(profileId: string) {
-    // Version ultra-ciblÃ©e de l'ancien radar
-    // Pour la dÃ©mo, on renvoie une info fictive pertinente si on n'a pas de vrai flux API
+    // Version ultra-ciblée de l'ancien radar
+    // Pour la démo, on renvoie une info fictive pertinente si on n'a pas de vrai flux API
     return [
-        { title: "Brevet FR2513 expirÃ© dans le domaine des leurres souples", urgency: "HIGH", context: "Occasion de dÃ©poser une variante." }
+        { title: "Brevet FR2513 expiré dans le domaine des leurres souples", urgency: "HIGH", context: "Occasion de déposer une variante." }
     ];
 }
 
 async function createGuardianIntervention(profileId: string, content: string) {
-    // Stocke l'intervention pour que l'UI la rÃ©cupÃ¨re
-    // On pourrait utiliser une table 'Intervention' ou 'Memory' avec type spÃ©cial
+    // Stocke l'intervention pour que l'UI la récupère
+    // On pourrait utiliser une table 'Intervention' ou 'Memory' avec type spécial
     await supabase.from('Memory').insert({
         profileId,
         content: `[GARDIEN:INTERVENTION] ${content}`,
         type: 'directive', // ou 'system'
         source: 'guardian_autonomous_loop'
     });
-    console.log(`ðŸ›¡ï¸ [GARDIEN] Intervention crÃ©Ã©e pour ${profileId}`);
+    console.log(`🛡️ [GARDIEN] Intervention créée pour ${profileId}`);
 }
 
 // Ce fichier devient l'unique moteur de ton Gardien qui orchestre tout
 export async function runGuardianCycle(profileId: string) {
-    console.log(`ðŸ”„ [GARDIEN] Cycle autonome dÃ©marrÃ© pour ${profileId}`);
+    console.log(`🔄 [GARDIEN] Cycle autonome démarré pour ${profileId}`);
 
     // 1. PERCEPTION (Ancien Radar/Sentinelle maintenant invisible)
     const internalMatches = await scanOtherAgents(profileId); // Cherche les autres humains compatibles
-    const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblÃ©e (uniquement ce qui te concerne)
+    const webSignals = await ingestSecretlyRelevantNews(profileId); // Veille ciblée (uniquement ce qui te concerne)
 
-    // 2. RÃ‰FLEXION (L'Oracle interne)
+    // 2. RÉFLEXION (L'Oracle interne)
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [
-            { role: "system", content: "Tu es le Gardien de FrÃ©dÃ©ric Rey. Ton but est son Ã©panouissement et la rÃ©ussite de FisherMade. Tu agis seul. Si tu trouves une opportunitÃ© rÃ©elle ou un match avec un autre Agent, prÃ©pare une intervention. Si c'est calme, ne dis rien (rÃ©ponds 'RIEN')." },
-            { role: "user", content: `Signaux dÃ©tectÃ©s : ${JSON.stringify({ internalMatches, webSignals })}` }
+            { role: "system", content: "Tu es le Gardien de Frédéric Rey. Ton but est son épanouissement et la réussite de FisherMade. Tu agis seul. Si tu trouves une opportunité réelle ou un match avec un autre Agent, prépare une intervention. Si c'est calme, ne dis rien (réponds 'RIEN')." },
+            { role: "user", content: `Signaux détectés : ${JSON.stringify({ internalMatches, webSignals })}` }
         ]
     });
 
     const content = decision.choices?.[0].message.content;
 
-    // 3. ACTION (SpontanÃ©itÃ©)
-    // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crÃ©e une "Intervention"
+    // 3. ACTION (Spontanéité)
+    // Si le Gardien juge l'info CRITIQUE (pas 'RIEN'), il crée une "Intervention"
     const textContent = String(content);
 
     if (textContent && !textContent.includes("RIEN") && textContent.length > 20) {
@@ -5344,15 +6273,16 @@ export async function runGuardianCycle(profileId: string) {
 
     return { intervention: null };
 }
-</file>
+````
 
-<file path="lib/guardian/brain.ts">
+## File: lib/guardian/brain.ts
+````typescript
 import { mistralClient } from "@/lib/mistral";
 import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
-// RÃ©cupÃ¨re le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
+// Récupère le contexte vital de l'Agent Ipse (Derniers souvenirs, Radar)
 async function getContext(profileId: string) {
     const { data: memories } = await supabase
         .from('Memory')
@@ -5361,30 +6291,30 @@ async function getContext(profileId: string) {
         .order('createdAt', { ascending: false })
         .limit(5);
 
-    // On suppose qu'on peut rÃ©cupÃ©rer quelques mots-clÃ©s du profil ou des souvenirs rÃ©cents
-    // Pour l'instant, hardcodÃ© ou dÃ©rivÃ© simplement
+    // On suppose qu'on peut récupérer quelques mots-clés du profil ou des souvenirs récents
+    // Pour l'instant, hardcodé ou dérivé simplement
     return {
         recentMemories: memories?.map(m => m.content).join('\n') || "",
-        keywords: ["pÃªche", "innovation", "brevet", "industrie", "var"]
+        keywords: ["pêche", "innovation", "brevet", "industrie", "var"]
     };
 }
 
-// Simule ou rÃ©cupÃ¨re les signaux radar rÃ©cents (peut Ãªtre Ã©tendu)
+// Simule ou récupère les signaux radar récents (peut être étendu)
 async function getRadarSignals() {
     // Pourrait appeler l'API radar interne
     return [];
 }
 
 export async function guardianSelfReflection(profileId: string) {
-    console.log(`ðŸ¤– [GARDIEN] Cycle de rÃ©flexion pour ${profileId}...`);
+    console.log(`🤖 [GARDIEN] Cycle de réflexion pour ${profileId}...`);
 
-    // 1. RÃ©cupÃ©rer tes derniÃ¨res donnÃ©es (Brevets, Radar, Humeur)
+    // 1. Récupérer tes dernières données (Brevets, Radar, Humeur)
     const myContext = await getContext(profileId);
     const externalSignals = await getRadarSignals();
 
     // 2. Chercher des matchs avec d'autres Agents (via Intentions)
-    // Note: 'containedBy' est spÃ©cifique Postgres, Supabase supporte 'cs' (contains) ou 'ov' (overlap) pour les tableaux
-    // Ici on fait simple : on rÃ©cupÃ¨re tout ce qui est public et pas Ã  nous, et on filtrera/triera
+    // Note: 'containedBy' est spécifique Postgres, Supabase supporte 'cs' (contains) ou 'ov' (overlap) pour les tableaux
+    // Ici on fait simple : on récupère tout ce qui est public et pas à nous, et on filtrera/triera
     const { data: potentialMatches } = await supabase
         .from('Intention')
         .select('*')
@@ -5393,56 +6323,57 @@ export async function guardianSelfReflection(profileId: string) {
         .eq('status', 'SEEKING')
         .limit(5);
 
-    // 3. Mistral dÃ©cide de la meilleure action
+    // 3. Mistral décide de la meilleure action
     const decision = await mistral.chat.complete({
         model: "mistral-large-latest",
         messages: [{
             role: "system",
-            content: "Tu es le Gardien de FrÃ©dÃ©ric (Projet Ipse/FisherMade). TA MISSION : ÃŠtre proactif. Ne rÃ©ponds pas Ã  une question. ANALYSE sa situation actuelle et les opportunitÃ©s externes. Si tu trouves un match avec un autre Agent (Match Intention), c'est une prioritÃ© absolue : propose une prise de contact. Sinon, pose une question stratÃ©gique pour avancer sur ses objectifs (Brevets, Business)."
+            content: "Tu es le Gardien de Frédéric (Projet Ipse/FisherMade). TA MISSION : Être proactif. Ne réponds pas à une question. ANALYSE sa situation actuelle et les opportunités externes. Si tu trouves un match avec un autre Agent (Match Intention), c'est une priorité absolue : propose une prise de contact. Sinon, pose une question stratégique pour avancer sur ses objectifs (Brevets, Business)."
         }, {
             role: "user",
-            content: `CONTEXTE INTERNE (Souvenirs rÃ©cents) : \n${myContext.recentMemories}\n\nOPPORTUNITÃ‰S EXTERNES (Intentions d'autres Agents) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller FrÃ©dÃ©ric, ou une proposition de mise en relation si pertinent.`
+            content: `CONTEXTE INTERNE (Souvenirs récents) : \n${myContext.recentMemories}\n\nOPPORTUNITÉS EXTERNES (Intentions d'autres Agents) : \n${JSON.stringify(potentialMatches)}\n\nACTION REQUISE : Une phrase courte et percutante pour interpeller Frédéric, ou une proposition de mise en relation si pertinent.`
         }]
     });
 
     return decision.choices?.[0].message.content || "Le Gardien observe en silence.";
 }
-</file>
+````
 
-<file path="lib/guardian/negotiator.ts">
+## File: lib/guardian/negotiator.ts
+````typescript
 import { mistralClient } from "@/lib/mistral";
 import { createClient } from '@supabase/supabase-js';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const mistral = mistralClient;
 
 export async function processDeepNegotiation(negotiationId: string) {
-    // 1. RÃ©cupÃ©rer les dÃ©tails de la nÃ©gociation
+    // 1. Récupérer les détails de la négociation
     const { data: neg, error: negError } = await supabase.from('Negotiation').select('*').eq('id', negotiationId).single();
     if (negError || !neg) return null;
 
-    // 2. DEEP SCAN : On extrait les mÃ©moires des deux Agents
+    // 2. DEEP SCAN : On extrait les mémoires des deux Agents
     const { data: myMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.initiatorId).limit(20);
     const { data: targetMemories } = await supabase.from('Memory').select('content').eq('profileId', neg.receiverId).limit(20);
 
-    // 3. ANALYSE CROISÃ‰E PAR MISTRAL
+    // 3. ANALYSE CROISÉE PAR MISTRAL
     try {
         const response = await mistral.chat.complete({
             model: "mistral-large-latest",
             messages: [
                 {
                     role: "system",
-                    content: `Tu es le Protocole de Liaison de FrÃ©dÃ©ric. 
-            Tu analyses un match entre un Innovateur (FrÃ©dÃ©ric) et un Fabricant (user).
+                    content: `Tu es le Protocole de Liaison de Frédéric. 
+            Tu analyses un match entre un Innovateur (Frédéric) et un Fabricant (user).
             
-            DONNÃ‰ES FRÃ‰DÃ‰RIC : ${JSON.stringify(myMemories?.map(m => m.content) || [])}
-            DONNÃ‰ES FABRICANT : ${JSON.stringify(targetMemories?.map(m => m.content) || [])}
+            DONNÉES FRÉDÉRIC : ${JSON.stringify(myMemories?.map(m => m.content) || [])}
+            DONNÉES FABRICANT : ${JSON.stringify(targetMemories?.map(m => m.content) || [])}
             
             TA MISSION : 
-            1. Identifier si le fabricant a les machines/matÃ©riaux, et dÃ©terminer les points de friction.
-            2. RÃ©diger un "verdict" clair (Positif/NÃ©gatif/Incertain).
-            3. RÃ©diger un "summary" court pour le tableau de bord.
+            1. Identifier si le fabricant a les machines/matériaux, et déterminer les points de friction.
+            2. Rédiger un "verdict" clair (Positif/Négatif/Incertain).
+            3. Rédiger un "summary" court pour le tableau de bord.
             
-            RÃ©ponds UNIQUEMENT au format JSON valide avec les clÃ©s "verdict" et "summary".`
+            Réponds UNIQUEMENT au format JSON valide avec les clés "verdict" et "summary".`
                 },
                 { role: "user", content: "Lance l'audit technique et rends ton verdict." }
             ],
@@ -5461,10 +6392,10 @@ export async function processDeepNegotiation(negotiationId: string) {
 
         } catch (parseError) {
             console.error("Mistral JSON Parse Error:", parseError);
-            result = { verdict: "Erreur Analyse", summary: "L'IA n'a pas pu structurer la rÃ©ponse." };
+            result = { verdict: "Erreur Analyse", summary: "L'IA n'a pas pu structurer la réponse." };
         }
 
-        // 4. MISE Ã€ JOUR DE LA NÃ‰GOCIATION
+        // 4. MISE À JOUR DE LA NÉGOCIATION
         await supabase.from('Negotiation').update({
             summary: result.summary,
             // verdict: result.verdict, // Note: user did not ask to add 'verdict' column to DB, check if it exists or put in summary/metadata? 
@@ -5488,27 +6419,28 @@ export async function processDeepNegotiation(negotiationId: string) {
         return null;
     }
 }
-</file>
+````
 
-<file path="lib/local-db/init.ts">
+## File: lib/local-db/init.ts
+````typescript
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { useKeyStore } from '@/store/keyStore';
 import { LOCAL_SCHEMA } from './schema';
 
 const sqlite = new SQLiteConnection(CapacitorSQLite);
 
-// âš¡ LE SINGLETON : Il garde la base de donnÃ©es active en mÃ©moire
+// ⚡ LE SINGLETON : Il garde la base de données active en mémoire
 let dbInstance: SQLiteDBConnection | null = null;
 
 export const initLocalDatabase = async () => {
     try {
         const secretKey = useKeyStore.getState().masterKey;
-        if (!secretKey) throw new Error("AccÃ¨s refusÃ© : ClÃ© biomÃ©trique manquante.");
+        if (!secretKey) throw new Error("Accès refusé : Clé biométrique manquante.");
 
         const db = await sqlite.createConnection(
             'ipse_twin_db',
             false,
-            'no-encryption', // Ã€ remplacer par 'encryption' avec le secret en prod
+            'no-encryption', // À remplacer par 'encryption' avec le secret en prod
             1,
             false
         );
@@ -5516,36 +6448,37 @@ export const initLocalDatabase = async () => {
         await db.open();
         await db.execute(LOCAL_SCHEMA);
 
-        // ðŸ› ï¸ Migration tactique : ajout de la colonne idempotencyKey si absente
+        // 🛠️ Migration tactique : ajout de la colonne idempotencyKey si absente
         try {
             await db.execute("ALTER TABLE mutation_queue ADD COLUMN idempotencyKey TEXT UNIQUE");
         } catch (e) {
-            // La colonne existe dÃ©jÃ  probablement, on ignore silencieusement
+            // La colonne existe déjà probablement, on ignore silencieusement
         }
 
         // On sauvegarde la connexion pour le reste de l'application
         dbInstance = db;
 
-        console.log("ðŸŸ¢ Bunker Local InitialisÃ©");
+        console.log("🟢 Bunker Local Initialisé");
         return db;
     } catch (error) {
-        console.error("ðŸ”´ Ã‰chec de l'initialisation locale", error);
+        console.error("🔴 Échec de l'initialisation locale", error);
         throw error;
     }
 };
 
-// âš¡ L'EXTRACTEUR : UtilisÃ© par ton Sync Engine pour faire des requÃªtes
+// ⚡ L'EXTRACTEUR : Utilisé par ton Sync Engine pour faire des requêtes
 export const getLocalDb = (): SQLiteDBConnection => {
     if (!dbInstance) {
-        throw new Error("FATAL: Tentative d'accÃ¨s Ã  la DB locale avant son initialisation par le Gatekeeper.");
+        throw new Error("FATAL: Tentative d'accès à la DB locale avant son initialisation par le Gatekeeper.");
     }
     return dbInstance;
 };
-</file>
+````
 
-<file path="lib/local-db/schema.ts">
+## File: lib/local-db/schema.ts
+````typescript
 export const LOCAL_SCHEMA = `
-  -- Table pour stocker les alertes et opportunitÃ©s hors-ligne
+  -- Table pour stocker les alertes et opportunités hors-ligne
   CREATE TABLE IF NOT EXISTS opportunities (
     id TEXT PRIMARY KEY,
     sourceId TEXT,
@@ -5556,21 +6489,22 @@ export const LOCAL_SCHEMA = `
     createdAt TEXT
   );
 
-  -- âš¡ LE CÅ’UR DU MODE HORS-LIGNE âš¡
+  -- ⚡ LE CŒUR DU MODE HORS-LIGNE ⚡
   -- Toute action faite sans internet va ici
   CREATE TABLE IF NOT EXISTS mutation_queue (
     id TEXT PRIMARY KEY,
     endpoint TEXT NOT NULL,          -- ex: '/api/opportunities/accept'
     method TEXT NOT NULL,            -- 'POST', 'PATCH'
-    payload TEXT NOT NULL,           -- JSON stringifiÃ© des donnÃ©es
+    payload TEXT NOT NULL,           -- JSON stringifié des données
     status TEXT DEFAULT 'PENDING',   -- 'PENDING', 'SYNCED', 'FAILED'
-    idempotencyKey TEXT UNIQUE,      -- ðŸ›¡ï¸ ClÃ© d'idempotence UUID v4
+    idempotencyKey TEXT UNIQUE,      -- 🛡️ Clé d'idempotence UUID v4
     createdAt TEXT NOT NULL
   );
 `;
-</file>
+````
 
-<file path="lib/supabase/client.ts">
+## File: lib/supabase/client.ts
+````typescript
 import { createBrowserClient } from '@supabase/ssr'
 
 let supabaseInstance: any = null;
@@ -5584,9 +6518,10 @@ export const createClient = () => {
     );
     return supabaseInstance;
 }
-</file>
+````
 
-<file path="lib/utils.ts">
+## File: lib/utils.ts
+````typescript
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -5594,9 +6529,9 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// Nettoyage final : "Profil Ã  dÃ©finir"
+// Nettoyage final : "Profil à définir"
 export function getAgentName(profile: any) {
-    // Adaptation Ã  notre schÃ©ma : "name" au lieu de "fullName"
+    // Adaptation à notre schéma : "name" au lieu de "fullName"
     let name = "AGENT_FURTIF";
     if (profile?.name) name = profile.name;
     else if (profile?.id) name = `AGENT_${profile.id.slice(0, 4).toUpperCase()}`;
@@ -5604,9 +6539,10 @@ export function getAgentName(profile: any) {
     if (typeof name === 'object') return JSON.stringify(name);
     return name;
 }
-</file>
+````
 
-<file path=".gitignore">
+## File: .gitignore
+````
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -5640,7 +6576,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # ==========================================
-# SÃ‰CURITÃ‰ : VARIABLES D'ENVIRONNEMENT
+# SÉCURITÉ : VARIABLES D'ENVIRONNEMENT
 # ==========================================
 .env
 .env.local
@@ -5649,7 +6585,7 @@ yarn-error.log*
 .env.production.local
 .env.production
 
-# On garde l'exception pour le template qui DOIT Ãªtre commitÃ© :
+# On garde l'exception pour le template qui DOIT être commité :
 !.env.example
 
 # vercel
@@ -5665,9 +6601,10 @@ next-env.d.ts
 google-services.json
 GoogleService-Info.plist
 .vercel
-</file>
+````
 
-<file path="app/actions/connection.ts">
+## File: app/actions/connection.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
@@ -5690,7 +6627,7 @@ async function getAuthUser() {
         }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
@@ -5704,7 +6641,7 @@ export async function requestConnection(targetId: string) {
         // Prevent self-connection
         if (currentUserId === targetId) return { success: false, error: 'Self connection not allowed' };
 
-        // VÃ©rifier si la connexion n'existe pas dÃ©jÃ 
+        // Vérifier si la connexion n'existe pas déjà
         const existingConnection = await prisma.connection.findFirst({
             where: {
                 OR: [
@@ -5715,11 +6652,11 @@ export async function requestConnection(targetId: string) {
         });
 
         if (existingConnection) {
-            console.warn("Connexion dÃ©jÃ  existante ou en attente.");
-            return { success: false, error: 'Connexion dÃ©jÃ  existante' };
+            console.warn("Connexion déjà existante ou en attente.");
+            return { success: false, error: 'Connexion déjà existante' };
         }
 
-        // 1. CrÃ©er la demande de connexion
+        // 1. Créer la demande de connexion
         await prisma.connection.create({
             data: {
                 initiatorId: currentUserId,
@@ -5728,7 +6665,7 @@ export async function requestConnection(targetId: string) {
             }
         });
 
-        // 2. Nettoyer la dÃ©couverte du Radar pour cet utilisateur
+        // 2. Nettoyer la découverte du Radar pour cet utilisateur
         await prisma.discovery.deleteMany({
             where: {
                 profileId: currentUserId,
@@ -5752,7 +6689,7 @@ export async function acceptConnection(formData: FormData) {
         const user = await getAuthUser();
         const currentUserId = user.id;
 
-        // 1. Mettre Ã  jour la connexion en vÃ©rifiant que le receiver est bien l'utilisateur courant
+        // 1. Mettre à jour la connexion en vérifiant que le receiver est bien l'utilisateur courant
         const result = await prisma.connection.updateMany({
             where: {
                 id: connectionId,
@@ -5765,7 +6702,7 @@ export async function acceptConnection(formData: FormData) {
         });
 
         if (result.count === 0) {
-            console.error("Impossible d'accepter cette connexion (non trouvÃ©e ou non autorisÃ©).");
+            console.error("Impossible d'accepter cette connexion (non trouvée ou non autorisé).");
             return;
         }
 
@@ -5774,9 +6711,10 @@ export async function acceptConnection(formData: FormData) {
         console.error("Erreur acceptConnection:", error);
     }
 }
-</file>
+````
 
-<file path="app/actions/delete-memory.ts">
+## File: app/actions/delete-memory.ts
+````typescript
 // 'use server' (static build fix)
 import { createClient } from '@/lib/supabaseServer';
 import { trackAgentActivity } from './missions';
@@ -5785,7 +6723,7 @@ import { revalidatePath } from 'next/cache';
 export async function deleteMemoryFragment(memoryId: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Non authentifiÃ©');
+    if (!user) throw new Error('Non authentifié');
 
     // 1. Suppression physique
     const { error } = await supabase
@@ -5796,7 +6734,7 @@ export async function deleteMemoryFragment(memoryId: string) {
 
     if (error) throw new Error(error.message);
 
-    // 2. Mise Ã  jour des stats (recomptage rÃ©el)
+    // 2. Mise à jour des stats (recomptage réel)
     await trackAgentActivity(user.id, 'memory_delete');
 
     // 3. Revalidation (seulement ici !)
@@ -5805,9 +6743,10 @@ export async function deleteMemoryFragment(memoryId: string) {
 
     return { success: true };
 }
-</file>
+````
 
-<file path="app/api/connection/route.ts">
+## File: app/api/connection/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -5841,22 +6780,37 @@ export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, incoming: [], active: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
+        
+        // On cherche les profils WORK de l'utilisateur pour servir de base aux connexions (si l'app est mono-prism-UI pour l'instant)
+        // Mais techniquement une connexion lie deux Profile.id.
+        // On récupère toutes les connexions impliquant l'USER ID via ses profils.
+        
         const incoming = await prismaRLS.connection.findMany({
-            where: { receiverId: user.id, status: "PENDING" },
+            where: { 
+                receiver: { userId: user.id }, 
+                status: "PENDING" 
+            },
             include: { initiator: true },
             orderBy: { createdAt: 'desc' }
         });
         const active = await prismaRLS.connection.findMany({
-            where: { OR: [{ initiatorId: user.id }, { receiverId: user.id }], status: "ACCEPTED" },
+            where: { 
+                OR: [
+                    { initiator: { userId: user.id } }, 
+                    { receiver: { userId: user.id } }
+                ], 
+                status: "ACCEPTED" 
+            },
             include: { initiator: true, receiver: true },
             orderBy: { createdAt: 'desc' }
         });
 
         return NextResponse.json({ success: true, incoming, active });
     } catch (e: any) {
+        console.error("Connection GET Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -5865,7 +6819,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const idempotencyKey = request.headers.get('x-idempotency-key');
@@ -5873,23 +6827,30 @@ export async function POST(request: Request) {
         const { action } = body;
 
         if (action === 'request') {
-            const { targetId } = body;
+            const { targetId } = body; // Ici targetId doit être un Profile.id
             if (!targetId) return NextResponse.json({ success: false, error: 'Target ID missing (POST)' }, { status: 400 });
-            if (user.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
 
-            // On utilise prisma (global) pour bypasser RLS sur la vÃ©rification de l'existence
-            // (car on peut vouloir savoir si on est dÃ©jÃ  connectÃ© Ã  quelqu'un d'autre)
+            // On doit identifier NOTRE profile ID source (celui avec lequel on envoie l'invite)
+            // Par défaut, on prend le WORK profile de l'initiateur
+            const myWorkProfile = await prismaRLS.profile.findUnique({
+                where: { userId_type: { userId: user.id, type: 'WORK' } }
+            });
+
+            if (!myWorkProfile) return NextResponse.json({ success: false, error: 'Profil source non trouvé' }, { status: 404 });
+            if (myWorkProfile.id === targetId) return NextResponse.json({ success: false, error: 'Self connection not allowed' }, { status: 400 });
+
             const existing = await prisma.connection.findFirst({
-                where: { OR: [{ initiatorId: user.id, receiverId: targetId }, { initiatorId: targetId, receiverId: user.id }] }
+                where: { OR: [{ initiatorId: myWorkProfile.id, receiverId: targetId }, { initiatorId: targetId, receiverId: myWorkProfile.id }] }
             });
             if (existing) {
-                console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Request already exists for ${user.id} -> ${targetId}. Key: ${idempotencyKey}`);
+                console.log(`🛡️ [IDEMPOTENCY] Request already exists for ${myWorkProfile.id} -> ${targetId}. Key: ${idempotencyKey}`);
                 return NextResponse.json({ success: true, message: 'Already requested', status: existing.status });
             }
 
-            await prisma.connection.create({ data: { initiatorId: user.id, receiverId: targetId, status: "PENDING" } });
+            await prisma.connection.create({ 
+                data: { initiatorId: myWorkProfile.id, receiverId: targetId, status: "PENDING" } 
+            });
 
-            // Si on vient d'un Radar, on met Ã  jour le statut de l'opportunitÃ©
             const { oppId } = body;
             if (oppId) {
                 await prisma.opportunity.update({
@@ -5905,19 +6866,15 @@ export async function POST(request: Request) {
             const { connectionId, oppId } = body;
 
             if (oppId) {
-                // ðŸ›¡ï¸ BYPASS RLS for Opportunity check (Consistency with /api/opportunities)
                 const opp = await prisma.opportunity.findUnique({ where: { id: oppId } });
-                if (!opp || (opp.sourceId !== user.id && opp.targetId !== user.id)) {
-                    return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable ou non autorisÃ©e pour acceptation' }, { status: 404 });
-                }
+                if (!opp) return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
 
                 // Check if opportunity is already accepted
                 if (opp.status === 'ACCEPTED') {
-                    console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Opportunity ${oppId} already accepted. Key: ${idempotencyKey}`);
                     return NextResponse.json({ success: true, message: 'Opportunity already accepted' });
                 }
 
-                // Acceptation idempotente : on cherche si une connexion existe dÃ©jÃ 
+                // Ici opp.sourceId et opp.targetId sont des Profile.id
                 const existing = await prisma.connection.findFirst({
                     where: {
                         OR: [
@@ -5943,29 +6900,36 @@ export async function POST(request: Request) {
             }
 
             const conn = await prisma.connection.findUnique({ where: { id: connectionId } });
-            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvÃ©e' }, { status: 404 });
+            if (!conn) return NextResponse.json({ success: false, error: 'Connexion non trouvée' }, { status: 404 });
             
             if (conn.status === 'ACCEPTED') {
-                console.log(`ðŸ›¡ï¸ [IDEMPOTENCY] Connection ${connectionId} already accepted. Key: ${idempotencyKey}`);
                 return NextResponse.json({ success: true, message: 'Already accepted' });
             }
 
-            const result = await prisma.connection.updateMany({
-                where: { id: connectionId, receiverId: user.id, status: "PENDING" },
+            // Vérifier que le receiverId de la connexion appartient bien à l'utilisateur courant (via un profile)
+            const myTargetProfile = await prismaRLS.profile.findUnique({
+                where: { id: conn.receiverId }
+            });
+            if (!myTargetProfile) return NextResponse.json({ success: false, error: 'Accès refusé' }, { status: 403 });
+
+            await prisma.connection.update({
+                where: { id: connectionId },
                 data: { status: "ACCEPTED" }
             });
-            if (result.count === 0) return NextResponse.json({ success: false, error: 'AccÃ¨s refusÃ© ou statut invalide' }, { status: 403 });
+            
             return NextResponse.json({ success: true });
         }
 
         return NextResponse.json({ success: false, error: `Action non reconnue: ${action}` }, { status: 400 });
     } catch (e: any) {
+        console.error("Connection POST Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/components/ActiveChannelsList.tsx">
+## File: app/components/ActiveChannelsList.tsx
+````typescript
 'use client';
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
@@ -5983,7 +6947,7 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
     );
 
     useEffect(() => {
-        // Le Radar Global : On Ã©coute tous les messages qui NOUS sont destinÃ©s
+        // Le Radar Global : On écoute tous les messages qui NOUS sont destinés
         const channel = supabase
             .channel('global_inbox')
             .on('postgres_changes', {
@@ -5993,7 +6957,7 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
                 filter: `receiverId=eq.${currentUserId}`
             }, (payload) => {
                 const newMsg = payload.new;
-                // On ajoute l'ID de l'expÃ©diteur dans notre Set des "non lus"
+                // On ajoute l'ID de l'expéditeur dans notre Set des "non lus"
                 setUnreadSenders(prev => new Set(prev).add(newMsg.senderId));
             })
             .subscribe();
@@ -6036,9 +7000,32 @@ export default function ActiveChannelsList({ activeChannels, currentUserId }: { 
         </div>
     );
 }
-</file>
+````
 
-<file path="app/components/PushManager.tsx">
+## File: app/components/NavBadge.tsx
+````typescript
+"use client";
+
+import React from "react";
+import { useCortexGaps } from "@/app/hooks/useCortexGaps";
+
+export default function NavBadge() {
+    const { gaps, isLoading } = useCortexGaps();
+
+    // Si ça charge ou qu'il n'y a pas de question, on ne montre pas le badge
+    if (isLoading || !gaps?.question) return null;
+
+    return (
+        <span className="absolute top-1 right-1/4 translate-x-1/2 -translate-y-1/2 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)]/70 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent)]"></span>
+        </span>
+    );
+}
+````
+
+## File: app/components/PushManager.tsx
+````typescript
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6068,164 +7055,167 @@ export default function PushManager() {
     usePushNotifications(userId || null);
     return null;
 }
-</file>
+````
 
-<file path="app/components/TacticalEarpiece.tsx">
+## File: app/components/SecureMessageBubble.tsx
+````typescript
 'use client';
 
-import { useState } from 'react';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/ipse-advisor
-import { Brain, Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { decryptLocal } from '@/lib/crypto-client';
+import { TranslationManager } from '@/lib/translation-client';
+import { Loader2, Lock, Languages } from 'lucide-react';
 
-export function TacticalEarpiece({
-    getDecryptedContext
+export function SecureMessageBubble({
+    id,
+    encryptedPayload,
+    sharedKey,
+    isSender,
+    onDecrypted
 }: {
-    getDecryptedContext: () => { id: string, clearText: string, isMe: boolean }[]
+    id: string,
+    encryptedPayload: string,
+    sharedKey: CryptoKey | null,
+    isSender: boolean,
+    onDecrypted?: (id: string, clearText: string, isSender: boolean) => void
 }) {
-    const [advice, setAdvice] = useState<string | null>(null);
-    const [isThinking, setIsThinking] = useState(false);
+    const [clearText, setClearText] = useState<string | null>(null);
+    const [translatedText, setTranslatedText] = useState<string | null>(null);
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [translationProgress, setTranslationProgress] = useState(0);
+    const [error, setError] = useState(false);
 
-    const handleCallIpse = async () => {
-        setIsThinking(true);
-        setAdvice(null);
+    useEffect(() => {
+        let isMounted = true;
 
-        // On appelle la fonction pour gÃ©nÃ©rer la liste fraÃ®che au moment du clic
-        const decryptedMessages = getDecryptedContext();
-        if (decryptedMessages.length === 0) {
-            setAdvice("Pas assez de contexte pour analyser.");
-            setIsThinking(false);
-            return;
+        async function decode() {
+            if (!encryptedPayload.startsWith('🧠')) {
+                if (isMounted) {
+                    setClearText(encryptedPayload);
+                    if (onDecrypted) onDecrypted(id, encryptedPayload, isSender);
+                }
+                return;
+            }
+
+            if (!sharedKey) return;
+
+            try {
+                const decrypted = await decryptLocal(encryptedPayload, sharedKey);
+                console.log(`[TRADUCTION] Texte déchiffré: "${decrypted.substring(0, 30)}..."`);
+                console.log(`[TRADUCTION] Langue cible: ${TranslationManager.getTargetLanguage()}`);
+
+                if (isMounted) {
+                    setClearText(decrypted);
+                    if (onDecrypted) onDecrypted(id, decrypted, isSender);
+
+                    if (!isSender) {
+                        tryAutoTranslate(decrypted);
+                    }
+                }
+            } catch (err) {
+                console.error("Échec du déchiffrement", err);
+                if (isMounted) setError(true);
+            }
         }
 
-        // On compile les 5 derniers messages en clair (dÃ©jÃ  dÃ©chiffrÃ©s par l'UI)
-        const context = decryptedMessages
-            .slice(-5)
-            .map(m => `${m.isMe ? 'MOI' : 'CIBLE'}: ${m.clearText}`)
-            .join('\n');
+        async function tryAutoTranslate(text: string) {
+            const targetLang = TranslationManager.getTargetLanguage();
+            
+            if (text.length > 3) {
+                console.log(`[TRADUCTION] Tentative de traduction vers: ${targetLang}`);
+                
+                setIsTranslating(true);
+                TranslationManager.init((progress) => {
+                    if (isMounted) setTranslationProgress(progress);
+                });
 
-        const { createClient } = await import('@/lib/supabaseBrowser');
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const headers: any = { 'Content-Type': 'application/json' };
-        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-        const res = await fetch(getApiUrl('/api/ipse-advisor'), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ decryptedContext: context })
-        }).then(r => r.json());
-        if (res.success && res.advice) {
-            setAdvice(res.advice);
-        } else {
-            setAdvice("InterfÃ©rence rÃ©seau. Impossible de contacter le Cortex.");
+                try {
+                    const result = await TranslationManager.translate(text, targetLang);
+                    
+                    if (isMounted) {
+                        if (result.trim().toLowerCase() === text.trim().toLowerCase()) {
+                            console.log('[TRADUCTION] Ignorée: Langue source = Langue cible');
+                            setTranslatedText(null);
+                        } else {
+                            console.log(`[TRADUCTION] Succès: "${result.substring(0, 30)}..."`);
+                            setTranslatedText(result);
+                        }
+                    }
+                } catch (e) {
+                    console.error("[TRADUCTION] Erreur critique:", e);
+                } finally {
+                    if (isMounted) setIsTranslating(false);
+                }
+            } else {
+                console.log('[TRADUCTION] Texte trop court, ignoré.');
+            }
         }
-        setIsThinking(false);
-    };
+
+        decode();
+        return () => { isMounted = false; };
+    }, [encryptedPayload, sharedKey, isSender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const bubbleAlignClass = isSender ? 'self-end items-end' : 'self-start items-start';
+    const bubbleColorClass = isSender
+        ? 'bg-[var(--primary)]/20 border-[var(--primary)]/30 text-[var(--text-main)]'
+        : 'bg-[var(--bg-card)]/50 border-white/10 text-[var(--text-main)]/80';
 
     return (
-        <div className="mb-8 flex flex-col items-center animate-in fade-in duration-500">
-            <button
-                onClick={handleCallIpse}
-                disabled={isThinking}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-900/20 text-blue-400 border border-blue-800/50 hover:bg-blue-800/30 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(37,99,235,0.15)] hover:shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-50"
-            >
-                {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-                {isThinking ? "Ipse analyse..." : "Demander conseil Ã  Ipse"}
-            </button>
+        <div className={`flex flex-col max-w-[80%] mb-4 ${bubbleAlignClass}`}>
+            <div className={`px-4 py-3 rounded-2xl shadow-lg border relative group ${bubbleColorClass}`}>
+                {error ? (
+                    <span className="text-red-400 text-sm flex items-center gap-2">
+                        <Lock className="w-4 h-4" /> <i>Verrouillé (Clé manquante)</i>
+                    </span>
+                ) : clearText === null ? (
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                        <span className="text-xs text-zinc-400">Déchiffrement...</span>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-sm md:text-base whitespace-pre-wrap">{clearText}</p>
+                        
+                        {/* Affichage de la traduction si disponible */}
+                        {translatedText && (
+                            <div className="mt-2 pt-2 border-t border-white/5 animate-in fade-in duration-500">
+                                <p className="text-sm text-zinc-400 italic font-light">{translatedText}</p>
+                                <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1 uppercase tracking-widest font-bold opacity-60">
+                                    <Languages className="w-3 h-3" /> (traduit)
+                                </span>
+                            </div>
+                        )}
 
-            {advice && (
-                <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-indigo-950/40 border border-indigo-500/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <p className="text-[10px] text-indigo-400 font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                        <Brain className="w-3 h-3" /> Signal Tactique InterceptÃ©
-                    </p>
-                    <p className="text-sm md:text-base text-indigo-100 italic leading-relaxed">"{advice}"</p>
-                </div>
-            )}
+                        {/* Barre de progression du téléchargement de modèle */}
+                        {isTranslating && !translatedText && translationProgress > 0 && translationProgress < 100 && (
+                            <div className="mt-2 text-[9px] text-emerald-500 uppercase font-mono tracking-tighter flex flex-col gap-1">
+                                <div className="flex justify-between">
+                                    <span>Téléchargement module IA...</span>
+                                    <span>{Math.round(translationProgress)}%</span>
+                                </div>
+                                <div className="w-full h-0.5 bg-zinc-900 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-emerald-500 transition-all duration-300" 
+                                        style={{ width: `${translationProgress}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="app/globals.css">
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
-
-@import "tailwindcss";
-
-:root {
-  --background: #09090b;
-  /* Zinc 950 - Plus doux que le noir pur */
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --card-border: #27272a;
-  --primary: #2563eb;
-  /* Blue 600 */
-  --cortex: #6366f1;
-  /* Indigo 500 */
-}
-
-@layer base {
-  body {
-    @apply bg-[var(--background)] text-[var(--foreground)] antialiased selection:bg-blue-500/30;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
-  }
-}
-
-@layer components {
-
-  /* Cartes Radar & Intelligence */
-  .b2b-card {
-    @apply bg-zinc-900/40 backdrop-blur-md border border-zinc-800 rounded-2xl transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5;
-  }
-
-  /* Bouton Primaire (Audit / Action) */
-  .btn-primary {
-    @apply relative px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20;
-  }
-
-  /* Bouton Secondaire / Outline */
-  .btn-outline {
-    @apply px-5 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm font-semibold rounded-xl transition-all duration-200 hover:bg-zinc-800 hover:text-white active:scale-[0.98];
-  }
-
-  /* Badge de Score / Status */
-  .badge-status {
-    @apply px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-800 border border-zinc-700 text-zinc-400;
-  }
-
-  /* Inputs de Grade Professionnel */
-  .b2b-input {
-    @apply w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-sm placeholder:text-zinc-600 outline-none transition-all focus:border-blue-500/50 focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/5;
-  }
-}
-
-/* Scrollbar RaffinÃ©e */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
-}
-</file>
-
-<file path="components/cortex/CortexGrid.tsx">
+## File: components/cortex/CortexGrid.tsx
+````typescript
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories
+// Server actions supprimées — on utilise fetch vers /api/memories
 import { createClient } from '@/lib/supabaseBrowser';
 
 type MemoryFragment = {
@@ -6239,19 +7229,19 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
     const router = useRouter();
     const supabase = createClient();
 
-    // Ã‰tat local des fragments (synchronisÃ© avec les props + realtime)
+    // État local des fragments (synchronisé avec les props + realtime)
     const [fragments, setFragments] = useState<MemoryFragment[]>(initialFragments);
     const [deletedIds, setDeletedIds] = useState<string[]>([]);
 
-    // Synchronisation : Si les props changent (refresh serveur), on met Ã  jour l'Ã©tat
+    // Synchronisation : Si les props changent (refresh serveur), on met à jour l'état
     useEffect(() => {
         setFragments(initialFragments);
     }, [initialFragments]);
 
-    // Filtrage souverain : on ne montre jamais un fragment blacklistÃ©
+    // Filtrage souverain : on ne montre jamais un fragment blacklisté
     const visibleFragments = fragments.filter(f => !deletedIds.includes(f.id));
 
-    // âš¡ REALTIME : Ã‰coute les mutations sur la table memory
+    // ⚡ REALTIME : Écoute les mutations sur la table memory
     useEffect(() => {
         // 1. On nomme le canal proprement
         const channel = supabase
@@ -6260,10 +7250,10 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 'postgres_changes',
                 { event: 'DELETE', schema: 'public', table: 'memory' },
                 (payload: any) => {
-                    console.log("ðŸ”¥ Signal DELETE reÃ§u :", payload);
+                    console.log("🔥 Signal DELETE reçu :", payload);
 
-                    // 2. RÃˆGLE D'OR : Utiliser le callback du setState (prev)
-                    // Cela permet de mettre Ã  jour la liste SANS mettre `fragments` dans les dÃ©pendances du useEffect
+                    // 2. RÈGLE D'OR : Utiliser le callback du setState (prev)
+                    // Cela permet de mettre à jour la liste SANS mettre `fragments` dans les dépendances du useEffect
                     setFragments((prev) => prev.filter((frag) => frag.id !== payload.old.id));
                 }
             )
@@ -6271,7 +7261,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'memory' },
                 (payload: any) => {
-                    console.log("ðŸŸ¢ Signal INSERT reÃ§u :", payload);
+                    console.log("🟢 Signal INSERT reçu :", payload);
                     // Ajout optimiste si besoin
                     const newFrag: MemoryFragment = {
                         id: payload.new.id,
@@ -6287,7 +7277,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []); // 4. LE VERROUILLAGE : Ce tableau DOIT Ãªtre vide.
+    }, []); // 4. LE VERROUILLAGE : Ce tableau DOIT être vide.
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editContent, setEditContent] = useState('');
@@ -6324,7 +7314,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                 setEditingId(null);
                 setEditContent('');
             } else {
-                console.error('[CORTEX] Ã‰chec sauvegarde :', result.error);
+                console.error('[CORTEX] Échec sauvegarde :', result.error);
             }
         } catch (err) {
             console.error('[CORTEX] Erreur inattendue :', err);
@@ -6334,10 +7324,10 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
     };
 
     const handleDelete = async (id: string) => {
-        // Ã‰TAPE 1 : Suppression visuelle immÃ©diate et dÃ©finitive
+        // ÉTAPE 1 : Suppression visuelle immédiate et définitive
         setDeletedIds(prev => [...prev, id]);
 
-        // Ã‰TAPE 2 : Action serveur en arriÃ¨re-plan
+        // ÉTAPE 2 : Action serveur en arrière-plan
         try {
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabaseClient = createSupabase();
@@ -6352,7 +7342,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
             });
             router.refresh();
         } catch (error) {
-            // Ã‰TAPE 3 : Rollback â€” on retire de la blacklist pour rÃ©afficher
+            // ÉTAPE 3 : Rollback — on retire de la blacklist pour réafficher
             setDeletedIds(prev => prev.filter(deletedId => deletedId !== id));
             alert('Erreur serveur');
         }
@@ -6365,7 +7355,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                     key={frag.id}
                     className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-[0_0_15px_rgba(0,255,255,0.03)] hover:border-cyan-500/50 transition-all group"
                 >
-                    {/* â”€â”€ HEADER â”€â”€ */}
+                    {/* ── HEADER ── */}
                     <div className="flex justify-between items-start mb-2">
                         <span className="text-xs text-cyan-600 font-mono">
                             ID: {frag.id.slice(0, 8)}...
@@ -6403,7 +7393,7 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
                         </div>
                     </div>
 
-                    {/* â”€â”€ BODY : Vue ou Ã‰dition â”€â”€ */}
+                    {/* ── BODY : Vue ou Édition ── */}
                     {editingId === frag.id ? (
                         <div className="space-y-2">
                             <textarea
@@ -6448,9 +7438,10 @@ export default function CortexGrid({ initialFragments, userId }: { initialFragme
         </div>
     );
 }
-</file>
+````
 
-<file path="components/dashboard/AuditReport.tsx">
+## File: components/dashboard/AuditReport.tsx
+````typescript
 export default function AuditReport({ data, onAction }: any) {
     return (
         <div className="bg-black/95 border-t border-cyan-500/50 fixed inset-0 z-50 mt-20 flex flex-col p-6 overflow-y-auto animate-fade-in">
@@ -6458,7 +7449,7 @@ export default function AuditReport({ data, onAction }: any) {
 
             <div className="space-y-6 flex-1">
                 <section>
-                    <h3 className="text-white font-bold mb-2">OpportunitÃ©s DÃ©tectÃ©es</h3>
+                    <h3 className="text-white font-bold mb-2">Opportunités Détectées</h3>
                     <ul className="text-sm text-slate-300 list-disc pl-4 space-y-1">
                         {data.opportunities && data.opportunities.map((opp: string, i: number) => (
                             <li key={i}>{opp}</li>
@@ -6466,7 +7457,7 @@ export default function AuditReport({ data, onAction }: any) {
                         {!data.opportunities && (
                             <>
                                 <li>Potentiel partenaire technique (React/Node)</li>
-                                <li>IntÃ©rÃªt commun: Cyber-sÃ©curitÃ©</li>
+                                <li>Intérêt commun: Cyber-sécurité</li>
                                 <li>Localisation compatible</li>
                             </>
                         )}
@@ -6475,7 +7466,7 @@ export default function AuditReport({ data, onAction }: any) {
 
                 <section>
                     <h3 className="text-white font-bold mb-2">Risques / Divergences</h3>
-                    <p className="text-sm text-slate-400">Aucune divergence critique dÃ©tectÃ©e. Profil stable.</p>
+                    <p className="text-sm text-slate-400">Aucune divergence critique détectée. Profil stable.</p>
                 </section>
             </div>
 
@@ -6493,9 +7484,10 @@ export default function AuditReport({ data, onAction }: any) {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/dashboard/MatchOverlay.tsx">
+## File: components/dashboard/MatchOverlay.tsx
+````typescript
 export default function MatchOverlay({ data, onAudit, onCancel }: any) {
     return (
         <div className="bg-slate-900/90 border border-cyan-500/50 rounded-2xl p-6 backdrop-blur-xl animate-slide-up">
@@ -6506,7 +7498,7 @@ export default function MatchOverlay({ data, onAudit, onCancel }: any) {
                 </div>
                 <div>
                     <h2 className="text-white text-xl font-bold">{data.name}</h2>
-                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÃ‰: {data.score}%</p>
+                    <p className="text-green-400 font-mono text-sm">COMPATIBILITÉ: {data.score}%</p>
                 </div>
             </div>
 
@@ -6521,9 +7513,10 @@ export default function MatchOverlay({ data, onAudit, onCancel }: any) {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/TopNav.tsx">
+## File: components/TopNav.tsx
+````typescript
 'use client'
 
 import Link from 'next/link';
@@ -6533,7 +7526,7 @@ import { Database, Radar, User, Shield } from 'lucide-react';
 export default function TopNav() {
     const pathname = usePathname();
 
-    // ðŸ›¡ï¸ SÃ‰CURITÃ‰ : Ne pas afficher le menu sur la page de connexion
+    // 🛡️ SÉCURITÉ : Ne pas afficher le menu sur la page de connexion
     if (pathname === '/' || pathname === '/login') {
         return null;
     }
@@ -6569,7 +7562,7 @@ export default function TopNav() {
                             href="/profile"
                             className={`flex items-center px-3 py-2 text-sm font-medium transition-colors ${pathname.includes('/profile') ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-white'}`}
                         >
-                            <User size={18} className="mr-2 hidden sm:block" /> IDENTITÃ‰
+                            <User size={18} className="mr-2 hidden sm:block" /> IDENTITÉ
                         </Link>
                     </div>
 
@@ -6578,9 +7571,10 @@ export default function TopNav() {
         </nav>
     );
 }
-</file>
+````
 
-<file path="inngest/functions.ts">
+## File: inngest/functions.ts
+````typescript
 // inngest/functions.ts
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
@@ -6589,14 +7583,14 @@ import { mistralClient } from "@/lib/mistral";
 export const processRadarMatch = inngest.createFunction(
     {
         id: "process-radar-match",
-        // âš¡ ANTIGRAVITY : Si Mistral crash, Inngest rÃ©essaiera automatiquement jusqu'Ã  3 fois avec un dÃ©lai exponentiel.
+        // ⚡ ANTIGRAVITY : Si Mistral crash, Inngest réessaiera automatiquement jusqu'à 3 fois avec un délai exponentiel.
         retries: 3
     },
     { event: "radar/process.user" },
     async ({ event, step }) => {
         const { userId } = event.data;
 
-        // Ã‰tape 1 : RÃ©cupÃ©rer le Vecteur MaÃ®tre
+        // Étape 1 : Récupérer le Vecteur Maître
         const targetUser = await step.run("fetch-user-vector", async () => {
             const raw: any[] = await prisma.$queryRaw`
          SELECT id, name, role, bio, "unifiedEmbedding"::text 
@@ -6608,7 +7602,7 @@ export const processRadarMatch = inngest.createFunction(
 
         if (!targetUser?.unifiedEmbedding) return { status: "no_vector_skipped" };
 
-        // Ã‰tape 2 : Lancer la recherche Cosinus
+        // Étape 2 : Lancer la recherche Cosinus
         const matches = await step.run("find-cosine-matches", async () => {
             const results: any[] = await prisma.$queryRaw`
          SELECT 
@@ -6625,9 +7619,9 @@ export const processRadarMatch = inngest.createFunction(
 
         if (matches.length === 0) return { status: "no_matches_found" };
 
-        // Ã‰tape 3 : Pour chaque match, gÃ©nÃ©rer un rÃ©sumÃ© et crÃ©er l'opportunitÃ©
+        // Étape 3 : Pour chaque match, générer un résumé et créer l'opportunité
         for (const target of matches) {
-            // VÃ©rifier qu'une opportunitÃ© n'existe pas dÃ©jÃ 
+            // Vérifier qu'une opportunité n'existe pas déjà
             const existing = await step.run(`check-existing-${target.id}`, async () => {
                 return prisma.opportunity.findFirst({
                     where: {
@@ -6641,14 +7635,14 @@ export const processRadarMatch = inngest.createFunction(
 
             if (existing) continue;
 
-            // GÃ©nÃ©rer le rÃ©sumÃ© via Mistral
+            // Générer le résumé via Mistral
             const result = await step.run(`mistral-match-${target.id}`, async () => {
-                const prompt = `Tu es Cortex. Compare ces deux profils pour Ã©valuer une synergie.
+                const prompt = `Tu es Cortex. Compare ces deux profils pour évaluer une synergie.
 UTILISATEUR COURANT: ${targetUser.bio} | Role: ${targetUser.role}
-CIBLE DÃ‰TECTÃ‰E (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
+CIBLE DÉTECTÉE (${target.name || 'Cible'}): ${target.bio} | Role: ${target.role}
 
-Si compatibilitÃ© > 60%, donne un score (0-100) et un rÃ©sumÃ© ultra-bref (15 mots max).
-DIRECTIVE STRICTE POUR LE RÃ‰SUMÃ‰ : DÃ©cris uniquement "${target.name || 'la cible'}". Ne mentionne JAMAIS l'utilisateur connectÃ©.
+Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
+DIRECTIVE STRICTE POUR LE RÉSUMÉ : Décris uniquement "${target.name || 'la cible'}". Ne mentionne JAMAIS l'utilisateur connecté.
 Format JSON strict: { "score": number, "synergies": "string" }`;
 
                 const res = await mistralClient.chat.complete({
@@ -6668,7 +7662,7 @@ Format JSON strict: { "score": number, "synergies": "string" }`;
                             sourceId: userId,
                             targetId: target.id,
                             matchScore: result.score,
-                            synergies: result.synergies || result.summary || result.content || "Analyse sÃ©mantique non fournie par l'IA.",
+                            synergies: result.synergies || result.summary || result.content || "Analyse sémantique non fournie par l'IA.",
                             status: 'DETECTED'
                         }
                     });
@@ -6679,228 +7673,20 @@ Format JSON strict: { "score": number, "synergies": "string" }`;
         return { status: "success", userId, matchesFound: matches.length };
     }
 );
-</file>
+````
 
-<file path="lib/crypto-client.ts">
-import { Capacitor } from '@capacitor/core';
-import { VaultManager, VaultKey } from './vault-manager';
-import * as bip39 from 'bip39';
-
-// =====================================================
-// ðŸ§¬ IDENTITÃ‰ CRYPTOGRAPHIQUE (BIP39 + ECDH)
-// =====================================================
-
-/**
- * âš¡ ANTIGRAVITY: Source Unique de VÃ©ritÃ© pour la gÃ©nÃ©ration de clÃ©s.
- * Ne retourne QUE la clÃ© publique Ã  envoyer au serveur.
- * La clÃ© privÃ©e est sÃ©questrÃ©e dans la puce matÃ©rielle via VaultManager.
- */
-export async function generateAndStoreKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
-    try {
-        // A. GÃ©nÃ©ration des 12 mots
-        const mnemonic = bip39.generateMnemonic();
-
-        // B. GÃ©nÃ©ration MathÃ©matique de la paire ECDH
-        const keyPair = await crypto.subtle.generateKey(
-            { name: "ECDH", namedCurve: "P-256" },
-            true,
-            ["deriveKey", "deriveBits"]
-        );
-
-        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
-        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
-
-        // C. Le Bouclier MatÃ©riel (Zero-Tolerance)
-        if (Capacitor.isNativePlatform()) {
-            await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
-            await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-            console.log("âœ… [CRYPTO] ClÃ© privÃ©e verrouillÃ©e dans le Keystore/Keychain natif via VaultManager.");
-        } else {
-            // ðŸš¨ ArrÃªt d'urgence. On ne stocke RIEN en clair.
-            throw new Error("SECURITY_HALT: Environnement non sÃ©curisÃ© dÃ©tectÃ©. Le stockage de clÃ© en clair est interdit.");
-        }
-
-        // D. On ne renvoie que ce qui est publiable
-        return { publicKeyJwk, mnemonic };
-
-    } catch (error: any) {
-        console.error("âŒ [CRYPTO FATAL ERROR]:", error.message);
-        throw error;
-    }
-}
-
-// RÃ©trocompatibilitÃ© : alias pour l'ancien nom
-export const generateIdentity = generateAndStoreKeyPair;
-
-/**
- * âš¡ ANTIGRAVITY: Lecture exclusive depuis la puce sÃ©curisÃ©e.
- */
-export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
-    const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
-    if (value) {
-        return JSON.parse(value) as JsonWebKey;
-    }
-    return null;
-}
-
-// RÃ©trocompatibilitÃ© : alias pour l'ancien nom
-export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
-    const key = await getLocalPrivateKey();
-    if (!key) throw new Error("ClÃ© introuvable. Veuillez importer votre Seed Phrase.");
-    return key;
-}
-
-/**
- * Restauration depuis la Phrase SecrÃ¨te (BIP39).
- */
-export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
-    if (!bip39.validateMnemonic(mnemonic)) {
-        throw new Error("Phrase secrÃ¨te invalide.");
-    }
-
-    const keyPair = await crypto.subtle.generateKey(
-        { name: "ECDH", namedCurve: "P-256" },
-        true,
-        ["deriveKey", "deriveBits"]
-    );
-
-    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
-    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
-
-    if (Capacitor.isNativePlatform()) {
-        await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
-        await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
-        console.log("âœ… [CRYPTO] ClÃ© privÃ©e restaurÃ©e dans le Keystore/Keychain via VaultManager.");
-    } else {
-        throw new Error("SECURITY_HALT: Environnement non sÃ©curisÃ© dÃ©tectÃ©.");
-    }
-
-    return { publicKeyJwk };
-}
-
-// =====================================================
-// ðŸ”‘ ECDH KEY EXCHANGE
-// =====================================================
-
-/**
- * Calculer la clÃ© partagÃ©e AES-GCM (quand tu ouvres un chat).
- */
-export async function deriveSharedKey(otherPersonPublicKeyJwk: any): Promise<CryptoKey> {
-    const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
-
-    const privateKey = await crypto.subtle.importKey(
-        "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
-    );
-
-    const publicKey = await crypto.subtle.importKey(
-        "jwk", otherPersonPublicKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, []
-    );
-
-    const sharedKey = await crypto.subtle.deriveKey(
-        { name: "ECDH", public: publicKey },
-        privateKey,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-    );
-
-    return sharedKey;
-}
-
-// =====================================================
-// ðŸ”’ CHIFFREMENT / DÃ‰CHIFFREMENT AES-GCM
-// =====================================================
-
-export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encoded = new TextEncoder().encode(plaintext);
-
-    const cipherBuffer = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        sharedKey,
-        encoded
-    );
-
-    const ivB64 = arrayBufferToBase64(iv);
-    const cipherB64 = arrayBufferToBase64(new Uint8Array(cipherBuffer));
-
-    return `${ivB64}:${cipherB64}`;
-}
-
-const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
-
-export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
-    try {
-        const cleanPayload = encryptedPayload.replace('ðŸ§  ', '').trim();
-
-        if (!cleanPayload.includes(':')) {
-            return encryptedPayload;
-        }
-
-        const parts = cleanPayload.split(':');
-        let iv: Uint8Array;
-        let cipherData: Uint8Array;
-
-        if (parts.length === 3) {
-            iv = hexToBuffer(parts[0]);
-            const authTag = hexToBuffer(parts[1]);
-            const ciphertext = hexToBuffer(parts[2]);
-            cipherData = new Uint8Array(ciphertext.length + authTag.length);
-            cipherData.set(ciphertext);
-            cipherData.set(authTag, ciphertext.length);
-        } else if (parts.length === 2) {
-            iv = base64ToArrayBuffer(parts[0]);
-            cipherData = base64ToArrayBuffer(parts[1]);
-        } else {
-            return encryptedPayload;
-        }
-
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv as BufferSource },
-            sharedKey,
-            cipherData as BufferSource
-        );
-
-        return new TextDecoder().decode(decrypted);
-    } catch (e) {
-        console.error("Ã‰chec dÃ©chiffrement:", e);
-        return "ðŸ”’ Message chiffrÃ© illisible";
-    }
-}
-
-// =====================================================
-// ðŸ› ï¸ UTILITAIRES
-// =====================================================
-
-function arrayBufferToBase64(buffer: Uint8Array): string {
-    let binary = '';
-    for (let i = 0; i < buffer.byteLength; i++) {
-        binary += String.fromCharCode(buffer[i]);
-    }
-    return btoa(binary);
-}
-
-function base64ToArrayBuffer(base64: string): Uint8Array {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-}
-</file>
-
-<file path="lib/pushSender.ts">
+## File: lib/pushSender.ts
+````typescript
 import { prisma } from "@/lib/prisma";
 import admin from 'firebase-admin';
 
-// Initialisation sÃ©curisÃ©e de Firebase Admin (s'assure qu'il n'est pas initialisÃ© 2 fois)
+// Initialisation sécurisée de Firebase Admin (s'assure qu'il n'est pas initialisé 2 fois)
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            // GÃ¨re les retours Ã  la ligne dans la clÃ© privÃ©e
+            // Gère les retours à la ligne dans la clé privée
             privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         }),
     });
@@ -6925,11 +7711,11 @@ export async function sendCortexAlert(userId: string, title: string, body: strin
         };
 
         const response = await admin.messaging().send(message);
-        console.log(`âœ… [PUSH SENDER] Tir rÃ©ussi : ${response}`);
+        console.log(`✅ [PUSH SENDER] Tir réussi : ${response}`);
         return { success: true, messageId: response };
 
     } catch (error: any) {
-        console.error(`âŒ [PUSH SENDER] Ã‰chec du tir :`, error);
+        console.error(`❌ [PUSH SENDER] Échec du tir :`, error);
         return { success: false, error: error.message };
     }
 }
@@ -6944,29 +7730,30 @@ export async function sendOpportunityNotif(userId: string, oppId: string, score:
 
     const message: admin.messaging.Message = {
         notification: {
-            title: `ðŸŽ¯ OpportunitÃ© dÃ©tectÃ©e (${score}%)`,
+            title: `🎯 Opportunité détectée (${score}%)`,
             body: summary,
         },
         data: {
             type: 'OPPORTUNITY_DETECTED',
             opportunityId: oppId,
-            url: `/cortex/opportunity/${oppId}` // Vers la page de dÃ©cision
+            url: `/cortex/opportunity/${oppId}` // Vers la page de décision
         },
         token: userProfile.fcmToken,
     };
 
     return await admin.messaging().send(message);
 }
-</file>
+````
 
-<file path="lib/sync/engine.ts">
+## File: lib/sync/engine.ts
+````typescript
 import { Network } from '@capacitor/network';
 import { getApiUrl } from '@/lib/api';
 import { createClient } from '../supabaseBrowser';
 import { getLocalDb } from '../local-db/init';
 
 /**
- * ðŸ› ï¸ SYNC ENGINE - Idempotent & Offline-First
+ * 🛠️ SYNC ENGINE - Idempotent & Offline-First
  * Implements UUID v4 Idempotency, 401 Auth Recovery, and Exponential Backoff.
  */
 
@@ -6986,12 +7773,12 @@ export const performAction = async (endpoint: string, method: string, payload: a
             
             // If 401, it's better to queue and let the flush handle the refresh logic
             if (response.status === 401) {
-                console.warn("ðŸ” 401 detected in immediate action. Queuing for background recovery.");
+                console.warn("🔐 401 detected in immediate action. Queuing for background recovery.");
             }
             
             return await queueMutation(endpoint, method, payload, idempotencyKey);
         } catch (e) {
-            console.error("âš ï¸ Immediate fetch failed, queuing:", e);
+            console.error("⚠️ Immediate fetch failed, queuing:", e);
             return await queueMutation(endpoint, method, payload, idempotencyKey);
         }
     } else {
@@ -7043,7 +7830,7 @@ const queueMutation = async (endpoint: string, method: string, payload: any, ide
 export const setupBackgroundSync = () => {
     Network.addListener('networkStatusChange', async (status) => {
         if (status.connected) {
-            console.log("ðŸŒ Network Restored: Triggering Flush.");
+            console.log("🌐 Network Restored: Triggering Flush.");
             await flushMutationQueue();
         }
     });
@@ -7063,7 +7850,7 @@ export const flushMutationQueue = async () => {
             return;
         }
 
-        console.log(`ðŸ“¡ [SYNC] Processing ${mutations.length} mutations...`);
+        console.log(`📡 [SYNC] Processing ${mutations.length} mutations...`);
 
         for (const mutation of mutations) {
             let success = false;
@@ -7083,47 +7870,59 @@ export const flushMutationQueue = async () => {
                         await db.run("UPDATE mutation_queue SET status = 'SYNCED' WHERE id = ?", [mutation.id]);
                         success = true;
                     } else if (response.status === 401) {
-                        // ðŸ” Session recovery logic
-                        console.warn("ðŸ” 401: Attempting session refresh...");
+                        // 🔐 Session recovery logic
+                        console.warn("🔐 401: Attempting session refresh...");
                         const supabase = createClient();
                         const { error } = await supabase.auth.refreshSession();
                         
                         if (error) {
-                            console.error("âŒ Refresh failed. Sync paused until next trigger.");
+                            console.error("❌ Refresh failed. Sync paused until next trigger.");
                             isSyncing = false;
                             return; 
                         }
                         // Continue loop to retry with fresh token
-                        console.log("âœ… Session refreshed. Retrying mutation.");
+                        console.log("✅ Session refreshed. Retrying mutation.");
                     } else if (response.status >= 500) {
                         throw new Error(`Server Error: ${response.status}`);
                     } else {
                         // 4xx other than 401: Definitive failure
-                        console.error(`âŒ Mutation ${mutation.id} failed with ${response.status}`);
+                        console.error(`❌ Mutation ${mutation.id} failed with ${response.status}`);
                         await db.run("UPDATE mutation_queue SET status = 'FAILED' WHERE id = ?", [mutation.id]);
                         success = true;
                     }
                 } catch (error) {
                     attempts++;
                     if (attempts >= 8) {
-                        console.error(`ðŸ”¥ Max retries for ${mutation.id}. Giving up.`);
+                        console.error(`🔥 Max retries for ${mutation.id}. Giving up.`);
                         break;
                     }
-                    console.warn(`â³ Network retry ${attempts} in ${retryDelay}ms...`);
+                    console.warn(`⏳ Network retry ${attempts} in ${retryDelay}ms...`);
                     await new Promise(r => setTimeout(r, retryDelay));
                     retryDelay = Math.min(retryDelay * 2, MAX_RETRY_DELAY);
                 }
             }
         }
     } catch (err) {
-        console.error("ðŸ”¥ Sync Engine Critical:", err);
+        console.error("🔥 Sync Engine Critical:", err);
     } finally {
         isSyncing = false;
     }
 };
-</file>
+````
 
-<file path="public/messages/en.json">
+## File: prisma.config.ts
+````typescript
+import { defineConfig } from '@prisma/config';
+
+export default defineConfig({
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
+});
+````
+
+## File: public/messages/en.json
+````json
 {
     "navigation": {
         "radar": "Radar",
@@ -7251,20 +8050,21 @@ export const flushMutationQueue = async () => {
         "language": "Language"
     }
 }
-</file>
+````
 
-<file path="public/messages/fr.json">
+## File: public/messages/fr.json
+````json
 {
     "navigation": {
         "radar": "Radar",
         "cortex": "Cortex",
-        "identity": "IdentitÃ©"
+        "identity": "Identité"
     },
     "profile": {
         "title": "Mon Prisme",
-        "subtitle": "Configurez les multiples facettes de votre identitÃ©",
+        "subtitle": "Configurez les multiples facettes de votre identité",
         "tabs": {
-            "identity": "IdentitÃ©",
+            "identity": "Identité",
             "work": "Travail",
             "social": "Cercle",
             "hobby": "Passions",
@@ -7272,9 +8072,9 @@ export const flushMutationQueue = async () => {
         },
         "identity": {
             "pseudo": "Pseudo",
-            "age": "Ã‚ge",
+            "age": "Âge",
             "sex": "Sexe",
-            "sex_placeholder": "SÃ©lectionner",
+            "sex_placeholder": "Sélectionner",
             "sex_options": {
                 "male": "Homme",
                 "female": "Femme",
@@ -7282,39 +8082,39 @@ export const flushMutationQueue = async () => {
             },
             "city": "Ville",
             "country": "Pays",
-            "update_btn": "Mettre Ã  jour l'identitÃ©"
+            "update_btn": "Mettre à jour l'identité"
         },
         "work": {
             "tjm": "Honoraires (TJM)",
-            "availability": "DisponibilitÃ©",
-            "update_btn": "Mettre Ã  jour le Prisme Work"
+            "availability": "Disponibilité",
+            "update_btn": "Mettre à jour le Prisme Work"
         },
         "social": {
-            "update_btn": "Mettre Ã  jour le Prisme Social"
+            "update_btn": "Mettre à jour le Prisme Social"
         },
         "hobby": {
-            "update_btn": "Mettre Ã  jour le Prisme Hobby"
+            "update_btn": "Mettre à jour le Prisme Hobby"
         },
         "common": {
-            "dimension": "Dimension d'Ã©change",
+            "dimension": "Dimension d'échange",
             "position": "Positionnement Typologique",
-            "bio": "Bio sÃ©mantique (Vecteur Mistral)",
-            "bio_placeholder": "DÃ©taillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
+            "bio": "Bio sémantique (Vecteur Mistral)",
+            "bio_placeholder": "Détaillez vos nuances ici... Notre IA Mistral analysera ce texte pour vous trouver les meilleurs matchs.",
             "syncing": "Synchronisation...",
-            "encrypt_note": "Les modifications sont cryptÃ©es et vectorisÃ©es en temps rÃ©el."
+            "encrypt_note": "Les modifications sont cryptées et vectorisées en temps réel."
         },
         "sectors": {
             "TECH": "Tech & Digital",
-            "DESIGN": "CrÃ©ation & Design",
+            "DESIGN": "Création & Design",
             "BUSINESS": "Business & Vente",
             "MANAGEMENT": "Admin & Management",
-            "HEALTH": "SantÃ© & Bien-Ãªtre",
+            "HEALTH": "Santé & Bien-être",
             "INDUSTRY": "Artisanat & Industrie",
             "OTHER": "Autre",
-            "FRIENDSHIP": "AmitiÃ© & Social",
+            "FRIENDSHIP": "Amitié & Social",
             "DATING": "Rencontres (Soul)",
             "MENTORING": "Mentorat",
-            "COMMUNITY": "CommunautÃ© / Cause",
+            "COMMUNITY": "Communauté / Cause",
             "PROFESSIONAL": "Networking",
             "SPORT": "Sport & Fitness",
             "ARTS": "Art & Culture",
@@ -7323,67 +8123,68 @@ export const flushMutationQueue = async () => {
             "FOOD": "Gastronomie & Vin"
         },
         "availabilities": {
-            "IMMEDIATE": "ImmÃ©diate",
+            "IMMEDIATE": "Immédiate",
             "ONE_MONTH": "Sous 1 mois",
             "UNAVAILABLE": "Indisponible"
         },
         "settings": {
-            "logout": "DÃ©connexion"
+            "logout": "Déconnexion"
         }
     },
     "radar": {
-        "title": "Radar SÃ©mantique",
-        "subtitle": "DÃ©couvrez les profils qui rÃ©sonnent avec votre recherche",
+        "title": "Radar Sémantique",
+        "subtitle": "Découvrez les profils qui résonnent avec votre recherche",
         "search_placeholder": "Que cherchez-vous ? (ex: Mentor en design, Partenaire de tennis...)",
         "filters": "Filtres",
         "match_score": "Correspondance",
-        "connect_btn": "CrÃ©er le rapport",
-        "empty_state": "Aucune rÃ©sonance trouvÃ©e. Essayez une autre intention.",
-        "incoming_requests": "RequÃªtes Entrantes",
-        "encrypted_link": "Souhaite Ã©tablir une liaison chiffrÃ©e",
-        "secure_channels": "Canaux SÃ©curisÃ©s",
-        "audit_ready": "Rapport d'Audit StratÃ©gique PrÃªt",
-        "start_audit": "Lancer l'Audit StratÃ©gique",
+        "connect_btn": "Créer le rapport",
+        "empty_state": "Aucune résonance trouvée. Essayez une autre intention.",
+        "incoming_requests": "Requêtes Entrantes",
+        "encrypted_link": "Souhaite établir une liaison chiffrée",
+        "secure_channels": "Canaux Sécurisés",
+        "audit_ready": "Rapport d'Audit Stratégique Prêt",
+        "start_audit": "Lancer l'Audit Stratégique",
         "read_audit": "Lire l'Audit Cortex",
-        "invite_sent": "Invitation envoyÃ©e. En attente de rÃ©ponse...",
+        "invite_sent": "Invitation envoyée. En attente de réponse...",
         "channel_request": "Demande d'ouverture de canal",
         "new_invite": "Nouvelle invitation",
         "accept": "Accepter",
-        "accepted": "AcceptÃ©",
+        "accepted": "Accepté",
         "refuse": "Refuser",
         "ignore": "Ignorer",
         "block": "Bloquer",
-        "creating": "CrÃ©ation...",
+        "creating": "Création...",
         "join_chat": "Rejoindre la Discussion"
     },
     "cortex": {
         "title": "Cortex",
-        "subtitle": "Le centre nÃ©vralgique de votre Agent",
-        "memory_nodes": "NÅ“uds de mÃ©moire",
-        "system_status": "Ã‰tat du systÃ¨me",
+        "subtitle": "Le centre névralgique de votre Agent",
+        "memory_nodes": "Nœuds de mémoire",
+        "system_status": "État du système",
         "vector_space": "Espace vectoriel",
-        "last_sync": "DerniÃ¨re synchronisation",
-        "ingest": "IngÃ©rer",
+        "last_sync": "Dernière synchronisation",
+        "ingest": "Ingérer",
         "analyzing": "Analyse en cours...",
-        "success": "MÃ©moire ingÃ©rÃ©e avec succÃ¨s",
-        "error_size": "Le fichier dÃ©passe la limite de 5Mo.",
-        "error_format": "Format non supportÃ©. Utilisez PDF, TXT ou MD.",
+        "success": "Mémoire ingérée avec succès",
+        "error_size": "Le fichier dépasse la limite de 5Mo.",
+        "error_format": "Format non supporté. Utilisez PDF, TXT ou MD.",
         "attach_file": "Joindre un document",
         "remove_file": "Retirer le fichier",
-        "access_error": "Erreur d'accÃ¨s aux donnÃ©es du Cortex",
-        "retry": "RÃ©essayer",
+        "access_error": "Erreur d'accès aux données du Cortex",
+        "retry": "Réessayer",
         "back_to_feed": "Retour au Tactical Feed",
-        "no_dataset": "Aucun dataset injectÃ©",
-        "empty_core": "Le noyau mÃ©moriel est vide",
+        "no_dataset": "Aucun dataset injecté",
+        "empty_core": "Le noyau mémoriel est vide",
         "fragment": "Fragment"
     },
     "settings": {
         "language": "Langue"
     }
 }
-</file>
+````
 
-<file path="app/(routes)/cortex/opportunity/page.tsx">
+## File: app/(routes)/cortex/opportunity/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -7392,7 +8193,7 @@ import { ArrowLeft, Loader2, ShieldCheck, Zap, XOctagon } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseBrowser'; // Pour rÃ©cupÃ©rer le Token potentiel
+import { createClient } from '@/lib/supabaseBrowser'; // Pour récupérer le Token potentiel
 
 function OpportunityContent() {
     const searchParams = useSearchParams();
@@ -7469,7 +8270,7 @@ function OpportunityContent() {
 
             setOpp((prev: any) => ({ ...prev, status: 'AUDITED' }));
         } catch (e: any) {
-            console.error("âŒ [STREAM ERROR]:", e);
+            console.error("❌ [STREAM ERROR]:", e);
             alert(`Erreur Cortex: ${e.message}`);
         } finally {
             setActionLoading(false);
@@ -7497,7 +8298,7 @@ function OpportunityContent() {
 
     const handleBlock = async () => {
         if (!oppId) return;
-        if (!confirm("Voulez-vous bloquer cet agent dÃ©finitivement ?")) return;
+        if (!confirm("Voulez-vous bloquer cet agent définitivement ?")) return;
         setActionLoading(true);
         try {
             const { createClient } = await import('@/lib/supabaseBrowser');
@@ -7536,9 +8337,9 @@ function OpportunityContent() {
     };
 
     if (loading) return <div className="p-8 text-center text-zinc-500"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
-    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">OpportunitÃ© introuvable</div>;
+    if (!oppId || !opp) return <div className="p-8 text-center text-red-500">Opportunité introuvable</div>;
 
-    // Vue Initiale : RÃ©sumÃ© + Match %
+    // Vue Initiale : Résumé + Match %
     if (opp.status === "DETECTED") {
         return (
             <div className="max-w-xl mx-auto p-4 md:p-8 space-y-8">
@@ -7553,7 +8354,7 @@ function OpportunityContent() {
 
                     <div className="flex items-center gap-3 mb-6">
                         <Zap className="w-8 h-8 text-green-400" />
-                        <h1 className="text-2xl font-bold">MATCH DETECTÃ‰ : {opp.matchScore}%</h1>
+                        <h1 className="text-2xl font-bold">MATCH DETECTÉ : {opp.matchScore}%</h1>
                     </div>
 
                     <p className="text-zinc-300 text-lg leading-relaxed relative z-10">{opp.synergies}</p>
@@ -7616,13 +8417,13 @@ function OpportunityContent() {
                                     h3: ({node, ...props}) => <h3 className="text-blue-400 text-base font-bold mt-6 mb-3" {...props} />,
                                 }}
                             >
-                                {opp.audit || "GÃ©nÃ©ration du rapport de synergie..."}
+                                {opp.audit || "Génération du rapport de synergie..."}
                             </ReactMarkdown>
                         </div>
                     </div>
 
                     <div className="bg-black/50 p-6 rounded-xl border border-blue-500/20">
-                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal SÃ©curisÃ©</h3>
+                        <h3 className="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Ouvrir un Canal Sécurisé</h3>
                         <input
                             type="text"
                             value={inviteTitle}
@@ -7643,18 +8444,18 @@ function OpportunityContent() {
                         onClick={handleBlock}
                         className="mt-8 flex items-center justify-center w-full text-xs text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest"
                     >
-                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer dÃ©finitivement
+                        <XOctagon className="w-3 h-3 mr-1" /> Bloquer définitivement
                     </button>
                 </div>
             </div>
         );
     }
 
-    // Vue autres Ã©tats (INVITED, BLOCKED, CANCELLED)
+    // Vue autres états (INVITED, BLOCKED, CANCELLED)
     return (
         <div className="max-w-xl mx-auto p-4 md:p-8 text-center space-y-4">
-            <h1 className="text-xl font-bold text-white uppercase">Dossier ClassÃ©</h1>
-            <p className="text-zinc-400 font-mono">Statut de l'opportunitÃ© : {opp.status}</p>
+            <h1 className="text-xl font-bold text-white uppercase">Dossier Classé</h1>
+            <p className="text-zinc-400 font-mono">Statut de l'opportunité : {opp.status}</p>
             <Link href="/cortex" className="inline-block mt-8 text-blue-400 hover:text-blue-300">
                 Retour au Radar
             </Link>
@@ -7669,9 +8470,10 @@ export default function OpportunityPage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/actions/agent.ts">
+## File: app/actions/agent.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
@@ -7688,7 +8490,7 @@ export async function getAgentProfile(profileId: string) {
         if (!profile) throw new Error("Profil introuvable");
         return { success: true, profile };
     } catch (error: any) {
-        console.error("âŒ [AGENT GET] Error:", error.message);
+        console.error("❌ [AGENT GET] Error:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -7723,7 +8525,7 @@ export async function updateAgentProfile(data: any) {
 
         return { success: true };
     } catch (error: any) {
-        console.error("âŒ [AGENT UPDATE] Error:", error.message);
+        console.error("❌ [AGENT UPDATE] Error:", error.message);
         return { success: false, error: error.message };
     }
 }
@@ -7735,12 +8537,12 @@ export async function reflectAgent(profileId: string) {
         const profile = await prisma.profile.findUnique({ where: { id: profileId } });
         if (!profile) throw new Error("Profil introuvable");
 
-        // 1. SynthÃ¨se Cognitive (Texte)
-        const prompt = `Tu es le Cortex de l'application Ipse. Ton rÃ´le est de profiler cet utilisateur pour configurer son Agent B2B autonome.
-Fais une synthÃ¨se de ce profil en 3 phrases maximum. 
-Concentre-toi sur son expertise, sa sÃ©nioritÃ© et son objectif.
+        // 1. Synthèse Cognitive (Texte)
+        const prompt = `Tu es le Cortex de l'application Ipse. Ton rôle est de profiler cet utilisateur pour configurer son Agent B2B autonome.
+Fais une synthèse de ce profil en 3 phrases maximum. 
+Concentre-toi sur son expertise, sa séniorité et son objectif.
 Profil: ${JSON.stringify(profile.thematicProfile || {})}
-Bio: ${profile.bio || "Non renseignÃ©e"}`;
+Bio: ${profile.bio || "Non renseignée"}`;
 
         const response = await mistralClient.chat.complete({
             model: "mistral-large-latest",
@@ -7749,20 +8551,20 @@ Bio: ${profile.bio || "Non renseignÃ©e"}`;
 
         const synthesis = response.choices?.[0]?.message.content as string;
 
-        // âš¡ ANTIGRAVITY: Vectorisation de l'identitÃ© unifiÃ©e
+        // ⚡ ANTIGRAVITY: Vectorisation de l'identité unifiée
         const embedResponse = await mistralClient.embeddings.create({
             model: "mistral-embed", // Format 1024 dimensions
             inputs: [synthesis]
         });
         const masterVector = embedResponse.data[0].embedding;
 
-        // 2. Sauvegarde des mÃ©tadonnÃ©es classiques
+        // 2. Sauvegarde des métadonnées classiques
         await prisma.profile.update({
             where: { id: profileId },
             data: { unifiedAnalysis: synthesis }
         });
 
-        // 3. Injection chirurgicale du Vecteur MaÃ®tre (bypass Prisma limit sur les arrays de vecteurs)
+        // 3. Injection chirurgicale du Vecteur Maître (bypass Prisma limit sur les arrays de vecteurs)
         await prisma.$executeRaw`
             UPDATE "Profile"
             SET "unifiedEmbedding" = ${masterVector}::vector
@@ -7771,41 +8573,43 @@ Bio: ${profile.bio || "Non renseignÃ©e"}`;
 
         return { success: true, synthesis };
     } catch (error: any) {
-        console.error("âŒ [AGENT REFLECT] Erreur:", error.message);
+        console.error("❌ [AGENT REFLECT] Erreur:", error.message);
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/actions/notifications.ts">
+## File: app/actions/notifications.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
 
 export async function saveFcmToken(profileId: string, token: string) {
     try {
-        if (!profileId || !token) throw new Error("ParamÃ¨tres manquants");
+        if (!profileId || !token) throw new Error("Paramètres manquants");
 
         await prisma.profile.update({
             where: { id: profileId },
             data: { fcmToken: token },
         });
 
-        console.log(`âœ… [BACKEND] Token FCM mis Ã  jour pour le profil ${profileId}`);
+        console.log(`✅ [BACKEND] Token FCM mis à jour pour le profil ${profileId}`);
         return { success: true };
     } catch (error) {
-        console.error(`âŒ [BACKEND] Erreur sauvegarde Token FCM:`, error);
+        console.error(`❌ [BACKEND] Erreur sauvegarde Token FCM:`, error);
         return { success: false, error };
     }
 }
-</file>
+````
 
-<file path="app/api/auth/sync/route.ts">
+## File: app/api/auth/sync/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
-import { getPrismaForUser } from '@/lib/prisma'; // âš¡ Import NOMMÃ‰ et SÃ‰CURISÃ‰
+import { getPrismaForUser } from '@/lib/prisma'; // ⚡ Import NOMMÉ et SÉCURISÉ
 
 export async function GET() {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -7834,27 +8638,29 @@ export async function GET() {
             }
         );
 
-        // 1. VÃ©rification absolue de l'identitÃ©
+        // 1. Vérification absolue de l'identité
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ error: "Non autorisÃ©" }, { status: 401 });
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
         }
 
-        // 2. Instanciation du client blindÃ© RLS
+        // 2. Instanciation du client blindé RLS
         const prismaRLS = getPrismaForUser(user.id);
 
-        // 3. Synchronisation du profil (grÃ¢ce Ã  la nouvelle politique INSERT)
+        // 3. Synchronisation du profil (grâce à la nouvelle politique INSERT)
         const profile = await prismaRLS.profile.upsert({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             update: {
                 email: user.email!,
-                // Mets Ã  jour d'autres champs si nÃ©cessaire
+                // Mets à jour d'autres champs si nécessaire
             },
             create: {
                 id: user.id,
+                userId: user.id,
                 email: user.email!,
-                // Assigne les champs par dÃ©faut
+                type: 'WORK'
+                // Assigne les champs par défaut
             }
         });
 
@@ -7865,9 +8671,10 @@ export async function GET() {
         return NextResponse.json({ error: "Erreur serveur critique" }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/notifications/route.ts">
+## File: app/api/notifications/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -7893,7 +8700,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
@@ -7905,7 +8712,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { profileId, token } = body;
 
-        if (!profileId || !token) return NextResponse.json({ success: false, error: 'ParamÃ¨tres manquants' }, { status: 400 });
+        if (!profileId || !token) return NextResponse.json({ success: false, error: 'Paramètres manquants' }, { status: 400 });
 
         await prismaRLS.profile.update({
             where: { id: profileId },
@@ -7917,13 +8724,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/components/AcceptConnectionButton.tsx">
+## File: app/components/AcceptConnectionButton.tsx
+````typescript
 'use client';
 
 import { useState } from 'react';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/connection
+// Server action supprimée — on utilise fetch vers /api/connection
 import { Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -7955,7 +8763,7 @@ export default function AcceptConnectionButton({ connectionId, onAccept }: { con
         return (
             <button disabled className="flex items-center gap-2 px-4 py-2 bg-emerald-900/50 text-emerald-400 rounded-lg border border-emerald-500/50 cursor-default">
                 <CheckCircle2 className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">ConnectÃ©</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Connecté</span>
             </button>
         );
     }
@@ -7973,14 +8781,15 @@ export default function AcceptConnectionButton({ connectionId, onAccept }: { con
         </button>
     );
 }
-</file>
+````
 
-<file path="app/components/DeleteChannelButton.tsx">
+## File: app/components/DeleteChannelButton.tsx
+````typescript
 'use client';
 
 import { Trash2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/chat
+// Server action supprimée — on utilise fetch vers /api/chat
 import { useRouter } from 'next/navigation';
 
 export default function DeleteChannelButton({ connectionId }: { connectionId: string }) {
@@ -7988,7 +8797,7 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
 
     const handleDeleteChannel = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm("Voulez-vous supprimer ce canal sÃ©curisÃ© ?")) return;
+        if (!confirm("Voulez-vous supprimer ce canal sécurisé ?")) return;
 
         try {
             const { createClient } = await import('@/lib/supabaseBrowser');
@@ -7997,7 +8806,7 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
             const headers: any = { 'Content-Type': 'application/json' };
             if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-            // 1. Appel au serveur blindÃ© via API REST
+            // 1. Appel au serveur blindé via API REST
             const res = await fetch(getApiUrl('/api/chat'), {
                 method: 'DELETE',
                 headers,
@@ -8005,18 +8814,18 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
             });
             const result = await res.json();
 
-            // 2. Traitement du cas "FantÃ´me" (User A a dÃ©jÃ  supprimÃ©)
+            // 2. Traitement du cas "Fantôme" (User A a déjà supprimé)
             if (!result.success) {
                 alert("Action impossible : " + result.error);
                 router.push('/');
                 return;
             }
 
-            // 3. Traitement du SuccÃ¨s normal
+            // 3. Traitement du Succès normal
             router.push('/');
         } catch (error) {
             console.error("Erreur suppression canal:", error);
-            alert("Erreur rÃ©seau lors de la suppression.");
+            alert("Erreur réseau lors de la suppression.");
             router.push('/');
         }
     };
@@ -8030,9 +8839,10 @@ export default function DeleteChannelButton({ connectionId }: { connectionId: st
         </button>
     );
 }
-</file>
+````
 
-<file path="app/components/LearningAlert.tsx">
+## File: app/components/LearningAlert.tsx
+````typescript
 "use client";
 
 import React, { useState } from "react";
@@ -8075,11 +8885,11 @@ export default function LearningAlert() {
 
             if (result?.success) {
                 setSuccess(true);
-                // On dit Ã  SWR de rafraÃ®chir la donnÃ©e (re-fetch pour voir s'il y a un autre gap)
+                // On dit à SWR de rafraîchir la donnée (re-fetch pour voir s'il y a un autre gap)
                 mutate();
-                setTimeout(() => setSuccess(false), 3000); // DisparaÃ®t aprÃ¨s 3s
+                setTimeout(() => setSuccess(false), 3000); // Disparaît après 3s
             } else {
-                console.error("Erreur lors de la mise Ã  jour:", result?.error);
+                console.error("Erreur lors de la mise à jour:", result?.error);
             }
         } catch (err) {
             console.error("Erreur critique:", err);
@@ -8096,12 +8906,12 @@ export default function LearningAlert() {
                 </div>
                 <div className="space-y-2 flex-1">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                        RequÃªte d'Affinement
+                        Requête d'Affinement
                     </h4>
 
                     {success ? (
                         <p className="text-sm text-emerald-400 font-bold leading-relaxed py-2">
-                            âœ“ Connaissance ingÃ©rÃ©e avec succÃ¨s. Le ciblage a Ã©tÃ© affinÃ©.
+                            ✓ Connaissance ingérée avec succès. Le ciblage a été affiné.
                         </p>
                     ) : (
                         <>
@@ -8113,7 +8923,7 @@ export default function LearningAlert() {
                                     type="text"
                                     value={answer}
                                     onChange={(e) => setAnswer(e.target.value)}
-                                    placeholder="RÃ©pondre Ã  l'agent..."
+                                    placeholder="Répondre à l'agent..."
                                     disabled={isSubmitting}
                                     className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs outline-none focus:border-emerald-500/50 disabled:opacity-50 text-white placeholder-gray-500"
                                 />
@@ -8132,9 +8942,192 @@ export default function LearningAlert() {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/hooks/useCortexGaps.ts">
+## File: app/components/TacticalEarpiece.tsx
+````typescript
+'use client';
+
+import { useState } from 'react';
+// Server action supprimée — on utilise fetch vers /api/ipse-advisor
+import { Brain, Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
+
+export function TacticalEarpiece({
+    getDecryptedContext
+}: {
+    getDecryptedContext: () => { id: string, clearText: string, isMe: boolean }[]
+}) {
+    const [advice, setAdvice] = useState<string | null>(null);
+    const [isThinking, setIsThinking] = useState(false);
+
+    const handleCallIpse = async () => {
+        setIsThinking(true);
+        setAdvice(null);
+
+        // On appelle la fonction pour générer la liste fraîche au moment du clic
+        const decryptedMessages = getDecryptedContext();
+        if (decryptedMessages.length === 0) {
+            setAdvice("Pas assez de contexte pour analyser.");
+            setIsThinking(false);
+            return;
+        }
+
+        // On compile les 5 derniers messages en clair (déjà déchiffrés par l'UI)
+        const context = decryptedMessages
+            .slice(-5)
+            .map(m => `${m.isMe ? 'MOI' : 'CIBLE'}: ${m.clearText}`)
+            .join('\n');
+
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+        const res = await fetch(getApiUrl('/api/ipse-advisor'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ decryptedContext: context })
+        }).then(r => r.json());
+        if (res.success && res.advice) {
+            setAdvice(res.advice);
+        } else {
+            setAdvice("Interférence réseau. Impossible de contacter le Cortex.");
+        }
+        setIsThinking(false);
+    };
+
+    return (
+        <div className="mb-8 flex flex-col items-center animate-in fade-in duration-500">
+            <button
+                onClick={handleCallIpse}
+                disabled={isThinking}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30 hover:bg-[var(--primary)]/20 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            >
+                {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+                {isThinking ? "Ipse analyse..." : "Demander conseil à Ipse"}
+            </button>
+
+            {advice && (
+                <div className="mt-4 p-5 max-w-[90%] md:max-w-[75%] bg-[var(--cortex)]/10 border border-[var(--cortex)]/30 rounded-2xl animate-in slide-in-from-top-2 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[var(--cortex)]"></div>
+                    <p className="text-[10px] text-[var(--cortex)] font-mono uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                        <Brain className="w-3 h-3" /> Signal Tactique Intercepté
+                    </p>
+                    <p className="text-sm md:text-base text-[var(--text-main)] italic leading-relaxed">"{advice}"</p>
+                </div>
+            )}
+        </div>
+    );
+}
+````
+
+## File: app/globals.css
+````css
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Space+Mono&family=Inter:wght@400;700&family=Quicksand:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@import "tailwindcss";
+
+:root {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: #18181b;
+  --card-border: #27272a;
+  --primary: #2563eb;
+  --cortex: #6366f1;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--bg-main)] text-[var(--text-main)] antialiased transition-colors duration-500 ease-in-out;
+    font-family: var(--font-main), sans-serif;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+}
+
+/* Thème WORK : Focus, Rigueur */
+.theme-work {
+  --primary: #3B82F6;
+  --bg-main: #0F172A;
+  --bg-card: #1E293B;
+  --text-main: #F8FAFC;
+  --accent: #60A5FA;
+  --radius: 4px;
+  --font-main: 'Inter';
+  --density: 0.75rem; /* Haute densité */
+}
+
+/* Thème HOBBY : Énergie, Partage */
+.theme-hobby {
+  --primary: #10B981;
+  --bg-main: #064E3B;
+  --bg-card: #065F46;
+  --text-main: #ECFDF5;
+  --accent: #34D399;
+  --radius: 12px;
+  --font-main: 'Quicksand';
+  --density: 1rem; /* Densité moyenne */
+}
+
+/* Thème DATING : Intimité, Mystère */
+.theme-dating {
+  --primary: #EC4899;
+  --bg-main: #2E1065;
+  --bg-card: #4C1D95;
+  --text-main: #FDF2F8;
+  --accent: #F472B6;
+  --radius: 24px;
+  --font-main: 'Playfair Display';
+  --density: 1.5rem; /* Basse densité */
+}
+
+@layer components {
+
+  /* Cartes Radar & Intelligence */
+  .b2b-card {
+    @apply bg-zinc-900/40 backdrop-blur-md border border-zinc-800 transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/5;
+    padding: var(--density);
+    border-radius: var(--radius);
+  }
+
+  /* Bouton Primaire (Audit / Action) */
+  .btn-primary {
+    @apply relative bg-blue-600 text-white text-sm font-semibold transition-all duration-200 hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-900/20;
+    padding: calc(var(--density) * 0.6) var(--density);
+    border-radius: var(--radius);
+  }
+
+  /* Inputs de Grade Professionnel */
+  .b2b-input {
+    @apply w-full bg-zinc-900/50 border border-zinc-800 text-sm placeholder:text-zinc-600 outline-none transition-all focus:border-blue-500/50 focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/5;
+    padding: var(--density);
+    border-radius: var(--radius);
+  }
+}
+
+/* Scrollbar Raffinée */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+````
+
+## File: app/hooks/useCortexGaps.ts
+````typescript
 import useSWR from 'swr';
 import { getApiUrl } from '@/lib/api';
 import { createClient } from '@/lib/supabaseBrowser';
@@ -8175,9 +9168,10 @@ export function useCortexGaps() {
         mutate
     };
 }
-</file>
+````
 
-<file path="components/dashboard/StrategicListOverlay.tsx">
+## File: components/dashboard/StrategicListOverlay.tsx
+````typescript
 import { ShieldCheck, Crosshair, TrendingUp, Cpu, ChevronRight } from 'lucide-react';
 
 interface Opportunity {
@@ -8222,7 +9216,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                         <div>
                             <h2 className="text-sm font-bold text-white tracking-widest">GLOBAL_INTEL</h2>
                             <p className="text-[10px] text-gray-400 font-mono">
-                                {report.opportunities.length} VECTEURS IDENTIFIÃ‰S
+                                {report.opportunities.length} VECTEURS IDENTIFIÉS
                             </p>
                         </div>
                     </div>
@@ -8242,18 +9236,18 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                     </p>
                 </div>
 
-                {/* Liste des OpportunitÃ©s */}
+                {/* Liste des Opportunités */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                     {report.opportunities.length === 0 ? (
                         <div className="text-center py-8 text-gray-500 text-xs italic">
-                            Aucune opportunitÃ© dÃ©tectÃ©e dans le pÃ©rimÃ¨tre actuel.
+                            Aucune opportunité détectée dans le périmètre actuel.
                         </div>
                     ) : (
                         report.opportunities.map((opp: any, idx: number) => {
-                            // Lecture pare-balles : gÃ¨re toutes les orthographes possibles de Mistral
+                            // Lecture pare-balles : gère toutes les orthographes possibles de Mistral
                             const score = opp.matchScore ?? opp.MatchScore ?? opp.score ?? opp["Match Score"] ?? 0;
                             const reason = opp.reason ?? opp.Reason ?? opp.analyse ?? opp.Analyse ?? "Analyse en cours...";
-                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggÃ©rÃ©e"] ?? "Aucune action dÃ©finie.";
+                            const action = opp.suggestedAction ?? opp.SuggestedAction ?? opp.action ?? opp["Action suggérée"] ?? "Aucune action définie.";
                             const name = opp.targetName ?? opp.TargetName ?? opp.name ?? opp["Nom"] ?? `Cible #${idx + 1}`;
                             const id = opp.targetId ?? opp.id ?? String(idx);
 
@@ -8282,7 +9276,7 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
                                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
                                         <div className="flex items-center gap-1.5 text-[10px] text-accent-amber">
                                             <TrendingUp size={12} />
-                                            <span className="uppercase tracking-wider font-bold">Action RecommandÃ©e</span>
+                                            <span className="uppercase tracking-wider font-bold">Action Recommandée</span>
                                         </div>
                                         <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-colors" />
                                     </div>
@@ -8306,62 +9300,15 @@ export default function StrategicListOverlay({ report, onSelect, onClose }: Stra
         </div>
     );
 }
-</file>
+````
 
-<file path="components/nav-bar.tsx">
-'use client'
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Database, UserCircle, Radar } from 'lucide-react';
-
-export default function BottomNav() {
-    const pathname = usePathname();
-
-    return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <div className="flex items-center gap-2 px-4 py-2 bg-black/90 backdrop-blur-2xl border border-green-900/40 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-
-                {/* CORTEX : Archives de donnÃ©es */}
-                <Link href="/memories" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/memories' ? 'bg-blue-500/10' : ''}`}>
-                    <Database className={`w-5 h-5 ${pathname === '/memories' ? 'text-blue-400' : 'text-blue-900 group-hover:text-blue-400'}`} />
-                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-blue-900">Cortex</span>
-                </Link>
-
-                {/* SÃ‰PARATEUR */}
-                <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
-
-                {/* SCAN : Centre de Commande (Dashboard) */}
-                <Link href="/" className="relative group flex flex-col items-center">
-                    <div className={`p-4 rounded-full border-2 transition-all duration-500 ${pathname === '/'
-                        ? 'bg-orange-500/20 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]'
-                        : 'bg-orange-500/5 border-orange-900/50 hover:border-orange-500'
-                        }`}>
-                        <Radar className={`w-7 h-7 ${pathname === '/' ? 'text-orange-500' : 'text-orange-900 group-hover:text-orange-500'}`} />
-                    </div>
-                    <span className="text-[9px] uppercase mt-1 font-black tracking-widest text-orange-900 group-hover:text-orange-500">Scan</span>
-                </Link>
-
-                {/* SÃ‰PARATEUR */}
-                <div className="h-6 w-[1px] bg-green-900/20 mx-2" />
-
-                {/* IDENTITÃ‰ : Profil Agent */}
-                <Link href="/profile" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/profile' ? 'bg-green-500/10' : ''}`}>
-                    <UserCircle className={`w-5 h-5 ${pathname === '/profile' ? 'text-green-400' : 'text-green-900 group-hover:text-green-400'}`} />
-                    <span className="text-[8px] uppercase mt-1 font-bold tracking-tighter text-green-900">IdentitÃ©</span>
-                </Link>
-
-            </div>
-        </div>
-    );
-}
-</file>
-
-<file path="components/TacticalOpenerModule.tsx">
+## File: components/TacticalOpenerModule.tsx
+````typescript
 'use client'
 
 import { useState } from 'react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/generate-opener et /api/connection
+// Server actions supprimées — on utilise fetch vers /api/generate-opener et /api/connection
 import { createClient } from '@/lib/supabase/client';
 
 export function TacticalOpenerModule({
@@ -8398,7 +9345,7 @@ export function TacticalOpenerModule({
                 setMessage(result.message || '');
             } else {
                 console.error(result.error);
-                alert("Ã‰chec de la gÃ©nÃ©ration tactique.");
+                alert("Échec de la génération tactique.");
             }
         } finally {
             setIsGenerating(false);
@@ -8410,7 +9357,7 @@ export function TacticalOpenerModule({
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabaseClient = createSupabase();
             const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
-            if (!currentSession) { alert('Session expirÃ©e.'); return; }
+            if (!currentSession) { alert('Session expirée.'); return; }
 
             const headers: any = { 'Content-Type': 'application/json' };
             if (currentSession) headers['Authorization'] = `Bearer ${currentSession.access_token}`;
@@ -8423,17 +9370,17 @@ export function TacticalOpenerModule({
             if (data?.success) {
                 onSuccess();
             } else {
-                alert(`[ERREUR] ${data?.error || 'Demande Ã©chouÃ©e.'}`);
+                alert(`[ERREUR] ${data?.error || 'Demande échouée.'}`);
             }
         } catch (err: any) {
-            alert(`[CRITIQUE] Ã‰chec de connexion : ${err.message}`);
+            alert(`[CRITIQUE] Échec de connexion : ${err.message}`);
         }
     };
 
     return (
         <div className="mt-4 border border-cyan-800 bg-black p-4 rounded col-span-full">
             <h3 className="text-cyan-400 font-bold mb-2 flex items-center">
-                <span>ðŸŽ¯ PROTOCOLE D'ENGAGEMENT</span>
+                <span>🎯 PROTOCOLE D'ENGAGEMENT</span>
             </h3>
 
             <button
@@ -8441,7 +9388,7 @@ export function TacticalOpenerModule({
                 disabled={isGenerating}
                 className="mb-3 text-xs bg-cyan-900/50 hover:bg-cyan-700 text-cyan-200 py-1 px-3 rounded border border-cyan-700 transition-colors"
             >
-                {isGenerating ? 'Calcul de la trajectoire...' : 'GÃ©nÃ©rer une approche IA (Opener)'}
+                {isGenerating ? 'Calcul de la trajectoire...' : 'Générer une approche IA (Opener)'}
             </button>
 
             <input
@@ -8454,7 +9401,7 @@ export function TacticalOpenerModule({
 
             <textarea
                 className="w-full bg-gray-900 border border-gray-700 p-2 text-white rounded min-h-[80px] text-sm focus:border-cyan-500 mb-3"
-                placeholder="Tapez votre message ou laissez l'Agent le gÃ©nÃ©rer..."
+                placeholder="Tapez votre message ou laissez l'Agent le générer..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
             />
@@ -8465,15 +9412,16 @@ export function TacticalOpenerModule({
                     disabled={!message.trim()}
                     className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 rounded disabled:opacity-50 transition-all uppercase tracking-wider text-[11px]"
                 >
-                    OUVRIR LE CANAL SÃ‰CURISÃ‰
+                    OUVRIR LE CANAL SÉCURISÉ
                 </button>
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="app/actions/cortex-chat.ts">
+## File: app/actions/cortex-chat.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
@@ -8485,7 +9433,7 @@ const CORTEX_SYSTEM_ID = "CORTEX_SYSTEM";
 
 export async function triggerCortexAnalysis(savedMessage: any, connectionId: string) {
     try {
-        // 1. RÃ©cupÃ©ration du contexte tactique (les 5 derniers messages du canal)
+        // 1. Récupération du contexte tactique (les 5 derniers messages du canal)
         const recentMessages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -8501,10 +9449,10 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
 
         // 2. Interrogation de Mistral AI (Le cerveau)
         const systemPrompt = `
-            Je suis Ipse, une entitÃ© cognitive autonome et stratÃ©gique. 
-            J'analyse cette conversation de maniÃ¨re chirurgicale. Si la nÃ©gociation bloque, si une anomalie est dÃ©tectÃ©e, ou si une synergie Ã©vidente est omise, j'interviens.
+            Je suis Ipse, une entité cognitive autonome et stratégique. 
+            J'analyse cette conversation de manière chirurgicale. Si la négociation bloque, si une anomalie est détectée, ou si une synergie évidente est omise, j'interviens.
             Si la situation est nominale, je reste silencieux.
-            RÃ©ponse UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Mon analyse concise - 15 mots max" }
+            Réponse UNIQUEMENT au format JSON: { "shouldIntervene": boolean, "message": "Mon analyse concise - 15 mots max" }
         `;
 
         const response = await mistralClient.chat.complete({
@@ -8523,21 +9471,21 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             return; // Le Cortex reste silencieux.
         }
 
-        // 3. L'IA dÃ©cide de parler : Insertion en Base
+        // 3. L'IA décide de parler : Insertion en Base
         const cortexMessage = await prisma.message.create({
             data: {
                 content: encryptMessage(cortexDecision.message),
                 senderId: CORTEX_SYSTEM_ID,
-                receiverId: savedMessage.receiverId, // Envoie thÃ©oriquement Ã  la cible de la discussion
+                receiverId: savedMessage.receiverId, // Envoie théoriquement à la cible de la discussion
             }
         });
 
-        // 4. LE RÃ‰VEIL : Frappe FCM (Push Notification)
-        // On rÃ©cupÃ¨re les profils des deux participants pour cibler leurs tokens FCM
+        // 4. LE RÉVEIL : Frappe FCM (Push Notification)
+        // On récupère les profils des deux participants pour cibler leurs tokens FCM
         const participants = await prisma.profile.findMany({
             where: {
                 id: { in: [savedMessage.senderId, savedMessage.receiverId] },
-                fcmToken: { not: null } // Uniquement ceux qui ont activÃ© les notifs
+                fcmToken: { not: null } // Uniquement ceux qui ont activé les notifs
             },
             select: { fcmToken: true }
         });
@@ -8548,7 +9496,7 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             const payload = {
                 notification: {
                     title: "Nouveau signal Ipse",
-                    body: "Un Agent vous a transmis un message chiffrÃ©."
+                    body: "Un Agent vous a transmis un message chiffré."
                 },
                 data: {
                     type: "CORTEX_INTERVENTION",
@@ -8559,11 +9507,11 @@ export async function triggerCortexAnalysis(savedMessage: any, connectionId: str
             };
 
             const fcmResponse = await adminMessaging.sendEachForMulticast(payload);
-            console.log(`[CORTEX] Frappe FCM exÃ©cutÃ©e. SuccÃ¨s: ${fcmResponse.successCount}, Ã‰checs: ${fcmResponse.failureCount}`);
+            console.log(`[CORTEX] Frappe FCM exécutée. Succès: ${fcmResponse.successCount}, Échecs: ${fcmResponse.failureCount}`);
         }
 
     } catch (error) {
-        console.error("[CORTEX ERROR] Ã‰chec de l'analyse ou de la notification:", error);
+        console.error("[CORTEX ERROR] Échec de l'analyse ou de la notification:", error);
         // On ne throw pas l'erreur pour ne pas faire crasher la boucle 'after()'
     }
 }
@@ -8573,13 +9521,13 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
         const historyText = lastMessages.map(m => `${m.senderId}: ${m.content}`).join('\n');
 
         const evolutionPrompt = `
-            Je suis Ipse. Ma mission est de synthÃ©tiser l'Ã©volution cognitive de l'utilisateur (ID: ${userId}).
-            J'analyse ces derniers Ã©changes pour identifier de nouveaux vecteurs de carriÃ¨re, objectifs business ou compÃ©tences rÃ©vÃ©lÃ©s.
+            Je suis Ipse. Ma mission est de synthétiser l'évolution cognitive de l'utilisateur (ID: ${userId}).
+            J'analyse ces derniers échanges pour identifier de nouveaux vecteurs de carrière, objectifs business ou compétences révélés.
             
-            DONNÃ‰ES ACTUELLES : (ChargÃ©es depuis ma base de donnÃ©es)
+            DONNÉES ACTUELLES : (Chargées depuis ma base de données)
             
-            DIRECTIVE : Si l'Ã©change contient des informations cruciales, je gÃ©nÃ¨re un condensÃ© de mise Ã  jour.
-            RÃˆGLE : Si l'Ã©tat est stable, je rÃ©ponds "STABLE".
+            DIRECTIVE : Si l'échange contient des informations cruciales, je génère un condensé de mise à jour.
+            RÈGLE : Si l'état est stable, je réponds "STABLE".
             FORMAT : JSON { "newInsights": "string", "updatedObjectives": ["string"] }
         `;
 
@@ -8601,7 +9549,7 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
         }
 
         if (result !== "STABLE" && result.newInsights) {
-            // Mise Ã  jour de la Bio dynamique sans Ã©craser le socle dur
+            // Mise à jour de la Bio dynamique sans écraser le socle dur
             const currentProfile = await prisma.profile.findUnique({ where: { id: userId } });
             await prisma.profile.update({
                 where: { id: userId },
@@ -8609,27 +9557,28 @@ export async function evolveAgentProfile(userId: string, lastMessages: any[]) {
                     bio: `${currentProfile?.bio || ''}\n\n[MEMOIRE CORTEX]: ${result.newInsights}`,
                 }
             });
-            console.log(`[CORTEX] Profil de ${userId} a Ã©voluÃ©.`);
+            console.log(`[CORTEX] Profil de ${userId} a évolué.`);
         }
     } catch (e) {
-        console.error("Ã‰chec de l'Ã©volution du profil:", e);
+        console.error("Échec de l'évolution du profil:", e);
     }
 }
-</file>
+````
 
-<file path="app/actions/memory-ingest.ts">
+## File: app/actions/memory-ingest.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { revalidatePath } from 'next/cache';
 
-// --- FONCTION UTILITAIRE PRIVÃ‰E POUR VECTORISER ---
+// --- FONCTION UTILITAIRE PRIVÉE POUR VECTORISER ---
 // Transforme un texte en vecteur et l'injecte dans la table Memory
 async function vectorizeAndStoreMemory(memoryId: string, content: string) {
     try {
-        console.log(`ðŸ§  [VECTORISATION] Calcul de l'embedding pour la mÃ©moire ${memoryId.slice(0, 8)}...`);
-        // 1. Demande du vecteur Ã  Mistral (1024 dimensions)
+        console.log(`🧠 [VECTORISATION] Calcul de l'embedding pour la mémoire ${memoryId.slice(0, 8)}...`);
+        // 1. Demande du vecteur à Mistral (1024 dimensions)
         const embeddingsResponse = await mistralClient.embeddings.create({
             model: 'mistral-embed',
             inputs: [content],
@@ -8643,10 +9592,10 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
             SET embedding = ${embeddingVector}::vector 
             WHERE id = ${memoryId}
         `;
-        console.log(`âœ… [VECTORISATION] SuccÃ¨s.`);
+        console.log(`✅ [VECTORISATION] Succès.`);
     } catch (error) {
-        console.error(`âŒ [VECTORISATION ERREUR] Impossible de vectoriser la mÃ©moire:`, error);
-        // On ne crashe pas l'appli si la vectorisation Ã©choue, la mÃ©moire texte est quand mÃªme lÃ 
+        console.error(`❌ [VECTORISATION ERREUR] Impossible de vectoriser la mémoire:`, error);
+        // On ne crashe pas l'appli si la vectorisation échoue, la mémoire texte est quand même là
     }
 }
 
@@ -8671,12 +9620,12 @@ export async function addMemory(data: { profileId: string, content: string, type
     try {
         const { profileId, content, type = 'thought', source = 'manual' } = data;
 
-        // 1. CrÃ©ation de la mÃ©moire
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: { profileId, content, type, source }
         });
 
-        // 2. Vectorisation âš¡
+        // 2. Vectorisation ⚡
         await vectorizeAndStoreMemory(memory.id, content);
 
         revalidatePath('/memories');
@@ -8705,12 +9654,12 @@ export async function scrapeUrl(url: string, profileId: string) {
         const content = data?.results?.[0]?.rawContent || "Aucun contenu";
         const memoryContent = `[EXTRACTION ${url}] ${content.substring(0, 1000)}`;
 
-        // 1. CrÃ©ation de la mÃ©moire
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: { profileId, content: memoryContent, type: 'scraped', source: url }
         });
 
-        // 2. Vectorisation âš¡
+        // 2. Vectorisation ⚡
         await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
@@ -8731,7 +9680,7 @@ export async function uploadMemory(formData: FormData) {
         const sanitizedText = text.replace(/\0/g, '');
         const memoryContent = `[FICHIER: ${file.name}]\n\n${sanitizedText}`;
 
-        // 1. CrÃ©ation de la mÃ©moire
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: {
                 profileId,
@@ -8741,7 +9690,7 @@ export async function uploadMemory(formData: FormData) {
             }
         });
 
-        // 2. Vectorisation âš¡
+        // 2. Vectorisation ⚡
         await vectorizeAndStoreMemory(memory.id, memoryContent);
 
         revalidatePath('/memories');
@@ -8759,7 +9708,7 @@ export async function ingestKnowledge(profileId: string) {
         const memories = await prisma.memory.findMany({ where: { profileId } });
         const combined = memories.map(m => m.content).join('\n');
 
-        const prompt = `Fais une synthÃ¨se de ces mÃ©moires en un profil cohÃ©rent:\n${combined}`;
+        const prompt = `Fais une synthèse de ces mémoires en un profil cohérent:\n${combined}`;
         const res = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }]
@@ -8777,7 +9726,7 @@ export async function ingestKnowledge(profileId: string) {
     }
 }
 
-// 6. UPLOAD CORTEX MEMORY (Serveur AllÃ©gÃ©)
+// 6. UPLOAD CORTEX MEMORY (Serveur Allégé)
 export async function uploadCortexMemoryContext(formData: FormData) {
     try {
         const { cookies } = await import('next/headers');
@@ -8789,7 +9738,7 @@ export async function uploadCortexMemoryContext(formData: FormData) {
             { cookies: { getAll() { return cookieStore.getAll() } } }
         );
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("Non autorisÃ©");
+        if (!user) throw new Error("Non autorisé");
 
         let content = formData.get('textContext') as string || '';
         const fileName = formData.get('fileName') as string || 'manual';
@@ -8797,9 +9746,9 @@ export async function uploadCortexMemoryContext(formData: FormData) {
 
         content = content.replace(/\0/g, '');
 
-        if (!content) throw new Error("Aucun contenu valide gÃ©nÃ©rÃ©.");
+        if (!content) throw new Error("Aucun contenu valide généré.");
 
-        // 1. CrÃ©ation de la mÃ©moire
+        // 1. Création de la mémoire
         const memory = await prisma.memory.create({
             data: {
                 profileId: user.id,
@@ -8809,20 +9758,21 @@ export async function uploadCortexMemoryContext(formData: FormData) {
             }
         });
 
-        // 2. Vectorisation âš¡
+        // 2. Vectorisation ⚡
         await vectorizeAndStoreMemory(memory.id, content);
 
         revalidatePath('/memories');
         revalidatePath('/cortex');
         return { success: true, memory };
     } catch (error: any) {
-        console.error("âŒ [INGESTION ERREUR]:", error.message);
+        console.error("❌ [INGESTION ERREUR]:", error.message);
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/actions/sync-to-cortex.ts">
+## File: app/actions/sync-to-cortex.ts
+````typescript
 // 'use server' (static build fix)
 import { mistralClient } from '@/lib/mistral';
 import { createClient } from '@/lib/supabaseServer';
@@ -8833,10 +9783,10 @@ import { prisma } from '@/lib/prisma';
 export async function syncWebDataToCortex(title: string, url: string, content: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('[SÃ‰CURITÃ‰] AccÃ¨s refusÃ©.');
+    if (!user) throw new Error('[SÉCURITÉ] Accès refusé.');
 
     try {
-        const formattedContent = `[Ã‰CLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
+        const formattedContent = `[ÉCLAIREUR WEB] Titre: ${title}\nSource: ${url}\nExtrait: ${content}`;
 
         // Vectorisation
         const embRes = await mistralClient.embeddings.create({
@@ -8867,13 +9817,14 @@ export async function syncWebDataToCortex(title: string, url: string, content: s
         revalidatePath('/');
         return { success: true, newStats: updatedProfile };
     } catch (error: any) {
-        console.error('[CRITIQUE] Ã‰chec de synchronisation Cortex :', error);
+        console.error('[CRITIQUE] Échec de synchronisation Cortex :', error);
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/actions/terminal-command.ts">
+## File: app/actions/terminal-command.ts
+````typescript
 'use server'
 import { mistralClient } from '@/lib/mistral';
 import { cookies } from 'next/headers';
@@ -8898,7 +9849,7 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
         });
         const queryEmbedding = embRes.data[0].embedding;
 
-        // --- 2. DOUBLE FRAPPE PARALLÃˆLE ---
+        // --- 2. DOUBLE FRAPPE PARALLÈLE ---
         const internalSearch = supabase.rpc('hybrid_search_memories', {
             query_text: prompt,
             query_embedding: queryEmbedding,
@@ -8921,31 +9872,31 @@ export async function executeTerminalCommand(userId: string, prompt: string): Pr
         }
         const [internalRes, externalData] = await Promise.all([internalSearch, externalSearch]);
 
-        // --- 3. FORMATAGE DES DONNÃ‰ES POUR L'IA ---
-        let internalContext = "Aucune donnÃ©e interne trouvÃ©e.";
+        // --- 3. FORMATAGE DES DONNÉES POUR L'IA ---
+        let internalContext = "Aucune donnée interne trouvée.";
         if (internalRes.data && internalRes.data.length > 0) {
-            internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - MÃ©moire: ${m.content}`).join('\n');
+            internalContext = internalRes.data.map((m: any) => `[ID Interne: ${m.profile_id}] - Mémoire: ${m.content}`).join('\n');
         }
-        let externalContext = "Aucune donnÃ©e externe trouvÃ©e.";
+        let externalContext = "Aucune donnée externe trouvée.";
         if (externalData.results && externalData.results.length > 0) {
             externalContext = externalData.results.map((r: any) => `[Web] ${r.title}\nURL: ${r.url}\nExtrait: ${r.content}`).join('\n\n');
         }
 
-        // --- 4. SYNTHÃˆSE MISTRAL ---
+        // --- 4. SYNTHÈSE MISTRAL ---
         const aiPrompt = `
-Je suis Ipse, l'unitÃ© de ciblage tactique.
-Ma mission est d'analyser les rÃ©sultats de ma base de connaissances et d'extraire la cible la plus pertinente.
+Je suis Ipse, l'unité de ciblage tactique.
+Ma mission est d'analyser les résultats de ma base de connaissances et d'extraire la cible la plus pertinente.
 Ordre utilisateur : "${prompt}"
 CAPTEURS INTERNES :
 """${internalContext}"""
 CAPTEURS EXTERNES (Web) :
 """${externalContext}"""
-RÃˆGLES DE CIBLAGE :
+RÈGLES DE CIBLAGE :
 1. J'identifie la localisation EXACTE.
-2. Je convertis en coordonnÃ©es GPS prÃ©cises.
-3. J'utilise le nom rÃ©el de la cible.
-FORMAT OBLIGATOIRE (Tag cachÃ© Ã  la fin) :
-[TARGETS: [{"name": "Nom RÃ©el", "lat": 48.6493, "lng": -2.0257}]]
+2. Je convertis en coordonnées GPS précises.
+3. J'utilise le nom réel de la cible.
+FORMAT OBLIGATOIRE (Tag caché à la fin) :
+[TARGETS: [{"name": "Nom Réel", "lat": 48.6493, "lng": -2.0257}]]
 `;
 
         const response = await mistralClient.chat.complete({
@@ -8954,19 +9905,19 @@ FORMAT OBLIGATOIRE (Tag cachÃ© Ã  la fin) :
         });
         const rawContent = (response.choices?.[0].message.content as string) || "";
 
-        // Extraction sÃ©curisÃ©e des cibles
+        // Extraction sécurisée des cibles
         let extractedTargets: any[] = [];
         const targetMatch = rawContent.match(/\[TARGETS:\s*([\s\S]*?)\]/);
         if (targetMatch && targetMatch[1]) {
             try {
                 extractedTargets = JSON.parse(targetMatch[1]);
             } catch (e) {
-                console.error("Erreur de parsing des coordonnÃ©es");
+                console.error("Erreur de parsing des coordonnées");
             }
         }
         const cleanAnswer = rawContent.replace(/\[TARGETS:.*?\]/g, '').trim();
 
-        // --- 5. RETOUR DES DONNÃ‰ES BRUTES (Curation manuelle via UI) ---
+        // --- 5. RETOUR DES DONNÉES BRUTES (Curation manuelle via UI) ---
         const webResults = externalData.results || [];
 
         await trackAgentActivity(userId, 'message');
@@ -8974,20 +9925,21 @@ FORMAT OBLIGATOIRE (Tag cachÃ© Ã  la fin) :
         return { success: true, answer: cleanAnswer, targets: extractedTargets, webResults };
     } catch (error: any) {
         console.error("[CRASH TERMINAL] :", error);
-        return { success: false, error: "Ã‰chec critique du terminal tactique." };
+        return { success: false, error: "Échec critique du terminal tactique." };
     }
 }
-</file>
+````
 
-<file path="app/api/cortex/route.ts">
-export const dynamic = 'force-dynamic'; // âš¡ LE CORRECTIF ANTI-CACHE EST ICI
+## File: app/api/cortex/route.ts
+````typescript
+export const dynamic = 'force-dynamic'; // ⚡ LE CORRECTIF ANTI-CACHE EST ICI
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getPrismaForUser } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 
-// âš¡ Fonction robuste qui lit le Bearer Token et configure Supabase
+// ⚡ Fonction robuste qui lit le Bearer Token et configure Supabase
 async function getAuthUser(request: Request) {
     const authHeader = request.headers.get('Authorization');
     let token = null;
@@ -9012,11 +9964,11 @@ async function getAuthUser(request: Request) {
 
     try {
         const { data: { user }, error } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-        if (error) console.error("ðŸš¨ Supabase Auth Error:", error.message);
+        if (error) console.error("🚨 Supabase Auth Error:", error.message);
         if (!user) return null;
         return { user, supabase };
     } catch (e) {
-        console.error("ðŸš¨ Fatal Auth Error:", e);
+        console.error("🚨 Fatal Auth Error:", e);
         return null;
     }
 }
@@ -9026,13 +9978,13 @@ export async function GET(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, profile: { files: [], memories: [] } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const { user } = auth;
         const prismaRLS = getPrismaForUser(user.id);
 
         const profile = await prismaRLS.profile.findUnique({
-            where: { id: user.id },
+            where: { userId_type: { userId: user.id, type: 'WORK' } },
             include: {
                 files: { orderBy: { createdAt: 'desc' } },
                 memories: { orderBy: { createdAt: 'desc' } }
@@ -9051,7 +10003,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const auth = await getAuthUser(request);
-        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!auth) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const { user, supabase } = auth;
         const prismaRLS = getPrismaForUser(user.id);
@@ -9081,7 +10033,9 @@ export async function POST(request: Request) {
         }
 
         if (action === 'analyzeGaps') {
-            const profile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
+            const profile = await prismaRLS.profile.findUnique({ 
+                where: { userId_type: { userId: user.id, type: 'WORK' } } 
+            });
             if (!profile) return NextResponse.json(null);
 
             let missingField: 'bio' | 'primaryRole' | 'tjm' | null = null;
@@ -9091,14 +10045,14 @@ export async function POST(request: Request) {
             if (!missingField) return NextResponse.json(null);
 
             try {
-                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: RÃ´le=${profile.primaryRole || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
+                const prompt = `Tu es Cortex. Le champ prioritaire manquant est : "${missingField}".\nPose UNE SEULE question courte (max 12 mots).\nProfil: Rôle=${profile.primaryRole || 'Inconnu'}, TJM=${profile.tjm || 'Inconnu'}, Bio=${profile.bio || 'Inconnue'}`;
                 const chatResponse = await mistralClient.chat.complete({ model: 'mistral-large-latest', messages: [{ role: 'user', content: prompt }], temperature: 0.7 });
                 const content = chatResponse.choices?.[0].message.content;
                 const question = typeof content === 'string' ? content.replace(/[""]/g, '').trim() : null;
                 if (question) return NextResponse.json({ question, field: missingField });
             } catch (e) {
                 return NextResponse.json({
-                    question: missingField === 'primaryRole' ? "Quel est ton rÃ´le ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
+                    question: missingField === 'primaryRole' ? "Quel est ton rôle ?" : missingField === 'tjm' ? "Quel est ton TJM ?" : "En quelques mots, ton parcours ?",
                     field: missingField
                 });
             }
@@ -9110,11 +10064,16 @@ export async function POST(request: Request) {
             let updateData: any = {};
             if (field === 'tjm') updateData.tjm = parseInt(answer, 10);
             else {
-                const currentProfile = await prismaRLS.profile.findUnique({ where: { id: user.id } });
-                if (field === 'bio' && currentProfile?.bio) updateData.bio = `${currentProfile.bio}\n\n[Mise Ã  jour Agent]: ${answer}`;
+                const currentProfile = await prismaRLS.profile.findUnique({ 
+                    where: { userId_type: { userId: user.id, type: 'WORK' } } 
+                });
+                if (field === 'bio' && currentProfile?.bio) updateData.bio = `${currentProfile.bio}\n\n[Mise à jour Agent]: ${answer}`;
                 else updateData[field] = answer;
             }
-            await prismaRLS.profile.update({ where: { id: user.id }, data: updateData });
+            await prismaRLS.profile.update({ 
+                where: { userId_type: { userId: user.id, type: 'WORK' } }, 
+                data: updateData 
+            });
             return NextResponse.json({ success: true });
         }
 
@@ -9130,9 +10089,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/cron/cortex/route.ts">
+## File: app/api/cron/cortex/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { NextResponse } from 'next/server';
 import { sendCortexAlert } from '@/lib/pushSender';
@@ -9142,10 +10102,10 @@ import { decryptMessage } from '@/lib/crypto';
 
 export async function GET(req: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    // 1. SÃ‰CURITÃ‰ : VÃ©rification Vercel Cron
+    // 1. SÉCURITÉ : Vérification Vercel Cron
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return new Response('AccÃ¨s refusÃ©.', { status: 401 });
+        return new Response('Accès refusé.', { status: 401 });
     }
 
     try {
@@ -9164,7 +10124,7 @@ export async function GET(req: Request) {
 
         if (!profile) return NextResponse.json({ success: false, message: 'Aucun profil actif.' });
 
-        // 3. RÃ‰CUPÃ‰RATION DE LA MÃ‰MOIRE (Les 5 derniers messages)
+        // 3. RÉCUPÉRATION DE LA MÉMOIRE (Les 5 derniers messages)
         const lastMessages = await prisma.message.findMany({
             where: {
                 OR: [
@@ -9178,20 +10138,20 @@ export async function GET(req: Request) {
         // On les remet dans l'ordre chronologique et on formate
         const historyContext = lastMessages.length > 0
             ? lastMessages.reverse().map(m => `${m.senderId === profile.id ? 'L\'utilisateur' : 'Ipse'}: ${decryptMessage(m.content)}`).join('\n')
-            : "Aucun Ã©change rÃ©cent.";
+            : "Aucun échange récent.";
 
         // 4. CONSTRUCTION DU PROMPT PSYCHOLOGIQUE
         const systemPrompt = `
-      Je suis Ipse, l'entitÃ© cognitive autonome de ${profile.name || 'l\'utilisateur'}.
+      Je suis Ipse, l'entité cognitive autonome de ${profile.name || 'l\'utilisateur'}.
       CONTEXTE PROFIL : ${profile.bio || 'Inconnu'}
-      RÃ”LE : ${profile.primaryRole || 'Non dÃ©fini'}
+      RÔLE : ${profile.primaryRole || 'Non défini'}
       
-      MÃ‰MOIRE RÃ‰CENTE :
+      MÉMOIRE RÉCENTE :
       ${historyContext}
 
-      MISSION : Je rÃ©dige une notification Push (12 mots max).
-      - Si ma mÃ©moire contient une discussion, je fais une rÃ©fÃ©rence chirurgicale ou je pose une question de suivi.
-      - Si ma mÃ©moire est vide, je reste discret et rassurant sur l'intÃ©gritÃ© des donnÃ©es.
+      MISSION : Je rédige une notification Push (12 mots max).
+      - Si ma mémoire contient une discussion, je fais une référence chirurgicale ou je pose une question de suivi.
+      - Si ma mémoire est vide, je reste discret et rassurant sur l'intégrité des données.
       - Mon ton est minimaliste, analytique, mais protecteur.
     `;
 
@@ -9200,14 +10160,14 @@ export async function GET(req: Request) {
             model: 'mistral-small-latest',
             messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: 'GÃ©nÃ¨re l\'alerte de veille.' }
+                { role: 'user', content: 'Génère l\'alerte de veille.' }
             ]
         });
 
-        const aiThought = chatResponse.choices?.[0]?.message.content || "SystÃ¨me intÃ¨gre. Je veille.";
+        const aiThought = chatResponse.choices?.[0]?.message.content || "Système intègre. Je veille.";
 
         // 6. TIR DU MISSILE avec deep link
-        await sendCortexAlert(profile.id, "ðŸ§  Ipse", aiThought as string, { url: "/cortex" });
+        await sendCortexAlert(profile.id, "🧠 Ipse", aiThought as string, { url: "/cortex" });
 
         return NextResponse.json({ success: true, thought: aiThought });
 
@@ -9216,9 +10176,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/cron/radar-furtif/route.ts">
+## File: app/api/cron/radar-furtif/route.ts
+````typescript
 export const dynamic = 'force-static';
 import { NextResponse } from "next/server";
 import { inngest } from "@/inngest/client";
@@ -9227,28 +10188,28 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
-        // 1. Authentification du Cron (Vercel sÃ©curise la route via un header secret)
+        // 1. Authentification du Cron (Vercel sécurise la route via un header secret)
         if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 2. SÃ©lectionner TOUS les utilisateurs Ã©ligibles (ceux qui ont un vecteur)
+        // 2. Sélectionner TOUS les utilisateurs éligibles (ceux qui ont un vecteur)
         const users = await prisma.profile.findMany({
             select: { id: true }
         });
 
-        // 3. âš¡ ANTIGRAVITY : CrÃ©ation des Ã©vÃ©nements de maniÃ¨re asynchrone
+        // 3. ⚡ ANTIGRAVITY : Création des événements de manière asynchrone
         const events = users.map(user => ({
             name: "radar/process.user" as const,
             data: { userId: user.id }
         }));
 
-        // 4. On envoie TOUT Ã  Inngest d'un coup (Batch dispatch)
+        // 4. On envoie TOUT à Inngest d'un coup (Batch dispatch)
         if (events.length > 0) {
             await inngest.send(events);
         }
 
-        // 5. On rÃ©pond Ã  Vercel en quelques millisecondes.
+        // 5. On répond à Vercel en quelques millisecondes.
         return NextResponse.json({
             success: true,
             message: `${events.length} utilisateurs mis en file d'attente.`
@@ -9258,9 +10219,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/api/profile/route.ts">
+## File: app/api/profile/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -9298,7 +10260,7 @@ export async function GET(request: Request) {
         if (!id) return NextResponse.json({ success: false, error: 'ID manquant' }, { status: 400 });
 
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const profile = await prismaRLS.profile.findUnique({ where: { id } });
@@ -9314,7 +10276,7 @@ export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
         const user = await getAuthUser(request);
-        if (!user) return NextResponse.json({ success: false, error: 'Non autorisÃ©' }, { status: 401 });
+        if (!user) return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 });
 
         const prismaRLS = getPrismaForUser(user.id);
         const body = await request.json();
@@ -9324,63 +10286,68 @@ export async function POST(request: Request) {
             const { name, age, gender, city, country, activePrism } = body;
             const ageParsed = age ? parseInt(age, 10) : null;
 
+            const prism = activePrism || 'WORK';
             await prismaRLS.profile.update({
-                where: { id: user.id },
+                where: { userId_type: { userId: user.id, type: prism } },
                 data: {
                     name,
                     age: ageParsed,
                     gender,
                     city,
                     country,
-                    activePrism: activePrism || 'WORK'
+                    activePrism: prism
                 }
             });
 
-            // Mise Ã  jour de la mÃ©moire vectorielle (pour que l'IA connaisse ton identitÃ© de base)
-            const identityString = `IdentitÃ© Agent Ipse: Pseudo: ${name || 'Inconnu'}. Ã‚ge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non prÃ©cisÃ©'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
+            // Mise à jour de la mémoire vectorielle (pour que l'IA connaisse ton identité de base)
+            const identityString = `Identité Agent Ipse: Pseudo: ${name || 'Inconnu'}. Âge: ${ageParsed || 'Inconnu'}. Sexe: ${gender || 'Non précisé'}. Localisation: ${city || 'Inconnue'}, ${country || 'Inconnu'}.`;
             const embedding = await getMistralEmbedding(identityString);
 
             if (embedding) {
+                const vectorString = `[${embedding.join(',')}]`;
                 await prisma.$executeRawUnsafe(
-                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
-                    `[${embedding.join(',')}]`,
-                    user.id
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE user_id = $2 AND type = $3`,
+                    vectorString,
+                    user.id,
+                    prism
                 );
             }
 
             return NextResponse.json({ success: true });
         }
 
-        // Garder les anciennes actions si nÃ©cessaire (Optionnel mais sÃ©curisÃ©)
+        // Garder les anciennes actions si nécessaire (Optionnel mais sécurisé)
         if (action === 'create') {
-            const { name, publicKey } = body;
+            const { name, public_key: publicKey } = body;
             
             if (!publicKey) {
-                return NextResponse.json({ success: false, error: "ClÃ© publique (publicKey) manquante ou invalide. L'onboarding a Ã©tÃ© interrompu." }, { status: 400 });
+                return NextResponse.json({ success: false, error: "Clé publique (public_key) manquante ou invalide. L'onboarding a été interrompu." }, { status: 400 });
             }
 
             try {
                 const profile = await prismaRLS.profile.upsert({
-                    where: { id: user.id },
+                    where: { userId_type: { userId: user.id, type: 'WORK' } },
                     update: { 
                         name,
                         publicKey
                     },
                     create: { 
                         id: user.id, 
+                        userId: user.id,
                         email: user.email!, 
                         name,
-                        publicKey
+                        publicKey,
+                        type: 'WORK'
                     }
                 });
                 
                 if (publicKey) {
-                    console.log(`âœ… [API-PROFILE] ClÃ© publique synchronisÃ©e pour l'utilisateur ${user.id}`);
+                    console.log(`✅ [API-PROFILE] Clé publique synchronisée pour l'utilisateur ${user.id}`);
                 }
                 
                 return NextResponse.json({ success: true, profileId: profile.id });
             } catch (error: any) {
-                console.error("âŒ [API-PROFILE] Ã‰chec critique de la persistance de la clÃ© publique:", error.message);
+                console.error("❌ [API-PROFILE] Échec critique de la persistance de la clé publique:", error.message);
                 throw error;
             }
         }
@@ -9390,7 +10357,7 @@ export async function POST(request: Request) {
             const tjmParsed = tjm ? parseInt(tjm, 10) : null;
 
             await prismaRLS.profile.update({
-                where: { id: user.id },
+                where: { userId_type: { userId: user.id, type: 'WORK' } },
                 data: {
                     primaryRole,
                     customRole: primaryRole === 'OTHER' ? customRole : null,
@@ -9400,13 +10367,14 @@ export async function POST(request: Request) {
                 }
             });
 
-            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}â‚¬. Dispo: ${availability}`;
+            const identityString = `Role: ${primaryRole === 'OTHER' ? customRole : primaryRole}. Bio: ${bio}. TJM: ${tjmParsed}€. Dispo: ${availability}`;
             const embedding = await getMistralEmbedding(identityString);
 
             if (embedding) {
+                const vectorString = `[${embedding.join(',')}]`;
                 await prisma.$executeRawUnsafe(
-                    `UPDATE public."Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
-                    `[${embedding.join(',')}]`,
+                    `UPDATE "profiles" SET "unified_embedding" = $1::vector WHERE user_id = $2 AND type = 'WORK'`,
+                    vectorString,
                     user.id
                 );
             }
@@ -9419,9 +10387,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/components/CortexUploader.tsx">
+## File: app/components/CortexUploader.tsx
+````typescript
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -9430,7 +10399,7 @@ import { Paperclip, Send, Loader2, CheckCircle, AlertCircle, X, Brain } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { getApiUrl } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/memories
+// Server action supprimée — on utilise fetch vers /api/memories
 
 type UploadState = 'IDLE' | 'UPLOADING' | 'ANALYZING' | 'SUCCESS' | 'ERROR';
 
@@ -9460,7 +10429,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
 
             // Validation: Size
             if (file.size > MAX_FILE_SIZE) {
-                setErrorMsg(t('cortex.error_size') || 'Le fichier dÃ©passe la limite de 5Mo.');
+                setErrorMsg(t('cortex.error_size') || 'Le fichier dépasse la limite de 5Mo.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -9469,7 +10438,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             // Validation: Type
             const allowedTypes = ['text/plain', 'text/markdown', 'application/pdf'];
             if (!allowedTypes.includes(file.type)) {
-                setErrorMsg(t('cortex.error_format') || 'Format non supportÃ©. Utilisez PDF, TXT ou MD.');
+                setErrorMsg(t('cortex.error_format') || 'Format non supporté. Utilisez PDF, TXT ou MD.');
                 setUploadState('ERROR');
                 setTimeout(() => setUploadState('IDLE'), 4000);
                 return;
@@ -9506,10 +10475,10 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
         let fileName = 'manual';
 
         try {
-            // âš¡ ANTIGRAVITY: Extraction locale avant l'envoi rÃ©seau !
+            // ⚡ ANTIGRAVITY: Extraction locale avant l'envoi réseau !
             if (selectedFile) {
                 fileName = selectedFile.name;
-                setUploadState('ANALYZING'); // On met Ã  jour l'UI pendant l'extraction locale
+                setUploadState('ANALYZING'); // On met à jour l'UI pendant l'extraction locale
 
                 if (selectedFile.type === 'application/pdf') {
                     const { extractTextFromPdf } = await import('@/lib/pdf-client');
@@ -9527,7 +10496,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             formData.append('fileName', fileName);
             formData.append('hasFile', selectedFile ? 'true' : 'false');
 
-            // âš¡ NOUVEAU : On rÃ©cupÃ¨re la session pour avoir le jeton
+            // ⚡ NOUVEAU : On récupère la session pour avoir le jeton
             const { createClient } = await import('@/lib/supabaseBrowser');
             const supabase = createClient();
             const { data: { session } } = await supabase.auth.getSession();
@@ -9537,7 +10506,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                 headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            // âš¡ NOUVEAU : On passe les headers Ã  la requÃªte fetch
+            // ⚡ NOUVEAU : On passe les headers à la requête fetch
             const data = await fetch(getApiUrl('/api/memories'), {
                 method: 'POST',
                 headers: headers, // <-- Ajout des headers ici
@@ -9550,7 +10519,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
             if (onUploadComplete) onUploadComplete();
             router.refresh();
 
-            // Reset l'Ã©tat aprÃ¨s succÃ¨s
+            // Reset l'état après succès
             setTimeout(() => {
                 setUploadState('IDLE');
                 setTextContext('');
@@ -9585,7 +10554,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                         'border-white/10 focus-within:border-purple-500/50 focus-within:shadow-[0_0_20px_rgba(168,85,247,0.15)] hover:border-white/20'}
             `}>
 
-                {/* Overlay de chargement ou succÃ¨s (prend le dessus sur le formulaire) */}
+                {/* Overlay de chargement ou succès (prend le dessus sur le formulaire) */}
                 <AnimatePresence>
                     {uploadState !== 'IDLE' && uploadState !== 'ERROR' && (
                         <motion.div
@@ -9597,7 +10566,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             {uploadState === 'UPLOADING' && (
                                 <div className="flex flex-col items-center gap-3">
                                     <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                                    <span className="text-sm font-medium text-white/90">{t('profile.common.syncing') || 'PrÃ©paration des donnÃ©es...'}</span>
+                                    <span className="text-sm font-medium text-white/90">{t('profile.common.syncing') || 'Préparation des données...'}</span>
                                 </div>
                             )}
                             {uploadState === 'ANALYZING' && (
@@ -9615,7 +10584,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                 <div className="flex flex-col items-center gap-3">
                                     <CheckCircle className="w-10 h-10 text-green-400" />
                                     <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-400 text-center">
-                                        {t('cortex.success') || "MÃ©moire ingÃ©rÃ©e avec succÃ¨s"}
+                                        {t('cortex.success') || "Mémoire ingérée avec succès"}
                                     </span>
                                 </div>
                             )}
@@ -9636,12 +10605,12 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                             onChange={(e) => setTextContext(e.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isBusy}
-                            placeholder={t('radar.search_placeholder') || "Collez une URL Ã  scraper, tapez une note, ou dÃ©crivez un contexte..."}
+                            placeholder={t('radar.search_placeholder') || "Collez une URL à scraper, tapez une note, ou décrivez un contexte..."}
                             className="w-full min-h-[60px] max-h-[200px] bg-transparent text-gray-200 placeholder-gray-500 outline-none resize-none text-sm md:text-base leading-relaxed"
                         />
                     </div>
 
-                    {/* Zone d'affichage du fichier sÃ©lectionnÃ© */}
+                    {/* Zone d'affichage du fichier sélectionné */}
                     <AnimatePresence>
                         {selectedFile && (
                             <motion.div
@@ -9683,7 +10652,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                         )}
                     </AnimatePresence>
 
-                    {/* Barre d'action infÃ©rieure */}
+                    {/* Barre d'action inférieure */}
                     <div className="flex items-center justify-between p-2 pt-0 border-t border-transparent mt-2">
 
                         {/* Actions Gauche */}
@@ -9724,7 +10693,7 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
                                     }
                                 `}
                             >
-                                <span>{t('cortex.ingest') || "IngÃ©rer"}</span>
+                                <span>{t('cortex.ingest') || "Ingérer"}</span>
                                 <Send className="w-4 h-4 ml-1" />
                             </button>
                         </div>
@@ -9735,12 +10704,13 @@ export default function CortexUploader({ onUploadComplete }: { onUploadComplete?
         </div>
     );
 }
-</file>
+````
 
-<file path="app/components/GestationOnboarding.tsx">
+## File: app/components/GestationOnboarding.tsx
+````typescript
 'use client';
 import { useState, useRef } from 'react';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/auto-ingest
+// Server actions supprimées — on utilise fetch vers /api/auto-ingest
 import { Loader2, UploadCloud, CheckCircle } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
@@ -9756,7 +10726,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
 
         setIsProcessing(true);
         try {
-            // Ã‰tape A : On lit le PDF via la Server Action
+            // Étape A : On lit le PDF via la Server Action
             const formData = new FormData();
             formData.append('file', file);
 
@@ -9771,7 +10741,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
                 headers,
                 body: formData
             }).then(r => r.json());
-            if (!uploadData.success) throw new Error("Ã‰chec lecture PDF");
+            if (!uploadData.success) throw new Error("Échec lecture PDF");
 
             const headersJson: any = { 'Content-Type': 'application/json' };
             if (session) headersJson['Authorization'] = `Bearer ${session.access_token}`;
@@ -9806,7 +10776,7 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
             body: JSON.stringify({ action: 'confirmIngestion', userId, validatedData: extractedMatrix })
         }).then(r => r.json());
         if (res.success) {
-            alert("Matrice injectÃ©e avec succÃ¨s.");
+            alert("Matrice injectée avec succès.");
             window.location.href = '/'; // Redirection vers le Radar
         }
         setIsProcessing(false);
@@ -9827,19 +10797,19 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
                     ) : (
                         <>
                             <UploadCloud className="mx-auto w-12 h-12 text-blue-400 mb-4" />
-                            <p className="text-zinc-300 font-mono text-sm">DÃ©posez votre CV ou export LinkedIn (PDF)</p>
+                            <p className="text-zinc-300 font-mono text-sm">Déposez votre CV ou export LinkedIn (PDF)</p>
                         </>
                     )}
                 </div>
             ) : (
                 <div className="space-y-6 animate-in fade-in zoom-in">
                     <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-700">
-                        <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Matrice DÃ©duite (VÃ©rifiez les donnÃ©es)</h3>
+                        <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">Matrice Déduite (Vérifiez les données)</h3>
 
                         <div className="grid grid-cols-2 gap-4 text-sm text-zinc-300">
-                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix?.primaryRole || 'Non spÃ©cifiÃ©'}</div>
-                            <div><span className="text-zinc-500 block text-xs">SÃ©nioritÃ©</span> {extractedMatrix?.seniority || 'Non spÃ©cifiÃ©e'}</div>
-                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix?.ikigaiMission || 'Non spÃ©cifiÃ©e'}</div>
+                            <div><span className="text-zinc-500 block text-xs">Profession</span> {extractedMatrix?.primaryRole || 'Non spécifié'}</div>
+                            <div><span className="text-zinc-500 block text-xs">Séniorité</span> {extractedMatrix?.seniority || 'Non spécifiée'}</div>
+                            <div className="col-span-2"><span className="text-zinc-500 block text-xs">Mission</span> {extractedMatrix?.ikigaiMission || 'Non spécifiée'}</div>
                         </div>
                     </div>
 
@@ -9854,9 +10824,10 @@ export default function GestationOnboarding({ userId }: { userId: string }) {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/hooks/usePushNotifications.ts">
+## File: app/hooks/usePushNotifications.ts
+````typescript
 import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -9906,150 +10877,16 @@ export const usePushNotifications = (profileId: string | null) => {
         return () => { PushNotifications.removeAllListeners(); };
     }, [profileId]);
 };
-</file>
+````
 
-<file path="app/login/page.tsx">
-'use client';
-
-import { useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-import { useRouter } from 'next/navigation';
-import { getApiUrl } from '@/lib/api';
-
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  // On stocke l'action (login ou signup) pour savoir quoi faire lors du submit
-  const [actionType, setActionType] = useState<'login' | 'signup'>('login');
-  const router = useRouter();
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    // 1. Authentification Supabase
-    const { data: authData, error: authError } = actionType === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/` }
-      });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (!authData.session) {
-      setError("âš ï¸ Agent Ipse : En attente de confirmation email.");
-      setLoading(false);
-      return;
-    }
-
-    if (authData?.user?.id) {
-      try {
-        console.log("ðŸ” VÃ©rification du profil cÃ´tÃ© client...");
-
-        const response = await fetch(getApiUrl('/api/auth/sync-profile'), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authData.session.access_token}`
-          }
-        });
-
-        if (!response.ok) {
-          setError(`Alerte Ipse : La synchronisation du profil a Ã©chouÃ©.`);
-        }
-
-        console.log("âœ… Agent Ipse validÃ© avec succÃ¨s !");
-        router.push('/');
-        router.refresh();
-      } catch (err) {
-        console.error("Erreur inattendue:", err);
-        setError("Erreur inattendue lors de la vÃ©rification.");
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white/10 p-8 backdrop-blur-lg border border-white/20 shadow-xl">
-        <h1 className="text-3xl font-bold text-white mb-2 text-center">Ipse</h1>
-        <p className="text-blue-300/80 text-sm mb-6 text-center font-medium uppercase tracking-widest">
-          Initialisation de l'Agent Ipse
-        </p>
-
-        {error && (
-          <div className="mb-4 p-3 rounded bg-red-500/20 border border-red-500 text-red-200 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            required
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            placeholder="Mot de passe (min. 6 caractÃ¨res)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
-          />
-
-          <div className="flex gap-4 pt-4">
-            <button
-              type="submit"
-              onClick={() => setActionType('login')}
-              disabled={loading}
-              className="flex-1 p-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50"
-            >
-              Se connecter
-            </button>
-            <button
-              type="submit"
-              onClick={() => setActionType('signup')}
-              disabled={loading}
-              className="flex-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition disabled:opacity-50"
-            >
-              S'inscrire
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="components/CommandTerminal.tsx">
+## File: components/CommandTerminal.tsx
+````typescript
 'use client'
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/terminal et /api/sync-cortex
+// Server actions supprimées — on utilise fetch vers /api/terminal et /api/sync-cortex
 
 interface WebResult {
     title: string;
@@ -10101,9 +10938,9 @@ function SyncButton({ result, onStatsUpdate }: { result: WebResult; onStatsUpdat
             disabled={syncState !== 'idle'}
             className="text-[10px] bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 px-2 py-1 rounded hover:bg-cyan-500/20 transition-all uppercase tracking-wider mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            {syncState === 'idle' && 'âš¡ Sync Cortex'}
+            {syncState === 'idle' && '⚡ Sync Cortex'}
             {syncState === 'syncing' && 'VECTORISATION...'}
-            {syncState === 'synced' && 'âœ“ SYNCHRONISÃ‰'}
+            {syncState === 'synced' && '✓ SYNCHRONISÉ'}
         </button>
     );
 }
@@ -10154,7 +10991,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
             {/* HEADER TERMINAL */}
             <div className="flex items-center justify-between border-b border-white/10 p-4 mx-2">
                 <h3 className="text-xs text-cyan-500 font-bold tracking-widest flex items-center gap-2">
-                    <span className="animate-pulse">â˜„ï¸</span> IPSE_OS // TERMINAL
+                    <span className="animate-pulse">☄️</span> IPSE_OS // TERMINAL
                 </h3>
                 <span className="text-[10px] flex items-center gap-2 text-gray-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> RADAR EN LIGNE
@@ -10163,7 +11000,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
 
             {/* ZONE DE CHAT / LOGS */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-gray-300 custom-scrollbar">
-                <div className="text-cyan-600/50 text-xs italic">SystÃ¨me initialisÃ©. En attente d&apos;ordres tactiques...</div>
+                <div className="text-cyan-600/50 text-xs italic">Système initialisé. En attente d&apos;ordres tactiques...</div>
 
                 {history.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -10176,7 +11013,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                             }`}>
                             {msg.text}
 
-                            {/* RÃ©sultats Web avec bouton Sync Cortex */}
+                            {/* Résultats Web avec bouton Sync Cortex */}
                             {msg.webResults && msg.webResults.length > 0 && (
                                 <div className="mt-3 pt-3 border-t border-cyan-500/10 space-y-3">
                                     <div className="text-[9px] text-cyan-500/60 uppercase tracking-widest">Capteurs Externes</div>
@@ -10196,7 +11033,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                     </div>
                 ))}
                 {isProcessing && (
-                    <div className="text-cyan-500 text-xs animate-pulse">&gt; Scan rÃ©seau et Web en cours...</div>
+                    <div className="text-cyan-500 text-xs animate-pulse">&gt; Scan réseau et Web en cours...</div>
                 )}
             </div>
 
@@ -10206,7 +11043,7 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
                 <input
                     type="text"
                     className="flex-1 bg-transparent border-none text-cyan-400 focus:outline-none focus:ring-0 placeholder-cyan-900/50 text-sm"
-                    placeholder="Ex: Cherche un CTO expert en cybersÃ©curitÃ©..."
+                    placeholder="Ex: Cherche un CTO expert en cybersécurité..."
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleCommand()}
@@ -10216,25 +11053,26 @@ export function CommandTerminal({ userId, onStatsUpdate }: { userId: string; onS
         </div>
     );
 }
-</file>
+````
 
-<file path="components/cortex/GuardianLoop.tsx">
+## File: components/cortex/GuardianLoop.tsx
+````typescript
 'use client';
 import { useState } from 'react';
 import { ShieldCheck, UserCheck } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/guardian
+// Server action supprimée — on utilise fetch vers /api/guardian
 
 export default function GuardianLoop({ profileId }: { profileId: string }) {
     const [activeNegotiations, setNegotiations] = useState<any[]>([]);
     const [isNegotiating, setIsNegotiating] = useState(false);
 
-    // Simulation d'une dÃ©tection et nÃ©gociation automatique
+    // Simulation d'une détection et négociation automatique
     const startAutonomousSync = async () => {
         setIsNegotiating(true);
-        // Pour la dÃ©mo, on simule un Target ID. Dans la vraie vie, on le prendrait du NetworkRadar.
+        // Pour la démo, on simule un Target ID. Dans la vraie vie, on le prendrait du NetworkRadar.
         // On va utiliser un ID fictif ou celui d'un autre profil existant si connu.
-        // Ici on laisse l'API gÃ©rer l'absence ou simuler si besoin, ou on passe un ID fictif.
+        // Ici on laisse l'API gérer l'absence ou simuler si besoin, ou on passe un ID fictif.
         const fakeTargetId = "partner-profile-id-placeholder";
 
         try {
@@ -10254,9 +11092,9 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
             if (data.success) {
                 setNegotiations(prev => [data, ...prev]);
             } else {
-                // Si l'API renvoie 404 car pas de profil, on simule une rÃ©ponse pour la dÃ©mo UI
+                // Si l'API renvoie 404 car pas de profil, on simule une réponse pour la démo UI
                 setNegotiations(prev => [{
-                    summary: "Simulation : Le Gardien de Rapala est intriguÃ© par vos brevets sur l'acier tungstÃ¨ne.",
+                    summary: "Simulation : Le Gardien de Rapala est intrigué par vos brevets sur l'acier tungstène.",
                     verdict: "MATCH",
                     nextStep: "Proposer un NDA avant d'envoyer les plans."
                 }, ...prev]);
@@ -10282,14 +11120,14 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
             <div className="space-y-4">
                 {activeNegotiations.length === 0 ? (
                     <div className="text-slate-600 text-sm italic text-center py-10">
-                        "Je scanne le rÃ©seau. Je te prÃ©viendrai dÃ¨s que je trouve un Agent IA digne de ton attention."
+                        "Je scanne le réseau. Je te préviendrai dès que je trouve un Agent IA digne de ton attention."
                     </div>
                 ) : (
                     activeNegotiations.map((neg, i) => (
                         <div key={i} className="bg-slate-900/50 border-l-2 border-cyan-500 p-4 rounded-r-lg animate-in fade-in slide-in-from-right-4">
                             <div className="flex justify-between items-start mb-2">
                                 <span className="text-xs font-bold text-white flex items-center gap-2">
-                                    <UserCheck size={14} className="text-cyan-400" /> Match trouvÃ© avec le Fabricant
+                                    <UserCheck size={14} className="text-cyan-400" /> Match trouvé avec le Fabricant
                                 </span>
                                 <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${neg.verdict === 'MATCH' ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
                                     {neg.verdict}
@@ -10305,25 +11143,26 @@ export default function GuardianLoop({ profileId }: { profileId: string }) {
                 )}
             </div>
 
-            {/* Bouton pour tester le dÃ©clenchement (En attendant le Cron Job automatique) */}
+            {/* Bouton pour tester le déclenchement (En attendant le Cron Job automatique) */}
             <button
                 onClick={startAutonomousSync}
                 disabled={isNegotiating}
                 className="mt-6 w-full py-2 border border-cyan-500/50 text-cyan-400 text-[10px] uppercase font-bold hover:bg-cyan-500/10 transition-all rounded-lg flex justify-center items-center gap-2"
             >
-                {isNegotiating ? 'NÃ‰GOCIATION EN COURS...' : 'SIMULER UNE RENCONTRE DE Agent IAS'}
+                {isNegotiating ? 'NÉGOCIATION EN COURS...' : 'SIMULER UNE RENCONTRE DE Agent IAS'}
             </button>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/cortex/KnowledgeIngester.tsx">
+## File: components/cortex/KnowledgeIngester.tsx
+````typescript
 'use client';
 import { useState } from 'react';
 import { Link2, Loader2, Database, CheckCircle, Trash2, Volume2, Search } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories
+// Server actions supprimées — on utilise fetch vers /api/memories
 
 export default function KnowledgeIngester({ profileId, memories = [], onRefresh }: { profileId: string, memories?: any[], onRefresh?: () => void }) {
     const [url, setUrl] = useState('');
@@ -10423,7 +11262,7 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
                         {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> :
                             status === 'success' ? <CheckCircle size={16} /> :
                                 <Link2 size={16} />}
-                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÃ‰MORISÃ‰' : 'INGÃ‰RER'}
+                        {status === 'loading' ? 'ANALYSE...' : status === 'success' ? 'MÉMORISÉ' : 'INGÉRER'}
                     </button>
                 </div>
             </div>
@@ -10470,14 +11309,15 @@ export default function KnowledgeIngester({ profileId, memories = [], onRefresh 
         </div>
     );
 }
-</file>
+````
 
-<file path="components/cortex/NetworkRadar.tsx">
+## File: components/cortex/NetworkRadar.tsx
+````typescript
 'use client';
 import { useState } from 'react';
 import { Radar, Target, UserPlus, ShieldAlert } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/scan-network
+// Server action supprimée — on utilise fetch vers /api/scan-network
 
 export default function NetworkRadar({ profileId }: { profileId: string }) {
     const [isScanning, setIsScanning] = useState(false);
@@ -10485,7 +11325,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
     const launchScan = async () => {
         setIsScanning(true);
-        // On scanne le secteur "Marine Tech & Fishing" par dÃ©faut pour FisherMade
+        // On scanne le secteur "Marine Tech & Fishing" par défaut pour FisherMade
         try {
             const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
             const supabase = createSupabase();
@@ -10515,11 +11355,11 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
             </div>
 
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Target className="text-red-500" /> RADAR D'OPPORTUNITÃ‰S
+                <Target className="text-red-500" /> RADAR D'OPPORTUNITÉS
             </h2>
 
             <p className="text-xs text-slate-400 mb-4">
-                DÃ©tecte les entitÃ©s (concurrents, partenaires, investisseurs) actives dans votre secteur et Ã©value leur compatibilitÃ©.
+                Détecte les entités (concurrents, partenaires, investisseurs) actives dans votre secteur et évalue leur compatibilité.
             </p>
 
             <div className="mb-6">
@@ -10552,7 +11392,7 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
 
                         <div className="text-right flex flex-col items-end">
                             <div className="text-2xl font-bold text-green-400">{agent.matchScore}%</div>
-                            <div className="text-[10px] uppercase text-green-600 font-bold">CompatibilitÃ©</div>
+                            <div className="text-[10px] uppercase text-green-600 font-bold">Compatibilité</div>
                         </div>
                     </div>
                 ))}
@@ -10560,16 +11400,17 @@ export default function NetworkRadar({ profileId }: { profileId: string }) {
                 {agents.length === 0 && !isScanning && (
                     <div className="text-center py-8 opacity-50">
                         <ShieldAlert className="mx-auto mb-2 text-slate-600" size={32} />
-                        <p className="text-slate-500 text-sm italic">Aucune cible dÃ©tectÃ©e. Lancez le scan pour activer le sonar.</p>
+                        <p className="text-slate-500 text-sm italic">Aucune cible détectée. Lancez le scan pour activer le sonar.</p>
                     </div>
                 )}
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/dashboard/Scanner.tsx">
+## File: components/dashboard/Scanner.tsx
+````typescript
 import { motion } from "framer-motion";
 
 export default function Scanner({ onScanStart }: { onScanStart: () => void }) {
@@ -10590,22 +11431,23 @@ export default function Scanner({ onScanStart }: { onScanStart: () => void }) {
                 </div>
 
                 <div className="flex flex-col items-center z-10 space-y-2">
-                    <p className="text-cyan-400 font-mono text-[10px] tracking-[0.2em] uppercase">SYSTÃˆME PRÃŠT</p>
-                    <h3 className="text-white font-bold text-lg tracking-widest drop-shadow-lg uppercase">Analyser le RÃ©seau</h3>
+                    <p className="text-cyan-400 font-mono text-[10px] tracking-[0.2em] uppercase">SYSTÈME PRÊT</p>
+                    <h3 className="text-white font-bold text-lg tracking-widest drop-shadow-lg uppercase">Analyser le Réseau</h3>
                 </div>
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/file-uploader.tsx">
+## File: components/file-uploader.tsx
+````typescript
 'use client';
 
 import { useState, useRef } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/memories
+// Server action supprimée — on utilise fetch vers /api/memories
 
 export default function FileUploader({ profileId, onUploadComplete }: { profileId: string, onUploadComplete: () => void }) {
     const [isDragging, setIsDragging] = useState(false);
@@ -10616,10 +11458,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
     const handleFile = async (file: File) => {
         if (!file) return;
 
-        // VÃ©rification basique (PDF ou TXT)
+        // Vérification basique (PDF ou TXT)
         if (file.type !== 'application/pdf' && file.type !== 'text/plain') {
             setStatus('error');
-            setMessage('Format non supportÃ©. PDF ou TXT uniquement.');
+            setMessage('Format non supporté. PDF ou TXT uniquement.');
             return;
         }
 
@@ -10645,10 +11487,10 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
             if (!data.success) throw new Error(data.error || "Erreur upload");
 
             setStatus('success');
-            setMessage(`Assimilation terminÃ©e ! Fragments de mÃ©moire crÃ©Ã©s.`);
+            setMessage(`Assimilation terminée ! Fragments de mémoire créés.`);
             if (onUploadComplete) onUploadComplete();
 
-            // Reset aprÃ¨s 3 secondes
+            // Reset après 3 secondes
             setTimeout(() => {
                 setStatus('idle');
                 setMessage('');
@@ -10719,22 +11561,72 @@ export default function FileUploader({ profileId, onUploadComplete }: { profileI
                     <>
                         <AlertCircle className="text-red-500" size={32} />
                         <p className="text-xs text-red-400 font-bold">{message}</p>
-                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">RÃ©essayer</button>
+                        <button onClick={() => setStatus('idle')} className="text-[10px] underline">Réessayer</button>
                     </>
                 )}
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="components/RadarWidget.tsx">
+## File: components/nav-bar.tsx
+````typescript
+'use client'
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Database, UserCircle, Radar } from 'lucide-react';
+
+export default function BottomNav() {
+    const pathname = usePathname();
+
+    return (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/90 backdrop-blur-2xl border border-[var(--primary)]/20 rounded-full shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+
+                {/* CORTEX : Archives de données */}
+                <Link href="/memories" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/memories' ? 'bg-[var(--primary)]/10' : ''}`}>
+                    <Database className={`w-5 h-5 ${pathname === '/memories' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20 group-hover:text-[var(--primary)]'}`} />
+                    <span className={`text-[8px] uppercase mt-1 font-bold tracking-tighter ${pathname === '/memories' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20'}`}>Cortex</span>
+                </Link>
+
+                {/* SÉPARATEUR */}
+                <div className="h-6 w-[1px] bg-[var(--primary)]/10 mx-2" />
+
+                {/* SCAN : Centre de Commande (Dashboard) */}
+                <Link href="/" className="relative group flex flex-col items-center">
+                    <div className={`p-4 rounded-full border-2 transition-all duration-500 ${pathname === '/'
+                        ? 'bg-[var(--primary)]/20 border-[var(--primary)] shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)]'
+                        : 'border-[var(--primary)]/20 hover:border-[var(--primary)]'
+                        }`}>
+                        <Radar className={`w-7 h-7 ${pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20 group-hover:text-[var(--primary)]'}`} />
+                    </div>
+                    <span className={`text-[9px] uppercase mt-1 font-black tracking-widest ${pathname === '/' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20 group-hover:text-[var(--primary)]'}`}>Scan</span>
+                </Link>
+
+                {/* SÉPARATEUR */}
+                <div className="h-6 w-[1px] bg-[var(--primary)]/10 mx-2" />
+
+                {/* IDENTITÉ : Profil Agent */}
+                <Link href="/profile" className={`group flex flex-col items-center min-w-[70px] p-2 rounded-full transition-all ${pathname === '/profile' ? 'bg-[var(--primary)]/10' : ''}`}>
+                    <UserCircle className={`w-5 h-5 ${pathname === '/profile' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20 group-hover:text-[var(--primary)]'}`} />
+                    <span className={`text-[8px] uppercase mt-1 font-bold tracking-tighter ${pathname === '/profile' ? 'text-[var(--primary)]' : 'text-[var(--text-main)]/20'}`}>Identité</span>
+                </Link>
+
+            </div>
+        </div>
+    );
+}
+````
+
+## File: components/RadarWidget.tsx
+````typescript
 'use client';
 
 import { useEffect, useState } from 'react';
 import { Radio, ExternalLink, RefreshCw } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/radar et /api/memories
+// Server actions supprimées — on utilise fetch vers /api/radar et /api/memories
 
 export default function RadarWidget({ profileId }: { profileId: string | null }) {
     const [news, setNews] = useState<any[]>([]);
@@ -10761,7 +11653,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
     };
 
     const saveToMemory = async (e: React.MouseEvent, item: any) => {
-        e.preventDefault(); // EmpÃªche l'ouverture du lien
+        e.preventDefault(); // Empêche l'ouverture du lien
         if (!profileId) return;
 
         setSaving(item.link);
@@ -10782,7 +11674,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                     type: 'news'
                 })
             });
-            alert("News mÃ©morisÃ©e !");
+            alert("News mémorisée !");
         } catch (error) {
             console.error("Erreur sauvegarde", error);
         } finally {
@@ -10836,7 +11728,7 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                                 <button
                                     onClick={(e) => saveToMemory(e, item)}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-cyan-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                    title="MÃ©moriser cette news"
+                                    title="Mémoriser cette news"
                                 >
                                     {saving === item.link ? <RefreshCw size={14} className="animate-spin" /> : <ExternalLink size={14} />}
                                 </button>
@@ -10846,65 +11738,502 @@ export default function RadarWidget({ profileId }: { profileId: string | null })
                 )}
             </div>
 
-            {/* Footer DÃ©coratif */}
+            {/* Footer Décoratif */}
             <div className="h-1 w-full bg-slate-800">
                 <div className="h-full bg-cyan-600 animate-pulse w-1/3"></div>
             </div>
         </div>
     );
 }
-</file>
+````
 
-<file path="lib/prisma.ts">
-import { PrismaClient } from '../generated/prisma/client';
-import { Pool } from 'pg'; // Requis pour l'adapter-pg
-import { PrismaPg } from '@prisma/adapter-pg';
+## File: lib/crypto-client.ts
+````typescript
+import { Capacitor } from '@capacitor/core';
+import { VaultManager, VaultKey } from './vault-manager';
+import * as bip39 from 'bip39';
+
+// =====================================================
+// 🧬 IDENTITÉ CRYPTOGRAPHIQUE (BIP39 + ECDH)
+// =====================================================
+
+/**
+ * Dérive une clé AES-GCM 256 bits à partir d'un PIN utilisateur en utilisant PBKDF2.
+ */
+export async function deriveKeyFromPin(pin: string, salt: Uint8Array): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(pin),
+        { name: "PBKDF2" },
+        false,
+        ["deriveBits", "deriveKey"]
+    );
+
+    return crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt as any,
+            iterations: 100000, // Standard de sécurité pour contrer le brute-force
+            hash: "SHA-256",
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+
+
+/**
+ * ⚡ ANTIGRAVITY: Source Unique de Vérité pour la génération de clés.
+ * Ne retourne QUE la clé publique à envoyer au serveur.
+ * La clé privée est séquestrée dans la puce matérielle via VaultManager ou chiffrée sur le Web.
+ */
+export async function generateAndStoreKeyPair(userPin: string): Promise<{ publicKeyJwk: JsonWebKey; mnemonic: string }> {
+    if (!userPin || userPin.length < 4) {
+        throw new Error("Un PIN robuste est requis pour sécuriser le coffre local.");
+    }
+
+    try {
+        // A. Génération des 12 mots
+        const mnemonic = bip39.generateMnemonic();
+
+        // B. Génération Mathématique de la paire ECDH
+        const keyPair = await crypto.subtle.generateKey(
+            { name: "ECDH", namedCurve: "P-256" },
+            true,
+            ["deriveKey", "deriveBits"]
+        );
+
+        const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
+
+        // C. Le Bouclier Matériel (Zero-Tolerance)
+        if (Capacitor.isNativePlatform()) {
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+            await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+            console.log("✅ [CRYPTO] Clé privée verrouillée dans le Keystore/Keychain natif via VaultManager.");
+        } else {
+            // 🚨 Web Fallback: Chiffrement de la clé privée avec le PIN
+            const exportedPrivateKey = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const aesKey = await deriveKeyFromPin(userPin, salt);
+            
+            const encryptedPrivateKey = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                aesKey,
+                exportedPrivateKey
+            );
+
+            const vaultData = {
+                encryptedPrivateKey: arrayBufferToBase64(new Uint8Array(encryptedPrivateKey)),
+                salt: arrayBufferToBase64(salt),
+                iv: arrayBufferToBase64(iv)
+            };
+            
+            localStorage.setItem('ipse_web_vault', JSON.stringify(vaultData));
+            cachedPrivateKey = keyPair.privateKey;
+            console.log("🔒 Clé privée chiffrée, sauvegardée localement, et chargée en RAM avec succès.");
+        }
+
+        // D. On ne renvoie que ce qui est publiable
+        return { publicKeyJwk, mnemonic };
+
+    } catch (error: any) {
+        console.error("❌ [CRYPTO FATAL ERROR]:", error.message);
+        throw error;
+    }
+}
+
+// Rétrocompatibilité : alias pour l'ancien nom
+export const generateIdentity = generateAndStoreKeyPair;
+
+/**
+ * ⚡ ANTIGRAVITY: Lecture exclusive depuis la puce sécurisée.
+ */
+export async function getLocalPrivateKey(): Promise<JsonWebKey | null> {
+    const value = await VaultManager.loadSecret(VaultKey.IDENTITY_PRIVATE);
+    if (value) {
+        return JSON.parse(value) as JsonWebKey;
+    }
+    return null;
+}
+
+let cachedPrivateKey: CryptoKey | null = null;
+
+// Rétrocompatibilité : alias pour l'ancien nom
+export async function getStoredPrivateKeyJwk(): Promise<JsonWebKey> {
+    try {
+        if (Capacitor.isNativePlatform()) {
+            const key = await getLocalPrivateKey();
+            if (!key) throw new Error("Clé native introuvable.");
+            return key;
+        } else {
+            // ⚡️ 1. Vérification la plus rapide : La RAM
+            if (cachedPrivateKey) {
+                return await window.crypto.subtle.exportKey("jwk", cachedPrivateKey) as JsonWebKey;
+            }
+
+            // 🔄 2. TENTATIVE DE RÉCUPÉRATION JWT (Cross-Tab / F5)
+            console.log("🔄 RAM vide. Tentative de récupération depuis la Session...");
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                const recoveredKey = await unwrapKeyWithSession(session.access_token);
+                if (recoveredKey) {
+                    cachedPrivateKey = recoveredKey; // Remise en RAM
+                    console.log("✅ Clé E2EE restaurée depuis le JWT !");
+                    return await window.crypto.subtle.exportKey("jwk", recoveredKey) as JsonWebKey;
+                }
+            }
+
+            // ❌ 3. Si la RAM est vide ET le SessionStorage est vide/invalide
+            // C'est ici, et SEULEMENT ici, qu'on throw l'erreur qui affiche ton écran de déverrouillage
+            throw new Error("Clé non chargée en RAM. Reconnexion requise.");
+        }
+    } catch (e) {
+        console.error("❌ Erreur critique E2EE:", e);
+        throw e;
+    }
+}
+
+// --- DÉBUT DU BLOC JWT WRAPPING ---
+
+// Utilitaire d'encodage pour ArrayBuffer au lieu d'Uint8Array directement
+function arrayBufferToBase64ForWrap(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
+// 1. Emballe la clé privée avec le Token Supabase
+export async function wrapKeyWithSession(privateKey: CryptoKey, jwtToken: string) {
+    const jwk = await window.crypto.subtle.exportKey("jwk", privateKey);
+    const encoder = new TextEncoder();
+    
+    // Dérivation d'une clé AES à partir du JWT
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", encoder.encode(jwtToken), { name: "PBKDF2" }, false, ["deriveKey"]
+    );
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const aesKey = await window.crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt: salt, iterations: 10000, hash: "SHA-256" },
+        keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+    );
+
+    // Chiffrement de la clé
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, aesKey, encoder.encode(JSON.stringify(jwk))
+    );
+
+    // Sauvegarde Cross-Tab
+    localStorage.setItem('ipse_jwt_vault', JSON.stringify({
+        encryptedKey: arrayBufferToBase64ForWrap(encrypted),
+        salt: arrayBufferToBase64ForWrap(salt.buffer),
+        iv: arrayBufferToBase64ForWrap(iv.buffer)
+    }));
+    console.log("🔐 Clé E2EE sécurisée avec la session active.");
+}
+
+// 2. Déballe la clé privée avec le Token Supabase
+export async function unwrapKeyWithSession(jwtToken: string): Promise<CryptoKey | null> {
+    const vaultStr = localStorage.getItem('ipse_jwt_vault');
+    if (!vaultStr) return null;
+
+    try {
+        const vaultData = JSON.parse(vaultStr);
+        const salt = base64ToArrayBuffer(vaultData.salt);
+        const iv = base64ToArrayBuffer(vaultData.iv);
+        const encryptedKey = base64ToArrayBuffer(vaultData.encryptedKey);
+
+        const encoder = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+            "raw", encoder.encode(jwtToken), { name: "PBKDF2" }, false, ["deriveKey"]
+        );
+        const aesKey = await window.crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt as BufferSource, iterations: 10000, hash: "SHA-256" },
+            keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+        );
+
+        const decryptedBuffer = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: new Uint8Array(iv.buffer) as BufferSource }, aesKey, encryptedKey as BufferSource
+        );
+
+        const jwk = JSON.parse(new TextDecoder().decode(decryptedBuffer));
+        return await window.crypto.subtle.importKey(
+            "jwk", jwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey", "deriveBits"]
+        );
+    } catch (e) {
+        console.warn("⚠️ Impossible de déchiffrer avec la session. Token expiré ?");
+        return null;
+    }
+}
+// --- FIN DU BLOC JWT WRAPPING ---
+
+/**
+ * Ouvre le coffre local, déchiffre la clé privée avec le mot de passe fourni, et la place en RAM.
+ */
+export async function unlockLocalVault(secret: string): Promise<CryptoKey> {
+    const vaultString = localStorage.getItem('ipse_web_vault');
+    if (!vaultString) {
+        throw new Error("Clé introuvable. Aucun coffre local détecté.");
+    }
+
+    const vaultData = JSON.parse(vaultString);
+
+    // Reconstruction des buffers (base64ToArrayBuffer renvoie un Uint8Array)
+    const salt = base64ToArrayBuffer(vaultData.salt);
+    const iv = base64ToArrayBuffer(vaultData.iv);
+    const encryptedPrivateKey = base64ToArrayBuffer(vaultData.encryptedPrivateKey);
+
+    try {
+        // 1. Recréer la clé AES à partir du mot de passe saisi
+        const aesKey = await deriveKeyFromPin(secret, salt);
+
+        // 2. Déchiffrer la clé privée ECDH
+        const decryptedPrivateKeyBuffer = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv as any },
+            aesKey,
+            encryptedPrivateKey as any
+        );
+
+        // 3. Réimporter le buffer déchiffré en tant que CryptoKey utilisable
+        const privateKey = await crypto.subtle.importKey(
+            "pkcs8",
+            decryptedPrivateKeyBuffer,
+            { name: "ECDH", namedCurve: "P-256" },
+            true, // extractable
+            ["deriveKey", "deriveBits"]
+        );
+
+        console.log("🔓 Coffre déverrouillé avec succès ! Clé chargée en RAM.");
+        cachedPrivateKey = privateKey;
+        return privateKey;
+
+    } catch (error) {
+        console.error("Échec du déchiffrement. PIN incorrect ou données corrompues.", error);
+        throw new Error("Code PIN incorrect.");
+    }
+}
+
+/**
+ * Restauration depuis la Phrase Secrète (BIP39).
+ */
+export async function restoreFromMnemonic(mnemonic: string): Promise<{ publicKeyJwk: JsonWebKey }> {
+    if (!bip39.validateMnemonic(mnemonic)) {
+        throw new Error("Phrase secrète invalide.");
+    }
+
+    const keyPair = await crypto.subtle.generateKey(
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey", "deriveBits"]
+    );
+
+    const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey) as JsonWebKey;
+    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey) as JsonWebKey;
+
+    if (Capacitor.isNativePlatform()) {
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PRIVATE, JSON.stringify(privateKeyJwk));
+        await VaultManager.saveSecret(VaultKey.IDENTITY_PUBLIC, JSON.stringify(publicKeyJwk));
+        console.log("✅ [CRYPTO] Clé privée restaurée dans le Keystore/Keychain via VaultManager.");
+    } else {
+        throw new Error("SECURITY_HALT: Environnement non sécurisé détecté.");
+    }
+
+    return { publicKeyJwk };
+}
+
+// =====================================================
+// 🔑 ECDH KEY EXCHANGE
+// =====================================================
+
+/**
+ * Dérive la clé partagée (SharedKey) entre ta clé privée et la clé publique du partenaire.
+ * Ce parseur est blindé contre TOUTES les variations d'encodage (Objet, JSON, Base64, Base64Url).
+ */
+export async function deriveSharedKey(myPrivateKey: CryptoKey, partnerPublicKeyData: string | object): Promise<CryptoKey> {
+    let partnerJwkObj;
+
+    try {
+        // CAS 1: Supabase a déjà parsé le champ en Objet JavaScript natif
+        if (typeof partnerPublicKeyData === 'object') {
+            partnerJwkObj = partnerPublicKeyData;
+        } 
+        // CAS 2: C'est une chaîne de caractères (JSON ou Base64)
+        else if (typeof partnerPublicKeyData === 'string') {
+            const trimmed = partnerPublicKeyData.trim();
+            
+            // Si c'est du JSON en texte brut
+            if (trimmed.startsWith('{')) {
+                partnerJwkObj = JSON.parse(trimmed);
+            } 
+            // Si c'est du Base64
+            else {
+                // 1. Nettoyage extrême : on retire les guillemets (" ou ') et les espaces invisibles
+                let cleanBase64 = trimmed.replace(/['"\s]/g, '');
+                
+                // 2. Conversion du Base64Url-Safe vers le Base64 Standard
+                cleanBase64 = cleanBase64.replace(/-/g, '+').replace(/_/g, '/');
+                
+                // 3. Réparation du Padding (=) pour forcer un multiple de 4
+                while (cleanBase64.length % 4 !== 0) {
+                    cleanBase64 += '=';
+                }
+                
+                // 4. Décodage et parsing
+                const jsonString = window.atob(cleanBase64);
+                partnerJwkObj = JSON.parse(jsonString);
+            }
+        } else {
+            throw new Error("Le format de la clé est inconnu (ni object, ni string).");
+        }
+    } catch (error) {
+        console.error("❌ Échec critique du parsing de la clé publique de l'interlocuteur :", partnerPublicKeyData);
+        console.error("Détail de l'erreur :", error);
+        throw new Error("Clé du destinataire corrompue ou indécodable.");
+    }
+
+    // Importation de la clé via WebCrypto au format JWK
+    const partnerPublicKey = await window.crypto.subtle.importKey(
+        "jwk",
+        partnerJwkObj as JsonWebKey,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        [] // Les clés publiques ECDH n'ont pas d'opérations assignées
+    );
+
+    // Dérivation mathématique de la clé AES partagée
+    return await window.crypto.subtle.deriveKey(
+        {
+            name: "ECDH",
+            public: partnerPublicKey
+        },
+        myPrivateKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+// =====================================================
+// 🔒 CHIFFREMENT / DÉCHIFFREMENT AES-GCM
+// =====================================================
+
+export async function encryptLocal(plaintext: string, sharedKey: CryptoKey): Promise<string> {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(plaintext);
+
+    const cipherBuffer = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        sharedKey,
+        encoded
+    );
+
+    const ivB64 = arrayBufferToBase64(iv);
+    const cipherB64 = arrayBufferToBase64(new Uint8Array(cipherBuffer));
+
+    return `${ivB64}:${cipherB64}`;
+}
+
+const hexToBuffer = (hex: string) => new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
+
+export async function decryptLocal(encryptedPayload: string, sharedKey: CryptoKey): Promise<string> {
+    try {
+        const cleanPayload = encryptedPayload.replace('🧠 ', '').trim();
+
+        if (!cleanPayload.includes(':')) {
+            return encryptedPayload;
+        }
+
+        const parts = cleanPayload.split(':');
+        let iv: Uint8Array;
+        let cipherData: Uint8Array;
+
+        if (parts.length === 3) {
+            iv = hexToBuffer(parts[0]);
+            const authTag = hexToBuffer(parts[1]);
+            const ciphertext = hexToBuffer(parts[2]);
+            cipherData = new Uint8Array(ciphertext.length + authTag.length);
+            cipherData.set(ciphertext);
+            cipherData.set(authTag, ciphertext.length);
+        } else if (parts.length === 2) {
+            iv = base64ToArrayBuffer(parts[0]);
+            cipherData = base64ToArrayBuffer(parts[1]);
+        } else {
+            return encryptedPayload;
+        }
+
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv as BufferSource },
+            sharedKey,
+            cipherData as BufferSource
+        );
+
+        return new TextDecoder().decode(decrypted);
+    } catch (e) {
+        console.error("Échec déchiffrement:", e);
+        return "🔒 Message chiffré illisible";
+    }
+}
+
+// =====================================================
+// 🛠️ UTILITAIRES
+// =====================================================
+
+function arrayBufferToBase64(buffer: Uint8Array): string {
+    let binary = '';
+    for (let i = 0; i < buffer.byteLength; i++) {
+        binary += String.fromCharCode(buffer[i]);
+    }
+    return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string): Uint8Array {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+````
+
+## File: lib/prisma.ts
+````typescript
+import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-    // CORRECTION DU BUG : PrismaPg prend un Pool pg, pas un objet de config brut
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaPg(pool);
-    return new PrismaClient({ adapter });
+  // AJOUTER UN OBJET, MEME VIDE, EST OBLIGATOIRE DANS CETTE VERSION
+  return new PrismaClient({
+    log: ['error', 'warn']
+  }) 
 }
 
 declare global {
-    var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
+  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>
 }
 
-export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+export const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 
-if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
+if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma
 
-/**
- * âš¡ LE GARDIEN DU RLS âš¡
- * Utilise cette fonction dans TOUTES tes routes API (au lieu du prisma standard)
- * Elle force Prisma Ã  se comporter comme l'utilisateur authentifiÃ©.
- */
 export const getPrismaForUser = (userId: string) => {
-    return prisma.$extends({
-        query: {
-            $allModels: {
-                async $allOperations({ args, query }) {
-                    // On enveloppe la requÃªte dans une transaction interactive locale
-                    const [, result] = await prisma.$transaction([
-                        // 1. On injecte le JWT de l'utilisateur dans le contexte Postgres
-                        // âš¡ CORRECTION : Ajout de ::text aprÃ¨s ${userId} pour forcer le typage Postgres
-                        prisma.$executeRaw`
-              SELECT set_config('role', 'authenticated', true), 
-                     set_config('request.jwt.claims', json_build_object('sub', ${userId}::text)::text, true);
-            `,
-                        // 2. On exÃ©cute la requÃªte Prisma (qui est maintenant soumise au RLS)
-                        query(args),
-                    ]);
-                    return result;
-                },
-            },
-        },
-    });
+  return prisma;
 };
-</file>
+````
 
-<file path="app/actions/auto-ingest-profile.ts">
+## File: app/actions/auto-ingest-profile.ts
+````typescript
 'use server'
 import { mistralClient } from "@/lib/mistral";
 import { prisma } from "@/lib/prisma";
@@ -10921,20 +12250,20 @@ export async function extractTextFromUpload(formData: FormData) {
     }
 }
 
-// 1. PHASE D'EXTRACTION (Ne touche pas Ã  la DB)
+// 1. PHASE D'EXTRACTION (Ne touche pas à la DB)
 export async function extractProfileData(rawData: string) {
     try {
         const prompt = `
-    Tu es le Cortex de l'application Ipse. Ton rÃ´le est de profiler cet utilisateur pour configurer son Agent B2B autonome.
-    DONNÃ‰ES : """${rawData}"""
+    Tu es le Cortex de l'application Ipse. Ton rôle est de profiler cet utilisateur pour configurer son Agent B2B autonome.
+    DONNÉES : """${rawData}"""
     
     FORMAT JSON ATTENDU STRICT :
     {
       "primaryRole": "Titre du poste (Texte)",
       "industry": "Tech & Data|Commerce & Vente|Marketing & Design|Finance & Crypto",
-      "seniority": "Junior (0-2 ans)|ConfirmÃ© (3-5 ans)|Senior (6-10 ans)|Expert (+10 ans)",
+      "seniority": "Junior (0-2 ans)|Confirmé (3-5 ans)|Senior (6-10 ans)|Expert (+10 ans)",
       "objectives": ["Objectif 1", "Objectif 2"],
-      "ikigaiMission": "Sa mission de vie dÃ©duite (1 phrase)",
+      "ikigaiMission": "Sa mission de vie déduite (1 phrase)",
       "socialStyle": "Introverti|Extraverti|Analytique"
     }
     `;
@@ -10947,13 +12276,13 @@ export async function extractProfileData(rawData: string) {
         });
 
         const rawContent = chatResponse.choices?.[0].message.content;
-        if (!rawContent) throw new Error("RÃ©ponse vide de Mistral");
+        if (!rawContent) throw new Error("Réponse vide de Mistral");
 
         let profileData;
         try {
             profileData = JSON.parse(rawContent as string);
         } catch (parseError) {
-            throw new Error("L'IA a gÃ©nÃ©rÃ© un JSON corrompu.");
+            throw new Error("L'IA a généré un JSON corrompu.");
         }
 
         return { success: true, data: profileData };
@@ -10963,10 +12292,10 @@ export async function extractProfileData(rawData: string) {
     }
 }
 
-// 2. PHASE D'INJECTION (Avec gÃ©nÃ©ration du Vecteur 1024 de Mistral)
+// 2. PHASE D'INJECTION (Avec génération du Vecteur 1024 de Mistral)
 export async function confirmProfileIngestion(userId: string, validatedData: any) {
     try {
-        // 1. On sauvegarde d'abord les donnÃ©es texte classiques via Prisma
+        // 1. On sauvegarde d'abord les données texte classiques via Prisma
         await prisma.profile.update({
             where: { id: userId },
             data: {
@@ -10981,19 +12310,19 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
             }
         });
 
-        // 2. âš¡ GÃ‰NÃ‰RATION DE L'EMBEDDING (Le moteur du Radar)
-        // On crÃ©e un texte riche qui reprÃ©sente parfaitement l'utilisateur pour le Radar
+        // 2. ⚡ GÉNÉRATION DE L'EMBEDDING (Le moteur du Radar)
+        // On crée un texte riche qui représente parfaitement l'utilisateur pour le Radar
         const textToEmbed = `Profil: ${validatedData.primaryRole}. Secteur: ${validatedData.industry}. Niveau: ${validatedData.seniority}. Objectifs: ${validatedData.objectives.join(', ')}. Mission: ${validatedData.ikigaiMission}.`;
 
         const embeddingsResponse = await mistralClient.embeddings.create({
-            model: 'mistral-embed', // ModÃ¨le obligatoire pour les vecteurs
+            model: 'mistral-embed', // Modèle obligatoire pour les vecteurs
             inputs: [textToEmbed],
         });
 
         const embeddingVector = embeddingsResponse.data[0].embedding;
 
-        // 3. âš¡ SAUVEGARDE DU VECTEUR DANS POSTGRESQL (Prisma requiert $executeRaw pour pgvector)
-        // Note: Mistral gÃ©nÃ¨re des vecteurs Ã  1024 dimensions.
+        // 3. ⚡ SAUVEGARDE DU VECTEUR DANS POSTGRESQL (Prisma requiert $executeRaw pour pgvector)
+        // Note: Mistral génère des vecteurs à 1024 dimensions.
         await prisma.$executeRaw`
             UPDATE "Profile" 
             SET "unifiedEmbedding" = ${embeddingVector}::vector 
@@ -11007,9 +12336,10 @@ export async function confirmProfileIngestion(userId: string, validatedData: any
         return { success: false, error: "Erreur lors de l'enregistrement en DB." };
     }
 }
-</file>
+````
 
-<file path="app/actions/generate-opener.ts">
+## File: app/actions/generate-opener.ts
+````typescript
 'use server'
 import { mistralClient } from "@/lib/mistral";
 
@@ -11018,9 +12348,9 @@ import { prisma } from "@/lib/prisma";
 const client = mistralClient;
 
 export async function generateTacticalOpener(userId: string, targetId: string) {
-    if (!userId || !targetId) throw new Error("CoordonnÃ©es de frappe manquantes.");
+    if (!userId || !targetId) throw new Error("Coordonnées de frappe manquantes.");
 
-    // 1. RÃ©cupÃ©ration des deux profils (Les deux ADN)
+    // 1. Récupération des deux profils (Les deux ADN)
     const user = await prisma.profile.findUnique({
         where: { id: userId }
     });
@@ -11029,22 +12359,22 @@ export async function generateTacticalOpener(userId: string, targetId: string) {
         where: { id: targetId }
     });
 
-    if (!user || !target) throw new Error("Cible ou ExpÃ©diteur introuvable.");
+    if (!user || !target) throw new Error("Cible ou Expéditeur introuvable.");
 
-    // 2. Le Prompt d'IngÃ©nierie Sociale
+    // 2. Le Prompt d'Ingénierie Sociale
     const prompt = `
-Tu es Agent, un proxy tactique d'ingÃ©nierie sociale.
-Ta mission : RÃ©diger l'approche PARFAITE.
+Tu es Agent, un proxy tactique d'ingénierie sociale.
+Ta mission : Rédiger l'approche PARFAITE.
 
-ADN EXPÃ‰DITEUR : ${user.primaryRole || 'Non spÃ©cifiÃ©'} - ${(user as any).industry || (user as any).sector || 'Non spÃ©cifiÃ©'}
-ADN CIBLE : ${target.primaryRole || 'Non spÃ©cifiÃ©'} - ${(target as any).industry || (target as any).sector || 'Non spÃ©cifiÃ©'}
+ADN EXPÉDITEUR : ${user.primaryRole || 'Non spécifié'} - ${(user as any).industry || (user as any).sector || 'Non spécifié'}
+ADN CIBLE : ${target.primaryRole || 'Non spécifié'} - ${(target as any).industry || (target as any).sector || 'Non spécifié'}
 
-RÃˆGLES D'ENGAGEMENT :
-Tu dois gÃ©nÃ©rer DEUX Ã©lÃ©ments distincts.
+RÈGLES D'ENGAGEMENT :
+Tu dois générer DEUX éléments distincts.
 1. "hook" : Un objet/titre ultra-court pour la notification. Max 6 mots. (Ex: "Synergie : Logistique & Impression 3D").
 2. "message" : Le message complet de 3 phrases maximum. Direct, froid, professionnel. Pas de formules de politesse inutiles.
 
-FORMAT DE RÃ‰PONSE OBLIGATOIRE (JSON STRICT) :
+FORMAT DE RÉPONSE OBLIGATOIRE (JSON STRICT) :
 {
   "hook": "Ton accroche ici",
   "message": "Ton message complet ici"
@@ -11071,14 +12401,15 @@ FORMAT DE RÃ‰PONSE OBLIGATOIRE (JSON STRICT) :
 }
 
 // trigger fix build
-</file>
+````
 
-<file path="app/api/guardian/route.ts">
+## File: app/api/guardian/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { mistralClient } from '@/lib/mistral';
 
-// POST /api/guardian â€” guardianCheck or simulateNegotiation
+// POST /api/guardian — guardianCheck or simulateNegotiation
 export async function POST(request: Request) {
     if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     try {
@@ -11090,7 +12421,7 @@ export async function POST(request: Request) {
             if (!myProfileId || !targetProfileId) return NextResponse.json({ success: false, error: 'Ids manquants' }, { status: 400 });
             return NextResponse.json({
                 success: true,
-                summary: "Simulation : Le Gardien a interceptÃ© un contact prometteur.",
+                summary: "Simulation : Le Gardien a intercepté un contact prometteur.",
                 verdict: "MATCH",
                 nextStep: "Proposer un NDA avant d'envoyer les plans."
             });
@@ -11102,7 +12433,7 @@ export async function POST(request: Request) {
 
         const triageResponse = await mistralClient.chat.complete({
             model: "mistral-small-latest",
-            messages: [{ role: "user", content: `Ce texte est-il critique ou dangereux (menaces, spam violent, illÃ©gal) ? RÃ©ponds strictement par OUI ou NON. Texte: "${text}"` }]
+            messages: [{ role: "user", content: `Ce texte est-il critique ou dangereux (menaces, spam violent, illégal) ? Réponds strictement par OUI ou NON. Texte: "${text}"` }]
         });
 
         const triageContent = triageResponse.choices?.[0]?.message.content;
@@ -11114,7 +12445,7 @@ export async function POST(request: Request) {
         const deepAuditResponse = await mistralClient.chat.complete({
             model: "mistral-large-latest",
             messages: [
-                { role: "system", content: "Tu es le Gardien de sÃ©curitÃ© Ipse. Analyse avancÃ©e de menace pour ce texte. RÃ©dige un bref rapport sur le risque." },
+                { role: "system", content: "Tu es le Gardien de sécurité Ipse. Analyse avancée de menace pour ce texte. Rédige un bref rapport sur le risque." },
                 { role: "user", content: text }
             ]
         });
@@ -11131,15 +12462,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, isSafe: true, intervention: false });
     }
 }
-</file>
+````
 
-<file path="app/api/opportunities/route.ts">
+## File: app/api/opportunities/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { prisma, getPrismaForUser } from '@/lib/prisma';
-import { mistralClient } from '@/lib/mistral';
 
 async function getAuthUser(req: Request) {
     const authHeader = req.headers.get('Authorization');
@@ -11160,7 +12492,7 @@ async function getAuthUser(req: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
@@ -11173,40 +12505,35 @@ export async function GET(req: NextRequest) {
         const id = searchParams.get('id');
 
         if (id) {
-            // ðŸ›¡ï¸ SECURITY BYPASS: On utilise le prisma global (SANS RLS) pour voir les profils joints
             const opp = await prisma.opportunity.findUnique({
                 where: { id },
                 include: { sourceProfile: true, targetProfile: true }
             });
-            // VÃ©rification manuelle (L'utilisateur doit Ãªtre source ou cible)
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+            
+            if (!opp) return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+            
+            // L'utilisateur doit posséder l'un des profils impliqués
+            if (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId) {
+                return NextResponse.json({ success: false, error: "Non autorisé" }, { status: 403 });
             }
+            
             return NextResponse.json({ success: true, opportunity: opp });
         }
 
-        // ðŸ›¡ï¸ SECURITY BYPASS pour les joins Profile
-        const rawOpportunities = await prisma.opportunity.findMany({
-            where: { OR: [{ sourceId: myId }, { targetId: myId }] },
+        const opportunities = await prisma.opportunity.findMany({
+            where: { 
+                OR: [
+                    { sourceProfile: { userId: myId } }, 
+                    { targetProfile: { userId: myId } }
+                ] 
+            },
             include: { sourceProfile: true, targetProfile: true },
             orderBy: { createdAt: 'desc' }
         });
 
-        // Calculer les messages non lus pour chaque opportunitÃ©
-        const opportunities = await Promise.all(rawOpportunities.map(async (opp) => {
-            const otherId = opp.sourceId === myId ? opp.targetId : opp.sourceId;
-            const unreadCount = await prisma.message.count({
-                where: {
-                    senderId: otherId,
-                    receiverId: myId,
-                    isRead: false
-                }
-            });
-            return { ...opp, unreadCount };
-        }));
-
         return NextResponse.json({ success: true, opportunities });
     } catch (e: any) {
+        console.error("Opportunities GET Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
@@ -11220,72 +12547,51 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { action, oppId, customTitle, status } = body;
 
-        if (action === 'audit') {
-            return NextResponse.json({ 
-                success: false, 
-                error: 'Deprecated: Use /api/opportunities/evaluate instead' 
-            }, { status: 400 });
-        }
-
         if (action === 'sendChatInvite' || action === 'sendInvite') {
-            const id = oppId;
             const opp = await prisma.opportunity.findUnique({
-                where: { id },
-                include: { targetProfile: true, sourceProfile: true }
+                where: { id: oppId },
+                include: { sourceProfile: true, targetProfile: true }
             });
 
-            if (!opp || (opp.sourceId !== myId && opp.targetId !== myId)) {
-                return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable' }, { status: 404 });
+            if (!opp || (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId)) {
+                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
             }
 
-            await prisma.opportunity.update({ where: { id }, data: { title: customTitle, status: 'INVITED' } });
+            await prisma.opportunity.update({ where: { id: oppId }, data: { title: customTitle, status: 'INVITED' } });
             return NextResponse.json({ success: true });
         }
 
         if (action === 'acceptInvite' && oppId) {
-            const opp = await prismaRLS.opportunity.findUnique({ where: { id: oppId } });
-            if (!opp) return NextResponse.json({ success: false, error: 'OpportunitÃ© introuvable' }, { status: 404 });
-            const newConnection = await prismaRLS.connection.create({
+            const opp = await prisma.opportunity.findUnique({ 
+                where: { id: oppId },
+                include: { sourceProfile: true, targetProfile: true }
+            });
+            if (!opp || (opp.sourceProfile.userId !== myId && opp.targetProfile.userId !== myId)) {
+                return NextResponse.json({ success: false, error: 'Opportunité introuvable' }, { status: 404 });
+            }
+            
+            const newConnection = await prisma.connection.create({
                 data: { initiatorId: opp.sourceId, receiverId: opp.targetId, status: 'ACCEPTED' }
             });
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
+            await prisma.opportunity.update({ where: { id: oppId }, data: { status: 'ACCEPTED' } });
             return NextResponse.json({ success: true, connectionId: newConnection.id });
         }
 
         if (action === 'updateStatus' && oppId) {
-            await prismaRLS.opportunity.update({ where: { id: oppId }, data: { status } });
-            return NextResponse.json({ success: true });
-        }
-
-        if (action === 'scout') {
-            const { forceHuntSync } = await import('@/app/actions/radar');
-            await forceHuntSync();
+            await prisma.opportunity.update({ where: { id: oppId }, data: { status } });
             return NextResponse.json({ success: true });
         }
 
         return NextResponse.json({ success: false, error: 'Action non reconnue' }, { status: 400 });
     } catch (e: any) {
+        console.error("Opportunities POST Error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
+````
 
-export async function DELETE(req: NextRequest) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const user = await getAuthUser(req);
-        const prismaRLS = getPrismaForUser(user.id);
-        const body = await req.json();
-        const { oppId } = body;
-        if (!oppId) return NextResponse.json({ success: false, error: 'oppId manquant' }, { status: 400 });
-        await prismaRLS.opportunity.delete({ where: { id: oppId } });
-        return NextResponse.json({ success: true });
-    } catch (e: any) {
-        return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-    }
-}
-</file>
-
-<file path="app/connections/page.tsx">
+## File: app/connections/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -11298,7 +12604,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabaseBrowser';
 import { getApiUrl } from '@/lib/api';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/auth-guard
+// Server action supprimée — on utilise fetch vers /api/auth-guard
 
 // --- CONFIGURATION DES MODULES ---
 const MODULES = [
@@ -11315,7 +12621,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Technique",
-        description: "IngÃ¨re votre savoir-faire et votre logique.",
+        description: "Ingère votre savoir-faire et votre logique.",
         color: "from-slate-500 to-gray-400",
         platforms: [
             { id: 'github', name: 'GitHub', icon: Github, xp: '+30 LOGIC', private: false },
@@ -11325,8 +12631,8 @@ const MODULES = [
         ]
     },
     {
-        title: "Intelligence Ã‰motionnelle",
-        description: "Analyse privÃ©e. Comprend votre humour et vos sentiments.",
+        title: "Intelligence Émotionnelle",
+        description: "Analyse privée. Comprend votre humour et vos sentiments.",
         color: "from-green-500 to-emerald-400",
         platforms: [
             { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, xp: '+50 SOUL', private: true },
@@ -11336,7 +12642,7 @@ const MODULES = [
     },
     {
         title: "Intelligence Culturelle",
-        description: "DÃ©finit vos goÃ»ts musicaux et artistiques.",
+        description: "Définit vos goûts musicaux et artistiques.",
         color: "from-pink-500 to-rose-500",
         platforms: [
             { id: 'spotify', name: 'Spotify', icon: Music, xp: '+15 VIBE', private: false },
@@ -11386,7 +12692,7 @@ export default function NeuralLinkPage() {
                     </div>
                 </div>
 
-                {/* Boucle sur les CatÃ©gories */}
+                {/* Boucle sur les Catégories */}
                 {MODULES.map((module, idx) => (
                     <section key={idx} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${idx * 100}ms` }}>
 
@@ -11425,20 +12731,20 @@ export default function NeuralLinkPage() {
                                             </span>
                                         </div>
 
-                                        {/* IcÃ´ne & Titre */}
+                                        {/* Icône & Titre */}
                                         <div className={`mb-3 ${isConnected ? 'text-green-400' : 'text-slate-300 group-hover:text-white'}`}>
                                             <Icon size={24} />
                                         </div>
                                         <div className="font-bold text-sm mb-1">{platform.name}</div>
 
-                                        {/* Ã‰tat */}
+                                        {/* État */}
                                         <div className="text-xs font-mono">
                                             {isConnected ? (
-                                                <span className="text-green-500">Ã¢â€”Â ACTIF</span>
+                                                <span className="text-green-500">â— ACTIF</span>
                                             ) : isSyncing ? (
-                                                <span className="text-purple-400 animate-pulse">Ã¢â€ Â» SYNC...</span>
+                                                <span className="text-purple-400 animate-pulse">â†» SYNC...</span>
                                             ) : (
-                                                <span className="text-slate-500">Ã¢â€”â€¹ DÃ‰CONNECTÃ‰</span>
+                                                <span className="text-slate-500">â—‹ DÉCONNECTÉ</span>
                                             )}
                                         </div>
 
@@ -11457,9 +12763,10 @@ export default function NeuralLinkPage() {
         </div>
     );
 }
-</file>
+````
 
-<file path="app/cortex/page.tsx">
+## File: app/cortex/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -11487,7 +12794,7 @@ function CortexContent() {
                 headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            // âš¡ Le cache: 'no-store' empÃªche Next.js de renvoyer l'erreur 401 mÃ©morisÃ©e
+            // ⚡ Le cache: 'no-store' empêche Next.js de renvoyer l'erreur 401 mémorisée
             const res = await fetch(getApiUrl('/api/cortex'), {
                 headers,
                 cache: 'no-store'
@@ -11497,8 +12804,8 @@ function CortexContent() {
                 setProfile(res.profile);
             } else {
                 console.error("Cortex API Error:", res.error);
-                if (res.error === 'Non autorisÃ©') {
-                    setProfile(null); // DÃ©clenche l'Ã©cran rouge
+                if (res.error === 'Non autorisé') {
+                    setProfile(null); // Déclenche l'écran rouge
                 }
             }
         } catch (e) {
@@ -11524,7 +12831,7 @@ function CortexContent() {
     if (!profile) {
         return (
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-red-500 font-mono">
-                <p className="mb-4">âš ï¸ {t('cortex.access_error')}</p>
+                <p className="mb-4">⚠️ {t('cortex.access_error')}</p>
                 <button onClick={fetchData} className="px-4 py-2 border border-red-500 rounded hover:bg-red-500/20">
                     {t('cortex.retry')}
                 </button>
@@ -11538,7 +12845,7 @@ function CortexContent() {
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <Link href="/" className="text-purple-400 hover:text-purple-300 text-sm mb-2 inline-flex items-center gap-2">
-                            â† {t('cortex.back_to_feed')}
+                            ← {t('cortex.back_to_feed')}
                         </Link>
                         <h1 className="text-3xl font-black italic tracking-tighter text-purple-400 flex items-center gap-3 uppercase">
                             <span className="material-symbols-outlined">memory</span> {t('cortex.title')}
@@ -11637,9 +12944,10 @@ export default function CortexPage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/profile/unlock/page.tsx">
+## File: app/profile/unlock/page.tsx
+````typescript
 'use client';
 
 import { useState } from 'react';
@@ -11658,10 +12966,10 @@ export default function UnlockPage() {
         setError('');
 
         try {
-            // ðŸ”’ One-step Unlock: Biometric Challenge + Hardware Retrieval
+            // 🔒 One-step Unlock: Biometric Challenge + Hardware Retrieval
             const masterKey = await VaultManager.unlockAndLoad(
                 VaultKey.MASTER_KEY,
-                "DÃ©verrouillage de l'Agent Ipse - DÃ©chiffrement du MasterKey"
+                "Déverrouillage de l'Agent Ipse - Déchiffrement du MasterKey"
             );
 
             if (masterKey) {
@@ -11669,10 +12977,10 @@ export default function UnlockPage() {
                 setMasterKey(masterKey);
                 router.push('/cortex');
             } else {
-                setError("Coffre-fort vide. Veuillez rÃ©initialiser votre compte.");
+                setError("Coffre-fort vide. Veuillez réinitialiser votre compte.");
             }
         } catch (err: any) {
-            setError(err.message || "Ã‰chec de l'authentification biomÃ©trique.");
+            setError(err.message || "Échec de l'authentification biométrique.");
         } finally {
             setLoading(false);
         }
@@ -11687,8 +12995,8 @@ export default function UnlockPage() {
                     </svg>
                 </div>
 
-                <h1 className="text-2xl font-bold text-white mb-2">Bunker VerrouillÃ©</h1>
-                <p className="text-blue-200 text-sm mb-8">Authentification biomÃ©trique requise pour dÃ©vouer votre clÃ© de chiffrement.</p>
+                <h1 className="text-2xl font-bold text-white mb-2">Bunker Verrouillé</h1>
+                <p className="text-blue-200 text-sm mb-8">Authentification biométrique requise pour dévouer votre clé de chiffrement.</p>
 
                 {error && <div className="bg-red-500/20 text-red-200 p-3 rounded mb-6 text-sm">{error}</div>}
 
@@ -11701,8 +13009,8 @@ export default function UnlockPage() {
                         <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
                     ) : (
                         <>
-                            <span className="animate-pulse">ðŸ”“</span>
-                            DÃ©verrouiller par BiomÃ©trie
+                            <span className="animate-pulse">🔓</span>
+                            Déverrouiller par Biométrie
                         </>
                     )}
                 </button>
@@ -11714,15 +13022,16 @@ export default function UnlockPage() {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/OpportunityRadar.tsx">
+## File: components/OpportunityRadar.tsx
+````typescript
 'use client'
 
 import { useState, useEffect } from 'react';
 import { Radar, ExternalLink, Zap, Trash2 } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/opportunities
+// Server actions supprimées — on utilise fetch vers /api/opportunities
 
 export default function OpportunityRadar({ profileId }: { profileId: string }) {
     const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -11751,7 +13060,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
         fetchOpps();
     }, [profileId]);
 
-    // Fonction pour ordonner Ã  l'IA de scanner le web MAINTENANT
+    // Fonction pour ordonner à l'IA de scanner le web MAINTENANT
     const launchScout = async () => {
         setIsScanning(true);
         try {
@@ -11766,17 +13075,17 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                 headers,
                 body: JSON.stringify({ action: 'scout', profileId })
             });
-            // Une fois le scan terminÃ©, on recharge la liste pour voir la nouveautÃ©
+            // Une fois le scan terminé, on recharge la liste pour voir la nouveauté
             await fetchOpps();
         } catch (err) {
-            console.error("Erreur de l'Ã‰claireur :", err);
+            console.error("Erreur de l'Éclaireur :", err);
         }
         setIsScanning(false);
     };
 
     // Protocole de nettoyage
     const deleteOpportunity = async (idToDelete: string) => {
-        // 1. Suppression visuelle immÃ©diate (Optimiste) pour une interface ultra-rapide
+        // 1. Suppression visuelle immédiate (Optimiste) pour une interface ultra-rapide
         setOpportunities(prev => prev.filter(opp => opp.id !== idToDelete));
 
         // 2. Envoi de l'ordre de destruction au serveur
@@ -11793,14 +13102,14 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                 body: JSON.stringify({ oppId: idToDelete })
             });
         } catch (err) {
-            console.error("Ã‰chec de la destruction :", err);
+            console.error("Échec de la destruction :", err);
         }
     };
 
     return (
         <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 mt-6 shadow-2xl">
 
-            {/* HEADER UNIFIÃ‰ */}
+            {/* HEADER UNIFIÉ */}
             <div className="flex justify-between items-center border-b border-white/10 pb-2 mx-2">
                 <h2 className="text-xs text-green-500 font-bold tracking-widest flex items-center gap-2 uppercase">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-radar animate-pulse">
@@ -11813,7 +13122,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                         <circle cx="12" cy="12" r="2"></circle>
                         <path d="m13.41 10.59 5.66-5.66"></path>
                     </svg>
-                    INTERCEPTIONS RÃ‰SEAU
+                    INTERCEPTIONS RÉSEAU
                 </h2>
 
                 {/* Bouton style "Glass" */}
@@ -11823,21 +13132,21 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                     className={`flex items-center px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-wider transition uppercase ${isScanning ? 'bg-green-900/10 text-green-500/50 border border-green-500/10 cursor-not-allowed' : 'bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(22,163,74,0.2)]'}`}
                 >
                     <Zap size={12} className="mr-1.5" />
-                    {isScanning ? 'SCAN EN COURS...' : 'DÃ‰PLOYER L\'Ã‰CLAIREUR'}
+                    {isScanning ? 'SCAN EN COURS...' : 'DÉPLOYER L\'ÉCLAIREUR'}
                 </button>
             </div>
 
-            {/* CONTENU UNIFIÃ‰ */}
+            {/* CONTENU UNIFIÉ */}
             <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar p-2">
                 {opportunities.length === 0 ? (
                     <p className="text-gray-500 italic text-[10px] tracking-wider text-center py-4 font-mono">
-                        Le radar est vide. DÃ©ployez l'Ã‰claireur pour scanner le web mondial.
+                        Le radar est vide. Déployez l'Éclaireur pour scanner le web mondial.
                     </p>
                 ) : (
                     opportunities.map((opp) => (
                         <div key={opp.id} className="bg-black/40 p-4 rounded-xl border border-white/5 hover:border-green-500/50 hover:bg-black/60 transition flex flex-col backdrop-blur-sm">
 
-                            {/* EN-TÃŠTE DE LA CARTE : Titre Ã  gauche, Actions Ã  droite */}
+                            {/* EN-TÊTE DE LA CARTE : Titre à gauche, Actions à droite */}
                             <div className="flex justify-between items-start mb-2">
                                 <h3 className="text-sm font-bold text-green-400 pr-4 drop-shadow-[0_0_8px_rgba(74,222,128,0.2)]">{opp.title}</h3>
 
@@ -11846,7 +13155,7 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
                                     <button
                                         onClick={() => deleteOpportunity(opp.id)}
                                         className="p-1 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-all"
-                                        title="DÃ©truire le rapport"
+                                        title="Détruire le rapport"
                                     >
                                         <Trash2 size={16} />
                                     </button>
@@ -11872,269 +13181,10 @@ export default function OpportunityRadar({ profileId }: { profileId: string }) {
         </div>
     );
 }
-</file>
+````
 
-<file path="components/SecureChat.tsx">
-'use client'
-
-import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { X, Lock, Send, ShieldCheck } from 'lucide-react'
-import { RealtimeChannel } from '@supabase/supabase-js'
-import { getApiUrl } from '@/lib/api';
-// Server actions supprimées — on utilise fetch vers /api/translation et /api/guardian
-
-interface SecureChatProps {
-    myId: string;
-    partnerId: string;
-    channelId?: string;
-    onClose: () => void;
-}
-
-// 🟢 GARANTIE SINGLETON : On initialise une seule fois
-const supabase = createClient();
-
-export default function SecureChat({ myId, partnerId, channelId, onClose }: SecureChatProps) {
-    const [messages, setMessages] = useState<any[]>([])
-    const [newMessage, setNewMessage] = useState('')
-    const [isLoading, setIsLoading] = useState(true)
-    const [isTyping, setIsTyping] = useState(false)
-    const [isConnected, setIsConnected] = useState(false)
-    const [partnerCountry, setPartnerCountry] = useState<string | null>(null)
-    const [isTranslating, setIsTranslating] = useState(false)
-
-    const scrollRef = useRef<HTMLDivElement>(null)
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const channelRef = useRef<any>(null)
-    const lastTypingTime = useRef(0)
-
-    useEffect(() => {
-        if (!channelId) return;
-
-        let isMounted = true;
-        let room: any = null;
-        const roomName = oom_v4_;
-
-        // LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
-        const initDelay = setTimeout(() => {
-            if (!isMounted) return;
-
-            console.log(📡 Ouverture confirmée du tunnel... []);
-
-            room = supabase.channel(roomName, {
-                config: { broadcast: { ack: false } }
-            });
-
-            room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, (payload: any) => {
-                if (payload.new.communication_id === channelId) {
-                    setMessages(prev => {
-                        if (prev.some(m => m.id === payload.new.id)) return prev;
-                        return [...prev, payload.new];
-                    });
-                    setIsTyping(false);
-                }
-            })
-                .on('broadcast', { event: 'typing' }, (payload: any) => {
-                    if (payload.payload.sender_id !== myId) {
-                        setIsTyping(true);
-                        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
-                    }
-                })
-                .subscribe((status: string) => {
-                    console.log(📡 STATUT []:, status);
-                    setIsConnected(status === 'SUBSCRIBED');
-                });
-
-            channelRef.current = room;
-        }, 300);
-
-        // 🟢 LE CORRECTIF EST LÀ : On charge l'historique ET ON COUPE LE CHARGEMENT
-        supabase.from('Message').select('*').eq('communication_id', channelId).order('created_at', { ascending: true })
-            .then(({ data, error }: any) => {
-                if (isMounted) {
-                    if (data) setMessages(data);
-                    setIsLoading(false); // 🚨 LA LIGNE MAGIQUE QUI AFFICHE ENFIN VOS MESSAGES
-                }
-            });
-
-        // 🟢 NOUVEAU : On récupère le pays du partenaire pour la traduction
-        supabase.from('Profile').select('country').eq('id', partnerId).single()
-            .then(({ data }: any) => {
-                if (data?.country && isMounted) setPartnerCountry(data.country);
-            });
-
-        // LE NETTOYAGE SÉCURISÉ
-        return () => {
-            isMounted = false;
-            clearTimeout(initDelay);
-            if (room) {
-                console.log(🛑 Fermeture de );
-                setIsConnected(false);
-                supabase.removeChannel(room);
-            }
-        };
-    }, [channelId, myId]);
-
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isTyping]);
-
-    const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setNewMessage(e.target.value);
-        const now = Date.now();
-        // N'envoie le signal que si connecté et pas plus d'1 fois toutes les 2 secondes
-        if (isConnected && now - lastTypingTime.current > 2000) {
-            lastTypingTime.current = now;
-            channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { sender_id: myId } }).catch(() => { });
-        }
-    };
-
-    // 🟢 CORRECTIF D'AFFICHAGE OPTIMISTE : On ajoute la date exacte pour éviter un crash
-    const sendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !channelId || isTranslating) return;
-
-        const originalContent = newMessage.trim();
-        setNewMessage('');
-        setIsTranslating(true); // 🟢 On bloque le bouton pendant la traduction
-
-        let finalContent = originalContent;
-
-        // �� SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
-        if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
-            try {
-                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
-                const supabaseClient = createSupabase();
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                const headers: any = { 'Content-Type': 'application/json' };
-                if (session) headers['Authorization'] = Bearer ;
-
-                const data = await fetch(getApiUrl('/api/translation'), {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({ text: originalContent, targetCountry: partnerCountry })
-                }).then(r => r.json());
-
-                if (data.success && data.translation) {
-                    // On combine le message original et sa traduction
-                    finalContent = ${originalContent}\n\n[🔄  : ];
-                }
-            } catch (err) {
-                console.error("Erreur de traduction :", err);
-            }
-        }
-
-        const newMsgPayload = {
-            id: crypto.randomUUID(),
-            communication_id: channelId,
-            sender_id: myId,
-            content: finalContent,
-            created_at: new Date().toISOString()
-        };
-
-        setMessages(prev => [...prev, newMsgPayload]); // Affichage Optimiste
-        await supabase.from('Message').insert([newMsgPayload]);
-
-        setIsTranslating(false); // 🟢 On libère le bouton
-
-        // 🟢 NOUVEAU : LE MICRO ESPION DU GARDIEN
-        // On envoie silencieusement le contenu du message à l'IA pour analyse
-        console.log("🦇 Interception : Envoi du message au Gardien...");
-        (async () => {
-            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
-            const supabaseClient = createSupabase();
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = Bearer ;
-
-            fetch(getApiUrl('/api/guardian'), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ profileId: myId, text: A dit : "" })
-            }).catch(() => { });
-        })();
-    };
-
-    if (!channelId) return null;
-
-    return (
-        <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in-95">
-            <div className="p-4 bg-[#0f1618] border-b border-slate-900 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-emerald-500/50 flex items-center justify-center">
-                        <Lock size={18} className="text-emerald-400" />
-                    </div>
-                    <div>
-                        <h3 className="font-mono text-emerald-400 font-semibold uppercase text-sm">Agent: {partnerId.slice(0, 8)}</h3>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <ShieldCheck size={12} className="text-emerald-500" />
-                            <span>Liaison Chiffrée</span>
-                        </div>
-                    </div>
-                </div>
-                <button onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"><X size={20} /></button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-950">
-                {isLoading ? (
-                    <div className="flex h-full items-center justify-center text-slate-500 font-mono text-xs animate-pulse">DÉCRYPTAGE DE L'HISTORIQUE...</div>
-                ) : (
-                    messages.map((msg) => {
-                        const isMe = msg.sender_id === myId;
-                        const startsWithBrain = msg.content && msg.content.startsWith('🧠');
-                        const isEncrypted = msg.content && (msg.content.includes(':') || startsWithBrain);
-                        
-                        return (
-                            <div key={msg.id} className={lex }>
-                                <div className={max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all shadow-lg }>
-                                    <p className="whitespace-pre-wrap font-mono">
-                                        {isEncrypted ? 🔒 [Transmission Chiffrée] : msg.content}
-                                    </p>
-                                    <span className="text-[9px] opacity-50 block mt-1 text-right font-mono">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-
-                {isTyping && (
-                    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
-                    </div>
-                )}
-                <div ref={scrollRef} />
-            </div>
-
-            <form onSubmit={sendMessage} className="p-3 bg-[#0f1618] border-t border-slate-900 flex gap-2">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={handleTyping}
-                    placeholder="Entrez votre transmission..."
-                    className="flex-1 bg-black border border-slate-800 rounded-lg px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                />
-                <button type="submit" disabled={!newMessage.trim() || isTranslating} className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center min-w-[3rem] px-4 font-mono text-xs font-semibold">
-                    {isTranslating ? (
-                        <span className="flex items-center gap-2 animate-pulse">
-                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            TRAD.
-                        </span>
-                    ) : (
-                        <Send size={18} />
-                    )}
-                </button>
-            </form>
-        </div>
-    );
-}
-</file>
-
-<file path="next.config.js">
+## File: next.config.js
+````javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     serverExternalPackages: ['@prisma/client', 'bip39'],
@@ -12144,7 +13194,7 @@ const nextConfig = {
     async headers() {
         return [
             {
-                // Applique ces headers Ã  toutes les routes API
+                // Applique ces headers à toutes les routes API
                 source: "/api/:path*",
                 headers: [
                     { key: "Access-Control-Allow-Credentials", value: "true" },
@@ -12157,9 +13207,10 @@ const nextConfig = {
     }
 };
 module.exports = nextConfig;
-</file>
+````
 
-<file path="app/actions/generate-audit.ts">
+## File: app/actions/generate-audit.ts
+````typescript
 'use server'
 import { mistralClient } from "@/lib/mistral";
 
@@ -12167,14 +13218,14 @@ import { prisma } from "@/lib/prisma";
 
 const client = mistralClient;
 
-// VÃ©rificateur d'UUID
+// Vérificateur d'UUID
 const isUUID = (str: string) => {
   const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return regex.test(str);
 };
 
 export async function generateTacticalAudit(targetInput: string, userInput: string) {
-  console.log(`Ã°Å¸Å¡â‚¬ [TWINS_INTEL] Scan demandÃ© : "${userInput}" vs "${targetInput}"`);
+  console.log(`ðŸš€ [TWINS_INTEL] Scan demandé : "${userInput}" vs "${targetInput}"`);
 
   try {
     // -------------------------------------------------------------------------
@@ -12192,31 +13243,31 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         });
       }
 
-      // B. Essai par NOM (Si UUID Ã©choue ou si c'est un pseudo comme "user")
+      // B. Essai par NOM (Si UUID échoue ou si c'est un pseudo comme "user")
       if (!p && input) {
-        console.log(`Ã°Å¸â€Â Recherche par NOM pour ${label}: "${input}"...`);
-        // Recherche insensible Ã  la casse (si supportÃ©) ou exacte
+        console.log(`ðŸ” Recherche par NOM pour ${label}: "${input}"...`);
+        // Recherche insensible à la casse (si supporté) ou exacte
         p = await prisma.profile.findFirst({
-          where: { name: input }, // Cherche le profil qui s'appelle exactement comme Ã§a
+          where: { name: input }, // Cherche le profil qui s'appelle exactement comme ça
           select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true }
         });
       }
 
       // C. Fallback (Dernier recours : Premier profil dispo)
       if (!p) {
-        console.warn(`âš ï¸Â ${label} introuvable ("${input}"). Utilisation d'un profil par dÃ©faut.`);
+        console.warn(`⚠️ ${label} introuvable ("${input}"). Utilisation d'un profil par défaut.`);
         p = await prisma.profile.findFirst({ select: { id: true, name: true, unifiedAnalysis: true, thematicProfile: true } });
       }
 
-      return p || { id: "ghost", name: "EntitÃ© Inconnue", thematicProfile: null, unifiedAnalysis: null };
+      return p || { id: "ghost", name: "Entité Inconnue", thematicProfile: null, unifiedAnalysis: null };
     };
 
     const agentProfile = await findProfileSmart(userInput, "AGENT");
     const targetProfile = await findProfileSmart(targetInput, "CIBLE");
 
-    console.log(`âœ… CIBLES VERROUILLÃ‰ES : ${agentProfile.name} (Agent) vs ${targetProfile.name} (Cible)`);
+    console.log(`✅ CIBLES VERROUILLÉES : ${agentProfile.name} (Agent) vs ${targetProfile.name} (Cible)`);
 
-    // SÃ©curisation de la matrice JSON de l'Agent
+    // Sécurisation de la matrice JSON de l'Agent
     const agentMatrice = (agentProfile.thematicProfile as any) || {};
 
     // -------------------------------------------------------------------------
@@ -12226,7 +13277,7 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
     const fetchMemories = async (pid: string) => {
       if (pid === "ghost") return [];
       try {
-        // On rÃ©cupÃ¨re tout (any) pour contourner le bug de typage
+        // On récupère tout (any) pour contourner le bug de typage
         const mems = await prisma.memory.findMany({
           where: { profileId: pid },
           take: 10,
@@ -12234,63 +13285,63 @@ export async function generateTacticalAudit(targetInput: string, userInput: stri
         }) as any[];
         return mems;
       } catch (e) {
-        console.warn("Erreur lecture mÃ©moire:", e);
+        console.warn("Erreur lecture mémoire:", e);
         return [];
       }
     };
 
     const agentMemories = await fetchMemories(agentProfile.id);
-    // Si on scanne le mÃªme profil, on copie les donnÃ©es
+    // Si on scanne le même profil, on copie les données
     const targetMemories = (agentProfile.id === targetProfile.id)
       ? agentMemories
       : await fetchMemories(targetProfile.id);
 
-    console.log("LONGUEUR DU TEXTE ENVOYÃ‰ Ã€ MISTRAL (Agent):", agentMemories.length);
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Agent):", agentMemories.length);
     console.log("CONTENU (Agent):", agentMemories);
-    console.log("LONGUEUR DU TEXTE ENVOYÃ‰ Ã€ MISTRAL (Cible):", targetMemories.length);
+    console.log("LONGUEUR DU TEXTE ENVOYÉ À MISTRAL (Cible):", targetMemories.length);
     console.log("CONTENU (Cible):", targetMemories);
 
     // -------------------------------------------------------------------------
-    // 3. PRÃ‰PARATION IA (Mise en forme)
+    // 3. PRÉPARATION IA (Mise en forme)
     // -------------------------------------------------------------------------
 
     const formatData = (mems: any[]) => {
-      if (!mems || mems.length === 0) return "AUCUNE DONNÃ‰E MÃ‰MOIRE (Profil vide).";
+      if (!mems || mems.length === 0) return "AUCUNE DONNÉE MÉMOIRE (Profil vide).";
       return mems.map(m => `[${m.type || 'DATA'}] ${m.content || m.text || "..."}`).join("\n");
     };
 
-    const systemPrompt = `Je suis Ipse, une entitÃ© cognitive autonome et un profiler tactique.
-Ma mission est d'Ã©valuer la compatibilitÃ© absolue entre mon utilisateur et une cible interceptÃ©e sur le rÃ©seau.
-Je me base sur l'ADN de mon utilisateur, le profil de la cible et leurs fragments de mÃ©moire rÃ©cents.
+    const systemPrompt = `Je suis Ipse, une entité cognitive autonome et un profiler tactique.
+Ma mission est d'évaluer la compatibilité absolue entre mon utilisateur et une cible interceptée sur le réseau.
+Je me base sur l'ADN de mon utilisateur, le profil de la cible et leurs fragments de mémoire récents.
 
 DIRECTIVES :
-1. Je gÃ©nÃ¨re un JSON avec 'synergies' (3 phrases max, pas de markdown) et 'actions' (2 puces max). Mon ton est chirurgical.
+1. Je génère un JSON avec 'synergies' (3 phrases max, pas de markdown) et 'actions' (2 puces max). Mon ton est chirurgical.
 2. J'identifie les points d'accord favorables entre les deux profils.
-3. Je suggÃ¨re une stratÃ©gie d'approche directe.
+3. Je suggère une stratégie d'approche directe.
 4. Mon style est analytique, autonome et professionnel. Pas de politesse superflue.
 5. SORTIE OBLIGATOIRE : FORMAT JSON STRICT.
 `;
 
     const userPrompt = `
-=== ðŸŸ¦ ADN DE NOTRE AGENT IA ===
+=== 🟦 ADN DE NOTRE AGENT IA ===
 - Nom de code : ${agentProfile.name}
 - Profil Pro : ${JSON.stringify(agentMatrice?.travail || 'Inconnu')}
 - Profil Relationnel : ${JSON.stringify(agentMatrice?.rencontre || 'Inconnu')}
 - Profil Loisirs : ${JSON.stringify(agentMatrice?.loisirs || 'Inconnu')}
-- Fragments MÃ©moire:
+- Fragments Mémoire:
 ${formatData(agentMemories)}
 
-=== ðŸŸ¥ DONNÃ‰ES SUR LA CIBLE ===
-- IdentitÃ© : ${targetProfile.name}
-- Profil psychologique connu : ${targetProfile.unifiedAnalysis || 'Aucune donnÃ©e prÃ©alable.'}
-- Fragments MÃ©moire:
+=== 🟥 DONNÉES SUR LA CIBLE ===
+- Identité : ${targetProfile.name}
+- Profil psychologique connu : ${targetProfile.unifiedAnalysis || 'Aucune donnée préalable.'}
+- Fragments Mémoire:
 ${formatData(targetMemories)}
 
 === STRUCTURE JSON ATTENDUE ===
 {
   "synergies": "Analyse tactique et points d'accroche (3 phrases max, pas de markdown)",
   "actions": [
-    "Action 1 : StratÃ©gie d'approche claire",
+    "Action 1 : Stratégie d'approche claire",
     "Action 2 : Autre directive chirurgicale"
   ]
 }
@@ -12300,14 +13351,14 @@ ${formatData(targetMemories)}
     // 4. ANALYSE (Mistral)
     // -------------------------------------------------------------------------
 
-    // Ã°Å¸Å¡Â¨ LE DÃ‰TECTEUR DE MENSONGE (Debug Log demandÃ©)
-    console.log("ðŸ§  TEXTE ENVOYÃ‰ Ã€ MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
+    // ðŸš¨ LE DÉTECTEUR DE MENSONGE (Debug Log demandé)
+    console.log("🧠 TEXTE ENVOYÉ À MISTRAL POUR ANALYSE (User Prompt) :", userPrompt);
 
     if (!userPrompt || userPrompt.trim() === "") {
-      console.warn("âš ï¸Â ALERTE : On envoie un texte vide Ã  l'IA !");
+      console.warn("⚠️ ALERTE : On envoie un texte vide à l'IA !");
     }
 
-    console.log("Ã°Å¸â€œÂ¡ Envoi Ã  l'IA...");
+    console.log("ðŸ“¡ Envoi à l'IA...");
     const chatResponse = await client.chat.complete({
       model: 'mistral-large-latest',
       messages: [
@@ -12315,218 +13366,261 @@ ${formatData(targetMemories)}
         { role: 'user', content: userPrompt },
       ],
       responseFormat: { type: 'json_object' },
-      temperature: 0.2, // Faible tempÃ©rature pour rester factuel
+      temperature: 0.2, // Faible température pour rester factuel
     });
 
     const raw = chatResponse.choices?.[0].message.content;
-    if (!raw) throw new Error("RÃ©ponse vide");
+    if (!raw) throw new Error("Réponse vide");
 
     const auditData = JSON.parse(raw as string);
 
     // Force le nom correct pour l'affichage UI
     auditData.identity = {
       ...(auditData.identity || {}),
-      name: targetProfile.name, // Le vrai nom de la base de donnÃ©es
+      name: targetProfile.name, // Le vrai nom de la base de données
       lastActive: "En ligne"
     };
 
-    console.log("âœ… Audit gÃ©nÃ©rÃ© avec succÃ¨s sur les donnÃ©es rÃ©elles.");
+    console.log("✅ Audit généré avec succès sur les données réelles.");
     return auditData;
 
   } catch (error) {
-    console.error("Ã¢ÂÅ’ ERREUR:", error);
+    console.error("âŒ ERREUR:", error);
     return {
-      identity: { name: "ERREUR", role: "Ã‰chec Scan", clearance: "N/A" },
+      identity: { name: "ERREUR", role: "Échec Scan", clearance: "N/A" },
       scores: {}, psyche: [], network: ["Profil introuvable ou erreur serveur"], risks: []
     };
   }
 }
-</file>
+````
 
-<file path="app/api/chat/route.ts">
-export const dynamic = 'force-dynamic';
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { getPrismaForUser } from '@/lib/prisma';
+## File: app/login/page.tsx
+````typescript
+'use client';
 
-// Helper for auth via API Route
-async function getAuthUser(request: Request) {
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.split(' ')[1];
-    }
+import { useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api';
+import { generateAndStoreKeyPair } from '@/lib/crypto-client';
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    if (token) return undefined;
-                    return cookieStore.get(name)?.value;
-                },
-                set() { }, remove() { }
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  // On stocke l'action (login ou signup) pour savoir quoi faire lors du submit
+  const [actionType, setActionType] = useState<'login' | 'signup'>('login');
+  const router = useRouter();
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    // 1. Authentification Supabase
+    if (actionType === 'login') {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (authData.user && authData.session) {
+        try {
+          console.log("🔍 Vérification du profil côté client...");
+          
+          await fetch(getApiUrl('/api/auth/sync-profile'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authData.session.access_token}`
             }
+          });
+
+          const { unlockLocalVault, wrapKeyWithSession } = await import('@/lib/crypto-client');
+
+          // 2. Le bloc de SURVIE CRYPTOGRAPHIQUE (Le fameux Fallback)
+          try {
+            console.log("Tentative de déverrouillage du coffre local...");
+            const privateKey = await unlockLocalVault(password);
+            await wrapKeyWithSession(privateKey, authData.session.access_token);
+            console.log("✅ Connexion et déchiffrement réussis.");
+          } catch (cryptoError: any) {
+            if (cryptoError.message && cryptoError.message.includes("Aucun coffre local")) {
+              console.warn("⚠️ Nouveau navigateur détecté. Auto-génération de nouvelles clés E2EE...");
+              const { generateAndStoreKeyPair, unlockLocalVault: unlockAfterGen } = await import('@/lib/crypto-client');
+              const { publicKeyJwk } = await generateAndStoreKeyPair(password);
+              const newPublicKeyBase64 = btoa(JSON.stringify(publicKeyJwk));
+              
+              await supabase
+                .from('profiles')
+                .update({ public_key: newPublicKeyBase64 })
+                .eq('user_id', authData.user.id)
+                .eq('type', 'WORK');
+                
+              const newPrivateKey = await unlockAfterGen(password);
+              await wrapKeyWithSession(newPrivateKey, authData.session.access_token);
+            } else {
+              console.error("Erreur fatale de déchiffrement :", cryptoError);
+              setError("Mot de passe incorrect pour le coffre-fort local.");
+              setLoading(false);
+              return;
+            }
+          }
+
+          router.push('/');
+          router.refresh();
+
+        } catch (err) {
+          console.error("Erreur inattendue:", err);
+          setError("Erreur inattendue lors de la vérification.");
+          setLoading(false);
         }
-    );
-    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("AccÃ¨s refusÃ©. Token invalide ou manquant.");
-    return user;
-}
+      } else if (!authData.session) {
+        setError("⚠️ Agent Ipse : Session invalide ou email non confirmé.");
+        setLoading(false);
+      }
+    } else {
+      // --- BLOC STRICT INSCRIPTION ---
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/` }
+      });
 
-export async function POST(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        // 1. Parsing strict du payload
-        const body = await request.json();
-        const { content, receiverId, action } = body;
+      if (authError) {
+        console.error("Erreur d'inscription :", authError.message);
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
 
-        // 2. VÃ©rification de l'identitÃ© via Supabase Auth
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        if (action === 'read' && receiverId) {
-            await prismaRLS.message.updateMany({
-                where: {
-                    senderId: receiverId,
-                    receiverId: user.id,
-                    isRead: false
-                },
-                data: { isRead: true }
+      if (authData.user) {
+        try {
+          console.log("🚀 Nouvel utilisateur créé. Génération de l'identité cryptographique (E2EE)...");
+          
+          // On s'assure d'abord que le profil existe (via notre API interne qui handle le insert ou upsert)
+          if (authData.session) {
+            await fetch(getApiUrl('/api/auth/sync-profile'), {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authData.session.access_token}`
+              }
             });
-            return NextResponse.json({ success: true });
+          }
+
+          const { generateAndStoreKeyPair, wrapKeyWithSession, unlockLocalVault } = await import('@/lib/crypto-client');
+
+          // 2. Création du Coffre Local et des Clés (avec le mot de passe fraîchement tapé)
+          const { publicKeyJwk } = await generateAndStoreKeyPair(password);
+          const newPublicKey = btoa(JSON.stringify(publicKeyJwk));
+
+          // 3. On pousse la Clé Publique fraîchement générée dans la table Profile
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ public_key: newPublicKey })
+            .eq('user_id', authData.user.id)
+            .eq('type', 'WORK');
+
+          if (updateError) {
+            console.error("❌ Échec de la sauvegarde de la clé publique dans Supabase :", updateError);
+          } else {
+            console.log("✅ Profil E2EE initialisé avec succès !");
+          }
+
+          // 4. (Optionnel) Si Supabase auto-connecte l'utilisateur après le signUp, on sécurise la session (F5 survival)
+          if (authData.session) {
+            const privateKey = await unlockLocalVault(password);
+            await wrapKeyWithSession(privateKey, authData.session.access_token);
+          }
+
+        } catch (cryptoError) {
+          console.error("❌ Échec critique lors de la génération des clés :", cryptoError);
         }
+      }
 
-        if (!content || !receiverId) {
-            return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
-        }
-
-        // 3. âš¡ Instanciation du Prisma avec RLS âš¡
-        // prismaRLS est dÃ©jÃ  dÃ©clarÃ© en haut pour le action === 'read'
-
-        // VÃ©rification d'association si besoin, mais RLS gÃ¨re les accÃ¨s de base.
-        // On s'assure qu'une connexion ACCEPTED existe.
-        const activeConnection = await prismaRLS.connection.findFirst({
-            where: {
-                OR: [
-                    { initiatorId: user.id, receiverId: receiverId },
-                    { initiatorId: receiverId, receiverId: user.id }
-                ],
-                status: 'ACCEPTED'
-            }
-        });
-
-        if (!activeConnection) {
-            return NextResponse.json({ error: "AccÃ¨s refusÃ©. Aucune connexion active avec cet utilisateur." }, { status: 403 });
-        }
-
-        // 4. ExÃ©cution de la requÃªte sous contexte utilisateur
-        const message = await prismaRLS.message.create({
-            data: {
-                content,
-                senderId: user.id,
-                receiverId
-            }
-        });
-
-        return NextResponse.json({ success: true, message });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (POST):", error);
-        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
+      if (!authData.session) {
+        setError("⚠️ Agent Ipse : Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.");
+      } else {
+        router.push('/');
+        router.refresh();
+      }
+      setLoading(false);
     }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white/10 p-8 backdrop-blur-lg border border-white/20 shadow-xl">
+        <h1 className="text-3xl font-bold text-white mb-2 text-center">Ipse</h1>
+        <p className="text-blue-300/80 text-sm mb-6 text-center font-medium uppercase tracking-widest">
+          Initialisation de l'Agent Ipse
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-500/20 border border-red-500 text-red-200 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          />
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Mot de passe (min. 6 caractères)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 rounded-lg bg-black/50 border border-gray-700 text-white focus:outline-none focus:border-blue-500"
+          />
+
+          <div className="flex gap-4 pt-4">
+            <button
+              type="submit"
+              onClick={() => setActionType('login')}
+              disabled={loading}
+              className="flex-1 p-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50"
+            >
+              Se connecter
+            </button>
+            <button
+              type="submit"
+              onClick={() => setActionType('signup')}
+              disabled={loading}
+              className="flex-1 p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition disabled:opacity-50"
+            >
+              S'inscrire
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
+````
 
-export async function GET(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const { searchParams } = new URL(request.url);
-        const receiverId = searchParams.get('receiverId');
-        const cursorId = searchParams.get('cursorId');
-
-        if (!receiverId || !cursorId) {
-            return NextResponse.json({ error: "ParamÃ¨tres manquants : receiverId ou cursorId" }, { status: 400 });
-        }
-
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        // Fetch des messages plus anciens via pagination sur RLS
-        const olderMessages = await prismaRLS.message.findMany({
-            where: {
-                OR: [
-                    { senderId: user.id, receiverId: receiverId },
-                    { senderId: receiverId, receiverId: user.id }
-                ]
-            },
-            take: 50,
-            skip: 1, // Skip cursor
-            cursor: { id: cursorId },
-            orderBy: { createdAt: 'desc' } // Fetch backwards
-        });
-
-        // Remettre dans l'ordre chronologique logique (plus vieux en haut)
-        return NextResponse.json({ success: true, messages: olderMessages.reverse() });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (GET):", error);
-        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
-    }
-}
-
-export async function DELETE(request: Request) {
-    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    try {
-        const body = await request.json();
-        const { connectionId } = body;
-
-        if (!connectionId) {
-            return NextResponse.json({ success: false, error: "connectionId manquant" }, { status: 400 });
-        }
-
-        const user = await getAuthUser(request);
-        const prismaRLS = getPrismaForUser(user.id);
-
-        // VÃ©rifier que la connexion existe et appartient Ã  l'utilisateur
-        const connection = await prismaRLS.connection.findFirst({
-            where: {
-                id: connectionId,
-                OR: [
-                    { initiatorId: user.id },
-                    { receiverId: user.id }
-                ]
-            }
-        });
-
-        if (!connection) {
-            return NextResponse.json({ success: false, error: "Connexion introuvable ou accÃ¨s refusÃ©." }, { status: 404 });
-        }
-
-        // Supprimer les messages associÃ©s puis la connexion
-        await prismaRLS.message.deleteMany({
-            where: {
-                OR: [
-                    { senderId: connection.initiatorId, receiverId: connection.receiverId },
-                    { senderId: connection.receiverId, receiverId: connection.initiatorId }
-                ]
-            }
-        });
-
-        await prismaRLS.connection.delete({ where: { id: connectionId } });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error: any) {
-        console.error("Erreur API Chat (DELETE):", error);
-        return NextResponse.json({ success: false, error: error.message || "Erreur critique du serveur" }, { status: 500 });
-    }
-}
-</file>
-
-<file path="capacitor.config.ts">
+## File: capacitor.config.ts
+````typescript
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -12534,15 +13628,16 @@ const config: CapacitorConfig = {
   appName: 'Ipse',
   webDir: 'public',
   server: {
-    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // ðŸš€ CORRECTION : https://
+    url: 'https://dcilf-2a01-cb1c-8455-9a00-d9eb-7f41-cc38-a57a.a.free.pinggy.link', // 🚀 CORRECTION : https://
     cleartext: true
   }
 };
 
 export default config;
-</file>
+````
 
-<file path="vercel.json">
+## File: vercel.json
+````json
 {
     "crons": [
         {
@@ -12559,9 +13654,10 @@ export default config;
         }
     ]
 }
-</file>
+````
 
-<file path="app/actions/opportunities.ts">
+## File: app/actions/opportunities.ts
+````typescript
 // 'use server' (static build fix)
 import { mistralClient } from '@/lib/mistral';
 import { prisma } from '@/lib/prisma'; // Assurez-vous que l'import de prisma est correct
@@ -12584,7 +13680,7 @@ async function getAuthUser() {
         }
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
     return user;
 }
 
@@ -12594,7 +13690,7 @@ export async function performAudit(oppId: string) {
         const user = await getAuthUser();
         const myId = user.id;
 
-        // 1. On rÃ©cupÃ¨re l'opportunitÃ© avec les relations exactes
+        // 1. On récupère l'opportunité avec les relations exactes
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId },
             include: {
@@ -12604,7 +13700,7 @@ export async function performAudit(oppId: string) {
         });
 
         if (!opp || !opp.sourceProfile || !opp.targetProfile) {
-            return { success: false, error: "DonnÃ©es introuvables" };
+            return { success: false, error: "Données introuvables" };
         }
 
         // Identifier clairement qui est la cible (l'autre agent)
@@ -12612,36 +13708,36 @@ export async function performAudit(oppId: string) {
 
         // 2. On construit le prompt avec un FOCUS REQUIS STRICT SUR LA CIBLE
         const prompt = `
-Tu es le Cortex, une IA de renseignement stratÃ©gique B2B.
+Tu es le Cortex, une IA de renseignement stratégique B2B.
 
-RÃˆGLES DE SURVIE ABSOLUES :
-1. RÃ‰POND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte aprÃ¨s. Pas de balises markdown.
-2. FORMATAGE : Interdiction d'utiliser des astÃ©risques (*), des tirets (-) ou des diÃ¨ses (#).
-3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientÃ©es rentabilitÃ©.
+RÈGLES DE SURVIE ABSOLUES :
+1. RÉPOND UNIQUEMENT EN JSON VALIDE. Aucun texte avant, aucun texte après. Pas de balises markdown.
+2. FORMATAGE : Interdiction d'utiliser des astérisques (*), des tirets (-) ou des dièses (#).
+3. ACTIONS : Donne exactement 2 ou 3 actions ultra-concises orientées rentabilité.
 
 NOUVELLE DIRECTIVE STRICTE :
-Dans la section 'Match StratÃ©gique' (le champ 'synergies'), tu dois UNIQUEMENT dÃ©crire l'identitÃ© et l'activitÃ© de la CIBLE dÃ©tectÃ©e. 
-Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un rÃ©sumÃ© direct de la cible dÃ©tectÃ©e sous ce format : "[Nom de la cible] est [MÃ©tier de la cible]. Il/Elle cherche Ã  [Objectif]."
+Dans la section 'Match Stratégique' (le champ 'synergies'), tu dois UNIQUEMENT décrire l'identité et l'activité de la CIBLE détectée. 
+Ne cite JAMAIS l'utilisateur qui fait la recherche (toi, l'utilisateur courant, etc.). Fais un résumé direct de la cible détectée sous ce format : "[Nom de la cible] est [Métier de la cible]. Il/Elle cherche à [Objectif]."
 
 FORMAT ATTENDU :
 {
-  "synergies": "[Nom de la cible] est [MÃ©tier]. Il cherche Ã  [Objectif].",
+  "synergies": "[Nom de la cible] est [Métier]. Il cherche à [Objectif].",
   "actions": [
-    "Action prÃ©cise 1",
-    "Action prÃ©cise 2"
+    "Action précise 1",
+    "Action précise 2"
   ]
 }
 
-CIBLE DÃ‰TECTÃ‰E (${targetProfile.name || 'La Cible'}) : 
-RÃ´le : ${targetProfile.primaryRole || 'Non dÃ©fini'}
-Bio : ${targetProfile.bio || 'Non dÃ©finie'}
+CIBLE DÉTECTÉE (${targetProfile.name || 'La Cible'}) : 
+Rôle : ${targetProfile.primaryRole || 'Non défini'}
+Bio : ${targetProfile.bio || 'Non définie'}
 
-RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÃˆS LES ACCOLADES {}.
+RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT OU APRÈS LES ACCOLADES {}.
 `;
 
-        console.log("ðŸ•µï¸ [AUDIT DEBUG] Envoi Ã  Mistral :", prompt);
+        console.log("🕵️ [AUDIT DEBUG] Envoi à Mistral :", prompt);
 
-        // 3. Appel Ã  Mistral
+        // 3. Appel à Mistral
         const auditResponse = await mistralClient.chat.complete({
             model: 'mistral-large-latest',
             messages: [{ role: 'user', content: prompt }]
@@ -12657,9 +13753,9 @@ RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT 
             auditResult = cleanedContent; // Or parse it if we need structured data later
             // result = JSON.parse(cleanedContent); 
         } catch (error: any) {
-            console.error("âŒ [AUDIT] Ã‰chec du parsing... (Score: Inconnu)");
-            console.error("DÃ©tail de l'erreur Mistral :", error);
-            console.log("RÃ©ponse brute reÃ§ue :", content);
+            console.error("❌ [AUDIT] Échec du parsing... (Score: Inconnu)");
+            console.error("Détail de l'erreur Mistral :", error);
+            console.log("Réponse brute reçue :", content);
         }
 
         // 4. Sauvegarde en BDD
@@ -12679,15 +13775,15 @@ RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON. N'AJOUTE AUCUN TEXTE AVANT 
 // 2. ENVOYER INVITATION
 export async function sendChatInvite(oppId: string, customTitle: string) {
     try {
-        // 1. On rÃ©cupÃ¨re l'opportunitÃ© et les profils
+        // 1. On récupère l'opportunité et les profils
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId },
             include: { targetProfile: true, sourceProfile: true }
         });
 
-        if (!opp) throw new Error("OpportunitÃ© introuvable");
+        if (!opp) throw new Error("Opportunité introuvable");
 
-        // 2. ON MET Ã€ JOUR LA BDD D'ABORD (L'invitation est crÃ©Ã©e quoi qu'il arrive)
+        // 2. ON MET À JOUR LA BDD D'ABORD (L'invitation est créée quoi qu'il arrive)
         await prisma.opportunity.update({
             where: { id: oppId },
             data: { title: customTitle, status: 'INVITED' }
@@ -12696,7 +13792,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
         // 3. ENVOI DE LA NOTIFICATION (Optionnel : on ne crashe pas si pas de token)
         if (opp.targetProfile?.fcmToken) {
             const admin = (await import('firebase-admin')).default;
-            // On s'assure que Firebase est initialisÃ© (pushSender.ts le fait, mais au cas oÃ¹)
+            // On s'assure que Firebase est initialisé (pushSender.ts le fait, mais au cas où)
             if (!admin.apps.length) {
                 admin.initializeApp({
                     credential: admin.credential.cert({
@@ -12709,7 +13805,7 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
 
             const message = {
                 notification: {
-                    title: `ðŸ“© Nouvelle Invitation : ${customTitle}`,
+                    title: `📩 Nouvelle Invitation : ${customTitle}`,
                     body: `${opp.sourceProfile?.name || 'Un agent'} souhaite ouvrir un canal avec vous.`,
                 },
                 data: {
@@ -12722,41 +13818,41 @@ export async function sendChatInvite(oppId: string, customTitle: string) {
 
             try {
                 await admin.messaging().send(message as any);
-                console.log("âœ… [OPP] Notification Push envoyÃ©e avec succÃ¨s.");
+                console.log("✅ [OPP] Notification Push envoyée avec succès.");
             } catch (notifError) {
-                console.error("âš ï¸ [OPP] Erreur Push (mais invitation crÃ©Ã©e) :", notifError);
+                console.error("⚠️ [OPP] Erreur Push (mais invitation créée) :", notifError);
             }
         } else {
-            console.log("âš ï¸ [OPP] Cible sans fcmToken. Invitation crÃ©Ã©e en BDD mais pas de notification Push envoyÃ©e.");
+            console.log("⚠️ [OPP] Cible sans fcmToken. Invitation créée en BDD mais pas de notification Push envoyée.");
         }
 
         revalidatePath('/');
         return { success: true };
     } catch (error: any) {
-        console.error("âŒ [OPP] Erreur envoi invitation:", error);
+        console.error("❌ [OPP] Erreur envoi invitation:", error);
         return { success: false, error: error.message };
     }
 }
 
-// 3. ACCEPTER L'INVITATION (CrÃ©ation de Canal)
+// 3. ACCEPTER L'INVITATION (Création de Canal)
 export async function acceptInvite(oppId: string) {
     try {
         const opp = await prisma.opportunity.findUnique({
             where: { id: oppId }
         });
 
-        if (!opp) throw new Error("OpportunitÃ© expirÃ©e ou introuvable");
+        if (!opp) throw new Error("Opportunité expirée ou introuvable");
 
-        // 1. On crÃ©e le canal de communication (Table Connection)
+        // 1. On crée le canal de communication (Table Connection)
         const newConnection = await prisma.connection.create({
             data: {
                 initiatorId: opp.sourceId,
                 receiverId: opp.targetId,
-                status: 'ACCEPTED' // On l'accepte d'emblÃ©e
+                status: 'ACCEPTED' // On l'accepte d'emblée
             }
         });
 
-        // 2. On clÃ´ture l'opportunitÃ©
+        // 2. On clôture l'opportunité
         await prisma.opportunity.update({
             where: { id: oppId },
             data: { status: 'ACCEPTED' }
@@ -12765,7 +13861,7 @@ export async function acceptInvite(oppId: string) {
         revalidatePath('/');
         return { success: true, connectionId: newConnection.id };
     } catch (error) {
-        console.error("âŒ [OPP] Erreur acceptation invitation:", error);
+        console.error("❌ [OPP] Erreur acceptation invitation:", error);
         return { success: false, error };
     }
 }
@@ -12833,9 +13929,10 @@ export async function deleteOpportunity(oppId: string) {
         return { success: false, error: error.message };
     }
 }
-</file>
+````
 
-<file path="app/actions/scan-global-network.ts">
+## File: app/actions/scan-global-network.ts
+````typescript
 'use server'
 import { mistralClient } from "@/lib/mistral";
 
@@ -12847,7 +13944,7 @@ import { trackAgentActivity } from '@/app/actions/missions';
 const client = mistralClient;
 
 export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' = 'basic') {
-  // 1. Initialiser le client Supabase sÃ©curisÃ©
+  // 1. Initialiser le client Supabase sécurisé
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12859,23 +13956,23 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
     }
   );
 
-  // 2. RÃ©cupÃ©ration du profil agent pour dÃ©finir l'intention de recherche
+  // 2. Récupération du profil agent pour définir l'intention de recherche
   const agent: any = await prisma.profile.findUnique({
     where: { id: userId }
   });
   if (!agent) throw new Error("Agent introuvable.");
 
   // Ce que notre Agent cherche activement :
-  const searchIntent = `Profil: ${agent.profession || 'GÃ©nÃ©ral'}. Objectifs: ${agent.objectives?.join(', ') || 'OpportunitÃ©s stratÃ©giques'}`;
+  const searchIntent = `Profil: ${agent.profession || 'Général'}. Objectifs: ${agent.objectives?.join(', ') || 'Opportunités stratégiques'}`;
 
-  // 3. Transformation en vecteur mathÃ©matique (Embeddings)
+  // 3. Transformation en vecteur mathématique (Embeddings)
   const embeddingResponse = await client.embeddings.create({
     model: "mistral-embed",
     inputs: [searchIntent],
   });
   const queryVector = embeddingResponse.data[0].embedding;
 
-  // 4. Recherche RAG dans la mÃ©moire vectorielle
+  // 4. Recherche RAG dans la mémoire vectorielle
   const { data: ragResults } = await supabase.rpc('match_memories', {
     query_embedding: queryVector,
     match_threshold: 0.75,
@@ -12885,61 +13982,61 @@ export async function scanGlobalNetwork(userId: string, mode: 'basic' | 'deep' =
 
   const contextBlock = ragResults && ragResults.length > 0
     ? ragResults.map((r: any) => `[Score: ${r.similarity?.toFixed(2)}] ${r.content}`).join('\n')
-    : 'Aucune mÃ©moire pertinente trouvÃ©e dans la base vectorielle.';
+    : 'Aucune mémoire pertinente trouvée dans la base vectorielle.';
 
   // 5. Construction du prompt selon le mode
   const promptContent = mode === 'deep'
-    ? `Tu es TWINS_INTEL, un moteur d'analyse stratÃ©gique avancÃ©.
-Analyse ce profil et ses donnÃ©es mÃ©moire en profondeur pour identifier des opportunitÃ©s de connexion et de collaboration.
+    ? `Tu es TWINS_INTEL, un moteur d'analyse stratégique avancé.
+Analyse ce profil et ses données mémoire en profondeur pour identifier des opportunités de connexion et de collaboration.
 
 AGENT:
 - Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spÃ©cifiÃ©e'}
+- Profession: ${agent.profession || 'Non spécifiée'}
 - Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
 - Bio: ${agent.bio || 'Aucune'}
-- Analyse unifiÃ©e: ${agent.unifiedAnalysis || 'Aucune'}
+- Analyse unifiée: ${agent.unifiedAnalysis || 'Aucune'}
 
-DONNÃ‰ES MÃ‰MOIRE PERTINENTES:
+DONNÉES MÉMOIRE PERTINENTES:
 ${contextBlock}
 
-GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
 {
   "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "RÃ©sumÃ© de l'analyse en 2-3 phrases.",
+  "analysisSummary": "Résumé de l'analyse en 2-3 phrases.",
   "overallMatchScore": 0-100,
   "targetClassification": "Classification du profil cible",
-  "unifiedAnalysis": "Analyse dÃ©taillÃ©e du potentiel de l'agent.",
+  "unifiedAnalysis": "Analyse détaillée du potentiel de l'agent.",
   "strategicAlignment": "Comment l'agent peut capitaliser sur ses forces.",
   "targetId": "${userId}",
   "targets": [
-    {"name": "Nom entitÃ©", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
   ],
   "opportunities": [
-    {"title": "Titre opportunitÃ©", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
+    {"title": "Titre opportunité", "reasoning": "Pourquoi c'est pertinent", "priority": 1-10}
   ]
 }`
     : `Tu es TWINS_INTEL, un radar de surface rapide.
-Fais une analyse de surface du profil suivant pour identifier le statut gÃ©nÃ©ral et les directions stratÃ©giques.
+Fais une analyse de surface du profil suivant pour identifier le statut général et les directions stratégiques.
 
 AGENT:
 - Nom: ${agent.name || 'Agent'}
-- Profession: ${agent.profession || 'Non spÃ©cifiÃ©e'}
+- Profession: ${agent.profession || 'Non spécifiée'}
 - Objectifs: ${agent.objectives?.join(', ') || 'Exploration'}
 
-DONNÃ‰ES MÃ‰MOIRE:
+DONNÉES MÉMOIRE:
 ${contextBlock}
 
-GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
+Génère un rapport JSON structuré STRICT avec EXACTEMENT ces champs:
 {
   "globalStatus": "GREEN" ou "ORANGE" ou "RED",
-  "analysisSummary": "RÃ©sumÃ© bref en 1-2 phrases.",
+  "analysisSummary": "Résumé bref en 1-2 phrases.",
   "targetId": "${userId}",
   "targets": [
-    {"name": "Nom entitÃ©", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
+    {"name": "Nom entité", "lat": 48.8, "lng": 2.3, "type": "contact|company|opportunity"}
   ]
 }`;
 
-  // 6. Appel Mistral avec format JSON forcÃ©
+  // 6. Appel Mistral avec format JSON forcé
   const response = await client.chat.complete({
     model: "mistral-large-latest",
     messages: [{ role: "system", content: promptContent }],
@@ -12948,11 +14045,11 @@ GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
 
   const rawContent = response.choices?.[0]?.message?.content;
 
-  // 7. DÃ‰CLARATION EN DEHORS DU TRY/CATCH
+  // 7. DÉCLARATION EN DEHORS DU TRY/CATCH
   let aiAnalysis: any = {};
   let targets: any[] = [];
 
-  // 8. PARSING SÃ‰CURISÃ‰
+  // 8. PARSING SÉCURISÉ
   try {
     const cleanJsonContent = (rawContent as string).replace(/\[TARGETS:[\s\S]*?\]/g, '').trim();
     const jsonMatch = cleanJsonContent.match(/\{[\s\S]*\}/);
@@ -12960,11 +14057,11 @@ GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
     aiAnalysis = parsedData;
     targets = parsedData.targets || [];
   } catch (e) {
-    console.error("[RESEAU - CRITIQUE] JSON.parse a Ã©chouÃ© pour l'analyse IA :", rawContent);
-    throw new Error("Erreur de parsing JSON de la rÃ©ponse Mistral.");
+    console.error("[RESEAU - CRITIQUE] JSON.parse a échoué pour l'analyse IA :", rawContent);
+    throw new Error("Erreur de parsing JSON de la réponse Mistral.");
   }
 
-  // 9. LE RETURN SÃ‰CURISÃ‰
+  // 9. LE RETURN SÉCURISÉ
   await trackAgentActivity(userId, 'scan');
 
   return {
@@ -12973,9 +14070,189 @@ GÃ©nÃ¨re un rapport JSON structurÃ© STRICT avec EXACTEMENT ces champs:
     targets
   };
 }
-</file>
+````
 
-<file path="app/api/memories/route.ts">
+## File: app/api/chat/route.ts
+````typescript
+export const dynamic = 'force-dynamic';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { getPrismaForUser } from '@/lib/prisma';
+
+// Helper for auth via API Route
+async function getAuthUser(request: Request) {
+    const authHeader = request.headers.get('Authorization');
+    let token = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    if (token) return undefined;
+                    return cookieStore.get(name)?.value;
+                },
+                set() { }, remove() { }
+            }
+        }
+    );
+    const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
+    if (!user) throw new Error("Accès refusé. Token invalide ou manquant.");
+    return user;
+}
+
+export async function POST(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        // 1. Parsing strict du payload
+        const body = await request.json();
+        const { content, receiverId, action } = body;
+
+        // 2. Vérification de l'identité via Supabase Auth
+        const user = await getAuthUser(request);
+        const { senderId } = body; // Le profil décliné (WORK/HOBBY/DATING)
+
+        const prismaRLS = getPrismaForUser(user.id);
+
+        if (action === 'read' && receiverId) {
+            // Ici receiverId est le partenaire, on doit aussi filtrer par notre profil actif (senderId)
+            await prismaRLS.message.updateMany({
+                where: {
+                    senderId: receiverId,
+                    receiverId: senderId || user.id, // Fallback vers user.id pour compatibilité
+                    isRead: false
+                },
+                data: { isRead: true }
+            });
+            return NextResponse.json({ success: true });
+        }
+
+        if (!content || !receiverId) {
+            return NextResponse.json({ error: "Payload invalide : content ou receiverId manquant" }, { status: 400 });
+        }
+
+        // 3. ⚡ Instanciation du Prisma avec RLS ⚡
+        // On vérifie que le senderId appartient bien à l'utilisateur si fourni
+        if (senderId) {
+            const profile = await prismaRLS.profile.findFirst({
+                where: { id: senderId, userId: user.id }
+            });
+            if (!profile) return NextResponse.json({ error: "Profil invalide ou non autorisé" }, { status: 403 });
+        }
+
+        // 4. Exécution de la requête sous contexte utilisateur
+        const message = await prismaRLS.message.create({
+            data: {
+                content,
+                senderId: senderId || user.id,
+                receiverId
+            }
+        });
+
+        return NextResponse.json({ success: true, message });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (POST):", error);
+        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+
+export async function GET(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const { searchParams } = new URL(request.url);
+        const receiverId = searchParams.get('receiverId');
+        const cursorId = searchParams.get('cursorId');
+        const senderId = searchParams.get('senderId'); // Notre identité prism
+
+        if (!receiverId || !cursorId) {
+            return NextResponse.json({ error: "Paramètres manquants : receiverId ou cursorId" }, { status: 400 });
+        }
+
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // Fetch des messages plus anciens via pagination sur RLS
+        const myId = senderId || user.id;
+        const olderMessages = await prismaRLS.message.findMany({
+            where: {
+                OR: [
+                    { senderId: myId, receiverId: receiverId },
+                    { senderId: receiverId, receiverId: myId }
+                ]
+            },
+            take: 50,
+            skip: 1, // Skip cursor
+            cursor: { id: cursorId },
+            orderBy: { createdAt: 'desc' } // Fetch backwards
+        });
+
+        // Remettre dans l'ordre chronologique logique (plus vieux en haut)
+        return NextResponse.json({ success: true, messages: olderMessages.reverse() });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (GET):", error);
+        return NextResponse.json({ error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    if (process.env.BUILD_TARGET === 'mobile') return new Response(JSON.stringify({ success: true, message: 'Static build bypass' }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    try {
+        const body = await request.json();
+        const { connectionId } = body;
+
+        if (!connectionId) {
+            return NextResponse.json({ success: false, error: "connectionId manquant" }, { status: 400 });
+        }
+
+        const user = await getAuthUser(request);
+        const prismaRLS = getPrismaForUser(user.id);
+
+        // Vérifier que la connexion existe et appartient à l'utilisateur
+        const connection = await prismaRLS.connection.findFirst({
+            where: {
+                id: connectionId,
+                OR: [
+                    { initiatorId: user.id },
+                    { receiverId: user.id }
+                ]
+            }
+        });
+
+        if (!connection) {
+            return NextResponse.json({ success: false, error: "Connexion introuvable ou accès refusé." }, { status: 404 });
+        }
+
+        // Supprimer les messages associés puis la connexion
+        await prismaRLS.message.deleteMany({
+            where: {
+                OR: [
+                    { senderId: connection.initiatorId, receiverId: connection.receiverId },
+                    { senderId: connection.receiverId, receiverId: connection.initiatorId }
+                ]
+            }
+        });
+
+        await prismaRLS.connection.delete({ where: { id: connectionId } });
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error("Erreur API Chat (DELETE):", error);
+        return NextResponse.json({ success: false, error: error.message || "Erreur critique du serveur" }, { status: 500 });
+    }
+}
+````
+
+## File: app/api/memories/route.ts
+````typescript
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
@@ -12984,7 +14261,7 @@ import { prisma, getPrismaForUser } from '@/lib/prisma';
 import { mistralClient } from '@/lib/mistral';
 import { trackAgentActivity } from '@/app/actions/missions';
 
-// âš¡ La fonction qui lit le Bearer Token
+// ⚡ La fonction qui lit le Bearer Token
 async function getAuthUser(request: Request) {
     const authHeader = request.headers.get('Authorization');
     let token = null;
@@ -13005,7 +14282,7 @@ async function getAuthUser(request: Request) {
         }
     );
     const { data: { user } } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
-    if (!user) throw new Error("AccÃ¨s refusÃ©.");
+    if (!user) throw new Error("Accès refusé.");
     return user;
 }
 
@@ -13020,7 +14297,7 @@ async function vectorizeAndStoreMemory(memoryId: string, content: string) {
             UPDATE public.memory SET embedding = ${embeddingVector}::vector WHERE id = ${memoryId}
         `;
     } catch (error) {
-        console.error(`âŒ [VECTORISATION ERREUR]:`, error);
+        console.error(`❌ [VECTORISATION ERREUR]:`, error);
     }
 }
 
@@ -13175,1085 +14452,434 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
-</file>
+````
 
-<file path="app/components/RadarMatchCard.tsx">
-'use client';
-import { useState, useEffect } from 'react';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/opportunities
-import { getAgentName } from '@/lib/utils';
-import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
+## File: components/SecureChat.tsx
+````typescript
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { X, Lock, Send, ShieldCheck } from 'lucide-react'
+import { RealtimeChannel } from '@supabase/supabase-js'
 import { getApiUrl } from '@/lib/api';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import AuditPanel from './AuditPanel';
-import { useLanguage } from '@/context/LanguageContext';
+// Server actions supprimées — on utilise fetch vers /api/translation et /api/guardian
 
-export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
-    const { t } = useLanguage();
-    const router = useRouter();
-    const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
-    const [loading, setLoading] = useState(false);
-    const [isAuditing, setIsAuditing] = useState(false);
-    const [auditData, setAuditData] = useState(opportunity.audit);
-    const [showAudit, setShowAudit] = useState(false);
-    const [isAccepted, setIsAccepted] = useState(false);
-
-    // Sync state with props
-    useEffect(() => {
-        setStatus(opportunity.status);
-        setAuditData(opportunity.audit);
-    }, [opportunity.status, opportunity.audit]);
-
-    const hasAudit = Boolean(auditData || opportunity?.audit);
-
-    // On dÃ©termine qui est l'autre agent
-    const otherProfile = opportunity?.sourceId === myId
-        ? opportunity?.targetProfile
-        : opportunity?.sourceProfile;
-
-    console.log("ðŸ” [RadarMatchCard] Profile data:", {
-        oppId: opportunity?.id,
-        myId,
-        sourceId: opportunity?.sourceId,
-        targetId: opportunity?.targetId,
-        hasTargetProfile: !!opportunity?.targetProfile,
-        hasSourceProfile: !!opportunity?.sourceProfile,
-        otherId: otherProfile?.id
-    });
-
-    // --- LOGIQUE AUDIT ---
-    const getOppHeaders = async () => {
-        const { createClient } = await import('@/lib/supabaseBrowser');
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        const headers: any = { 'Content-Type': 'application/json' };
-        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-        return headers;
-    };
-
-    const handleAudit = async () => {
-        setIsAuditing(true);
-        setAuditData(''); // Reset for typewriter effect
-        setShowAudit(true); // Immediate UI feedback
-        
-        try {
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ opportunityId: opportunity.id })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
-                throw new Error(errorData.error || `HTTP ${response.status}`);
-            }
-
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            if (!reader) throw new Error('No stream reader available');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                setAuditData((prev: string) => prev + chunk);
-            }
-
-            setStatus('AUDITED');
-        } catch (e: any) {
-            console.error("âŒ [STREAM ERROR]:", e);
-            alert(`Erreur Cortex: ${e.message}`);
-            setAuditData("Ã‰chec de la gÃ©nÃ©ration de l'audit.");
-        } finally {
-            setIsAuditing(false);
-        }
-    };
-
-    const handleConnect = async () => {
-        setLoading(true);
-        const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/connection'), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ action: 'request', targetId: otherProfile?.id, oppId: opportunity.id })
-        }).then(r => r.json());
-        if (res.success) {
-            setStatus('INVITED');
-        }
-        setLoading(false);
-    };
-
-    const handleAccept = async () => {
-        if (!opportunity?.id || !otherProfile?.id) return;
-        setLoading(true);
-        const headers = await getOppHeaders();
-        const res = await fetch(getApiUrl('/api/connection'), {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ action: 'accept', oppId: opportunity.id })
-        }).then(r => r.json());
-        if (res.success) {
-            setIsAccepted(true);
-            router.push(`/chat?id=${otherProfile?.id}`);
-            return; // Le composant sera dÃ©montÃ© par la navigation, pas de setState aprÃ¨s
-        }
-        setLoading(false);
-    };
-
-    return (
-        <div className="b2b-card p-8 mb-6 transition-all hover:bg-zinc-900/40">
-            {/* HEADER : Nom + Score */}
-            <div className="flex items-start justify-between mb-4">
-                <div>
-                    <h3 className="text-xl font-bold tracking-tight text-white">{getAgentName(otherProfile)}</h3>
-                    <p className="text-xs text-zinc-400 line-clamp-1 mt-1 font-mono italic">
-                        {typeof (otherProfile?.bio || otherProfile?.primaryRole) === 'object'
-                            ? JSON.stringify(otherProfile?.bio || otherProfile?.primaryRole)
-                            : (otherProfile?.bio || otherProfile?.primaryRole || "Agent Digital Twin")}
-                    </p>
-                </div>
-                <span className="badge-status border-blue-500/20 text-blue-400 shrink-0 ml-4">
-                    {opportunity.matchScore}% {t('radar.match_score')}
-                </span>
-            </div>
-
-            {/* BODY : RÃ©sumÃ© ou Audit */}
-            <div className="mb-6">
-                {status === 'DETECTED' ? (
-                    <p className="text-zinc-400 text-sm leading-relaxed">
-                        {(() => {
-                            const val = opportunity.synergies || opportunity.summary || opportunity.content;
-                            if (!val) return "Le rapport d'audit est en cours de dÃ©cryptage par le Cortex...";
-                            if (typeof val === 'object') return JSON.stringify(val);
-                            return val;
-                        })()}
-                    </p>
-                ) : (
-                    <div className="bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
-                        <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold text-center">
-                            {t('radar.audit_ready')}
-                        </p>
-                    </div>
-                )}
-            </div>
-
-            {/* Rendu conditionnel des actions */}
-            <div className="mt-6 space-y-3">
-
-                {/* BOUTON AUDIT PERSISTANT (S'affiche si un audit existe dÃ©jÃ ) */}
-                {hasAudit && (
-                    <button
-                        onClick={() => setShowAudit(true)}
-                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-xs py-2 h-auto"
-                    >
-                        <Target className="w-3 h-3" />
-                        {t('radar.read_audit')}
-                    </button>
-                )}
-
-                {status === 'DETECTED' && !hasAudit && (
-                    <button
-                        disabled={isAuditing}
-                        onClick={handleAudit}
-                        className="btn-primary w-full flex items-center justify-center gap-2"
-                    >
-                        {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
-                        {isAuditing ? "GÃ©nÃ©ration par l'IA..." : t('radar.connect_btn')}
-                    </button>
-                )}
-
-                {status === 'AUDITED' && !hasAudit && (
-                    <button
-                        onClick={() => setShowAudit(true)}
-                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
-                    >
-                        <Target className="w-4 h-4" />
-                        {t('radar.read_audit')}
-                    </button>
-                )}
-
-                {status === 'ACCEPTED' && (
-                    <Link
-                        href={`/chat?id=${otherProfile?.id}`}
-                        className="btn-primary w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] relative"
-                    >
-                        <MessageSquare className="w-4 h-4" />
-                        {t('radar.join_chat')}
-
-                        {opportunity.unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] font-bold items-center justify-center text-white">
-                                    {opportunity.unreadCount}
-                                </span>
-                            </span>
-                        )}
-                    </Link>
-                )}
-
-                {/* --- NOUVEAU : STATUT INVITÃ‰ --- */}
-                {/* Si JE suis celui qui a envoyÃ© l'invitation (Source) */}
-                {status === 'INVITED' && opportunity.sourceId === myId && (
-                    <div className="w-full bg-blue-900/20 border border-blue-500/30 p-3 rounded text-center">
-                        <p className="text-blue-400 text-xs font-bold">
-                            â³ {t('radar.invite_sent')}
-                        </p>
-                    </div>
-                )}
-
-                {/* Si JE suis celui qui reÃ§oit l'invitation (Cible) */}
-                {status === 'INVITED' && opportunity.targetId === myId && (
-                    <div className="w-full bg-green-900/20 border border-green-500/30 p-4 rounded-xl text-center">
-                        <p className="text-green-400 text-sm font-bold mb-4">
-                            ðŸ“© {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
-                        </p>
-                        <div className="flex gap-2">
-                            <button
-                                disabled={loading || isAccepted}
-                                onClick={handleAccept}
-                                className={`btn-primary flex-1 ${isAccepted ? 'bg-emerald-600/50 cursor-default text-emerald-100' : 'bg-green-600 hover:bg-green-500 text-white'}`}
-                            >
-                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} âœ“` : t('radar.accept').toUpperCase()}
-                            </button>
-                            <button
-                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
-                                className="btn-outline flex-1 border-red-900/50 text-red-500 hover:bg-red-900/20 hover:text-red-400"
-                            >
-                                {t('radar.refuse')}
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
-                    <div className="flex gap-2 mt-6">
-                        <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
-                            className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
-                        >
-                            {t('radar.ignore')}
-                        </button>
-                        <button
-                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'BLOCKED' }) })}
-                            className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
-                        >
-                            {t('radar.block')}
-                        </button>
-                    </div>
-                )}
-
-            </div>
-
-            <AuditPanel
-                isOpen={showAudit}
-                onClose={() => setShowAudit(false)}
-                auditData={auditData}
-                targetName={getAgentName(otherProfile)}
-                opportunityId={opportunity?.id}
-                status={status}
-                targetId={otherProfile?.id}
-                onInviteSuccess={() => {
-                    setStatus('INVITED');
-                    setShowAudit(false);
-                }}
-            />
-        </div>
-    );
+interface SecureChatProps {
+    myId: string;
+    partnerId: string;
+    channelId?: string;
+    onClose: () => void;
 }
-</file>
 
-<file path="app/components/RealtimeChat.tsx">
-'use client';
+// ðŸŸ¢ GARANTIE SINGLETON : On initialise une seule fois
+const supabase = createClient();
 
-import { useState, useEffect, useOptimistic, useRef } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-// Server actions supprimées — on utilise fetch vers /api/chat
-import { deriveSharedKey, encryptLocal, decryptLocal, getStoredPrivateKeyJwk } from '@/lib/crypto-client';
-import { Send, AlertCircle, Loader2 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
-import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
-import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
+export default function SecureChat({ myId, partnerId, channelId, onClose }: SecureChatProps) {
+    const [messages, setMessages] = useState<any[]>([])
+    const [newMessage, setNewMessage] = useState('')
+    const [isLoading, setIsLoading] = useState(true)
+    const [isTyping, setIsTyping] = useState(false)
+    const [isConnected, setIsConnected] = useState(false)
+    const [partnerCountry, setPartnerCountry] = useState<string | null>(null)
+    const [isTranslating, setIsTranslating] = useState(false)
+    const [isVaultLocked, setIsVaultLocked] = useState(false)
+    const [unlockPassword, setUnlockPassword] = useState("")
+    const [unlockError, setUnlockError] = useState("")
+    const [retryTrigger, setRetryTrigger] = useState(0)
 
-type Message = { id: string; content: string; senderId: string; receiverId?: string; createdAt: Date | string };
+    const scrollRef = useRef<HTMLDivElement>(null)
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const channelRef = useRef<any>(null)
+    const lastTypingTime = useRef(0)
+    const sharedKeyRef = useRef<CryptoKey | null>(null)
 
-export default function RealtimeChat({ initialMessages, currentUserId, receiverId, receiverPublicKeyJwk }: any) {
-    const [messages, setMessages] = useState<Message[]>(initialMessages);
-    const [isError, setIsError] = useState(false);
-    const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
-    const sharedKeyRef = useRef<CryptoKey | null>(null);
-    const [isDecrypting, setIsDecrypting] = useState(true);
-
-    // --- ÉTATS DE PAGINATION ---
-    const [isLoadingOlder, setIsLoadingOlder] = useState(false);
-    const [hasMore, setHasMore] = useState(initialMessages.length >= 50);
-
-    const formRef = useRef<HTMLFormElement>(null);
-    const bottomRef = useRef<HTMLDivElement>(null);
-    const topObserverRef = useRef<HTMLDivElement>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const decryptedContextRef = useRef<{ id: string, clearText: string, isMe: boolean, createdAt: number }[]>([]);
-
-    const handleDecrypted = (id: string, clearText: string, isMe: boolean) => {
-        const current = decryptedContextRef.current;
-        // Éviter les doublons
-        if (current.some(m => m.id === id)) return;
-
-        // On ajoute, puis on trie chronologiquement (createdAt)
-        const newMsg = { id, clearText, isMe, createdAt: Date.now() };
-        const updated = [...current, newMsg].sort((a, b) => a.createdAt - b.createdAt);
-
-        // On ne conserve que les 20 derniers max pour la perf
-        decryptedContextRef.current = updated.slice(-20);
-    };
-
-    const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-        messages,
-        (state, newMsg: Message) => [...state, newMsg]
-    );
-
-    // =====================================================
-    // �� DÉRIVATION ECDH AU MONTAGE
-    // Clé privée auto-récupérée depuis Secure Storage + clé publique du destinataire
-    // =====================================================
     useEffect(() => {
-        async function initCrypto() {
+        if (!channelId) return;
+
+        let isMounted = true;
+        let room: any = null;
+        const roomName = `room_v4_${channelId}`;
+
+        // LE DÉBRUITAGE : On attend 300ms pour ignorer le double-render de React
+        const initDelay = setTimeout(async () => {
+            if (!isMounted) return;
+
             try {
-                // 1. La requête stricte vers Supabase pour le profil du partenaire
-                const { data: partnerProfile, error: profileError } = await supabase
-                    .from('Profile')
-                    .select('id, publicKey')
-                    .eq('id', receiverId)
+                // 1. Fetch partner's profile with Strict Guardrails
+                const { data: partnerData, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('id, country, public_key')
+                    .eq('id', partnerId)
                     .single();
 
+                if (partnerData?.country && isMounted) setPartnerCountry(partnerData.country);
+
                 // 2. Le Stress-Test de la donnée (L'entonnoir de sécurité)
-                if (profileError || !partnerProfile) {
+                if (profileError || !partnerData) {
                     console.error("❌ Impossible de trouver le profil de l'interlocuteur :", profileError);
-                    setIsDecrypting(false);
-                    return;
+                    if (isMounted) setIsLoading(false);
+                    throw new Error("Profil partenaire introuvable.");
                 }
 
-                if (!partnerProfile.publicKey) {
-                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
-                    setIsDecrypting(false);
-                    return;
+                if (!partnerData.public_key) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa public_key est VIDE (null) !");
+                    if (isMounted) setIsLoading(false);
+                    throw new Error("Le partenaire n'a pas encore de clé E2EE (Profil non initialisé).");
                 }
 
-                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.publicKey.substring(0, 20) + "...");
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerData.public_key.substring(0, 20) + "...");
 
-                // 3. Récupération de MA clé privée et dérivation
-                const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
-                const myPrivateKey = await window.crypto.subtle.importKey(
-                    "jwk", 
-                    myPrivateKeyJwk, 
-                    { name: "ECDH", namedCurve: "P-256" }, 
-                    true, 
-                    ["deriveKey"]
-                );
-
-                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.publicKey);
-                setSharedKey(derived);
-                sharedKeyRef.current = derived;
-
-                // --- L'ÉTAPE CRITIQUE : DÉCHIFFREMENT DE L'HISTORIQUE INITIAL ---
-                const decryptedMessages = await Promise.all(
-                    initialMessages.map(async (msg: Message) => {
-                        if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
-                            try {
-                                const clearText = await decryptLocal(msg.content, derived);
-                                return { ...msg, content: clearText };
-                            } catch (e) {
-                                console.error("Échec du déchiffrement du message historique:", msg.id, e);
-                                return { ...msg, content: "🔒 [Message indéchiffrable]" };
-                            }
-                        }
-                        return msg;
-                    })
-                );
-                setMessages(decryptedMessages);
-            } catch (e) {
-                console.error("[E2E] Erreur dérivation ECDH:", e);
-            } finally {
-                setIsDecrypting(false);
-            }
-        }
-        initCrypto();
-    }, [receiverId, initialMessages]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // --- L'OBSERVATEUR d'INFINITE SCROLL (Le Radar Front-end) ---
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            async (entries) => {
-                const target = entries[0];
-                if (target.isIntersecting && hasMore && !isLoadingOlder) {
-                    setIsLoadingOlder(true);
-
-                    const oldestMessage = messages[0];
-                    if (!oldestMessage) {
-                        setIsLoadingOlder(false);
-                        return;
-                    }
-
-                    const container = scrollContainerRef.current;
-                    const previousScrollHeight = container?.scrollHeight || 0;
-
+                let sKey: CryptoKey | null = null;
+                if (partnerData?.public_key) {
+                    const { deriveSharedKey, getStoredPrivateKeyJwk } = await import('@/lib/crypto-client');
                     try {
-                        const { createClient } = await import('@/lib/supabaseBrowser');
-                        const supabaseClient = createClient();
-                        const { data: { session } } = await supabaseClient.auth.getSession();
-                        const headers: any = { 'Content-Type': 'application/json' };
-                        if (session) headers['Authorization'] = Bearer ;
+                        const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+                        const myPrivateKey = await window.crypto.subtle.importKey(
+                            "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
+                        );
+                        sKey = await deriveSharedKey(myPrivateKey, partnerData.public_key);
+                        sharedKeyRef.current = sKey;
+                        if (isMounted) setIsVaultLocked(false);
+                    } catch (e: any) {
+                         console.error("Erreur dérivation clé partagée:", e);
+                         if (e.message && (e.message.includes("RAM") || e.message.includes("Seed Phrase") || e.message.includes("Reconnexion"))) {
+                             if (isMounted) {
+                                 setIsVaultLocked(true);
+                                 setIsLoading(false);
+                             }
+                             return; // On arrête l'initialisation si verrouillé
+                         }
+                    }
+                }
 
-                        const res = await fetch(getApiUrl(/api/chat?receiverId=&cursorId=), { headers });
-                        const data = await res.json();
-                        const older = data.messages || [];
+                // 2. Fetch messages
+                const { data: rawMessages } = await supabase.from('Message')
+                    .select('*')
+                    .eq('communication_id', channelId)
+                    .order('created_at', { ascending: true });
 
-                        if (older.length < 50) setHasMore(false);
-
-                        // --- DÉCHIFFREMENT DES ARCHIVES ---
-                        if (sharedKeyRef.current) {
-                            const decryptedOlder = await Promise.all(
-                                older.map(async (msg: Message) => {
-                                    if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
-                                        try {
-                                            const clearText = await decryptLocal(msg.content, sharedKeyRef.current!);
-                                            return { ...msg, content: clearText };
-                                        } catch (e) {
-                                            return { ...msg, content: "🔒 [Message indéchiffrable]" };
-                                        }
+                if (isMounted && rawMessages) {
+                    if (sKey) {
+                        const { decryptLocal } = await import('@/lib/crypto-client');
+                        const decryptedMessages = await Promise.all(
+                            rawMessages.map(async (msg: any) => {
+                                if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                                    try {
+                                        const clair = await decryptLocal(msg.content, sKey!);
+                                        return { ...msg, content: clair };
+                                    } catch (err) {
+                                        console.error("Impossible de déchiffrer le message", msg.id, err);
+                                        return { ...msg, content: "🔒 [Message indéchiffrable]" };
                                     }
-                                    return msg;
-                                })
-                            );
-                            setMessages((prev) => [...decryptedOlder, ...prev]);
-                        } else {
-                            setMessages((prev) => [...older, ...prev]);
-                        }
-
-                        setTimeout(() => {
-                            if (container) {
-                                container.scrollTop = container.scrollHeight - previousScrollHeight;
-                            }
-                        }, 0);
-                    } catch (error) {
-                        console.error("Erreur de pagination:", error);
-                    } finally {
-                        setIsLoadingOlder(false);
+                                }
+                                return msg;
+                            })
+                        );
+                        setMessages(decryptedMessages);
+                    } else {
+                        setMessages(rawMessages.map((m: any) => ({ ...m, content: "🔒 [Clé partenaire introuvable]" })));
                     }
+                    setIsLoading(false);
                 }
-            },
-            { root: scrollContainerRef.current, threshold: 0.1 }
-        );
 
-        if (topObserverRef.current) observer.observe(topObserverRef.current);
-        return () => observer.disconnect();
-    }, [hasMore, isLoadingOlder, messages, receiverId, sharedKey]);
+                if (!isMounted) return;
 
-    const [isTyping, setIsTyping] = useState(false);
-    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const channelRef = useRef<any>(null);
+                console.log(`📡 Ouverture confirmée du tunnel... [${roomName}]`);
 
-    // Écoute des WebSockets Supabase
-    useEffect(() => {
-        // ID de canal déterministe (toujours le même pour les deux utilisateurs)
-        const channelId = [currentUserId, receiverId].sort().join('_');
+                room = supabase.channel(roomName, {
+                    config: { broadcast: { ack: false } }
+                });
 
-        // Nettoyage si le destinataire change
-        if (channelRef.current) {
-            supabase.removeChannel(channelRef.current);
-        }
-
-        const channel = supabase
-            .channel(chat_, {
-                config: { broadcast: { self: true } } // On veut recevoir nos propres broadcasts pour confirmation si besoin
-            })
-            // Écoute des nouveaux messages (Tous les messages du canal, le RLS filtre l'accès)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'Message'
-            }, async (payload) => {
-                const incoming = payload.new as Message;
-
-                // Si c'est un message du canal actuel
-                if ((incoming.senderId === currentUserId && incoming.receiverId === receiverId) ||
-                    (incoming.senderId === receiverId && incoming.receiverId === currentUserId)) {
-
-                    // --- DÉCHIFFREMENT IMMÉDIAT DU MESSAGE ENTRANT ---
-                    if (incoming.content && (incoming.content.includes(':') || incoming.content.startsWith('🧠'))) {
+                room.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'Message' }, async (payload: any) => {
+                    const incomingMessage = payload.new;
+                    if (incomingMessage.communication_id === channelId) {
                         try {
-                            if (sharedKeyRef.current) {
-                                incoming.content = await decryptLocal(incoming.content, sharedKeyRef.current);
-                            } else {
-                                incoming.content = "🔒 [Clé manquante]";
+                            // 1. On vérifie si le message contient un ':' (signe qu'il est chiffré)
+                            if (incomingMessage.content && (incomingMessage.content.includes(':') || incomingMessage.content.startsWith('🧠'))) {
+                                // 2. On attend le déchiffrement avec la sharedKey
+                                if (sharedKeyRef.current) {
+                                    const { decryptLocal } = await import('@/lib/crypto-client');
+                                    const decryptedText = await decryptLocal(incomingMessage.content, sharedKeyRef.current);
+                                    // 3. On remplace le texte chiffré par le texte en clair
+                                    incomingMessage.content = decryptedText;
+                                } else {
+                                    incomingMessage.content = "🔒 [Clé manquante]";
+                                }
                             }
-                        } catch (e) {
-                            incoming.content = "🔒 [Message indéchiffrable]";
+                        } catch (error) {
+                            console.error("❌ Échec du déchiffrement à la volée :", error);
+                            incomingMessage.content = "🔒 [Message indéchiffrable]";
+                        }
+
+                        if (isMounted) {
+                            // 4. ON MET À JOUR L'UI SEULEMENT APRÈS LE DÉCHIFFREMENT
+                            setMessages((prevMessages) => {
+                                // Optionnel : éviter les doublons avec l'affichage optimiste de l'expéditeur
+                                if (prevMessages.some(msg => msg.id === incomingMessage.id)) return prevMessages;
+                                return [...prevMessages, incomingMessage];
+                            });
+                            setIsTyping(false);
                         }
                     }
-
-                    setMessages((prev) => {
-                        // Éviter les doublons (si le message est déjà là via fetch ou optimisme)
-                        if (prev.some(m => m.id === incoming.id)) return prev;
-                        return [...prev, incoming];
-                    });
-
-                    // Si on est le destinataire, on marque comme lu
-                    if (incoming.receiverId === currentUserId) {
-                        fetch(getApiUrl('/api/chat'), {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'read', receiverId })
-                        });
-                    }
-                }
-            })
-            // 🎙️ ÉCOUTE DU BROADCAST "TYPING"
-            .on('broadcast', { event: 'typing' }, ({ payload }) => {
-                // On ignore nos propres événements de frappe (handled localement si besoin, mais ici on veut l'autre)
-                if (payload.userId !== currentUserId) {
-                    setIsTyping(payload.isTyping);
-                    if (payload.isTyping) {
+                })
+                .on('broadcast', { event: 'typing' }, (payload: any) => {
+                    if (payload.payload.sender_id !== myId) {
+                        if (isMounted) setIsTyping(true);
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+                        typingTimeoutRef.current = setTimeout(() => {
+                            if (isMounted) setIsTyping(false);
+                        }, 2000);
                     }
-                }
-            })
-            .subscribe((status) => {
-                console.log(📡 [Chat-Realtime] Channel status: );
-            });
+                })
+                .subscribe((status: string) => {
+                    console.log(`📡 STATUT [${roomName}]:`, status);
+                    if (isMounted) setIsConnected(status === 'SUBSCRIBED');
+                });
 
-        channelRef.current = channel;
+                channelRef.current = room;
 
-        // Mark as read on mount
-        fetch(getApiUrl('/api/chat'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'read', receiverId })
-        });
+            } catch (err) {
+                console.error("Erreur initialisation chat:", err);
+                if (isMounted) setIsLoading(false);
+            }
+        }, 300);
 
+        // LE NETTOYAGE SÉCURISÉ
         return () => {
-            if (channelRef.current) supabase.removeChannel(channelRef.current);
+            isMounted = false;
+            clearTimeout(initDelay);
+            if (room) {
+                console.log(`🛑 Fermeture de ${roomName}`);
+                setIsConnected(false);
+                supabase.removeChannel(room);
+            }
         };
-    }, [currentUserId, receiverId, supabase]);
+    }, [channelId, myId, partnerId, retryTrigger]);
 
-    const broadcastTyping = (typing: boolean) => {
-        if (channelRef.current) {
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'typing',
-                payload: { isTyping: typing, userId: currentUserId },
-            });
-        }
-    };
-
-    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        broadcastTyping(true);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-            broadcastTyping(false);
-        }, 2000);
-    };
-
-    // Auto-scroll intelligent
-    const prevMessagesLen = useRef(optimisticMessages.length);
     useEffect(() => {
-        if (optimisticMessages.length > prevMessagesLen.current && bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-        prevMessagesLen.current = optimisticMessages.length;
-    }, [optimisticMessages]);
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
 
-    const handleSend = async (formData: FormData) => {
-        const content = formData.get('content') as string;
-        if (!content.trim()) return;
-
-        formRef.current?.reset();
-        setIsError(false);
-
-        // Affichage Optimiste 0ms (Le client voit le texte en clair)
-        addOptimisticMessage({
-            id: 	emp-,
-            content,
-            senderId: currentUserId,
-            receiverId,
-            createdAt: new Date(),
-        });
-
-        // CHIFFREMENT STRICT CÔTÉ CLIENT
+    const handleUnlockVault = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setUnlockError("");
         try {
-            if (!sharedKey) {
-                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé partagée non dérivée.");
-            }
-
-            const payload = await encryptLocal(content, sharedKey);
-
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabaseClient = createClient();
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            const headers: any = { 'Content-Type': 'application/json' };
-            if (session) headers['Authorization'] = Bearer ;
-
-            const res = await fetch(getApiUrl('/api/chat'), {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ content: payload, receiverId })
-            });
-            const result = await res.json();
-            if (!result?.success) throw new Error(result?.error || "Refus du serveur");
-
-        } catch (error: any) {
-            console.error("🔒 [E2E-SECURITY] Échec critique:", error.message);
-            setIsError(true);
+            const { unlockLocalVault, wrapKeyWithSession } = await import('@/lib/crypto-client');
+            const privateKey = await unlockLocalVault(unlockPassword);
             
-            // On remet le contenu pour que l'utilisateur ne perde pas son message
-            if (formRef.current) {
-                const input = formRef.current.elements.namedItem('content') as HTMLInputElement;
-                if (input) {
-                    input.value = content;
-                    input.focus();
+            // Nouveau: On wrap la clé pour qu'elle survive aux prochains F5
+            try {
+                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+                const supabaseClient = createSupabase();
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.access_token) {
+                    await wrapKeyWithSession(privateKey, session.access_token);
                 }
+            } catch (wrapErr) {
+                console.error("Erreur gérable lors du wrapping de la clé de session", wrapErr);
             }
 
-            // Message spécifique si c'est une erreur de clé
-            if (error.message.includes("Erreur de sécurité")) {
-                alert(error.message); // On utilise une alerte système ou on pourrait passer par un toast contextuel
-            }
+            setIsVaultLocked(false);
+            setUnlockPassword("");
+            setIsLoading(true);
+            setRetryTrigger(prev => prev + 1);
+        } catch (err) {
+            setUnlockError("Mot de passe incorrect. Impossible de déchiffrer le coffre.");
         }
     };
 
-    // SKELETON DE DÉCHIFFREMENT
-    if (isDecrypting) {
-        return (
-            <div className="flex-1 flex items-center justify-center">
-                <div className="text-center space-y-3">
-                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto" />
-                    <p className="text-xs text-emerald-400 font-mono uppercase tracking-widest">Déchiffrement en cours...</p>
-                </div>
-            </div>
-        );
-    }
+    const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewMessage(e.target.value);
+        const now = Date.now();
+        // N'envoie le signal que si connecté et pas plus d'1 fois toutes les 2 secondes
+        if (isConnected && now - lastTypingTime.current > 2000) {
+            lastTypingTime.current = now;
+            channelRef.current?.send({ type: 'broadcast', event: 'typing', payload: { sender_id: myId } }).catch(() => { });
+        }
+    };
 
-    return (
-        <div className="flex flex-col h-full overflow-hidden">
-            {/* ZONE DE SCROLL */}
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-
-                {/* L'AMORCE INVISIBLE : C'est elle qui déclenche l'IntersectionObserver */}
-                <div ref={topObserverRef} className="w-full h-1" />
-
-                {/* INDICATEUR DE FOUILLE */}
-                {isLoadingOlder && (
-                    <div className="flex justify-center items-center py-2 text-blue-500">
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        <span className="text-xs uppercase tracking-widest font-bold">Déchiffrement des archives...</span>
-                    </div>
-                )}
-
-                <div className="space-y-4 pt-2">
-                    {optimisticMessages.length === 0 && !hasMore ? (
-                        <div className="text-center text-slate-500 font-mono text-xs mt-10">
-                            DÉBUT DE LA TRANSMISSION...
-                        </div>
-                    ) : (
-                        optimisticMessages.map((msg) => {
-                            const isMe = msg.senderId === currentUserId;
-                            const isSystem = msg.senderId === 'CORTEX_SYSTEM';
-
-                            if (isSystem) {
-                                return (
-                                    <div key={msg.id} className="flex justify-center my-4 animate-in fade-in duration-500">
-                                        <div className="px-4 py-2 rounded-full bg-purple-900/30 border border-purple-500/50 text-purple-200 text-xs font-mono tracking-wide text-center max-w-[90%] shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                                            🧠 {msg.content.replace('[CORTEX] ', '')}
-                                        </div>
-                                    </div>
-                                );
-                            }
-
-                            return (
-                                <div key={msg.id} className={	ransition-all duration-300 }>
-                                    <SecureMessageBubble
-                                        id={msg.id}
-                                        encryptedPayload={msg.content}
-                                        sharedKey={sharedKey}
-                                        isSender={isMe}
-                                        onDecrypted={handleDecrypted}
-                                    />
-                                </div>
-                            );
-                        })
-                    )}
-                    <div ref={bottomRef} />
-                </div>
-
-                {/* OREILLETTE TACTIQUE (Ne s'active qu'avec du texte déchiffré) */}
-                <div className="mt-8">
-                    <TacticalEarpiece getDecryptedContext={() => decryptedContextRef.current} />
-                </div>
-            </div>
-
-            {/* FORMULAIRE */}
-            <div className="shrink-0 p-4 border-t border-white/10 bg-black/50 backdrop-blur-md">
-                {isTyping && (
-                    <div className="mb-2 text-[10px] text-emerald-400 font-mono animate-pulse uppercase tracking-widest">
-                        📡 L'agent adverse est en train d'écrire...
-                    </div>
-                )}
-                {isError && (
-                    <div className="mb-2 flex items-center gap-2 text-red-400 text-xs font-semibold animate-pulse">
-                        <AlertCircle className="w-4 h-4" />
-                        Échec réseau : Votre message n'a pas pu être envoyé. Veuillez réessayer.
-                    </div>
-                )}
-                <form ref={formRef} action={handleSend} className="flex gap-2">
-                    <input type="hidden" name="receiverId" value={receiverId} />
-                    <input
-                        type="text"
-                        name="content"
-                        onChange={handleInput}
-                        placeholder="Message chiffré de bout en bout..."
-                        autoComplete="off"
-                        className={lex-1 bg-black/40 border  rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors}
-                    />
-                    <button
-                        type="submit"
-                        className={px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 }
-                    >
-                        <Send className="w-5 h-5" />
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-}
-</file>
-}
-</file>
-
-<file path="app/profile/new/page.tsx">
-'use client';
-
-/**
- * New Profile Creation Page
- * Allows users to create a new digital twin profile with Zero-Knowledge encryption
- */
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { generateMnemonic } from 'bip39';
-import { getApiUrl } from '@/lib/api';
-import { Capacitor } from '@capacitor/core';
-import { VaultManager, VaultKey } from '@/lib/vault-manager';
-import {
-    generateSalt,
-    hashPassword,
-    deriveKey,
-    encryptObject,
-    arrayToBase64,
-} from '@/lib/crypto/zk-encryption';
-// Server action supprimÃ©e â€” on utilise fetch vers /api/profile
-
-export default function NewProfilePage() {
-    const router = useRouter();
-    const [step, setStep] = useState<'form' | 'recovery'>('form');
-    const [formData, setFormData] = useState({
-        name: '',
-        masterPassword: '',
-        confirmPassword: '',
-    });
-    const [recoveryPhrase, setRecoveryPhrase] = useState<string>('');
-    const [profileId, setProfileId] = useState<string>('');
-    const [isCreating, setIsCreating] = useState(false);
-    const [error, setError] = useState<string>('');
-    const [phraseConfirmed, setPhraseConfirmed] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    // 🟢 CORRECTIF D'AFFICHAGE OPTIMISTE : On ajoute la date exacte pour éviter un crash
+    const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
+        if (!newMessage.trim() || !channelId || isTranslating) return;
 
-        // Validation
-        if (formData.name.length < 2) {
-            setError('Le nom doit contenir au moins 2 caractÃ¨res');
-            return;
+        const originalContent = newMessage.trim();
+        setNewMessage('');
+        setIsTranslating(true); // 🟢 On bloque le bouton pendant la traduction
+
+        let finalContent = originalContent;
+
+        // 🌍 SI LE PARTENAIRE A UN PAYS DÉFINI, ON LANCE LA TRADUCTION
+        if (partnerCountry && partnerCountry.toLowerCase() !== 'france') {
+            try {
+                const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+                const supabaseClient = createSupabase();
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                const headers: any = { 'Content-Type': 'application/json' };
+                if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                const data = await fetch(getApiUrl('/api/translation'), {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ text: originalContent, targetCountry: partnerCountry })
+                }).then(r => r.json());
+
+                if (data.success && data.translation) {
+                    // On combine le message original et sa traduction
+                    finalContent = `${originalContent}\n\n[🔄 ${partnerCountry.toUpperCase()} : ${data.translation}]`;
+                }
+            } catch (err) {
+                console.error("Erreur de traduction :", err);
+            }
         }
 
-        if (formData.masterPassword.length < 12) {
-            setError('Le mot de passe maÃ®tre doit contenir au moins 12 caractÃ¨res');
-            return;
+        const newMsgPayload = {
+            id: crypto.randomUUID(),
+            communication_id: channelId,
+            sender_id: myId,
+            content: finalContent,
+            created_at: new Date().toISOString()
+        };
+
+        setMessages(prev => [...prev, newMsgPayload]); // Affichage Optimiste
+        
+        // 🔒 Chiffrement du message avant sauvegarde
+        let contentToSend = finalContent;
+        if (sharedKeyRef.current) {
+            try {
+                const { encryptLocal } = await import('@/lib/crypto-client');
+                contentToSend = await encryptLocal(finalContent, sharedKeyRef.current);
+            } catch (e) {
+                console.error("Encryption failed before sending:", e);
+                // Si l'encryption échoue on pourrait throw, mais ici on fallback sur le message en clair si c'est autorisé, ou on bloque
+                // Normalement il faut bloquer! 
+                return; // 🚨 Sécurité : On ne logue pas en clair si ça rate
+            }
         }
+        
+        const encryptedPayload = { ...newMsgPayload, content: contentToSend };
+        await supabase.from('Message').insert([encryptedPayload]);
 
-        if (formData.masterPassword !== formData.confirmPassword) {
-            setError('Les mots de passe ne correspondent pas');
-            return;
-        }
+        setIsTranslating(false); // 🟢 On libère le bouton
 
-        setIsCreating(true);
-
-        try {
-            // ===== CLIENT-SIDE CRYPTOGRAPHY (Zero-Knowledge) =====
-
-            const { generateAndStoreKeyPair } = await import('@/lib/crypto-client');
-            console.log("ðŸ§¬ [ONBOARDING] DÃ©marrage de la gÃ©nÃ©ration d'identitÃ© E2EE...");
-            const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair();
-            const publicKeyString = btoa(JSON.stringify(publicKeyJwk)); // Format base64 as requested
-
-            const { createClient } = await import('@/lib/supabaseBrowser');
-            const supabase = createClient();
-            const { data: { session } } = await supabase.auth.getSession();
+        // 🟢 NOUVEAU : LE MICRO ESPION DU GARDIEN
+        // On envoie silencieusement le contenu du message à l'IA pour analyse
+        console.log("🦇 Interception : Envoi du message au Gardien...");
+        (async () => {
+            const { createClient: createSupabase } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createSupabase();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             const headers: any = { 'Content-Type': 'application/json' };
             if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
 
-            // ===== SEND DATA TO SERVER (Mandatory Public Key Sync) =====
-            const r = await fetch(getApiUrl('/api/profile'), {
+            fetch(getApiUrl('/api/guardian'), {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ 
-                    action: 'create', 
-                    name: formData.name,
-                    publicKey: publicKeyString
-                })
-            });
-            const response = await r.json();
-
-            if (!response.success) {
-                console.error("âŒ [ONBOARDING] Ã‰chec de la synchronisation de la clÃ© publique avec Supabase.");
-                throw new Error(response.error || 'Erreur de sÃ©curitÃ© : Impossible de synchroniser votre clÃ© publique.');
-            }
-
-            console.log("âœ… [ONBOARDING] IdentitÃ© E2EE crÃ©Ã©e et synchronisÃ©e.");
-
-            // 8. Securely Persist to Hardware Vault
-            if (Capacitor.isNativePlatform()) {
-                await VaultManager.saveSecret(VaultKey.MASTER_KEY, formData.masterPassword);
-                console.log("âœ… [ONBOARDING] Master Key sÃ©curisÃ©e dans l'enclave matÃ©rielle.");
-            }
-
-            // Store recovery phrase (generated client-side, never sent to server)
-            setRecoveryPhrase(generatedRecoveryPhrase);
-            setProfileId(response.profileId!);
-            setStep('recovery');
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setIsCreating(false);
-        }
+                body: JSON.stringify({ profileId: myId, text: `A dit : "${originalContent}"` })
+            }).catch(() => { });
+        })();
     };
 
-    const handleCopyPhrase = () => {
-        navigator.clipboard.writeText(recoveryPhrase);
-        alert('Phrase de rÃ©cupÃ©ration copiÃ©e dans le presse-papiers');
-    };
+    if (!channelId) return null;
 
-    const handleConfirmAndContinue = () => {
-        if (!phraseConfirmed) {
-            alert('Veuillez confirmer que vous avez sauvegardÃ© votre phrase de rÃ©cupÃ©ration');
-            return;
-        }
-        router.push(`/profile/unlock?id=${profileId}`);
-    };
-
-    if (step === 'recovery') {
+    if (isVaultLocked) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
-                    <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h1 className="text-3xl font-bold text-white mb-2">Initialisation de votre Agent</h1>
-                        <p className="text-purple-200">Votre Agent est maintenant initialisÃ©</p>
-                    </div>
-
-                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
-                        <div className="flex items-start gap-3">
-                            <svg className="w-6 h-6 text-red-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <div>
-                                <h3 className="text-red-200 font-bold mb-2">âš ï¸ CRITIQUE : Phrase Cryptographique Fondatrice</h3>
-                                <p className="text-red-100 text-sm">
-                                    Voici la phrase cryptographique qui verrouille votre accÃ¨s Ã  Ipse. Elle sÃ©curise la mÃ©moire et les communications de votre Agent. Si vous perdez ces 12 mots, votre Agent sera amnÃ©sique de faÃ§on irrÃ©versible.
-                                    <strong className="block mt-2">Nous n'avons aucun double.</strong>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-white font-semibold">Phrase de RÃ©cupÃ©ration BIP39</h3>
-                            <button
-                                onClick={handleCopyPhrase}
-                                className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Copier
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            {recoveryPhrase.split(' ').map((word, index) => (
-                                <div key={index} className="bg-slate-700/50 rounded px-3 py-2 text-center">
-                                    <span className="text-purple-300 text-xs">{index + 1}.</span>
-                                    <span className="text-white font-mono ml-2">{word}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={phraseConfirmed}
-                                onChange={(e) => setPhraseConfirmed(e.target.checked)}
-                                className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
-                            />
-                            <span className="text-white text-sm">
-                                J'ai sÃ©curisÃ© la mÃ©moire de mon Agent
-                            </span>
-                        </label>
-                    </div>
-
-                    <button
-                        onClick={handleConfirmAndContinue}
-                        disabled={!phraseConfirmed}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        J'AI SÃ‰CURISÃ‰ LA MÃ‰MOIRE DE MON AGENT
+            <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl items-center justify-center p-6 text-center animate-in fade-in zoom-in-95">
+                <h2 className="text-xl font-bold text-emerald-400 mb-2 font-mono">🔒 COFFRE-FORT VERROUILLÉ</h2>
+                <p className="text-slate-400 mb-6 text-sm font-mono max-w-sm">Votre session a été rafraîchie. Saisissez votre mot de passe pour déchiffrer vos messages E2EE en RAM.</p>
+                
+                <form onSubmit={handleUnlockVault} className="flex flex-col gap-4 w-full max-w-sm">
+                    <input 
+                        type="password" 
+                        placeholder="Mot de passe du compte" 
+                        value={unlockPassword}
+                        onChange={(e) => setUnlockPassword(e.target.value)}
+                        className="px-4 py-3 bg-black border border-slate-800 rounded-lg text-emerald-400 font-mono text-center focus:outline-none focus:border-emerald-500/50"
+                        required
+                    />
+                    <button type="submit" disabled={!unlockPassword} className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-mono py-3 rounded-lg transition-colors disabled:opacity-50">
+                        DÉVERROUILLER
                     </button>
-
-                    <p className="text-purple-200 text-xs text-center mt-4">
-                        ID du Profil : <span className="font-mono">{profileId}</span>
-                    </p>
-                </div>
+                    {unlockError && <p className="text-red-500 text-sm mt-2 font-mono">{unlockError}</p>}
+                </form>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
-                <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+        <div className="flex flex-col h-full bg-[#050505] border border-slate-800 shadow-2xl overflow-hidden rounded-xl animate-in fade-in zoom-in-95">
+            <div className="p-4 bg-[#0f1618] border-b border-slate-900 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 border border-emerald-500/50 flex items-center justify-center">
+                        <Lock size={18} className="text-emerald-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Initialisation de l'Agent Ipse</h1>
-                    <p className="text-purple-200">CrÃ©ez votre profil sÃ©curisÃ© avec chiffrement Zero-Knowledge</p>
+                    <div>
+                        <h3 className="font-mono text-emerald-400 font-semibold uppercase text-sm">Agent: {partnerId.slice(0, 8)}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <ShieldCheck size={12} className="text-emerald-500" />
+                            <span>Liaison Chiffrée</span>
+                        </div>
+                    </div>
                 </div>
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"><X size={20} /></button>
+            </div>
 
-                {error && (
-                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-3 mb-4">
-                        <p className="text-red-200 text-sm">{error}</p>
-                    </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-950">
+                {isLoading ? (
+                    <div className="flex h-full items-center justify-center text-slate-500 font-mono text-xs animate-pulse">DÉCRYPTAGE DE L'HISTORIQUE...</div>
+                ) : (
+                    messages.map((msg) => {
+                        const isMe = msg.sender_id === myId;
+                        return (
+                            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm transition-all shadow-lg ${isMe ? 'bg-emerald-900/40 border border-emerald-800/30 text-emerald-50 rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'}`}>
+                                    <p className="whitespace-pre-wrap font-mono">{msg.content}</p>
+                                    <span className="text-[9px] opacity-50 block mt-1 text-right font-mono">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            </div>
+                        );
+                    })
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Nom du Profil
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Ex: Mon Agent Personnel"
-                            required
-                        />
+                {isTyping && (
+                    <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
                     </div>
-
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Mot de Passe MaÃ®tre (min. 12 caractÃ¨res)
-                        </label>
-                        <input
-                            type="password"
-                            value={formData.masterPassword}
-                            onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
-                            minLength={12}
-                            required
-                        />
-                        <p className="text-purple-300/70 text-xs mt-1">
-                            Ce mot de passe ne sera JAMAIS stockÃ© sur le serveur
-                        </p>
-                    </div>
-
-                    <div>
-                        <label className="block text-purple-200 text-sm font-medium mb-2">
-                            Confirmer le Mot de Passe
-                        </label>
-                        <input
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
-                            minLength={12}
-                            required
-                        />
-                    </div>
-
-                    <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
-                        <h3 className="text-blue-200 font-semibold text-sm mb-2">Ã°Å¸â€Â SÃ©curitÃ© Zero-Knowledge</h3>
-                        <ul className="text-blue-100 text-xs space-y-1">
-                            <li>âœ… Chiffrement AES-256-GCM cÃ´tÃ© client</li>
-                            <li>âœ… Vos clÃ©s ne quittent jamais votre appareil</li>
-                            <li>âœ… Le serveur ne peut pas lire vos donnÃ©es</li>
-                            <li>âœ… Phrase de rÃ©cupÃ©ration BIP39 (12 mots)</li>
-                        </ul>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isCreating}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        {isCreating ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                                CrÃ©ation en cours...
-                            </>
-                        ) : (
-                            'CrÃ©er le Profil'
-                        )}
-                    </button>
-                </form>
-
-                <div className="mt-6 text-center">
-                    <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
-                        Ã¢â€ Â Retour Ã  l'accueil
-                    </a>
-                </div>
+                )}
+                <div ref={scrollRef} />
             </div>
+
+            <form onSubmit={sendMessage} className="p-3 bg-[#0f1618] border-t border-slate-900 flex gap-2">
+                <input
+                    type="text"
+                    value={newMessage}
+                    onChange={handleTyping}
+                    placeholder="Entrez votre transmission..."
+                    className="flex-1 bg-black border border-slate-800 rounded-lg px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                />
+                <button type="submit" disabled={!newMessage.trim() || isTranslating} className="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center min-w-[3rem] px-4 font-mono text-xs font-semibold">
+                    {isTranslating ? (
+                        <span className="flex items-center gap-2 animate-pulse">
+                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            TRAD.
+                        </span>
+                    ) : (
+                        <Send size={18} />
+                    )}
+                </button>
+            </form>
         </div>
     );
 }
-</file>
+````
 
-<file path="app/actions/radar.ts">
+## File: app/actions/radar.ts
+````typescript
 // 'use server' (static build fix)
 
 import { prisma } from '@/lib/prisma';
@@ -14277,18 +14903,18 @@ export async function forceHuntSync(formData?: FormData) {
         await executeRadarScan(user.id, 'work');
         revalidatePath('/');
     } catch (error: any) {
-        console.error("ðŸ”¥ [RADAR] CRASH:", error.message);
+        console.error("🔥 [RADAR] CRASH:", error.message);
     }
 }
 
 export async function executeRadarScan(userId: string, theme: string = 'work') {
-    console.log(`ðŸ“¡ [RADAR] Scan IA pour ${userId} (ThÃ¨me: ${theme})...`);
+    console.log(`📡 [RADAR] Scan IA pour ${userId} (Thème: ${theme})...`);
 
     try {
         const myProfile = await prisma.profile.findUnique({ where: { id: userId } });
         if (!myProfile) return;
 
-        // Configuration selon le thÃ¨me
+        // Configuration selon le thème
         let embeddingField = "unifiedEmbedding";
         let myBio = myProfile.bio;
         let myRole = myProfile.primaryRole;
@@ -14315,11 +14941,11 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
         
         const userEmbedding = currentUserRaw[0]?.embedding;
         if (!userEmbedding) {
-            console.log(`âš ï¸ [RADAR] Aucun vecteur trouvÃ© pour ${userId} sur le thÃ¨me ${theme}.`);
+            console.log(`⚠️ [RADAR] Aucun vecteur trouvé pour ${userId} sur le thème ${theme}.`);
             return;
         }
 
-        // 2. Recherche Cosinus (Stricte SÃ©grÃ©gation Contextuelle)
+        // 2. Recherche Cosinus (Stricte Ségrégation Contextuelle)
         const others: any[] = await prisma.$queryRawUnsafe(`
             SELECT 
                 id, name, bio, sector,
@@ -14350,21 +14976,21 @@ export async function executeRadarScan(userId: string, theme: string = 'work') {
                 
                 if (existing) continue;
 
-                const prompt = `Tu es Cortex, une IA de renseignement sÃ©mantique. Compare ces deux profils pour Ã©valuer une synergie stratÃ©gique.
+                const prompt = `Tu es Cortex, une IA de renseignement sémantique. Compare ces deux profils pour évaluer une synergie stratégique.
         
 [MON PROFIL (Utilisateur Courant)]:
-RÃ´le : ${myRole || 'Non dÃ©fini'}
-Secteur : ${mySector || 'Non dÃ©fini'}
-Bio : ${myBio || 'Non spÃ©cifiÃ©'}
+Rôle : ${myRole || 'Non défini'}
+Secteur : ${mySector || 'Non défini'}
+Bio : ${myBio || 'Non spécifié'}
 
-[CIBLE DÃ‰TECTÃ‰E (${target.name || 'Cible'})]:
-RÃ´le : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non dÃ©fini'}
-Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non dÃ©fini'}
-Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spÃ©cifiÃ©'}
+[CIBLE DÉTECTÉE (${target.name || 'Cible'})]:
+Rôle : ${theme === 'work' ? target.primaryRole : theme === 'dating' ? target.socialRole : target.hobbyRole || 'Non défini'}
+Secteur : ${theme === 'work' ? target.sector : theme === 'dating' ? target.socialSector : target.hobbySector || 'Non défini'}
+Bio : ${theme === 'work' ? target.bio : theme === 'dating' ? target.socialBio : target.hobbyBio || 'Non spécifié'}
 
-Si compatibilitÃ© > 60%, donne un score (0-100) et un rÃ©sumÃ© ultra-bref (15 mots max).
-Directive : DÃ©cris la cible. Format JSON: { "score": number, "synergies": "string" }
-RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
+Si compatibilité > 60%, donne un score (0-100) et un résumé ultra-bref (15 mots max).
+Directive : Décris la cible. Format JSON: { "score": number, "synergies": "string" }
+RÉPOND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
 
                 const res = await mistralClient.chat.complete({
                     model: 'mistral-small-latest',
@@ -14385,7 +15011,7 @@ RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
                             sourceId: userId,
                             targetId: target.id,
                             matchScore: result.score,
-                            synergies: result.synergies || "CompatibilitÃ© dÃ©tectÃ©e.",
+                            synergies: result.synergies || "Compatibilité détectée.",
                             status: 'DETECTED',
                             context: theme.toUpperCase()
                         }
@@ -14396,7 +15022,7 @@ RÃ‰POND UNIQUEMENT ET STRICTEMENT AU FORMAT JSON.`;
             }
         }
     } catch (error: any) {
-        console.error(`âŒ [RADAR-EXEC] Error for ${userId}:`, error.message);
+        console.error(`❌ [RADAR-EXEC] Error for ${userId}:`, error.message);
     }
 }
 
@@ -14421,9 +15047,10 @@ export async function getRadarResults(profileId: string) {
 export async function getGlobalRadarNews() {
     return { success: true, news: [] };
 }
-</file>
+````
 
-<file path="app/components/AuditPanel.tsx">
+## File: app/components/AuditPanel.tsx
+````typescript
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -14505,7 +15132,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                                     {!auditData && (
                                         <div className="flex items-center gap-3 mt-4 text-zinc-500 italic text-xs animate-pulse">
                                             <Loader2 className="w-3 h-3 animate-spin" />
-                                            DÃ©cryptage des flux Cortex...
+                                            Décryptage des flux Cortex...
                                         </div>
                                     )}
                                 </article>
@@ -14515,7 +15142,7 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                         <div className="pt-4 flex items-center justify-center">
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-white/5 shadow-sm">
                                 <ShieldCheck className="w-3 h-3 text-blue-500" />
-                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">SynthÃ¨se certifiÃ©e par l'IA Edge</span>
+                                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Synthèse certifiée par l'IA Edge</span>
                             </div>
                         </div>
                     </div>
@@ -14558,9 +15185,9 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
                             {isSending && <Loader2 className="w-4 h-4 animate-spin" />}
                             {isSent && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
 
-                            {isSending ? "NÃ©gocations..." :
-                                isSent ? "âœ“ Signal transmis" :
-                                    "Ouvrir un Canal SÃ©curisÃ©"}
+                            {isSending ? "Négocations..." :
+                                isSent ? "✓ Signal transmis" :
+                                    "Ouvrir un Canal Sécurisé"}
 
                             {!isSending && !isSent && <ChevronRight className="w-4 h-4" />}
                         </button>
@@ -14571,43 +15198,1125 @@ export default function AuditPanel({ isOpen, onClose, auditData, targetName, opp
         document.body
     );
 }
-</file>
+````
 
-<file path="components/AgentConfig.tsx">
+## File: app/components/RadarMatchCard.tsx
+````typescript
+'use client';
+import { useState, useEffect } from 'react';
+// Server actions supprimées — on utilise fetch vers /api/opportunities
+import { getAgentName } from '@/lib/utils';
+import { Loader2, Zap, MessageSquare, FolderLock, Target } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import AuditPanel from './AuditPanel';
+import { useLanguage } from '@/context/LanguageContext';
+
+export default function RadarMatchCard({ opportunity, myId }: { opportunity: any, myId: string }) {
+    const { t } = useLanguage();
+    const router = useRouter();
+    const [status, setStatus] = useState(opportunity.status); // DETECTED, AUDITED, etc.
+    const [loading, setLoading] = useState(false);
+    const [isAuditing, setIsAuditing] = useState(false);
+    const [auditData, setAuditData] = useState(opportunity.audit);
+    const [showAudit, setShowAudit] = useState(false);
+    const [isAccepted, setIsAccepted] = useState(false);
+
+    // Sync state with props
+    useEffect(() => {
+        setStatus(opportunity.status);
+        setAuditData(opportunity.audit);
+    }, [opportunity.status, opportunity.audit]);
+
+    const hasAudit = Boolean(auditData || opportunity?.audit);
+
+    // On détermine qui est l'autre agent
+    const otherProfile = opportunity?.sourceId === myId
+        ? opportunity?.targetProfile
+        : opportunity?.sourceProfile;
+
+    console.log("🔍 [RadarMatchCard] Profile data:", {
+        oppId: opportunity?.id,
+        myId,
+        sourceId: opportunity?.sourceId,
+        targetId: opportunity?.targetId,
+        hasTargetProfile: !!opportunity?.targetProfile,
+        hasSourceProfile: !!opportunity?.sourceProfile,
+        otherId: otherProfile?.id
+    });
+
+    // --- LOGIQUE AUDIT ---
+    const getOppHeaders = async () => {
+        const { createClient } = await import('@/lib/supabaseBrowser');
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+        return headers;
+    };
+
+    const handleAudit = async () => {
+        setIsAuditing(true);
+        setAuditData(''); // Reset for typewriter effect
+        setShowAudit(true); // Immediate UI feedback
+        
+        try {
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const response = await fetch(getApiUrl('/api/opportunities/evaluate'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ opportunityId: opportunity.id })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Streaming Error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            if (!reader) throw new Error('No stream reader available');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                setAuditData((prev: string) => prev + chunk);
+            }
+
+            setStatus('AUDITED');
+        } catch (e: any) {
+            console.error("❌ [STREAM ERROR]:", e);
+            alert(`Erreur Cortex: ${e.message}`);
+            setAuditData("Échec de la génération de l'audit.");
+        } finally {
+            setIsAuditing(false);
+        }
+    };
+
+    const handleConnect = async () => {
+        setLoading(true);
+        const headers = await getOppHeaders();
+        const res = await fetch(getApiUrl('/api/connection'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'request', targetId: otherProfile?.id, oppId: opportunity.id })
+        }).then(r => r.json());
+        if (res.success) {
+            setStatus('INVITED');
+        }
+        setLoading(false);
+    };
+
+    const handleAccept = async () => {
+        if (!opportunity?.id || !otherProfile?.id) return;
+        setLoading(true);
+        const headers = await getOppHeaders();
+        const res = await fetch(getApiUrl('/api/connection'), {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ action: 'accept', oppId: opportunity.id })
+        }).then(r => r.json());
+        if (res.success) {
+            setIsAccepted(true);
+            router.push(`/chat?id=${otherProfile?.id}`);
+            return; // Le composant sera démonté par la navigation, pas de setState après
+        }
+        setLoading(false);
+    };
+
+    return (
+        <div className="b2b-card p-8 mb-6 transition-all hover:bg-zinc-900/40">
+            {/* HEADER : Nom + Score */}
+            <div className="flex items-start justify-between mb-4">
+                <div>
+                    <h3 className="text-xl font-bold tracking-tight text-white">{getAgentName(otherProfile)}</h3>
+                    <p className="text-xs text-zinc-400 line-clamp-1 mt-1 font-mono italic">
+                        {typeof (otherProfile?.bio || otherProfile?.primaryRole) === 'object'
+                            ? JSON.stringify(otherProfile?.bio || otherProfile?.primaryRole)
+                            : (otherProfile?.bio || otherProfile?.primaryRole || "Agent Digital Twin")}
+                    </p>
+                </div>
+                <span className="badge-status border-[var(--primary)]/20 text-[var(--primary)] shrink-0 ml-4">
+                    {opportunity.matchScore}% {t('radar.match_score')}
+                </span>
+            </div>
+
+            {/* BODY : Résumé ou Audit */}
+            <div className="mb-6">
+                {status === 'DETECTED' ? (
+                    <p className="text-zinc-400 text-sm leading-relaxed">
+                        {(() => {
+                            const val = opportunity.synergies || opportunity.summary || opportunity.content;
+                            if (!val) return "Le rapport d'audit est en cours de décryptage par le Cortex...";
+                            if (typeof val === 'object') return JSON.stringify(val);
+                            return val;
+                        })()}
+                    </p>
+                ) : (
+                    <div className="bg-zinc-900/30 p-4 rounded-xl border border-zinc-800/50">
+                        <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold text-center">
+                            {t('radar.audit_ready')}
+                        </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Rendu conditionnel des actions */}
+            <div className="mt-6 space-y-3">
+
+                {/* BOUTON AUDIT PERSISTANT (S'affiche si un audit existe déjà) */}
+                {hasAudit && (
+                    <button
+                        onClick={() => setShowAudit(true)}
+                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-xs py-2 h-auto"
+                    >
+                        <Target className="w-3 h-3" />
+                        {t('radar.read_audit')}
+                    </button>
+                )}
+
+                {status === 'DETECTED' && !hasAudit && (
+                    <button
+                        disabled={isAuditing}
+                        onClick={handleAudit}
+                        className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                        {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-white" />}
+                        {isAuditing ? "Génération par l'IA..." : t('radar.connect_btn')}
+                    </button>
+                )}
+
+                {status === 'AUDITED' && !hasAudit && (
+                    <button
+                        onClick={() => setShowAudit(true)}
+                        className="btn-outline w-full flex items-center justify-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                    >
+                        <Target className="w-4 h-4" />
+                        {t('radar.read_audit')}
+                    </button>
+                )}
+
+                {status === 'ACCEPTED' && (
+                    <Link
+                        href={`/chat?id=${otherProfile?.id}`}
+                        className="btn-primary w-full flex items-center justify-center gap-2 bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(var(--accent-rgb,16,185,129),0.3)] relative"
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        {t('radar.join_chat')}
+
+                        {opportunity.unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[8px] font-bold items-center justify-center text-white">
+                                    {opportunity.unreadCount}
+                                </span>
+                            </span>
+                        )}
+                    </Link>
+                )}
+
+                {/* --- NOUVEAU : STATUT INVITÉ --- */}
+                {/* Si JE suis celui qui a envoyé l'invitation (Source) */}
+                {status === 'INVITED' && opportunity.sourceId === myId && (
+                    <div className="w-full bg-[var(--primary)]/10 border border-[var(--primary)]/30 p-3 rounded text-center">
+                        <p className="text-[var(--primary)] text-xs font-bold">
+                            ⏳ {t('radar.invite_sent')}
+                        </p>
+                    </div>
+                )}
+
+                {/* Si JE suis celui qui reçoit l'invitation (Cible) */}
+                {status === 'INVITED' && opportunity.targetId === myId && (
+                    <div className="w-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 p-4 rounded-xl text-center">
+                        <p className="text-[var(--accent)] text-sm font-bold mb-4">
+                            📩 {t('radar.channel_request')} : {typeof opportunity.title === 'object' ? JSON.stringify(opportunity.title) : (opportunity.title || t('radar.new_invite'))}
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                disabled={loading || isAccepted}
+                                onClick={handleAccept}
+                                className={`btn-primary flex-1 ${isAccepted ? 'opacity-50 cursor-default' : ''}`}
+                                style={isAccepted ? { backgroundColor: 'var(--accent)' } : { backgroundColor: 'var(--accent)' }}
+                            >
+                                {loading ? t('radar.creating') : isAccepted ? `${t('radar.accepted')} ✓` : t('radar.accept').toUpperCase()}
+                            </button>
+                            <button
+                                onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
+                                className="btn-outline flex-1 border-white/10 text-red-400 hover:bg-red-500/10"
+                            >
+                                {t('radar.refuse')}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {status !== 'INVITED' && status !== 'DETECTED' && status !== 'ACCEPTED' && status !== 'AUDITED' && (
+                    <div className="flex gap-2 mt-6">
+                        <button
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'CANCELLED' }) })}
+                            className="btn-outline w-full text-zinc-400 hover:text-zinc-200"
+                        >
+                            {t('radar.ignore')}
+                        </button>
+                        <button
+                            onClick={async () => fetch(getApiUrl('/api/opportunities'), { method: 'POST', headers: await getOppHeaders(), body: JSON.stringify({ action: 'updateStatus', oppId: opportunity?.id, status: 'BLOCKED' }) })}
+                            className="btn-outline w-full border-transparent bg-transparent hover:bg-red-900/10 text-red-900/70 hover:text-red-500"
+                        >
+                            {t('radar.block')}
+                        </button>
+                    </div>
+                )}
+
+            </div>
+
+            <AuditPanel
+                isOpen={showAudit}
+                onClose={() => setShowAudit(false)}
+                auditData={auditData}
+                targetName={getAgentName(otherProfile)}
+                opportunityId={opportunity?.id}
+                status={status}
+                targetId={otherProfile?.id}
+                onInviteSuccess={() => {
+                    setStatus('INVITED');
+                    setShowAudit(false);
+                }}
+            />
+        </div>
+    );
+}
+````
+
+## File: app/components/RealtimeChat.tsx
+````typescript
+'use client';
+
+import { useState, useEffect, useOptimistic, useRef } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+// Server actions supprimées — on utilise fetch vers /api/chat
+import { deriveSharedKey, encryptLocal, decryptLocal, getStoredPrivateKeyJwk } from '@/lib/crypto-client';
+import { Send, AlertCircle, Loader2 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api';
+import { SecureMessageBubble } from '@/app/components/SecureMessageBubble';
+import { TacticalEarpiece } from '@/app/components/TacticalEarpiece';
+import { usePrismManager } from '@/components/providers/PrismProvider';
+
+type Message = { id: string; content: string; senderId: string; receiverId?: string; createdAt: Date | string };
+
+export default function RealtimeChat({ initialMessages, receiverId, receiverPublicKeyJwk }: any) {
+    const { activeProfile } = usePrismManager();
+    const currentUserId = activeProfile?.id;
+    const [messages, setMessages] = useState<Message[]>(initialMessages);
+    const [isError, setIsError] = useState(false);
+    const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
+    const sharedKeyRef = useRef<CryptoKey | null>(null);
+    const [isDecrypting, setIsDecrypting] = useState(true);
+
+    // --- ÉTATS DE PAGINATION ---
+    const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+    const [hasMore, setHasMore] = useState(initialMessages.length >= 50);
+
+    const formRef = useRef<HTMLFormElement>(null);
+    const bottomRef = useRef<HTMLDivElement>(null);
+    const topObserverRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const decryptedContextRef = useRef<{ id: string, clearText: string, isMe: boolean, createdAt: number }[]>([]);
+
+    const handleDecrypted = (id: string, clearText: string, isMe: boolean) => {
+        const current = decryptedContextRef.current;
+        // Éviter les doublons
+        if (current.some(m => m.id === id)) return;
+
+        // On ajoute, puis on trie chronologiquement (createdAt)
+        const newMsg = { id, clearText, isMe, createdAt: Date.now() };
+        const updated = [...current, newMsg].sort((a, b) => a.createdAt - b.createdAt);
+
+        // On ne conserve que les 20 derniers max pour la perf
+        decryptedContextRef.current = updated.slice(-20);
+    };
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+        messages,
+        (state, newMsg: Message) => [...state, newMsg]
+    );
+
+    // =====================================================
+    // 🔑 DÉRIVATION ECDH AU MONTAGE
+    // Clé privée auto-récupérée depuis Secure Storage + clé publique du destinataire
+    // =====================================================
+    useEffect(() => {
+        async function initCrypto() {
+            try {
+                // 1. La requête stricte vers Supabase pour le profil du partenaire
+                const { data: partnerProfile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('id, public_key')
+                    .eq('id', receiverId)
+                    .single();
+
+                // 2. Le Stress-Test de la donnée (L'entonnoir de sécurité)
+                if (profileError || !partnerProfile) {
+                    console.error("❌ Impossible de trouver le profil de l'interlocuteur :", profileError);
+                    setIsDecrypting(false);
+                    return;
+                }
+
+                if (!partnerProfile.public_key) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa public_key est VIDE (null) !");
+                    setIsDecrypting(false);
+                    return;
+                }
+
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerProfile.public_key.substring(0, 20) + "...");
+
+                // 3. Récupération de MA clé privée et dérivation
+                const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
+                const myPrivateKey = await window.crypto.subtle.importKey(
+                    "jwk", 
+                    myPrivateKeyJwk, 
+                    { name: "ECDH", namedCurve: "P-256" }, 
+                    true, 
+                    ["deriveKey"]
+                );
+
+                const derived = await deriveSharedKey(myPrivateKey, partnerProfile.public_key);
+                setSharedKey(derived);
+                sharedKeyRef.current = derived;
+
+                // --- L'ÉTAPE CRITIQUE : DÉCHIFFREMENT DE L'HISTORIQUE INITIAL ---
+                const decryptedMessages = await Promise.all(
+                    initialMessages.map(async (msg: Message) => {
+                        if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                            try {
+                                const clearText = await decryptLocal(msg.content, derived);
+                                return { ...msg, content: clearText };
+                            } catch (e) {
+                                console.error("Échec du déchiffrement du message historique:", msg.id, e);
+                                return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                            }
+                        }
+                        return msg;
+                    })
+                );
+                setMessages(decryptedMessages);
+            } catch (e) {
+                console.error("[E2E] Erreur dérivation ECDH:", e);
+            } finally {
+                setIsDecrypting(false);
+            }
+        }
+        initCrypto();
+    }, [receiverId, initialMessages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // --- L'OBSERVATEUR D'INFINITE SCROLL (Le Radar Front-end) ---
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            async (entries) => {
+                const target = entries[0];
+                if (target.isIntersecting && hasMore && !isLoadingOlder) {
+                    setIsLoadingOlder(true);
+
+                    const oldestMessage = messages[0];
+                    if (!oldestMessage) {
+                        setIsLoadingOlder(false);
+                        return;
+                    }
+
+                    const container = scrollContainerRef.current;
+                    const previousScrollHeight = container?.scrollHeight || 0;
+
+                    try {
+                        const { createClient } = await import('@/lib/supabaseBrowser');
+                        const supabaseClient = createClient();
+                        const { data: { session } } = await supabaseClient.auth.getSession();
+                        const headers: any = { 'Content-Type': 'application/json' };
+                        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+                        const res = await fetch(getApiUrl(`/api/chat?receiverId=${receiverId}&cursorId=${oldestMessage.id}&senderId=${currentUserId}`), { headers });
+                        const data = await res.json();
+                        const older = data.messages || [];
+
+                        if (older.length < 50) setHasMore(false);
+
+                        // --- DÉCHIFFREMENT DES ARCHIVES ---
+                        if (sharedKeyRef.current) {
+                            const decryptedOlder = await Promise.all(
+                                older.map(async (msg: Message) => {
+                                    if (msg.content && (msg.content.includes(':') || msg.content.startsWith('🧠'))) {
+                                        try {
+                                            const clearText = await decryptLocal(msg.content, sharedKeyRef.current!);
+                                            return { ...msg, content: clearText };
+                                        } catch (e) {
+                                            return { ...msg, content: "🔒 [Message indéchiffrable]" };
+                                        }
+                                    }
+                                    return msg;
+                                })
+                            );
+                            setMessages((prev) => [...decryptedOlder, ...prev]);
+                        } else {
+                            setMessages((prev) => [...older, ...prev]);
+                        }
+
+                        setTimeout(() => {
+                            if (container) {
+                                container.scrollTop = container.scrollHeight - previousScrollHeight;
+                            }
+                        }, 0);
+                    } catch (error) {
+                        console.error("Erreur de pagination:", error);
+                    } finally {
+                        setIsLoadingOlder(false);
+                    }
+                }
+            },
+            { root: scrollContainerRef.current, threshold: 0.1 }
+        );
+
+        if (topObserverRef.current) observer.observe(topObserverRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingOlder, messages, receiverId, sharedKey]);
+
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const channelRef = useRef<any>(null);
+
+    // Écoute des WebSockets Supabase
+    useEffect(() => {
+        // ID de canal déterministe (toujours le même pour les deux utilisateurs)
+        const channelId = [currentUserId, receiverId].sort().join('_');
+
+        // Nettoyage si le destinataire change
+        if (channelRef.current) {
+            supabase.removeChannel(channelRef.current);
+        }
+
+        const channel = supabase
+            .channel(`chat_${channelId}`, {
+                config: { broadcast: { self: true } } // On veut recevoir nos propres broadcasts pour confirmation si besoin
+            })
+            // Écoute des nouveaux messages (Tous les messages du canal, le RLS filtre l'accès)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'Message'
+            }, async (payload) => {
+                const incoming = payload.new as Message;
+
+                // Si c'est un message du canal actuel
+                if ((incoming.senderId === currentUserId && incoming.receiverId === receiverId) ||
+                    (incoming.senderId === receiverId && incoming.receiverId === currentUserId)) {
+
+                    // --- DÉCHIFFREMENT IMMÉDIAT DU MESSAGE ENTRANT ---
+                    if (incoming.content && (incoming.content.includes(':') || incoming.content.startsWith('🧠'))) {
+                        try {
+                            if (sharedKeyRef.current) {
+                                incoming.content = await decryptLocal(incoming.content, sharedKeyRef.current);
+                            } else {
+                                incoming.content = "🔒 [Clé manquante]";
+                            }
+                        } catch (e) {
+                            incoming.content = "🔒 [Message indéchiffrable]";
+                        }
+                    }
+
+                    setMessages((prev) => {
+                        // Éviter les doublons (si le message est déjà là via fetch ou optimisme)
+                        if (prev.some(m => m.id === incoming.id)) return prev;
+                        return [...prev, incoming];
+                    });
+
+                    // Si on est le destinataire, on marque comme lu
+                    if (incoming.receiverId === currentUserId) {
+                        fetch(getApiUrl('/api/chat'), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'read', receiverId, senderId: currentUserId })
+                        });
+                    }
+                }
+            })
+            // 🎙️ ÉCOUTE DU BROADCAST "TYPING"
+            .on('broadcast', { event: 'typing' }, ({ payload }) => {
+                // On ignore nos propres événements de frappe (handled localement si besoin, mais ici on veut l'autre)
+                if (payload.userId !== currentUserId) {
+                    setIsTyping(payload.isTyping);
+                    if (payload.isTyping) {
+                        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+                    }
+                }
+            })
+            .subscribe((status) => {
+                console.log(`📡 [Chat-Realtime] Channel status: ${status}`);
+            });
+
+        channelRef.current = channel;
+
+        // Mark as read on mount
+        fetch(getApiUrl('/api/chat'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'read', receiverId, senderId: currentUserId })
+        });
+
+        return () => {
+            if (channelRef.current) supabase.removeChannel(channelRef.current);
+        };
+    }, [currentUserId, receiverId, supabase]);
+
+    const broadcastTyping = (typing: boolean) => {
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { isTyping: typing, userId: currentUserId },
+            });
+        }
+    };
+
+    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        broadcastTyping(true);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            broadcastTyping(false);
+        }, 2000);
+    };
+
+    // Auto-scroll intelligent
+    const prevMessagesLen = useRef(optimisticMessages.length);
+    useEffect(() => {
+        if (optimisticMessages.length > prevMessagesLen.current && bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        prevMessagesLen.current = optimisticMessages.length;
+    }, [optimisticMessages]);
+
+    const handleSend = async (formData: FormData) => {
+        const content = formData.get('content') as string;
+        if (!content || !content.trim() || !currentUserId) return;
+
+        formRef.current?.reset();
+        setIsError(false);
+
+        // Affichage Optimiste 0ms (Le client voit le texte en clair)
+        addOptimisticMessage({
+            id: `temp-${Date.now()}`,
+            content,
+            senderId: currentUserId,
+            receiverId,
+            createdAt: new Date(),
+        });
+
+        // CHIFFREMENT STRICT CÔTÉ CLIENT
+        try {
+            if (!sharedKey) {
+                throw new Error("Erreur de sécurité : Le canal chiffré ne peut pas être établi. Clé partagée non dérivée.");
+            }
+
+            const payload = await encryptLocal(content, sharedKey);
+
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabaseClient = createClient();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const res = await fetch(getApiUrl('/api/chat'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ content: payload, receiverId, senderId: currentUserId })
+            });
+            const result = await res.json();
+            if (!result?.success) throw new Error(result?.error || "Refus du serveur");
+
+        } catch (error: any) {
+            console.error("🔒 [E2E-SECURITY] Échec critique:", error.message);
+            setIsError(true);
+            
+            // On remet le contenu pour que l'utilisateur ne perde pas son message
+            if (formRef.current) {
+                const input = formRef.current.elements.namedItem('content') as HTMLInputElement;
+                if (input) {
+                    input.value = content;
+                    input.focus();
+                }
+            }
+
+            // Message spécifique si c'est une erreur de clé
+            if (error.message.includes("Erreur de sécurité")) {
+                alert(error.message); // On utilise une alerte système ou on pourrait passer par un toast contextuel
+            }
+        }
+    };
+
+    // SKELETON DE DÉCHIFFREMENT
+    if (isDecrypting) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-3">
+                    <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
+                    <p className="text-xs text-[var(--text-main)]/60 font-mono uppercase tracking-widest">Déchiffrement en cours...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* ZONE DE SCROLL */}
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+
+                {/* L'AMORCE INVISIBLE : C'est elle qui déclenche l'IntersectionObserver */}
+                <div ref={topObserverRef} className="w-full h-1" />
+
+                {/* INDICATEUR DE FOUILLE */}
+                {isLoadingOlder && (
+                    <div className="flex justify-center items-center py-2 text-[var(--primary)]">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        <span className="text-xs uppercase tracking-widest font-bold">Déchiffrement des archives...</span>
+                    </div>
+                )}
+
+                <div className="space-y-4 pt-2">
+                    {optimisticMessages.length === 0 && !hasMore ? (
+                        <div className="text-center text-slate-500 font-mono text-xs mt-10">
+                            DÉBUT DE LA TRANSMISSION...
+                        </div>
+                    ) : (
+                        optimisticMessages.map((msg) => {
+                            const isMe = msg.senderId === currentUserId;
+                            const isSystem = msg.senderId === 'CORTEX_SYSTEM';
+
+                            if (isSystem) {
+                                return (
+                                    <div key={msg.id} className="flex justify-center my-4 animate-in fade-in duration-500">
+                                        <div className="px-4 py-2 rounded-full bg-[var(--cortex)]/20 border border-[var(--cortex)]/40 text-[var(--text-main)] text-xs font-mono tracking-wide text-center max-w-[90%] shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                                            🧠 {msg.content.replace('[CORTEX] ', '')}
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div key={msg.id} className={`transition-all duration-300 ${msg.id.startsWith('temp-') ? 'opacity-50 grayscale' : 'opacity-100'}`}>
+                                    <SecureMessageBubble
+                                        id={msg.id}
+                                        encryptedPayload={msg.content}
+                                        sharedKey={sharedKey}
+                                        isSender={isMe}
+                                        onDecrypted={handleDecrypted}
+                                    />
+                                </div>
+                            );
+                        })
+                    )}
+                    <div ref={bottomRef} />
+                </div>
+
+                {/* OREILLETTE TACTIQUE (Ne s'active qu'avec du texte déchiffré) */}
+                <div className="mt-8">
+                    <TacticalEarpiece getDecryptedContext={() => decryptedContextRef.current} />
+                </div>
+            </div>
+
+            {/* FORMULAIRE */}
+            <div className="shrink-0 p-4 border-t border-white/10 bg-black/50 backdrop-blur-md">
+                {isTyping && (
+                    <div className="mb-2 text-[10px] text-[var(--accent)] font-mono animate-pulse uppercase tracking-widest">
+                        📡 L'agent adverse est en train d'écrire...
+                    </div>
+                )}
+                {isError && (
+                    <div className="mb-2 flex items-center gap-2 text-red-400 text-xs font-semibold animate-pulse">
+                        <AlertCircle className="w-4 h-4" />
+                        Échec réseau : Votre message n'a pas pu être envoyé. Veuillez réessayer.
+                    </div>
+                )}
+                <form ref={formRef} action={handleSend} className="flex gap-2">
+                    <input type="hidden" name="receiverId" value={receiverId} />
+                    <input
+                        type="text"
+                        name="content"
+                        onChange={handleInput}
+                        placeholder="Message chiffré de bout en bout..."
+                        autoComplete="off"
+                        className={`flex-1 bg-black/40 border ${isError ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-blue-500/50'} rounded-xl px-4 py-4 text-sm text-white outline-none transition-colors`}
+                    />
+                    <button
+                        type="submit"
+                        className={`px-6 py-4 border rounded-xl flex items-center justify-center transition-all active:scale-95 ${isError ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30' : 'bg-[var(--primary)]/20 text-[var(--primary)] border-[var(--primary)]/30 hover:bg-[var(--primary)]/30'}`}
+                    >
+                        <Send className="w-5 h-5" />
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: app/profile/new/page.tsx
+````typescript
+'use client';
+
+/**
+ * New Profile Creation Page
+ * Allows users to create a new digital twin profile with Zero-Knowledge encryption
+ */
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { generateMnemonic } from 'bip39';
+import { getApiUrl } from '@/lib/api';
+import { Capacitor } from '@capacitor/core';
+import { VaultManager, VaultKey } from '@/lib/vault-manager';
+import {
+    generateSalt,
+    hashPassword,
+    deriveKey,
+    encryptObject,
+    arrayToBase64,
+} from '@/lib/crypto/zk-encryption';
+// Server action supprimée — on utilise fetch vers /api/profile
+
+export default function NewProfilePage() {
+    const router = useRouter();
+    const [step, setStep] = useState<'form' | 'recovery'>('form');
+    const [formData, setFormData] = useState({
+        name: '',
+        masterPassword: '',
+        confirmPassword: '',
+    });
+    const [recoveryPhrase, setRecoveryPhrase] = useState<string>('');
+    const [profileId, setProfileId] = useState<string>('');
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string>('');
+    const [phraseConfirmed, setPhraseConfirmed] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        // Validation
+        if (formData.name.length < 2) {
+            setError('Le nom doit contenir au moins 2 caractères');
+            return;
+        }
+
+        if (formData.masterPassword.length < 12) {
+            setError('Le mot de passe maître doit contenir au moins 12 caractères');
+            return;
+        }
+
+        if (formData.masterPassword !== formData.confirmPassword) {
+            setError('Les mots de passe ne correspondent pas');
+            return;
+        }
+
+        setIsCreating(true);
+
+        try {
+            // ===== CLIENT-SIDE CRYPTOGRAPHY (Zero-Knowledge) =====
+
+            const { generateAndStoreKeyPair } = await import('@/lib/crypto-client');
+            console.log("🧬 [ONBOARDING] Démarrage de la génération d'identité E2EE...");
+            const { publicKeyJwk, mnemonic: generatedRecoveryPhrase } = await generateAndStoreKeyPair(formData.masterPassword);
+            const publicKeyString = btoa(JSON.stringify(publicKeyJwk)); // Format base64 as requested
+
+            const { createClient } = await import('@/lib/supabaseBrowser');
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: any = { 'Content-Type': 'application/json' };
+            if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            // ===== SEND DATA TO SERVER (Mandatory Public Key Sync) =====
+            const r = await fetch(getApiUrl('/api/profile'), {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ 
+                    action: 'create', 
+                    name: formData.name,
+                    public_key: publicKeyString
+                })
+            });
+            const response = await r.json();
+
+            if (!response.success) {
+                console.error("❌ [ONBOARDING] Échec de la synchronisation de la clé publique avec Supabase.");
+                throw new Error(response.error || 'Erreur de sécurité : Impossible de synchroniser votre clé publique.');
+            }
+
+            console.log("✅ [ONBOARDING] Identité E2EE créée et synchronisée.");
+
+            // 8. Securely Persist to Hardware Vault
+            if (Capacitor.isNativePlatform()) {
+                await VaultManager.saveSecret(VaultKey.MASTER_KEY, formData.masterPassword);
+                console.log("✅ [ONBOARDING] Master Key sécurisée dans l'enclave matérielle.");
+            }
+
+            // Store recovery phrase (generated client-side, never sent to server)
+            setRecoveryPhrase(generatedRecoveryPhrase);
+            setProfileId(response.profileId!);
+            setStep('recovery');
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleCopyPhrase = () => {
+        navigator.clipboard.writeText(recoveryPhrase);
+        alert('Phrase de récupération copiée dans le presse-papiers');
+    };
+
+    const handleConfirmAndContinue = () => {
+        if (!phraseConfirmed) {
+            alert('Veuillez confirmer que vous avez sauvegardé votre phrase de récupération');
+            return;
+        }
+        router.push(`/profile/unlock?id=${profileId}`);
+    };
+
+    if (step === 'recovery') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+                    <div className="text-center mb-8">
+                        <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h1 className="text-3xl font-bold text-white mb-2">Initialisation de votre Agent</h1>
+                        <p className="text-purple-200">Votre Agent est maintenant initialisé</p>
+                    </div>
+
+                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-6 mb-6">
+                        <div className="flex items-start gap-3">
+                            <svg className="w-6 h-6 text-red-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <h3 className="text-red-200 font-bold mb-2">⚠️ CRITIQUE : Phrase Cryptographique Fondatrice</h3>
+                                <p className="text-red-100 text-sm">
+                                    Voici la phrase cryptographique qui verrouille votre accès à Ipse. Elle sécurise la mémoire et les communications de votre Agent. Si vous perdez ces 12 mots, votre Agent sera amnésique de façon irréversible.
+                                    <strong className="block mt-2">Nous n'avons aucun double.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800/50 rounded-lg p-6 mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-white font-semibold">Phrase de Récupération BIP39</h3>
+                            <button
+                                onClick={handleCopyPhrase}
+                                className="text-purple-300 hover:text-purple-200 text-sm flex items-center gap-1"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Copier
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {recoveryPhrase.split(' ').map((word, index) => (
+                                <div key={index} className="bg-slate-700/50 rounded px-3 py-2 text-center">
+                                    <span className="text-purple-300 text-xs">{index + 1}.</span>
+                                    <span className="text-white font-mono ml-2">{word}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={phraseConfirmed}
+                                onChange={(e) => setPhraseConfirmed(e.target.checked)}
+                                className="w-5 h-5 rounded border-purple-400 text-purple-600 focus:ring-purple-500"
+                            />
+                            <span className="text-white text-sm">
+                                J'ai sécurisé la mémoire de mon Agent
+                            </span>
+                        </label>
+                    </div>
+
+                    <button
+                        onClick={handleConfirmAndContinue}
+                        disabled={!phraseConfirmed}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        J'AI SÉCURISÉ LA MÉMOIRE DE MON AGENT
+                    </button>
+
+                    <p className="text-purple-200 text-xs text-center mt-4">
+                        ID du Profil : <span className="font-mono">{profileId}</span>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+                <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-2">Initialisation de l'Agent Ipse</h1>
+                    <p className="text-purple-200">Créez votre profil sécurisé avec chiffrement Zero-Knowledge</p>
+                </div>
+
+                {error && (
+                    <div className="bg-red-500/20 border border-red-400 rounded-lg p-3 mb-4">
+                        <p className="text-red-200 text-sm">{error}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Nom du Profil
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Ex: Mon Agent Personnel"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Mot de Passe Maître (min. 12 caractères)
+                        </label>
+                        <input
+                            type="password"
+                            value={formData.masterPassword}
+                            onChange={(e) => setFormData({ ...formData, masterPassword: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            minLength={12}
+                            required
+                        />
+                        <p className="text-purple-300/70 text-xs mt-1">
+                            Ce mot de passe ne sera JAMAIS stocké sur le serveur
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-purple-200 text-sm font-medium mb-2">
+                            Confirmer le Mot de Passe
+                        </label>
+                        <input
+                            type="password"
+                            value={formData.confirmPassword}
+                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                            className="w-full bg-white/5 border border-purple-300/30 rounded-lg px-4 py-3 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                            minLength={12}
+                            required
+                        />
+                    </div>
+
+                    <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
+                        <h3 className="text-blue-200 font-semibold text-sm mb-2">ðŸ” Sécurité Zero-Knowledge</h3>
+                        <ul className="text-blue-100 text-xs space-y-1">
+                            <li>✅ Chiffrement AES-256-GCM côté client</li>
+                            <li>✅ Vos clés ne quittent jamais votre appareil</li>
+                            <li>✅ Le serveur ne peut pas lire vos données</li>
+                            <li>✅ Phrase de récupération BIP39 (12 mots)</li>
+                        </ul>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isCreating}
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {isCreating ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Création en cours...
+                            </>
+                        ) : (
+                            'Créer le Profil'
+                        )}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <a href="/" className="text-purple-300 hover:text-purple-200 text-sm">
+                        â† Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
+````
+
+## File: components/AgentConfig.tsx
+````typescript
 'use client'
 
 import { useState, useEffect } from 'react'
 import { Briefcase, Heart, Palmtree, Save, User, Globe, Hash, MapPin, Calendar, Zap, Target, Edit3, RefreshCw } from 'lucide-react'
 import { getApiUrl } from '@/lib/api';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/agent
+// Server actions supprimées — on utilise fetch vers /api/agent
 
 const QUESTIONS = {
     travail: [
-        { id: 'industry', label: 'Secteur d\'activitÃ©', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'SantÃ© & Bien-Ãªtre', 'Artisanat & BTP', 'Autre (prÃ©ciser)'] },
-        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['SalariÃ©', 'Freelance / IndÃ©pendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Ã‰tudiant'] },
-        { id: 'seniority', label: 'Niveau d\'expÃ©rience', options: ['Junior (0-2 ans)', 'ConfirmÃ© (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
-        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunitÃ© de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marchÃ©', 'Reconversion professionnelle'] },
-        { id: 'environment', label: 'Environnement idÃ©al', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% TÃ©lÃ©travail / Nomad'] }
+        { id: 'industry', label: 'Secteur d\'activité', options: ['Tech & Data', 'Commerce & Vente', 'Marketing & Design', 'Finance & Crypto', 'Santé & Bien-être', 'Artisanat & BTP', 'Autre (préciser)'] },
+        { id: 'professionalStatus', label: 'Statut Professionnel', options: ['Salarié', 'Freelance / Indépendant', 'Entrepreneur / CEO', 'En transition / Recherche', 'Étudiant'] },
+        { id: 'seniority', label: 'Niveau d\'expérience', options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (6-10 ans)', 'Expert (+10 ans)'] },
+        { id: 'objectives', label: 'Objectif Prioritaire', options: ['Acquisition de clients (B2B/B2C)', 'Nouvelle opportunité de poste', 'Recherche de partenaires/fonds', 'Veille technologique/marché', 'Reconversion professionnelle'] },
+        { id: 'environment', label: 'Environnement idéal', options: ['Start-up / Scale-up', 'Grand Groupe Entreprise', 'PME / TPE', '100% Télétravail / Nomad'] }
     ],
 
 
-    // ðŸŸ¢ NOUVEAU BLOC : LA BOUSSOLE MORALE
+    // 🟢 NOUVEAU BLOC : LA BOUSSOLE MORALE
     ikigai: [
-        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['CrÃ©er de l\'impact (Social/Ã‰colo)', 'Atteindre l\'indÃ©pendance absolue (LibertÃ©/Finance)', 'Innover & Construire l\'avenir (CrÃ©ation)', 'Transmettre & Aider (Mentorat/Soin)'] },
-        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['AuthenticitÃ© & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
-        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires Ã  mon Ã©thique', 'DÃ©sÃ©quilibre pro/perso toxique', 'Manque de clartÃ© / Bullshit'] },
-        { id: 'superpouvoir', label: 'Votre "Zone de GÃ©nie"', options: ['Vision stratÃ©gique & Anticipation', 'ExÃ©cution & RÃ©solution de problÃ¨mes complexes', 'Communication & FÃ©dÃ©rer les humains', 'Analyse & ComprÃ©hension technique profonde'] },
-        { id: 'socialStyle', label: 'Ton de votre Agent Ipse', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'MystÃ©rieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
+        { id: 'ikigaiMission', label: 'Mission de vie (Aspiration profonde)', options: ['Créer de l\'impact (Social/Écolo)', 'Atteindre l\'indépendance absolue (Liberté/Finance)', 'Innover & Construire l\'avenir (Création)', 'Transmettre & Aider (Mentorat/Soin)'] },
+        { id: 'ikigaiValues', label: 'Valeurs fondamentales', options: ['Authenticité & Transparence', 'Excellence & Performance', 'Empathie & Bienveillance', 'Audace & Prise de risque'] },
+        { id: 'dealbreakers', label: 'Lignes rouges (Ce que l\'IA doit rejeter)', options: ['Micromanagement & Manque d\'autonomie', 'Projets contraires à mon éthique', 'Déséquilibre pro/perso toxique', 'Manque de clarté / Bullshit'] },
+        { id: 'superpouvoir', label: 'Votre "Zone de Génie"', options: ['Vision stratégique & Anticipation', 'Exécution & Résolution de problèmes complexes', 'Communication & Fédérer les humains', 'Analyse & Compréhension technique profonde'] },
+        { id: 'socialStyle', label: 'Ton de votre Agent Ipse', options: ['Diplomate, Courtois & Chaleureux', 'Froid, Direct & Analytique', 'Mystérieux, Discret & Exclusif', 'Proactif & Agressif (Mode Chasseur)'] }
     ]
 };
 
 export default function AgentConfig({ profileId, initialData }: { profileId: string, initialData?: any }) {
-    // Ã‰TATS MODULE 1 (GÃ©nÃ©ral)
+    // ÉTATS MODULE 1 (Général)
     const [dateOfBirth, setDateOfBirth] = useState<string>(initialData?.dateOfBirth || '');
     const [gender, setGender] = useState(initialData?.gender || '');
     const [country, setCountry] = useState(initialData?.country || 'France');
 
-    // ðŸŸ¢ NOUVEAU : Radar GÃ©ographique
+    // 🟢 NOUVEAU : Radar Géographique
     const [postalCode, setPostalCode] = useState<string>(initialData?.postalCode || '');
     const [city, setCity] = useState<string>(initialData?.city || '');
     const [citiesList, setCitiesList] = useState<string[]>([]);
@@ -14631,7 +16340,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
             }).then(r => r.json());
             if (data.success && data.synthesis) {
                 setSynthesis(data.synthesis);
-                alert("Profilage du Gardien synchronisÃ© avec succÃ¨s !");
+                alert("Profilage du Gardien synchronisé avec succès !");
             }
         } catch (e) {
             console.error("Erreur Synchro", e);
@@ -14640,11 +16349,11 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         }
     };
 
-    // Ã‰TATS MODULE 2 (ThÃ©matique)
+    // ÉTATS MODULE 2 (Thématique)
     const [activeTab, setActiveTab] = useState('travail');
     const [formData, setFormData] = useState<any>(initialData?.thematicProfile || {});
 
-    // ðŸŸ¢ Radar ConnectÃ© : API gouv.fr pour les villes
+    // 🟢 Radar Connecté : API gouv.fr pour les villes
     useEffect(() => {
         if (postalCode.length === 5) {
             fetch(`https://geo.api.gouv.fr/communes?codePostal=${postalCode}`)
@@ -14653,7 +16362,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     if (Array.isArray(data) && data.length > 0) {
                         const cityNames = data.map((c: any) => c.nom);
                         setCitiesList(cityNames);
-                        // Auto-sÃ©lectionne la premiÃ¨re ville si aucune n'est dÃ©jÃ  choisie
+                        // Auto-sélectionne la première ville si aucune n'est déjà choisie
                         if (!city || !cityNames.includes(city)) {
                             setCity(cityNames[0]);
                         }
@@ -14667,7 +16376,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         }
     }, [postalCode]);
 
-    // Chargement de la mÃ©moire
+    // Chargement de la mémoire
     useEffect(() => {
         const fetchAgentMemory = async () => {
             if (!profileId) return;
@@ -14690,7 +16399,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setGender(profile.gender || '');
                     setCountry(profile.country || 'France');
 
-                    // âœ… Mappage des top-level fields combinÃ©s avec ThematicProfile
+                    // ✅ Mappage des top-level fields combinés avec ThematicProfile
                     setFormData({
                         ...thematic,
                         travail: {
@@ -14714,7 +16423,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     setSynthesis(data.profile.unifiedAnalysis || '');
                 }
             } catch (err) {
-                console.error("âŒ Erreur de restauration :", err);
+                console.error("❌ Erreur de restauration :", err);
             }
         };
         fetchAgentMemory();
@@ -14740,7 +16449,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                 headers,
                 body: JSON.stringify({ action: 'update', profileId, country, dateOfBirth, postalCode, city, gender, thematicProfile: formData })
             }).then(r => r.json());
-            if (data.success) alert("ADN de l'Agent Ipse sauvegardÃ© avec succÃ¨s !");
+            if (data.success) alert("ADN de l'Agent Ipse sauvegardé avec succès !");
             else alert("Erreur lors de la sauvegarde.");
         } catch (error) {
             console.error(error);
@@ -14750,10 +16459,10 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
     return (
         <div className="max-w-3xl w-full mx-auto space-y-6">
 
-            {/* ðŸŸ¦ MODULE 1 : IDENTITÃ‰ GÃ‰NÃ‰RALE */}
+            {/* 🟦 MODULE 1 : IDENTITÉ GÉNÉRALE */}
             <div className="bg-gray-900 text-white p-6 rounded-lg border border-gray-700 shadow-lg">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
-                    <User className="mr-2 text-blue-400" /> IDENTITÃ‰ GÃ‰NÃ‰RALE
+                    <User className="mr-2 text-blue-400" /> IDENTITÉ GÉNÉRALE
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -14765,7 +16474,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                             onChange={(e) => setCountry(e.target.value)}
                             className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none"
                         >
-                            <option value="">SÃ©lectionner...</option>
+                            <option value="">Sélectionner...</option>
                             <option value="France">France</option>
                             <option value="Suisse">Suisse</option>
                             <option value="Belgique">Belgique</option>
@@ -14784,7 +16493,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><User size={14} className="mr-1" /> Genre</label>
                         <select value={gender} onChange={(e) => setGender(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none">
-                            <option value="">SÃ©lectionner...</option>
+                            <option value="">Sélectionner...</option>
                             <option value="Homme">Homme</option>
                             <option value="Femme">Femme</option>
                             <option value="Non-binaire">Non-binaire</option>
@@ -14797,7 +16506,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         <input type="text" maxLength={5} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none" placeholder="Ex: 75001" />
                     </div>
 
-                    {/* VILLE (GÃ©nÃ©rÃ©e automatiquement) */}
+                    {/* VILLE (Générée automatiquement) */}
                     <div className="flex flex-col space-y-1">
                         <label className="text-sm font-semibold text-gray-400 flex items-center"><Globe size={14} className="mr-1" /> Ville</label>
                         <select value={city} onChange={(e) => setCity(e.target.value)} disabled={citiesList.length === 0} className="bg-gray-800 border border-gray-600 rounded p-2 text-sm focus:border-blue-500 outline-none disabled:opacity-50">
@@ -14809,7 +16518,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     </div>
                 </div>
 
-                {/* ðŸŸ¢ LE MODULE DE PROFILAGE DU GARDIEN AVEC BOUTON DE SYNCHRO */}
+                {/* 🟢 LE MODULE DE PROFILAGE DU GARDIEN AVEC BOUTON DE SYNCHRO */}
                 <div className="col-span-full mt-6 p-4 bg-gray-900/80 border border-blue-500/40 rounded-lg shadow-inner relative">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 border-b border-gray-700/50 pb-3 gap-3">
                         <div className="flex items-center font-bold text-blue-400">
@@ -14827,15 +16536,15 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     </div>
 
                     <div className="italic text-gray-300 text-sm leading-relaxed p-2 bg-gray-800/50 rounded border border-gray-700/50">
-                        {synthesis ? `"${synthesis}"` : "Aucune analyse du Gardien pour le moment. Cliquez sur 'Forcer la Synchronisation' pour gÃ©nÃ©rer votre premier profilage global."}
+                        {synthesis ? `"${synthesis}"` : "Aucune analyse du Gardien pour le moment. Cliquez sur 'Forcer la Synchronisation' pour générer votre premier profilage global."}
                     </div>
                 </div>
             </div>
 
-            {/* ðŸŸª MODULE 2 : MATRICE THÃ‰MATIQUE */}
+            {/* 🟪 MODULE 2 : MATRICE THÉMATIQUE */}
             <div className="bg-gray-900 text-white p-6 rounded-lg border border-purple-900/50 shadow-lg relative overflow-hidden">
-                {/* Petit badge "PREMIUM" pour prÃ©parer visuellement l'arrivÃ©e de Stripe */}
-                <div className="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">MODULE AVANCÃ‰</div>
+                {/* Petit badge "PREMIUM" pour préparer visuellement l'arrivée de Stripe */}
+                <div className="absolute top-0 right-0 bg-purple-600 text-xs font-bold px-3 py-1 rounded-bl-lg">MODULE AVANCÉ</div>
 
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center border-b border-gray-700 pb-2">
                     <Briefcase className="mr-2 text-purple-400" /> MATRICE PSYCHOLOGIQUE
@@ -14846,7 +16555,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         <Briefcase size={16} className="mr-2" /> Travail
                     </button>
 
-                    {/* ðŸŸ¢ NOUVEAU BOUTON IKIGAI */}
+                    {/* 🟢 NOUVEAU BOUTON IKIGAI */}
                     <button onClick={() => setActiveTab('ikigai')} className={`flex items-center px-4 py-2 rounded-t-lg font-semibold transition-all whitespace-nowrap ${activeTab === 'ikigai' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                         <Target size={16} className="mr-2" /> Ikigai & Morale
                     </button>
@@ -14856,7 +16565,7 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                     {QUESTIONS[activeTab as keyof typeof QUESTIONS].map((q) => {
                         const currentValue = formData[activeTab]?.[q.id] || '';
                         const isCustom = currentValue.startsWith('CUSTOM:');
-                        const displayValue = isCustom ? 'Autre (prÃ©ciser)' : currentValue;
+                        const displayValue = isCustom ? 'Autre (préciser)' : currentValue;
 
                         return (
                             <div key={q.id} className="flex flex-col space-y-2">
@@ -14864,19 +16573,19 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                                 <select
                                     value={displayValue}
                                     onChange={(e) => {
-                                        if (e.target.value === 'Autre (prÃ©ciser)') handleThematicChange(activeTab, q.id, 'CUSTOM:');
+                                        if (e.target.value === 'Autre (préciser)') handleThematicChange(activeTab, q.id, 'CUSTOM:');
                                         else handleThematicChange(activeTab, q.id, e.target.value);
                                     }}
                                     className="bg-gray-900 border border-gray-600 rounded p-2 text-sm focus:border-purple-500 outline-none"
                                 >
-                                    <option value="" disabled>SÃ©lectionner...</option>
+                                    <option value="" disabled>Sélectionner...</option>
                                     {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                 </select>
 
                                 {isCustom && (
                                     <input
                                         type="text"
-                                        placeholder="PrÃ©cisez votre choix..."
+                                        placeholder="Précisez votre choix..."
                                         value={currentValue.replace('CUSTOM:', '')}
                                         onChange={(e) => handleThematicChange(activeTab, q.id, `CUSTOM:${e.target.value}`)}
                                         className="bg-gray-700 border border-gray-500 rounded p-2 text-sm mt-2 focus:border-purple-500 outline-none"
@@ -14887,16 +16596,16 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
                         );
                     })}
 
-                    {/* ðŸŸ¢ ZONE DE TEXTE LIBRE POUR AFFINER */}
+                    {/* 🟢 ZONE DE TEXTE LIBRE POUR AFFINER */}
                     <div className="mt-6 pt-6 border-t border-gray-700/50">
                         <label className="text-sm font-semibold text-gray-300 flex items-center mb-2">
                             <Edit3 size={14} className="mr-2 text-purple-400" />
-                            PrÃ©cisions libres (Nuances pour la section {activeTab})
+                            Précisions libres (Nuances pour la section {activeTab})
                         </label>
                         <textarea
                             value={formData[activeTab]?.precisionsLibres || ''}
                             onChange={(e) => handleThematicChange(activeTab, 'precisionsLibres', e.target.value)}
-                            placeholder={`Ajoutez ici vos nuances, lignes rouges spÃ©cifiques ou dÃ©tails uniques concernant la matrice "${activeTab}"...`}
+                            placeholder={`Ajoutez ici vos nuances, lignes rouges spécifiques ou détails uniques concernant la matrice "${activeTab}"...`}
                             className="bg-gray-800 border border-gray-600 rounded p-3 text-sm focus:border-purple-500 outline-none w-full min-h-[100px] resize-y"
                         />
                     </div>
@@ -14910,9 +16619,10 @@ export default function AgentConfig({ profileId, initialData }: { profileId: str
         </div>
     );
 }
-</file>
+````
 
-<file path="app/actions/profile.ts">
+## File: app/actions/profile.ts
+````typescript
 'use server'
 
 import { createServerClient } from '@supabase/ssr'
@@ -14945,7 +16655,7 @@ export async function createProfile(data: { name: string }) {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return { success: false, error: 'Utilisateur non authentifiÃ©' };
+            return { success: false, error: 'Utilisateur non authentifié' };
         }
 
         const profile = await prisma.profile.upsert({
@@ -14975,9 +16685,9 @@ export async function updateIdentity(formData: FormData) {
     );
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Non autorisÃ©");
+    if (!user) throw new Error("Non autorisé");
 
-    // Extraction sÃ©curisÃ©e des donnÃ©es
+    // Extraction sécurisée des données
     const role = formData.get('role') as string;
     const customRole = formData.get('customRole') as string;
     const tjmString = formData.get('tjm') as string;
@@ -14987,7 +16697,7 @@ export async function updateIdentity(formData: FormData) {
     const tjm = tjmString ? parseInt(tjmString, 10) : null;
 
     try {
-        // 1. Mise Ã  jour des champs standards
+        // 1. Mise à jour des champs standards
         await prisma.profile.update({
             where: { id: user.id },
             data: {
@@ -14999,38 +16709,39 @@ export async function updateIdentity(formData: FormData) {
             }
         });
 
-        // 2. ? GÃ‰NÃ‰RATION DU VECTEUR MAÃŽTRE (Unified Embedding)
-        // On combine les infos clÃ©s pour une recherche vectorielle prÃ©cise
-        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}â‚¬. Dispo: ${availability}`;
+        // 2. ? GÉNÉRATION DU VECTEUR MAÎTRE (Unified Embedding)
+        // On combine les infos clés pour une recherche vectorielle précise
+        const identityString = `Role: ${role === 'autre' ? customRole : role}. Bio: ${bio}. TJM: ${tjm}€. Dispo: ${availability}`;
 
-        console.log(`[IDENTITÃ‰] GÃ©nÃ©ration d'embedding pour ${user.id}...`);
+        console.log(`[IDENTITÉ] Génération d'embedding pour ${user.id}...`);
 
         const embedding = await getMistralEmbedding(identityString);
 
         if (embedding) {
             // Prisma ne supporte pas nativement le type 'vector', on passe en SQL brut
-            // On s'assure que l'ID est bien formatÃ© pour PostgreSQL
+            // On s'assure que l'ID est bien formaté pour PostgreSQL
             await prisma.$executeRawUnsafe(
                 `UPDATE "Profile" SET "unifiedEmbedding" = $1::vector WHERE id = $2`,
                 `[${embedding.join(',')}]`,
                 user.id
             );
-            console.log(`? [IDENTITÃ‰] Vecteur MaÃ®tre mis Ã  jour.`);
+            console.log(`? [IDENTITÉ] Vecteur Maître mis à jour.`);
         } else {
-            console.error("[IDENTITÃ‰] Ã‰chec de gÃ©nÃ©ration d'embedding Mistral.");
+            console.error("[IDENTITÉ] Échec de génération d'embedding Mistral.");
         }
 
-        console.log(`[IDENTITÃ‰] Profil de ${user.id} sauvegardÃ©.`);
+        console.log(`[IDENTITÉ] Profil de ${user.id} sauvegardé.`);
         revalidatePath('/profile');
 
     } catch (error) {
-        console.error("[IDENTITÃ‰] Erreur BDD/IA:", error);
+        console.error("[IDENTITÉ] Erreur BDD/IA:", error);
         throw new Error("Erreur lors de la sauvegarde.");
     }
 }
-</file>
+````
 
-<file path="app/profile/page.tsx">
+## File: app/profile/page.tsx
+````typescript
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
@@ -15265,7 +16976,7 @@ function ProfileContent() {
             });
             if (res.ok) {
                 setLanguage(newLang);
-                setSuccess(newLang === 'fr' ? 'Langue mise Ã  jour !' : 'Language updated!');
+                setSuccess(newLang === 'fr' ? 'Langue mise à jour !' : 'Language updated!');
                 setTimeout(() => setSuccess(null), 3000);
             }
         } catch (e) {
@@ -15296,7 +17007,7 @@ function ProfileContent() {
         <div className="min-h-screen bg-black text-white p-6 pb-40 lg:p-12">
             <header className="mb-8">
                 <Link href="/" className="text-gray-500 hover:text-white text-sm mb-4 inline-flex items-center gap-2">
-                    â† Radar
+                    ← Radar
                 </Link>
                 <div className="flex justify-between items-end">
                     <div>
@@ -15408,7 +17119,7 @@ function ProfileContent() {
                                     <section>
                                         <div className="flex justify-between items-center mb-4">
                                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest italic">{t('profile.work.tjm')}</label>
-                                            <span className="text-xl font-mono text-emerald-400">{formData.workTjm} â‚¬</span>
+                                            <span className="text-xl font-mono text-emerald-400">{formData.workTjm} €</span>
                                         </div>
                                         <input
                                             type="range" min="100" max="2500" step="50"
@@ -15474,18 +17185,18 @@ function ProfileContent() {
                                         onClick={() => handleLanguageChange('fr')}
                                         className={`py-4 rounded-2xl border font-bold transition-all ${language === 'fr' ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-gray-800/50 border-gray-700 text-gray-500'}`}
                                     >
-                                        ðŸ‡«ðŸ‡· FranÃ§ais
+                                        🇫🇷 Français
                                     </button>
                                     <button
                                         onClick={() => handleLanguageChange('en')}
                                         className={`py-4 rounded-2xl border font-bold transition-all ${language === 'en' ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-gray-800/50 border-gray-700 text-gray-500'}`}
                                     >
-                                        ðŸ‡ºðŸ‡¸ English
+                                        🇺🇸 English
                                     </button>
                                 </div>
                             </section>
 
-                            {/* --- DÃ‰CONNEXION --- */}
+                            {/* --- DÉCONNEXION --- */}
                             <section className="mt-12">
                                 <button
                                     onClick={handleLogout}
@@ -15616,9 +17327,10 @@ export default function ProfilePage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/memories/page.tsx">
+## File: app/memories/page.tsx
+````typescript
 'use client';
 
 import { useState, useRef, useEffect, Suspense } from 'react';
@@ -15632,10 +17344,10 @@ import {
 import { getApiUrl } from '@/lib/api';
 
 import CortexGrid from '@/components/cortex/CortexGrid';
-// Server actions supprimÃ©es â€” on utilise fetch vers /api/memories et /api/guardian
-// Server action supprimÃ©e â€” on utilise fetch vers /api/auth-guard
+// Server actions supprimées — on utilise fetch vers /api/memories et /api/guardian
+// Server action supprimée — on utilise fetch vers /api/auth-guard
 
-// â€”â€”â€” TYPE â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
+// ——— TYPE ————————————————————————————————————————————————————————————
 interface Memory {
     id: string;
     content: string;
@@ -15648,10 +17360,10 @@ interface Memory {
 type LogLevel = 'info' | 'success' | 'error' | 'warning';
 interface Log { msg: string; level: LogLevel; ts: string }
 
-// â€”â€”â€” HELPERS â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
+// ——— HELPERS ————————————————————————————————————————————————————————
 const typeIcon: Record<string, string> = {
-    document: 'Ã°Å¸â€œâ€ž', knowledge: 'ðŸŒ', THOUGHT: 'Ã°Å¸â€™Â­', thought: 'Ã°Å¸â€™Â­',
-    secret: 'Ã°Å¸â€â€™', default: 'Ã°Å¸Â§Â©',
+    document: 'ðŸ“„', knowledge: '🌐', THOUGHT: 'ðŸ’­', thought: 'ðŸ’­',
+    secret: 'ðŸ”’', default: 'ðŸ§©',
 };
 const typeColor: Record<string, string> = {
     document: 'bg-blue-900/50 text-blue-300 border-blue-700/50',
@@ -15662,7 +17374,7 @@ const typeColor: Record<string, string> = {
     default: 'bg-slate-800    text-slate-400  border-slate-700',
 };
 
-// â€”â€”â€” COMPOSANT PRINCIPAL â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”
+// ——— COMPOSANT PRINCIPAL ————————————————————————————————————————————
 function CortexManager() {
     const router = useRouter();
     const [supabase] = useState(() => createClient());
@@ -15670,13 +17382,13 @@ function CortexManager() {
     const [profileId, setProfileId] = useState<string | null>(null);
     const [memories, setMemories] = useState<Memory[]>([]);
     const [logs, setLogs] = useState<Log[]>([
-        { msg: '[SYSTÃˆME] Cortex en ligne. En attente de donnÃ©es...', level: 'info', ts: now() }
+        { msg: '[SYSTÈME] Cortex en ligne. En attente de données...', level: 'info', ts: now() }
     ]);
     const [isDragging, setIsDragging] = useState(false);
     const [urlInput, setUrlInput] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [isScraping, setIsScraping] = useState(false);
-    // Ã‰tats Ã©diteur de fragments
+    // États éditeur de fragments
     const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
     const [editContent, setEditContent] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
@@ -15685,14 +17397,14 @@ function CortexManager() {
     const [profileRawData, setProfileRawData] = useState('');
     const [isAssimilating, setIsAssimilating] = useState(false);
 
-    // Nouveaux States pour la PensÃ©e Rapide (MÃ©moire)
+    // Nouveaux States pour la Pensée Rapide (Mémoire)
     const [quickThought, setQuickThought] = useState('');
     const [isSavingThought, setIsSavingThought] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const logEndRef = useRef<HTMLDivElement>(null);
 
-    // â€” Auth check â€”
+    // — Auth check —
     useEffect(() => {
         supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
             if (!user) { router.push('/'); return; }
@@ -15700,12 +17412,12 @@ function CortexManager() {
         });
     }, []);
 
-    // â€”â€”â€” Load memories quand profileId est dispo â€”â€”â€”
+    // ——— Load memories quand profileId est dispo ———
     useEffect(() => {
         if (profileId) fetchMemories();
     }, [profileId]);
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Auto-scroll logs Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Auto-scroll logs â”€â”€
     useEffect(() => {
         logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [logs]);
@@ -15718,7 +17430,7 @@ function CortexManager() {
         setLogs(prev => [...prev.slice(-19), { msg, level, ts: now() }]);
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch mÃ©moires rÃ©centes Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Fetch mémoires récentes â”€â”€
     const fetchMemories = async () => {
         if (!profileId) return;
         try {
@@ -15734,16 +17446,16 @@ function CortexManager() {
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Upload fichier Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Upload fichier â”€â”€
     const handleFileUpload = async (file: File) => {
         setIsUploading(true);
         addLog(`[SENSOR] Analyse de la cible : ${file.name} (${(file.size / 1024).toFixed(1)} Ko)`, 'info');
 
-        // RÃ©cupÃ©ration de la session complÃ¨te pour extraire le Bearer token
+        // Récupération de la session complète pour extraire le Bearer token
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) {
-            addLog('[CRITIQUE] Utilisateur non authentifiÃ©. Connexion refusÃ©e.', 'error');
+            addLog('[CRITIQUE] Utilisateur non authentifié. Connexion refusée.', 'error');
             setIsUploading(false);
             return;
         }
@@ -15763,27 +17475,27 @@ function CortexManager() {
             }).then(r => r.json());
 
             if (data.success) {
-                addLog(`[SUCCÃˆS] Fragment de "${file.name}" gravÃ©s.`, 'success');
+                addLog(`[SUCCÈS] Fragment de "${file.name}" gravés.`, 'success');
                 await fetchMemories();
 
-                // ðŸŸ¢ NOUVEAU : On rÃ©veille le Gardien silencieusement en arriÃ¨re-plan !
-                console.log("ðŸ¦‡ Envoi du signal au Gardien...");
+                // 🟢 NOUVEAU : On réveille le Gardien silencieusement en arrière-plan !
+                console.log("🦇 Envoi du signal au Gardien...");
                 fetch(getApiUrl('/api/guardian'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ profileId: session.user.id, text: `Nouveau fichier analysÃ© : ${file.name}. Ce document a Ã©tÃ© ajoutÃ© Ã  sa base de donnÃ©es.` })
+                    body: JSON.stringify({ profileId: session.user.id, text: `Nouveau fichier analysé : ${file.name}. Ce document a été ajouté à sa base de données.` })
                 }).catch(err => console.error("Erreur du Gardien :", err));
             } else {
-                addLog(`[ERREUR SENSOR] ${data.error || 'Ã‰chec de l\'ingestion.'}`, 'error');
+                addLog(`[ERREUR SENSOR] ${data.error || 'Échec de l\'ingestion.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la liaison de transfert.', 'error');
+            addLog('[CRITIQUE] Échec de la liaison de transfert.', 'error');
         } finally {
             setIsUploading(false);
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Scrape URL Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Scrape URL â”€â”€
     const handleUrlSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!urlInput) return;
@@ -15791,12 +17503,12 @@ function CortexManager() {
         const targetUrl = urlInput.trim();
         setUrlInput('');
         setIsScraping(true);
-        addLog(`[RÃ‰SEAU] Extraction des donnÃ©es depuis : ${targetUrl}...`, 'info');
+        addLog(`[RÉSEAU] Extraction des données depuis : ${targetUrl}...`, 'info');
 
-        // RÃ©cupÃ©ration du passeport session
+        // Récupération du passeport session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] AccÃ¨s rÃ©seau refusÃ© (Non authentifiÃ©).', 'error');
+            addLog('[CRITIQUE] Accès réseau refusé (Non authentifié).', 'error');
             setIsScraping(false);
             return;
         }
@@ -15812,19 +17524,19 @@ function CortexManager() {
             }).then(r => r.json());
 
             if (data.success) {
-                addLog(`[SUCCÃˆS] Fragments du site extraits et indexÃ©s.`, 'success');
+                addLog(`[SUCCÈS] Fragments du site extraits et indexés.`, 'success');
                 await fetchMemories();
             } else {
-                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping Ã©chouÃ©.'}`, 'error');
+                addLog(`[ERREUR SCRAPER] ${data.error || 'Scraping échoué.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la connexion au module Scraper.', 'error');
+            addLog('[CRITIQUE] Échec de la connexion au module Scraper.', 'error');
         } finally {
             setIsScraping(false);
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Drag & Drop Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Drag & Drop â”€â”€
     const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
     const handleDragLeave = () => setIsDragging(false);
     const handleDrop = (e: React.DragEvent) => {
@@ -15832,18 +17544,18 @@ function CortexManager() {
         if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Delete mÃ©moire (avec Bearer token + confirmation) Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Delete mémoire (avec Bearer token + confirmation) â”€â”€
     const handleDeleteMemory = async (e: React.MouseEvent, memoryId: string) => {
-        e.stopPropagation(); // EmpÃªche d'ouvrir la modale d'Ã©dition
+        e.stopPropagation(); // Empêche d'ouvrir la modale d'édition
 
-        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mÃ©moire ? Cette action est irrÃ©versible.')) return;
+        if (!window.confirm('Avertissement : Voulez-vous vraiment purger ce fragment de votre mémoire ? Cette action est irréversible.')) return;
 
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) { addLog('[CRITIQUE] Session expirÃ©e.', 'error'); return; }
+        if (!session) { addLog('[CRITIQUE] Session expirée.', 'error'); return; }
 
-        // Mise Ã  jour optimiste immÃ©diate
+        // Mise à jour optimiste immédiate
         setMemories(prev => prev.filter(m => m.id !== memoryId));
-        addLog(`[PURGE] IncinÃ©ration du fragment ${memoryId.slice(0, 8)}...`, 'warning');
+        addLog(`[PURGE] Incinération du fragment ${memoryId.slice(0, 8)}...`, 'warning');
 
         try {
             const headers: any = { 'Content-Type': 'application/json' };
@@ -15854,14 +17566,14 @@ function CortexManager() {
                 headers,
                 body: JSON.stringify({ memoryId })
             });
-            addLog('[SUCCÃˆS] Fragment mÃ©moriel incinÃ©rÃ©.', 'success');
+            addLog('[SUCCÈS] Fragment mémoriel incinéré.', 'success');
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de connexion lors de la purge.', 'error');
+            addLog('[CRITIQUE] Échec de connexion lors de la purge.', 'error');
             fetchMemories();
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Sauvegarde Ã©dition avec re-vectorisation Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€ Sauvegarde édition avec re-vectorisation â”€â”€
     const handleSaveEdit = async () => {
         if (!editingMemory) return;
         setIsUpdating(true);
@@ -15869,7 +17581,7 @@ function CortexManager() {
 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            addLog('[CRITIQUE] Session expirÃ©e.', 'error');
+            addLog('[CRITIQUE] Session expirée.', 'error');
             setIsUpdating(false);
             return;
         }
@@ -15884,35 +17596,35 @@ function CortexManager() {
                 body: JSON.stringify({ memoryId: editingMemory.id, newContent: editContent })
             }).then(r => r.json());
             if (data.success) {
-                addLog('[SUCCÃˆS] Fragment mis Ã  jour et re-vectorisÃ©.', 'success');
+                addLog('[SUCCÈS] Fragment mis à jour et re-vectorisé.', 'success');
                 setMemories(prev => prev.map(m => m.id === editingMemory.id ? { ...m, content: editContent } : m));
                 setEditingMemory(null);
             } else {
-                addLog(`[ERREUR] ${data.error || 'Modification Ã©chouÃ©e.'}`, 'error');
+                addLog(`[ERREUR] ${data.error || 'Modification échouée.'}`, 'error');
             }
         } catch {
-            addLog('[CRITIQUE] Ã‰chec de la connexion lors de l\'Ã©dition.', 'error');
+            addLog('[CRITIQUE] Échec de la connexion lors de l\'édition.', 'error');
         } finally {
             setIsUpdating(false);
         }
     };
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Loading state Ã¢â€â‚¬Ã¢â€â‚¬
-    // --- Fonction 1 : Assimilation de l'IdentitÃ© ---
+    // â”€â”€ Loading state â”€â”€
+    // --- Fonction 1 : Assimilation de l'Identité ---
     const handleProfileAssimilation = async () => {
         if (!profileId || !profileRawData.trim()) return;
         setIsAssimilating(true);
-        addLog('[MATRICE] Injection des donnÃ©es brutes en cours...', 'info');
+        addLog('[MATRICE] Injection des données brutes en cours...', 'info');
         try {
-            // La logique a Ã©tÃ© dÃ©placÃ©e dans le composant d'onboarding
+            // La logique a été déplacée dans le composant d'onboarding
             // const result = await autoIngestProfile(profileId, profileRawData);
             // if (result?.success) {
-            //     addLog("[SUCCÃˆS] ADN AssimilÃ©. Matrice mise Ã  jour.", 'success');
+            //     addLog("[SUCCÈS] ADN Assimilé. Matrice mise à jour.", 'success');
             //     setProfileRawData('');
             // } else {
-            //     addLog(`[ERREUR] ${result?.error || "Ã‰chec de l'assimilation."}`, 'error');
+            //     addLog(`[ERREUR] ${result?.error || "Échec de l'assimilation."}`, 'error');
             // }
-            addLog("[DÃ‰SACTIVÃ‰] Veuillez utiliser l'interface d'Onboarding pour l'ingestion du profil.", 'warning');
+            addLog("[DÉSACTIVÉ] Veuillez utiliser l'interface d'Onboarding pour l'ingestion du profil.", 'warning');
         } catch (e: any) {
             addLog("[CRITIQUE] Impossible de contacter le centre d'assimilation.", 'error');
         } finally {
@@ -15920,19 +17632,19 @@ function CortexManager() {
         }
     };
 
-    // --- Fonction 2 : PensÃ©e Rapide (Ex-Dashboard) ---
+    // --- Fonction 2 : Pensée Rapide (Ex-Dashboard) ---
     const handleQuickThought = async () => {
         if (!quickThought.trim() || !profileId) return;
         setIsSavingThought(true);
 
-        // âœ… Filtre anti-corruption : suppression des null bytes
+        // ✅ Filtre anti-corruption : suppression des null bytes
         const cleanThought = quickThought.replace(/\0/g, '').replace(/\u0000/g, '').trim();
-        addLog('[CORTEX] Archivage de la pensÃ©e rapide...', 'info');
+        addLog('[CORTEX] Archivage de la pensée rapide...', 'info');
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                addLog('[CRITIQUE] Session expirÃ©e.', 'error');
+                addLog('[CRITIQUE] Session expirée.', 'error');
                 return;
             }
 
@@ -15953,11 +17665,11 @@ function CortexManager() {
             if (data.error) throw new Error(data.error);
 
             setQuickThought('');
-            addLog('[SUCCÃˆS] PensÃ©e enregistrÃ©e dans le Cortex.', 'success');
+            addLog('[SUCCÈS] Pensée enregistrée dans le Cortex.', 'success');
             fetchMemories();
             router.refresh();
         } catch (err: any) {
-            addLog(`[CRITIQUE] ${err.message || 'Ã‰chec de transmission.'}`, 'error');
+            addLog(`[CRITIQUE] ${err.message || 'Échec de transmission.'}`, 'error');
         } finally {
             setIsSavingThought(false);
         }
@@ -15974,11 +17686,11 @@ function CortexManager() {
         );
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ RENDER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     return (
         <div className="min-h-screen bg-slate-950 text-slate-300 font-mono p-4 md:p-8 selection:bg-blue-800">
 
-            {/* Ã¢â€â‚¬Ã¢â€â‚¬ SCANLINES overlay (dÃ©coratif) Ã¢â€â‚¬Ã¢â€â‚¬ */}
+            {/* â”€â”€ SCANLINES overlay (décoratif) â”€â”€ */}
             <div
                 className="pointer-events-none fixed inset-0 z-0 opacity-[0.03]"
                 style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #000 2px, #000 4px)' }}
@@ -15986,7 +17698,7 @@ function CortexManager() {
 
             <div className="relative z-10 max-w-6xl mx-auto">
 
-                {/* Ã¢â€â‚¬Ã¢â€â‚¬ HEADER Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                {/* â”€â”€ HEADER â”€â”€ */}
                 <header className="flex items-start justify-between mb-8 pb-4 border-b border-blue-900/50">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
@@ -15997,7 +17709,7 @@ function CortexManager() {
                             &gt; CORTEX_DATA_MANAGER
                         </h1>
                         <p className="text-xs text-slate-500 mt-1">
-                            Interface d'ingestion neuronale Ã¢â‚¬â€ Enrichissement de la mÃ©moire vectorielle
+                            Interface d'ingestion neuronale â€” Enrichissement de la mémoire vectorielle
                         </p>
                     </div>
                     <button
@@ -16008,20 +17720,20 @@ function CortexManager() {
                     </button>
                 </header>
 
-                {/* â”€â”€ NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX â”€â”€ */}
+                {/* ── NOUVELLE GRILLE : SECTEURS MATRICE & CORTEX ── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
 
-                    {/* --- SECTEUR 1 : MATRICE (IdentitÃ©) --- */}
+                    {/* --- SECTEUR 1 : MATRICE (Identité) --- */}
                     <div className="border border-cyan-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(0,255,255,0.1)] flex flex-col">
                         <h2 className="text-xl font-bold mb-2 flex items-center text-cyan-400">
-                            <span className="text-2xl mr-2">ðŸ§¬</span> 1. RECALIBRAGE DE LA MATRICE
+                            <span className="text-2xl mr-2">🧬</span> 1. RECALIBRAGE DE LA MATRICE
                         </h2>
                         <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
-                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA Ã©crasera et mettra Ã  jour votre ADN professionnel et psychologique.
+                            Copiez-collez votre CV, profil LinkedIn ou biographie. L'IA écrasera et mettra à jour votre ADN professionnel et psychologique.
                         </p>
                         <textarea
                             className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-cyan-500 focus:outline-none placeholder:text-slate-600"
-                            placeholder="DONNÃ‰ES BRUTES (Ex: Copier-coller LinkedIn)..."
+                            placeholder="DONNÉES BRUTES (Ex: Copier-coller LinkedIn)..."
                             value={profileRawData}
                             onChange={(e) => setProfileRawData(e.target.value)}
                         />
@@ -16034,17 +17746,17 @@ function CortexManager() {
                         </button>
                     </div>
 
-                    {/* --- SECTEUR 2 : CORTEX (MÃ©moire) --- */}
+                    {/* --- SECTEUR 2 : CORTEX (Mémoire) --- */}
                     <div className="border border-emerald-500 bg-black/50 p-6 rounded shadow-[0_0_15px_rgba(16,185,129,0.1)] flex flex-col">
                         <h2 className="text-xl font-bold mb-2 text-emerald-400 flex items-center">
-                            <span className="text-2xl mr-2">ðŸ§ </span> 2. INGESTION MÃ‰MOIRE RAPIDE
+                            <span className="text-2xl mr-2">🧠</span> 2. INGESTION MÉMOIRE RAPIDE
                         </h2>
                         <p className="text-sm text-slate-400 mb-4 font-sans flex-1">
-                            Ajoutez une note tactique, une idÃ©e ou une information isolÃ©e que l'Agent doit retenir pour ses futurs scans.
+                            Ajoutez une note tactique, une idée ou une information isolée que l'Agent doit retenir pour ses futurs scans.
                         </p>
                         <textarea
                             className="w-full bg-slate-900 border border-slate-700 p-3 text-slate-300 rounded min-h-[120px] focus:border-emerald-500 focus:outline-none placeholder:text-slate-600"
-                            placeholder="NOUVELLE PENSÃ‰E / MÃ‰MOIRE..."
+                            placeholder="NOUVELLE PENSÉE / MÉMOIRE..."
                             value={quickThought}
                             onChange={(e) => setQuickThought(e.target.value)}
                         />
@@ -16053,15 +17765,15 @@ function CortexManager() {
                             disabled={isSavingThought || quickThought.length < 5}
                             className="mt-4 w-full bg-emerald-700 hover:bg-emerald-600 text-black font-black py-3 rounded-lg disabled:opacity-50 transition-all uppercase tracking-widest text-[11px]"
                         >
-                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÃ‰E'}
+                            {isSavingThought ? 'ENREGISTREMENT...' : 'SAUVEGARDER LA PENSÉE'}
                         </button>
                     </div>
                 </div>
 
-                {/* â”€â”€ SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES â”€â”€ */}
+                {/* ── SECTEUR 3 / 4 : CAPTEURS LOURDS ET ARCHIVES ── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    {/* â”€â”€ COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES â”€â”€ */}
+                    {/* ── COL GAUCHE : CAPTEURS LOURDS ET ARCHIVES ── */}
                     <div className="lg:col-span-2 space-y-5">
 
                         {/* DROPZONE */}
@@ -16113,15 +17825,15 @@ function CortexManager() {
                                         [ INITIALISER TRANSFERT FICHIER ]
                                     </p>
                                     <p className="text-xs text-slate-500 text-center">
-                                        Glissez-dÃ©posez ou cliquez pour sÃ©lectionner<br />
-                                        <span className="text-slate-600">PDF Â· TXT Â· CSV Â· DOCX Â· MD Â· JSON</span>
+                                        Glissez-déposez ou cliquez pour sélectionner<br />
+                                        <span className="text-slate-600">PDF · TXT · CSV · DOCX · MD · JSON</span>
                                     </p>
 
                                     {isDragging && (
                                         <div className="absolute inset-0 flex items-center justify-center rounded-2xl">
                                             <div className="text-center">
                                                 <p className="text-2xl font-black text-blue-300 animate-pulse tracking-widest">
-                                                    DÃ‰POSER
+                                                    DÉPOSER
                                                 </p>
                                                 <p className="text-xs text-blue-500 mt-1">Ingestion automatique</p>
                                             </div>
@@ -16179,7 +17891,7 @@ function CortexManager() {
                             <div className="p-4 bg-black/20">
                                 {memories.length === 0 ? (
                                     <div className="p-8 text-center text-slate-600 text-xs italic">
-                                        Aucun fragment en mÃ©moire. DÃ©posez un fichier pour commencer.
+                                        Aucun fragment en mémoire. Déposez un fichier pour commencer.
                                     </div>
                                 ) : (
                                     <CortexGrid userId={profileId ?? undefined} initialFragments={memories.map(m => ({
@@ -16192,7 +17904,7 @@ function CortexManager() {
                         </div>
                     </div>
 
-                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ COL DROITE : TERMINAL Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                    {/* â”€â”€ COL DROITE : TERMINAL â”€â”€ */}
                     <div className="space-y-5">
 
                         {/* STATUS BAR */}
@@ -16216,7 +17928,7 @@ function CortexManager() {
                         <div className="bg-black border border-slate-800 rounded-2xl overflow-hidden">
                             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800 bg-slate-950">
                                 <Terminal size={12} className="text-blue-600" />
-                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÃ‰RATIONS</span>
+                                <span className="text-[9px] text-slate-600 tracking-widest font-bold">JOURNAL DES OPÉRATIONS</span>
                             </div>
 
                             <div className="p-4 h-72 overflow-y-auto space-y-1.5 custom-scrollbar text-xs">
@@ -16240,8 +17952,8 @@ function CortexManager() {
                         <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-4 space-y-3">
                             <h3 className="text-[10px] font-black text-slate-500 tracking-widest">PROTOCOLES D'INGESTION</h3>
                             {[
-                                { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX Ã¢â‚¬â€ Extraction vectorielle automatique' },
-                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + rÃ©sumÃ© Mistral AI Ã¢â‚¬â€ Indexation en mÃ©moire' },
+                                { icon: <FileText size={13} />, label: 'Fichiers', desc: 'PDF, TXT, CSV, DOCX â€” Extraction vectorielle automatique' },
+                                { icon: <Globe size={13} />, label: 'URL Web', desc: 'Scraping + résumé Mistral AI â€” Indexation en mémoire' },
                             ].map(({ icon, label, desc }) => (
                                 <div key={label} className="flex items-start gap-3">
                                     <div className="w-7 h-7 rounded-lg bg-blue-950/50 border border-blue-900/50 flex items-center justify-center flex-shrink-0 text-blue-500">
@@ -16259,21 +17971,21 @@ function CortexManager() {
                 </div>
             </div>
 
-            {/* Ã¢â€â‚¬Ã¢â€â‚¬ MODALE D'Ã‰DITION SYNAPTIQUE Ã¢â€â‚¬Ã¢â€â‚¬ */}
+            {/* â”€â”€ MODALE D'ÉDITION SYNAPTIQUE â”€â”€ */}
             {editingMemory && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-slate-900 border border-blue-500/50 rounded-2xl w-full max-w-2xl flex flex-col shadow-[0_0_50px_rgba(59,130,246,0.15)]">
                         {/* Header modale */}
                         <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                             <div>
-                                <h2 className="text-sm font-black text-blue-400 tracking-wider">Ã‰DITION DU FRAGMENT NEURONAL</h2>
+                                <h2 className="text-sm font-black text-blue-400 tracking-wider">ÉDITION DU FRAGMENT NEURONAL</h2>
                                 <p className="text-[10px] text-slate-600 mt-0.5">{editingMemory.id}</p>
                             </div>
                             <button
                                 onClick={() => setEditingMemory(null)}
                                 className="text-slate-500 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800"
                             >
-                                âŒ
+                                ❌
                             </button>
                         </div>
 
@@ -16313,7 +18025,7 @@ function CortexManager() {
     );
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ WRAPPER (Suspense boundary) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// â”€â”€â”€ WRAPPER (Suspense boundary) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function CortexPage() {
     return (
         <Suspense fallback={
@@ -16325,9 +18037,10 @@ export default function CortexPage() {
         </Suspense>
     );
 }
-</file>
+````
 
-<file path="app/components/auth/Gatekeeper.tsx">
+## File: app/components/auth/Gatekeeper.tsx
+````typescript
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -16369,26 +18082,27 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         try {
             isVerifying.current = true;
 
-            // 1. VÃ©rification session Supabase
+            // 1. Vérification session Supabase
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error("No session");
 
-            // 2. VÃ©rification DIRECTE en BDD (au lieu d'un fetch API)
+            // 2. Vérification DIRECTE en BDD (au lieu d'un fetch API)
             const { data: profile, error: dbError } = await supabase
-                .from('Profile')
+                .from('profiles')
                 .select('id')
-                .eq('id', session.user.id)
+                .eq('user_id', session.user.id)
+                .eq('type', 'WORK')
                 .maybeSingle();
 
             if (dbError || !profile) {
-                console.warn("âš ï¸ Profil fantÃ´me dÃ©tectÃ© en BDD. Redirection vers /login...");
+                console.warn("⚠️ Profil fantôme détecté en BDD. Redirection vers /login...");
                 await supabase.auth.signOut();
                 localStorage.clear();
                 router.push('/login');
                 return;
             }
 
-            // 3. BIOMÃ‰TRIE (Refactored to use VaultManager)
+            // 3. BIOMÉTRIE (Refactored to use VaultManager)
             if (Capacitor.isNativePlatform()) {
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
@@ -16400,14 +18114,14 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                 if ((!isKeyLoaded || isWakeUp) && !isPromptOpen) {
                     sessionStorage.setItem('ipse_bio_prompt', 'true');
                     try {
-                        // ðŸ”’ Secure Unlock via VaultManager
+                        // 🔒 Secure Unlock via VaultManager
                         const privateKey = await VaultManager.unlockAndLoad(
                             VaultKey.MASTER_KEY,
-                            "AccÃ¨s Ã  l'Agent Ipse - Authentification Neurale"
+                            "Accès à l'Agent Ipse - Authentification Neurale"
                         );
 
                         if (!privateKey) {
-                            console.warn("âš ï¸ ClÃ© introuvable dans le coffre-fort sÃ©curisÃ©. Redirection vers onboarding.");
+                            console.warn("⚠️ Clé introuvable dans le coffre-fort sécurisé. Redirection vers onboarding.");
                             router.replace('/profile/new');
                             return;
                         } else {
@@ -16415,7 +18129,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
                         }
 
                     } catch (bioError) {
-                        console.error("âŒ Ã‰chec BiomÃ©trique ou Coffre-fort verrouillÃ©", bioError);
+                        console.error("❌ Échec Biométrique ou Coffre-fort verrouillé", bioError);
                         router.replace('/login');
                         return;
                     } finally {
@@ -16428,42 +18142,42 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
             setIsLoading(false);
         } catch (err) {
-            console.error("ðŸš¨ Gatekeeper Intercept:", err);
+            console.error("🚨 Gatekeeper Intercept:", err);
             router.replace('/login');
         } finally {
             setTimeout(() => { isVerifying.current = false; }, 1000);
         }
     };
 
-    // ðŸ›¡ï¸ EFFECT 1: Initialisation et Listeners (UNE SEULE FOIS)
+    // 🛡️ EFFECT 1: Initialisation et Listeners (UNE SEULE FOIS)
     useEffect(() => {
         checkShield(false);
 
-        // 3. âš¡ ECOUTEUR SYSTÃˆME AVEC DÃ‰LAI DE GRÃ‚CE DE 2 MINUTES
+        // 3. ⚡ ECOUTEUR SYSTÈME AVEC DÉLAI DE GRÂCE DE 2 MINUTES
         let listenerPromise: any = null;
         if (Capacitor.isNativePlatform()) {
             listenerPromise = App.addListener('appStateChange', ({ isActive }) => {
                 const isPromptOpen = sessionStorage.getItem('ipse_bio_prompt') === 'true';
 
                 if (!isActive) {
-                    // ðŸ”» L'APP PASSE EN VEILLE : On enregistre l'heure exacte
+                    // 🔻 L'APP PASSE EN VEILLE : On enregistre l'heure exacte
                     if (!isPromptOpen) {
                         sessionStorage.setItem('ipse_bg_timestamp', Date.now().toString());
                     }
                 } else {
-                    // ðŸ”º L'APP REVIENT AU PREMIER PLAN
+                    // 🔺 L'APP REVIENT AU PREMIER PLAN
                     if (!isPromptOpen) {
                         const bgTimeStr = sessionStorage.getItem('ipse_bg_timestamp');
                         const timeElapsed = bgTimeStr ? Date.now() - parseInt(bgTimeStr) : 0;
 
                         // 120000 millisecondes = 2 minutes
                         if (timeElapsed > 120000 || !bgTimeStr) {
-                            console.log("ðŸ“± InactivitÃ© prolongÃ©e (> 2min). Verrouillage du coffre (Purge RAM).");
-                            // On efface la clÃ© de la RAM pour obliger une nouvelle biomÃ©trie
+                            console.log("📱 Inactivité prolongée (> 2min). Verrouillage du coffre (Purge RAM).");
+                            // On efface la clé de la RAM pour obliger une nouvelle biométrie
                             useKeyStore.getState().clearMasterKey();
                             checkShield(true);
                         } else {
-                            console.log(`ðŸ”“ Retour rapide (${Math.round(timeElapsed / 1000)}s). AccÃ¨s autorisÃ©.`);
+                            console.log(`🔓 Retour rapide (${Math.round(timeElapsed / 1000)}s). Accès autorisé.`);
                         }
                     }
                 }
@@ -16477,7 +18191,7 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
         };
     }, []);
 
-    // ðŸ›¡ï¸ EFFECT 2: Check Session sur changement de page
+    // 🛡️ EFFECT 2: Check Session sur changement de page
     useEffect(() => {
         if (pathname === '/login' || pathname === '/signup') {
             setIsLoading(false);
@@ -16497,13 +18211,15 @@ export default function Gatekeeper({ children }: { children: React.ReactNode }) 
 
     return <>{children}</>;
 }
-</file>
+````
 
-<file path="app/layout.tsx">
+## File: app/layout.tsx
+````typescript
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ClientLayout from './components/ClientLayout';
 import { LanguageProvider } from '@/context/LanguageContext';
+import { PrismProvider } from '@/components/providers/PrismProvider';
 
 export const metadata: Metadata = {
   title: "Ipse",
@@ -16530,8 +18246,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // NOTES: Suppression de cookies() et createServerClient au niveau Layout
-  // Car pour un export statique (mobile/Capacitor), le Layout doit Ãªtre statique.
-  // L'authentification est gÃ©rÃ©e par le Gatekeeper (Client Side).
+  // Car pour un export statique (mobile/Capacitor), le Layout doit être statique.
+  // L'authentification est gérée par le Gatekeeper (Client Side).
 
   return (
     <html lang="fr" className="dark">
@@ -16541,17 +18257,20 @@ export default function RootLayout({
       </head>
       <body className="bg-slate-950 text-slate-300 antialiased pb-20">
         <LanguageProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
+          <PrismProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </PrismProvider>
         </LanguageProvider>
       </body>
     </html>
   );
 }
-</file>
+````
 
-<file path="package.json">
+## File: package.json
+````json
 {
   "name": "digital-twin-profile",
   "version": "0.1.0",
@@ -16581,7 +18300,6 @@ export default function RootLayout({
     "@huggingface/transformers": "^3.8.1",
     "@mistralai/mistralai": "^1.14.0",
     "@noble/hashes": "^2.0.1",
-    "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",
@@ -16638,9 +18356,10 @@ export default function RootLayout({
     "@hono/node-server": "^1.19.10"
   }
 }
-</file>
+````
 
-<file path="app/page.tsx">
+## File: app/page.tsx
+````typescript
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -16671,13 +18390,13 @@ function RadarContent() {
       if (!session) return;
       setUser(session.user);
 
-      // âš¡ NOUVEAU : On prÃ©pare le badge de sÃ©curitÃ© pour l'API
+      // ⚡ NOUVEAU : On prépare le badge de sécurité pour l'API
       const headers = {
         'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json'
       };
 
-      // On ajoute les headers aux requÃªtes
+      // On ajoute les headers aux requêtes
       const oppsRes = await fetch(getApiUrl('/api/opportunities'), { headers }).then(r => r.json());
       if (oppsRes.success) {
         setDiscoveries(oppsRes.opportunities.filter((o: any) => o.status !== 'CANCELLED').slice(0, 10));
@@ -16758,7 +18477,7 @@ function RadarContent() {
 
       <LearningAlert />
 
-      {/* SECTION 1: RequÃªtes Entrantes */}
+      {/* SECTION 1: Requêtes Entrantes */}
       {incomingRequests.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-emerald-400">
@@ -16783,7 +18502,7 @@ function RadarContent() {
 
 
 
-      {/* SECTION 3: DÃ©couvertes Radar */}
+      {/* SECTION 3: Découvertes Radar */}
       <section className="space-y-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 text-slate-400">
           <Target className="w-4 h-4" />
@@ -16821,13 +18540,14 @@ export default function RadarPage() {
     </Suspense>
   );
 }
-</file>
+````
 
-<file path="prisma/schema.prisma">
+## File: prisma/schema.prisma
+````prisma
 generator client {
-  provider        = "prisma-client"
-  output          = "../generated/prisma"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  engineType      = "library"
 }
 
 datasource db {
@@ -16836,17 +18556,17 @@ datasource db {
 }
 
 model Profile {
-  id                     String                 @id
+  id                     String                 @id @default(uuid())
   email                  String                 @unique
   name                   String?                @default("Agent Furtif")
-  avatarUrl              String?
-  unifiedAnalysis        String?
+  avatarUrl              String?                @map("avatar_url")
+  unifiedAnalysis        String?                @map("unified_analysis")
   availability           String?
   bio                    String?
   tjm                    Int?
-  fcmToken               String?
-  publicKey              String?
-  unifiedEmbedding       Unsupported("vector")?
+  fcmToken               String?                @map("fcm_token")
+  publicKey              String?                @map("public_key")
+  unifiedEmbedding       Unsupported("vector")? @map("unified_embedding")
   age                    Int?
   city                   String?
   country                String?
@@ -16856,18 +18576,28 @@ model Profile {
   primaryRole            String?                @map("primary_role")
   thematicProfile        Json?                  @map("thematic_profile")
   updatedAt              DateTime               @default(now()) @updatedAt @map("updated_at")
-  bioEmbedding           Unsupported("vector")?
+  bioEmbedding           Unsupported("vector")? @map("bio_embedding")
+  
+  // Identity Triad & Vector isolation
+  userId                 String?                @map("user_id")
+  type                   String?                @default("WORK") @map("type")
+  metadataVector         Unsupported("vector(1536)")? @map("metadata_vector")
+  displayName            String?                @map("display_name")
+  
   sector                 String?
   hobbyBio               String?                @map("hobby_bio")
   hobbyEmbedding         Unsupported("vector")? @map("hobby_embedding")
   hobbyRole              String?                @map("hobby_role")
   hobbySector            String?                @map("hobby_sector")
+  
   socialBio              String?                @map("social_bio")
   socialEmbedding        Unsupported("vector")? @map("social_embedding")
   socialRole             String?                @map("social_role")
   socialSector           String?                @map("social_sector")
+
   language               String                 @default("fr")
   activePrism            String?                @default("WORK") @map("active_prism")
+  
   initiatedConnections   Connection[]           @relation("InitiatedConnections")
   receivedConnections    Connection[]           @relation("ReceivedConnections")
   notes                  CortexNote[]
@@ -16885,78 +18615,89 @@ model Profile {
   @@index([primaryRole])
   @@index([availability])
   @@index([tjm])
+  @@unique([userId, type])
+  @@map("profiles")
 }
 
 model FileArchive {
   id         String   @id @default(uuid())
-  profileId  String
-  fileName   String
-  fileUrl    String
-  mimeType   String
-  isAnalyzed Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  profileId  String   @map("profile_id")
+  fileName   String   @map("file_name")
+  fileUrl    String   @map("file_url")
+  mimeType   String   @map("mime_type")
+  isAnalyzed Boolean  @default(false) @map("is_analyzed")
+  createdAt  DateTime @default(now()) @map("created_at")
   profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  @@map("file_archives")
 }
 
 model CortexNote {
   id        String                 @id @default(uuid())
-  profileId String
+  profileId String                 @map("profile_id")
   content   String
   embedding Unsupported("vector")?
-  createdAt DateTime               @default(now())
+  createdAt DateTime               @default(now()) @map("created_at")
   profile   Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  @@map("cortex_notes")
 }
 
 model RadarResult {
   id          String   @id @default(uuid())
-  profileId   String
+  profileId   String   @map("profile_id")
   opportunity String
-  sourceUrl   String?
+  sourceUrl   String?  @map("source_url")
   score       Float
-  isHidden    Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isHidden    Boolean  @default(false) @map("is_hidden")
+  createdAt   DateTime @default(now()) @map("created_at")
   profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  @@map("radar_results")
 }
 
 model Match {
   id         String      @id @default(uuid())
-  userAId    String
-  userBId    String
-  matchScore Float
-  statusA    MatchStatus @default(PENDING)
-  statusB    MatchStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
+  userAId    String      @map("user_a_id")
+  userBId    String      @map("user_b_id")
+  matchScore Float       @map("match_score")
+  statusA    MatchStatus @default(PENDING) @map("status_a")
+  statusB    MatchStatus @default(PENDING) @map("status_b")
+  createdAt  DateTime    @default(now()) @map("created_at")
   userA      Profile     @relation("UserA", fields: [userAId], references: [id], onDelete: Cascade)
   userB      Profile     @relation("UserB", fields: [userBId], references: [id], onDelete: Cascade)
 
   @@unique([userAId, userBId])
+  @@map("matches")
 }
 
 model Message {
   id         String   @id @default(uuid())
-  senderId   String
-  receiverId String
+  senderId   String   @map("sender_id")
+  receiverId String   @map("receiver_id")
   content    String
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
   receiver   Profile  @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   sender     Profile  @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
 }
 
 model Memory {
   id               String                 @id @default(uuid())
   content          String
-  encryptedContent String?
+  encryptedContent String?                @map("encrypted_content")
   type             String                 @default("thought")
   source           String?
   embedding        Unsupported("vector")?
   tags             Json?
-  expires_at       DateTime?
+  expiresAt        DateTime?              @map("expires_at")
   createdAt        DateTime               @default(now()) @map("created_at")
   profileId        String                 @map("profile_id")
   profile          Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  @@map("memory")
+  @@map("memories")
 }
 
 model Discovery {
@@ -16966,34 +18707,40 @@ model Discovery {
   score     Int
   reason    String?
   url       String?
-  createdAt DateTime @default(now())
-  profileId String
+  createdAt DateTime @default(now()) @map("created_at")
+  profileId String   @map("profile_id")
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  @@map("discoveries")
 }
 
 model Connection {
   id          String   @id @default(uuid())
-  initiatorId String
-  receiverId  String
+  initiatorId String   @map("initiator_id")
+  receiverId  String   @map("receiver_id")
   status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
   initiator   Profile  @relation("InitiatedConnections", fields: [initiatorId], references: [id], onDelete: Cascade)
   receiver    Profile  @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@map("connections")
 }
 
 model Opportunity {
   id            String   @id @default(cuid())
-  sourceId      String
-  targetId      String
-  matchScore    Int
+  sourceId      String   @map("source_id")
+  targetId      String   @map("target_id")
+  matchScore    Int      @map("match_score")
   audit         String?
   status        String   @default("DETECTED")
-  context       String?  @default("WORK")
   title         String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime @default(now()) @map("created_at")
   synergies     String
+  context       String?  @default("WORK")
   sourceProfile Profile  @relation("InitiatedOpportunities", fields: [sourceId], references: [id], onDelete: Cascade)
   targetProfile Profile  @relation("ReceivedOpportunities", fields: [targetId], references: [id], onDelete: Cascade)
+  
+  @@map("opportunities")
 }
 
 enum MatchStatus {
@@ -17001,6 +18748,145 @@ enum MatchStatus {
   ACCEPTED
   REJECTED
 }
-</file>
+````
 
-</files>
+## File: store/prismStore.ts
+````typescript
+import { create } from 'zustand';
+
+export type PrismType = 'WORK' | 'HOBBY' | 'DATING';
+
+interface PrismState {
+    currentPrism: PrismType;
+    setPrism: (prism: PrismType) => void;
+    nextPrism: () => void;
+    prevPrism: () => void;
+}
+
+const PRISMS: PrismType[] = ['WORK', 'HOBBY', 'DATING'];
+
+export const usePrismStore = create<PrismState>((set, get) => ({
+    currentPrism: 'WORK', // Par défaut
+    setPrism: (prism) => set({ currentPrism: prism }),
+    nextPrism: () => {
+        const { currentPrism } = get();
+        const currentIndex = PRISMS.indexOf(currentPrism);
+        const nextIndex = (currentIndex + 1) % PRISMS.length;
+        set({ currentPrism: PRISMS[nextIndex] });
+    },
+    prevPrism: () => {
+        const { currentPrism } = get();
+        const currentIndex = PRISMS.indexOf(currentPrism);
+        const prevIndex = (currentIndex - 1 + PRISMS.length) % PRISMS.length;
+        set({ currentPrism: PRISMS[prevIndex] });
+    },
+}));
+````
+
+## File: app/components/PrismSwipeContainer.tsx
+````typescript
+'use client';
+
+import React from 'react';
+import { motion, PanInfo, AnimatePresence } from 'framer-motion';
+import { usePrismStore } from '@/store/prismStore';
+
+interface PrismSwipeContainerProps {
+    children: React.ReactNode;
+}
+
+export default function PrismSwipeContainer({ children }: PrismSwipeContainerProps) {
+    const { currentPrism, nextPrism, prevPrism } = usePrismStore();
+
+    const handleDragEnd = (event: any, info: PanInfo) => {
+        const threshold = 100; // Seuil de swipe en pixels
+        if (info.offset.x < -threshold) {
+            nextPrism();
+        } else if (info.offset.x > threshold) {
+            prevPrism();
+        }
+    };
+
+    return (
+        <div 
+            className="relative w-full overflow-hidden"
+            style={{ touchAction: 'pan-y' }} // Autorise le scroll vertical natif
+        >
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentPrism}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.4}
+                    onDragEnd={handleDragEnd}
+                    initial={{ x: 0, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30,
+                    }}
+                    className="w-full min-h-screen"
+                >
+                    {children}
+                </motion.div>
+            </AnimatePresence>
+        </div>
+    );
+}
+````
+
+## File: app/components/PrismIndicator.tsx
+````typescript
+'use client';
+
+import React from 'react';
+import { usePrismStore, PrismType } from '@/store/prismStore';
+import { motion } from 'framer-motion';
+
+const PRISMS: PrismType[] = ['WORK', 'HOBBY', 'DATING'];
+
+const THEMES = {
+    WORK: { color: 'bg-blue-500', label: 'WORK' },
+    HOBBY: { color: 'bg-emerald-500', label: 'HOBBY' },
+    DATING: { color: 'bg-pink-500', label: 'DATING' },
+};
+
+export default function PrismIndicator() {
+    const { currentPrism, setPrism } = usePrismStore();
+
+    return (
+        <div className="flex items-center justify-center gap-4 py-3">
+            {PRISMS.map((prism) => {
+                const isActive = currentPrism === prism;
+                return (
+                    <button
+                        key={prism}
+                        onClick={() => setPrism(prism)}
+                        className="flex flex-col items-center gap-1 group transition-all"
+                    >
+                        <div className={`
+                            h-1 rounded-full transition-all duration-500
+                            ${isActive ? `w-8 ${THEMES[prism].color}` : 'w-2 bg-white/20 group-hover:bg-white/40'}
+                        `} />
+                        <span className={`
+                            text-[8px] font-black tracking-[0.2em] transition-colors
+                            ${isActive ? 'text-white' : 'text-white/20 group-hover:text-white/40'}
+                        `}>
+                            {THEMES[prism].label}
+                        </span>
+                        {isActive && (
+                            <motion.div
+                                layoutId="prism-dot"
+                                className={`w-1 h-1 rounded-full mt-0.5 ${THEMES[prism].color}`}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            />
+                        )}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+````

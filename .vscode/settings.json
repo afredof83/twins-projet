@@ -15,5 +15,20 @@
     ],
     "java.import.exclusions": [
         "**/node_modules/**"
-    ]
+    ],
+    "files.exclude": {
+        "**/node_modules/**": true,
+        "**/.next/**": true,
+        "**/.vscode/**": false
+    },
+    "search.exclude": {
+        "**/node_modules/**": true,
+        "**/.next/**": true
+    },
+    "deno.enable": true,
+    "deno.enablePaths": [
+        "supabase/functions"
+    ],
+    "deno.lint": true,
+    "deno.unstable": true
 }

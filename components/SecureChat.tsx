@@ -50,8 +50,8 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
             try {
                 // 1. Fetch partner's profile with Strict Guardrails
                 const { data: partnerData, error: profileError } = await supabase
-                    .from('Profile')
-                    .select('id, country, publicKey')
+                    .from('profiles')
+                    .select('id, country, public_key')
                     .eq('id', partnerId)
                     .single();
 
@@ -64,23 +64,23 @@ export default function SecureChat({ myId, partnerId, channelId, onClose }: Secu
                     throw new Error("Profil partenaire introuvable.");
                 }
 
-                if (!partnerData.publicKey) {
-                    console.error("❌ Le profil du partenaire a été trouvé, mais sa publicKey est VIDE (null) !");
+                if (!partnerData.public_key) {
+                    console.error("❌ Le profil du partenaire a été trouvé, mais sa public_key est VIDE (null) !");
                     if (isMounted) setIsLoading(false);
                     throw new Error("Le partenaire n'a pas encore de clé E2EE (Profil non initialisé).");
                 }
 
-                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerData.publicKey.substring(0, 20) + "...");
+                console.log("✅ Clé publique du partenaire récupérée avec succès :", partnerData.public_key.substring(0, 20) + "...");
 
                 let sKey: CryptoKey | null = null;
-                if (partnerData?.publicKey) {
+                if (partnerData?.public_key) {
                     const { deriveSharedKey, getStoredPrivateKeyJwk } = await import('@/lib/crypto-client');
                     try {
                         const myPrivateKeyJwk = await getStoredPrivateKeyJwk();
                         const myPrivateKey = await window.crypto.subtle.importKey(
                             "jwk", myPrivateKeyJwk, { name: "ECDH", namedCurve: "P-256" }, true, ["deriveKey"]
                         );
-                        sKey = await deriveSharedKey(myPrivateKey, partnerData.publicKey);
+                        sKey = await deriveSharedKey(myPrivateKey, partnerData.public_key);
                         sharedKeyRef.current = sKey;
                         if (isMounted) setIsVaultLocked(false);
                     } catch (e: any) {

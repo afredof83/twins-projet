@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getPrismaForUser } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function PATCH(req: Request) {
     try {
@@ -25,9 +25,9 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Invalid language' }, { status: 400 });
         }
 
-        const prismaRLS = getPrismaForUser(user.id);
-        await prismaRLS.profile.update({
-            where: { id: user.id },
+
+        await prisma.profile.update({
+            where: { userId_type: { userId: user.id, type: 'WORK' } }, // Assuming settings apply to WORK profile or are global
             data: { language }
         });
 
