@@ -31,7 +31,7 @@ export async function updateAgentProfile(data: any) {
         const seniority = thematicProfile?.travail?.seniority || null;
         const professionalStatus = thematicProfile?.travail?.professionalStatus || null;
         const environment = thematicProfile?.travail?.environment || null;
-        let objectives = [];
+        let objectives: any[] = [];
         if (thematicProfile?.travail?.objectives) {
             objectives.push(thematicProfile.travail.objectives);
         }
